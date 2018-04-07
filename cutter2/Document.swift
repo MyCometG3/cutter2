@@ -378,7 +378,7 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
     }
     
     @IBAction func transcode(_ sender: Any?) {
-        Swift.print(#function, #line)
+        // Swift.print(#function, #line)
 
         let storyboard : NSStoryboard = NSStoryboard(name: NSStoryboard.Name("Main"), bundle: nil)
         let sid : NSStoryboard.SceneIdentifier = NSStoryboard.SceneIdentifier("TranscodeSheet Controller")
@@ -393,6 +393,8 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         transcodeVC.beginSheetModal(for: self.window!, handler: {(response) in
             // Swift.print("(NSApplication.ModalResponse):", response.rawValue)
             //
+            guard response == NSApplication.ModalResponse.continue else { return }
+            
             DispatchQueue.main.async {[unowned self] in
                 self.transcoding = true
                 self.saveTo(self)
@@ -400,7 +402,7 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
             }
         })
         
-        Swift.print(#function, #line)
+        // Swift.print(#function, #line)
     }
     
     private func export(to url: URL, ofType typeName: String, preset: String) throws {

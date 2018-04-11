@@ -106,6 +106,9 @@ class TranscodeViewController: NSViewController {
                                    AVAssetExportPresetAppleM4V1080pHD]
             preset = name[preset3]
             fileType = .m4v
+        case 4:
+            preset = kCustomKey
+            fileType = .mov
         default:
             break
         }

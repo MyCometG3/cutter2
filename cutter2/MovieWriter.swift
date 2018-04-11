@@ -8,24 +8,24 @@
 
 import Cocoa
 import AVFoundation
+import VideoToolbox
 
-class MovieWriter: NSObject {
-    
-    private var internalMovie : AVMovie
+class MovieWriter: NSObject, SampleBufferChannelDelegate {
+    private var internalMovie : AVMutableMovie
     
     /// callback for NSDocument.unblockUserInteraction()
     public var unblockUserInteraction : (() -> Void)? = nil
     
+    /// Flag if writer is running
+    public private(set) var writerIsBusy : Bool = false
+    
     init(_ movie : AVMovie) {
-        internalMovie = movie
+        internalMovie = movie.mutableCopy() as! AVMutableMovie
     }
     
     /* ============================================ */
-    // MARK: - public method - exportSession methods
+    // MARK: - exportSession methods
     /* ============================================ */
-    
-    /// Flag if exportSession is running
-    public private(set) var exportSessionBusy : Bool = false
     
     /// ExportSession
     private var exportSession : AVAssetExportSession? = nil
@@ -65,11 +65,16 @@ class MovieWriter: NSObject {
     public func exportMovie(to url : URL, fileType type : AVFileType, presetName preset : String?) throws {
         // Swift.print(#function, #line, url.path, type)
         
-        guard exportSessionBusy == false else {
+        guard writerIsBusy == false else {
             var info : [String:Any] = [:]
             info[NSLocalizedDescriptionKey] = "Another exportSession is running."
             info[NSLocalizedFailureReasonErrorKey] = "Try after export session is completed."
             throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+        }
+        
+        writerIsBusy = true
+        defer {
+            writerIsBusy = false
         }
         
         // Prepare exportSession
@@ -103,7 +108,6 @@ class MovieWriter: NSObject {
         
         // Start ExportSession
         self.exportSession = exportSession
-        self.exportSessionBusy = true
         self.exportSessionStart = dateStart
         self.exportSessionEnd = nil
         self.exportSessionProgress = 0.0
@@ -137,7 +141,6 @@ class MovieWriter: NSObject {
             
             // cleanup
             self.exportSession = nil
-            self.exportSessionBusy = false
             self.exportSessionStart = dateStart
             self.exportSessionEnd = dateEnd
             self.exportSessionProgress = progress
@@ -186,7 +189,6 @@ class MovieWriter: NSObject {
     /// - Returns: Dictionary of progress info
     public func exportSessionProgressInfo() -> [String: Any] {
         var result : [String:Any] = [:]
-        //guard exportSessionBusy == true else { return result }
         
         if let dateStart = self.exportSessionStart {
             if let session = self.exportSession {
@@ -222,7 +224,455 @@ class MovieWriter: NSObject {
     }
     
     /* ============================================ */
-    // MARK: - public/private method - write action/methods
+    // MARK: - exportCustomMovie methods
+    /* ============================================ */
+    
+    public private(set) var finalSuccess : Bool = true
+    public private(set) var finalError : Error? = nil
+    public var updateProgress : ((Float) -> Void)? = nil
+    
+    private var queue : DispatchQueue? = nil
+    private var sampleBufferChannels : [SampleBufferChannel] = []
+    private var cancelled : Bool = false
+    private var param : [String:Any] = [:]
+    
+    fileprivate func prepareCopyChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter, _ mediaType : AVMediaType) {
+        for track in movie.tracks(withMediaType: mediaType) {
+            // source
+            let arOutputSetting : [String:Any]? = nil
+            let arOutput : AVAssetReaderOutput = AVAssetReaderTrackOutput(track: track, outputSettings: arOutputSetting)
+            ar.add(arOutput)
+            
+            // destination
+            let awInputSetting : [String:Any]? = nil
+            let awInput : AVAssetWriterInput = AVAssetWriterInput(mediaType: mediaType, outputSettings: awInputSetting)
+            if mediaType != .audio {
+                awInput.mediaTimeScale = track.naturalTimeScale
+            }
+            aw.add(awInput)
+            
+            // channel
+            let copySBC : SampleBufferChannel = SampleBufferChannel(readerOutput: arOutput,
+                                                                     writerInput: awInput,
+                                                                     trackID: track.trackID)
+            sampleBufferChannels += [copySBC]
+        }
+    }
+    
+    fileprivate func prepareOtherMediaChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
+        let numCopyOtherMedia = param[kCopyOtherMediaKey] as? NSNumber
+        let copyOtherMedia : Bool = numCopyOtherMedia?.boolValue ?? false
+        guard copyOtherMedia else { return }
+        
+        // Copy non-av media type (excludes muxed media)
+        prepareCopyChannels(movie, ar, aw, .text)
+        prepareCopyChannels(movie, ar, aw, .closedCaption)
+        prepareCopyChannels(movie, ar, aw, .subtitle)
+        prepareCopyChannels(movie, ar, aw, .timecode)
+        prepareCopyChannels(movie, ar, aw, .metadata)
+        if #available(OSX 10.13, *) {
+            prepareCopyChannels(movie, ar, aw, .depthData)
+        }
+    }
+    
+    fileprivate func prepareAudioChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
+        let numAudioEncode = param[kAudioEncodeKey] as? NSNumber
+        let audioEncode : Bool = numAudioEncode?.boolValue ?? true
+        if audioEncode == false {
+            prepareCopyChannels(movie, ar, aw, .audio)
+            return
+        }
+        
+        let fourcc = param[kAudioCodecKey] as! NSString
+        
+        let numAudioKbps = param[kAudioKbpsKey] as? NSNumber
+        let targetKbps : Float = numAudioKbps?.floatValue ?? 128
+        let targetBitRate : Int = Int(targetKbps * 1000)
+        
+        let numLPCMDepth = param[kLPCMDepthKey] as? NSNumber
+        let lpcmDepth : Int = numLPCMDepth?.intValue ?? 16
+        
+        for track in movie.tracks(withMediaType: .audio) {
+            // source
+            var arOutputSetting : [String:Any] = [:]
+            arOutputSetting[AVFormatIDKey] = kAudioFormatLinearPCM
+            let arOutput : AVAssetReaderOutput = AVAssetReaderTrackOutput(track: track, outputSettings: arOutputSetting)
+            ar.add(arOutput)
+            
+            // preseve original sampleRate, numChannel, and audioChannelLayout
+            var sampleRate = 48000
+            var numChannel = 2
+            var avacLayout : AVAudioChannelLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Stereo)!
+            
+            let descArray : [Any] = track.formatDescriptions
+            if descArray.count > 0 {
+                let desc : CMFormatDescription = descArray[0] as! CMFormatDescription
+                
+                let asbdPtr = CMAudioFormatDescriptionGetStreamBasicDescription(desc)
+                if let asbd = asbdPtr?.pointee {
+                    sampleRate = Int(asbd.mSampleRate)
+                    numChannel = Int(asbd.mChannelsPerFrame)
+                }
+                
+                var layoutSize : Int = 0
+                let aclPtr = CMAudioFormatDescriptionGetChannelLayout(desc, &layoutSize)
+                if let acl = aclPtr?.pointee {
+                    var audioChannelLayout : AudioChannelLayout = acl
+                    avacLayout = AVAudioChannelLayout(layout: &audioChannelLayout)
+                }
+            }
+            
+            //
+            let acDescCount : UInt32 = avacLayout.layout.pointee.mNumberChannelDescriptions
+            let acDescSize : Int = MemoryLayout<AudioChannelDescription>.size
+            let acLayoutSize : Int = MemoryLayout<AudioChannelLayout>.size + (Int(acDescCount) - 1) * acDescSize
+            var acl : AudioChannelLayout = avacLayout.layout.pointee
+            let aclData : Data = Data.init(bytes: &acl, count: acLayoutSize)
+            
+            // destination
+            var awInputSetting : [String:Any] = [:]
+            awInputSetting[AVFormatIDKey] = UTGetOSTypeFromString(fourcc)
+            if fourcc == "lpcm" {
+                awInputSetting[AVLinearPCMIsBigEndianKey] = false
+                awInputSetting[AVLinearPCMIsFloatKey] = false
+                awInputSetting[AVLinearPCMBitDepthKey] = lpcmDepth
+                awInputSetting[AVLinearPCMIsNonInterleaved] = false
+            } else {
+                awInputSetting[AVEncoderBitRateKey] = targetBitRate
+            }
+            awInputSetting[AVSampleRateKey] = sampleRate
+            awInputSetting[AVNumberOfChannelsKey] = numChannel
+            awInputSetting[AVChannelLayoutKey] = aclData
+            
+            let awInput : AVAssetWriterInput = AVAssetWriterInput(mediaType: .audio, outputSettings: awInputSetting)
+            // awInput.mediaTimeScale = track.naturalTimeScale // Audio track is unable to change
+            aw.add(awInput)
+            
+            // channel
+            let audioSBC : SampleBufferChannel = SampleBufferChannel(readerOutput: arOutput,
+                                                                     writerInput: awInput,
+                                                                     trackID: track.trackID)
+            sampleBufferChannels += [audioSBC]
+        } // for track in movie.tracks(withMediaType: .audio)
+    }
+    
+    fileprivate func prepareVideoChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
+        let numVideoEncode = param[kVideoEncodeKey] as? NSNumber
+        let videoEncode : Bool = numVideoEncode?.boolValue ?? true
+        if videoEncode == false {
+            prepareCopyChannels(movie, ar, aw, .video)
+            return
+        }
+        
+        let fourcc = param[kVideoCodecKey] as! NSString
+        
+        let numVideoKbps = param[kVideoKbpsKey] as? NSNumber
+        let targetKbps : Float = numVideoKbps?.floatValue ?? 2500
+        let targetBitRate : Int = Int(targetKbps*1000)
+        
+        let numCopyField = param[kCopyFieldKey] as? NSNumber
+        let copyField : Bool = numCopyField?.boolValue ?? false
+        
+        let numCopyNCLC = param[kCopyNCLCKey] as? NSNumber
+        let copyNCLC : Bool = numCopyNCLC?.boolValue ?? false
+        
+        for track in movie.tracks(withMediaType: .video) {
+            // source
+            var arOutputSetting : [String:Any] = [:]
+            arOutputSetting[String(kCVPixelBufferPixelFormatTypeKey)] = kCVPixelFormatType_422YpCbCr8_yuvs
+            let arOutput : AVAssetReaderOutput = AVAssetReaderTrackOutput(track: track, outputSettings: arOutputSetting)
+            ar.add(arOutput)
+            
+            //
+            var compressionProperties : NSDictionary? = nil
+            if ["ap4h","apch","apcn","apcs","apco"].contains(fourcc) {
+                // ProRes family
+            } else {
+                compressionProperties = [AVVideoAverageBitRateKey:targetBitRate]
+            }
+            
+            var trackDimensions = track.naturalSize
+            let descArray : [Any] = track.formatDescriptions
+            if descArray.count > 0 {
+                let desc : CMFormatDescription = descArray[0] as! CMFormatDescription
+                trackDimensions = CMVideoFormatDescriptionGetPresentationDimensions(desc, false, false)
+                
+                var cleanAperture : NSDictionary? = nil
+                var pixelAspectRatio : NSDictionary? = nil
+                var nclc : NSDictionary? = nil
+                var fieldCount : NSNumber? = nil
+                var fieldDetail : NSString? = nil
+                
+                let extCA : CFPropertyList? =
+                    CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_CleanAperture)
+                if let extCA = extCA {
+                    let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as! NSNumber
+                    let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as! NSNumber
+                    let wOffset = extCA[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] as! NSNumber
+                    let hOffset = extCA[kCMFormatDescriptionKey_CleanApertureVerticalOffset] as! NSNumber
+                    
+                    let dict : NSMutableDictionary = NSMutableDictionary()
+                    dict[AVVideoCleanApertureWidthKey] = width
+                    dict[AVVideoCleanApertureHeightKey] = height
+                    dict[AVVideoCleanApertureHorizontalOffsetKey] = wOffset
+                    dict[AVVideoCleanApertureVerticalOffsetKey] = hOffset
+                    
+                    cleanAperture = dict
+                }
+                
+                let extPA : CFPropertyList? =
+                    CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_PixelAspectRatio)
+                if let extPA = extPA {
+                    let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as! NSNumber
+                    let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as! NSNumber
+                    
+                    let dict : NSMutableDictionary = NSMutableDictionary()
+                    dict[AVVideoPixelAspectRatioHorizontalSpacingKey] = hSpacing
+                    dict[AVVideoPixelAspectRatioVerticalSpacingKey] = vSpacing
+                    
+                    pixelAspectRatio = dict
+                }
+                
+                if copyNCLC {
+                    let extCP : CFPropertyList? =
+                        CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_ColorPrimaries)
+                    let extTF : CFPropertyList? =
+                        CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_TransferFunction)
+                    let extMX : CFPropertyList? =
+                        CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_YCbCrMatrix)
+                    if let extCP  = extCP, let extTF = extTF, let extMX = extMX {
+                        let colorPrimaries = extCP as! NSString
+                        let transferFunction = extTF as! NSString
+                        let ycbcrMatrix = extMX as! NSString
+                        
+                        let dict : NSMutableDictionary = NSMutableDictionary()
+                        dict[AVVideoColorPrimariesKey] = colorPrimaries
+                        dict[AVVideoTransferFunctionKey] = transferFunction
+                        dict[AVVideoYCbCrMatrixKey] = ycbcrMatrix
+                        
+                        nclc = dict
+                    }
+                }
+                
+                if copyField {
+                    let extFC : CFPropertyList? =
+                        CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_FieldCount)
+                    let extFD : CFPropertyList? =
+                        CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_FieldDetail)
+                    if let extFC = extFC, let extFD = extFD {
+                        fieldCount = (extFC as! NSNumber)
+                        fieldDetail = (extFD as! NSString)
+                    }
+                }
+                
+                if cleanAperture != nil || pixelAspectRatio != nil || nclc != nil || fieldCount != nil || fieldDetail != nil {
+                    let dict : NSMutableDictionary = NSMutableDictionary()
+                    
+                    if let cleanAperture = cleanAperture {
+                        dict[AVVideoCleanApertureKey] = cleanAperture
+                    }
+                    if let pixelAspectRatio = pixelAspectRatio {
+                        dict[AVVideoPixelAspectRatioKey] = pixelAspectRatio
+                    }
+                    if copyNCLC, let nclc = nclc {
+                        dict[AVVideoColorPropertiesKey] = nclc
+                    }
+                    if copyField, let fieldCount = fieldCount, let fieldDetail = fieldDetail {
+                        dict[kVTCompressionPropertyKey_FieldCount] = fieldCount
+                        dict[kVTCompressionPropertyKey_FieldDetail] = fieldDetail
+                    }
+                    
+                    if let compressionProperties = compressionProperties {
+                        dict.addEntries(from: compressionProperties as! [AnyHashable:Any])
+                    }
+                    compressionProperties = dict
+                }
+            }
+            
+            // destination
+            var awInputSetting : [String:Any] = [:]
+            awInputSetting[AVVideoCodecKey] = fourcc
+            awInputSetting[AVVideoWidthKey] = trackDimensions.width
+            awInputSetting[AVVideoHeightKey] = trackDimensions.height
+            if let compressionProperties = compressionProperties {
+                awInputSetting[AVVideoCompressionPropertiesKey] = compressionProperties
+            }
+            
+            let awInput : AVAssetWriterInput = AVAssetWriterInput(mediaType: .video, outputSettings: awInputSetting)
+            awInput.mediaTimeScale = track.naturalTimeScale
+            aw.add(awInput)
+            
+            // channel
+            let videoSBC : SampleBufferChannel = SampleBufferChannel(readerOutput: arOutput,
+                                                                     writerInput: awInput,
+                                                                     trackID: track.trackID)
+            sampleBufferChannels += [videoSBC]
+        } // for track in movie.tracks(withMediaType: .video)
+    }
+    
+    public func exportCustomMovie(to url : URL, fileType type : AVFileType, settings param : [String:Any]) throws {
+        // Swift.print(#function, #line, url.path, type)
+
+        guard writerIsBusy == false else {
+            var info : [String:Any] = [:]
+            info[NSLocalizedDescriptionKey] = "Another exportSession is running."
+            info[NSLocalizedFailureReasonErrorKey] = "Try after export session is completed."
+            throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+        }
+        
+        writerIsBusy = true
+        defer {
+            writerIsBusy = false
+        }
+        
+        //
+        self.param = param
+        self.queue = DispatchQueue(label: "exportCustomMovie")
+        self.sampleBufferChannels = []
+        self.cancelled = false
+        guard let queue = self.queue else { return }
+
+        //
+        let movie : AVMutableMovie = internalMovie
+        var assetReader : AVAssetReader? = nil
+        var assetWriter : AVAssetWriter? = nil
+        do {
+            assetReader = try AVAssetReader(asset: movie)
+            assetWriter = try AVAssetWriter(url: url, fileType: type)
+        } catch {
+            self.finalSuccess = false
+            self.finalError = error
+            return
+        }
+        guard let ar = assetReader, let aw = assetWriter else {
+            var info : [String:Any] = [:]
+            info[NSLocalizedDescriptionKey] = "Internal error"
+            info[NSLocalizedFailureReasonErrorKey] = "Either AVAssetReader or AVAssetWriter is not available."
+            self.finalError = NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+            self.finalSuccess = false
+            return
+        }
+
+        // setup aw parameters here
+        aw.movieTimeScale = movie.timescale
+        aw.movieFragmentInterval = kCMTimeInvalid
+        aw.shouldOptimizeForNetworkUse = true
+        
+        //
+        prepareAudioChannels(movie, ar, aw)
+        prepareVideoChannels(movie, ar, aw)
+        prepareOtherMediaChannels(movie, ar, aw)
+        
+        //
+        let readyReader : Bool = ar.startReading()
+        let readyWriter : Bool = aw.startWriting()
+        guard readyReader && readyWriter else {
+            let error = (readyReader == false) ? ar.error : aw.error
+            ar.cancelReading()
+            aw.cancelWriting()
+            self.rwDidFinish(result: false, error: error)
+            self.finalSuccess = false
+            self.finalError = error
+            return
+        }
+
+        // Start writing session
+        let startTime : CMTime = movie.range.start
+        let endTime : CMTime = movie.range.end
+        aw.startSession(atSourceTime: startTime)
+        
+        // Allow sheet to show
+        self.unblockUserInteraction?()
+
+        //
+        let dg : DispatchGroup = DispatchGroup()
+        for sbc in sampleBufferChannels {
+            dg.enter()
+            let handler : () -> Void = { dg.leave() }
+            sbc.start(with: self, completionHandler: handler)
+        }
+        
+        let waitSem  = DispatchSemaphore(value: 0)
+        dg.notify(queue: queue, execute: {[unowned self, ar, aw] in
+            if self.cancelled == false { // either completed or failed
+                let arFailed = (ar.status == .failed)
+                if arFailed {
+                    self.finalSuccess = false
+                    self.finalError = ar.error
+                } else {
+                    // Finish writing session
+                    aw.endSession(atSourceTime: endTime)
+                    
+                    let sem = DispatchSemaphore(value: 0)
+                    aw.finishWriting(completionHandler: {
+                        let awFailed = (aw.status == .failed)
+                        if awFailed {
+                            self.finalSuccess = false
+                            self.finalError = aw.error
+                        }
+                        sem.signal()
+                    })
+                    sem.wait() // await completion
+                }
+            }
+            
+            ar.cancelReading()
+            aw.cancelWriting()
+            self.rwDidFinish(result: self.finalSuccess, error: self.finalError)
+            waitSem.signal()
+        })
+        waitSem.wait()
+    }
+    
+    public func cancelCustomMovie(_ sender : Any) {
+        queue?.async {
+            for sbc in self.sampleBufferChannels {
+                sbc.cancel()
+            }
+            self.cancelled = true
+        }
+    }
+    
+    private func rwDidFinish(result success : Bool, error : Error?) {
+        // run some ui related tasks in main queue
+        DispatchQueue.main.async {
+            // do something for gui
+        }
+    }
+    
+    func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer) {
+        if let updateProgress = updateProgress {
+            //Swift.print("Progress:", progress)
+            let progress : Float = Float(calcProgress(of: buffer))
+            updateProgress(progress)
+        }
+        
+//        if let imageBuffer : CVImageBuffer = CMSampleBufferGetImageBuffer(buffer) {
+//            if let pixelBuffer : CVPixelBuffer = imageBuffer as? CVPixelBuffer {
+//                CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags.readOnly)
+//                // TODO: Pixel processing?
+//                CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags.readOnly)
+//            }
+//        }
+        
+//        DispatchQueue.main.async {
+//            // Any GUI related processing - update GUI etc. here
+//        }
+    }
+    
+    private func calcProgress(of sampleBuffer : CMSampleBuffer) -> Float64 {
+        var pts : CMTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+        let dur : CMTime = CMSampleBufferGetDuration(sampleBuffer)
+        if CMTIME_IS_NUMERIC(dur) {
+            pts = pts + dur
+        }
+        let ptsSec : Float64 = CMTimeGetSeconds(pts)
+        let lenSec : Float64 = CMTimeGetSeconds(internalMovie.range.duration)
+        return (lenSec != 0.0) ? (ptsSec/lenSec) : 0.0
+    }
+    
+    /* ============================================ */
+    // MARK: - writeMovie methods
     /* ============================================ */
     
     /// Write internalMovie to destination url (as self-contained or reference movie)
@@ -233,7 +683,8 @@ class MovieWriter: NSObject {
     ///   - selfContained: Other than AVFileType.mov should be true.
     /// - Throws: Misc Error while exporting AVMovie
     public func writeMovie(to url : URL, fileType type : AVFileType, copySampleData selfContained : Bool) throws {
-        // Swift.print(#function, #line, url.lastPathComponent, type.rawValue, selfContained ? "selfContained movie" : "reference movie")
+        // Swift.print(#function, #line, url.lastPathComponent, type.rawValue,
+        //     selfContained ? "selfContained movie" : "reference movie")
         
         if type == .mov {
             if selfContained {
@@ -265,6 +716,18 @@ class MovieWriter: NSObject {
     public func flattenMovie(to url : URL, with mode : FlattenMode) throws {
         // Swift.print(#function, #line, mode.hashValue, url.path)
         
+        guard writerIsBusy == false else {
+            var info : [String:Any] = [:]
+            info[NSLocalizedDescriptionKey] = "Another exportSession is running."
+            info[NSLocalizedFailureReasonErrorKey] = "Try after export session is completed."
+            throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+        }
+        
+        writerIsBusy = true
+        defer {
+            writerIsBusy = false
+        }
+
         var selfContained : Bool = false
         var option : AVMovieWritingOptions = .truncateDestinationToMovieHeaderOnly
         var before : Notification.Name = .movieWillWriteHeaderOnly

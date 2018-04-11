@@ -10,6 +10,19 @@ import Cocoa
 import AVKit
 import AVFoundation
 
+let kCustomKey = "Custom"
+let kLPCMDepthKey = "lpcmDepth"
+let kAudioKbpsKey = "audioKbps"
+let kVideoKbpsKey = "videoKbps"
+let kCopyFieldKey = "copyField"
+let kCopyNCLCKey = "copyNCLC"
+let kCopyOtherMediaKey = "copyOtherMedia"
+
+let kVideoEncodeKey = "videoEncode"
+let kAudioEncodeKey = "audioEncode"
+let kVideoCodecKey = "videoCodec"
+let kAudioCodecKey = "audioCodec"
+
 class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     /// Strong reference to MovieMutator
     public var movieMutator : MovieMutator? = nil
@@ -197,7 +210,20 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
             let transcodePreset : String? = UserDefaults.standard.string(forKey: "transcodePreset")
             guard let preset = transcodePreset else { return }
             do {
-                try export(to: url, ofType: typeName, preset: preset)
+                if preset == kCustomKey {
+                    try exportCustom(to: url, ofType: typeName)
+                } else {
+                    try export(to: url, ofType: typeName, preset: preset)
+                }
+            } catch {
+                // Don't use NSDocument default error handling
+                DispatchQueue.main.async {
+                    let alert = NSAlert(error: error)
+                    if let reason = (error as NSError).localizedFailureReason {
+                        alert.informativeText = reason
+                    }
+                    alert.beginSheetModal(for: self.window!, completionHandler: nil)
+                }
             }
             return
         }
@@ -435,6 +461,66 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         //Swift.print("##### EXPORT FINISHED #####")
     }
     
+    private func exportCustom(to url: URL, ofType typeName: String) throws {
+        // Swift.print(#function, #line, url.lastPathComponent, typeName)
+        guard let mutator = self.movieMutator else { return }
+        
+        let fileType : AVFileType = AVFileType.init(rawValue: typeName)
+        
+        // Check UTI for AVFileType
+        if AVMovie.movieTypes().contains(fileType) == false {
+            var info : [String:Any] = [:]
+            info[NSLocalizedDescriptionKey] = "Incompatible file type detected."
+            info[NSDetailedErrorsKey] = "(UTI:" + typeName + ")"
+            throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
+        }
+        
+        //Swift.print("##### EXPORT STARTED #####")
+        showBusySheet("Exporting...", "Please hold on minute(s)...")
+        mutator.unblockUserInteraction = { self.unblockUserInteraction() }
+        defer {
+            mutator.unblockUserInteraction = nil
+            hideBusySheet()
+        }
+        mutator.updateProgress = {(progress) in self.updateProgress(progress) }
+        defer {
+            mutator.updateProgress = nil
+        }
+        
+        do {
+            let videoID : [String] = ["avc1","hvc1","apcn","apcs","apco"]
+            let audioID : [String] = ["aac ","lpcm","lpcm","lpcm"]
+            let lpcmBPC : [Int] = [0, 16, 24, 32]
+            
+            // Export as specified file type using custom setting params
+            let defaults = UserDefaults.standard
+            let audioRate = defaults.integer(forKey: kAudioKbpsKey)
+            let videoRate = defaults.integer(forKey: kVideoKbpsKey)
+            let copyField = defaults.bool(forKey: kCopyFieldKey)
+            let copyOtherMedia = defaults.bool(forKey: kCopyOtherMediaKey)
+            let videoEncode = defaults.bool(forKey: kVideoEncodeKey)
+            let audioEncode = defaults.bool(forKey: kAudioEncodeKey)
+            let videoCodec = videoID[defaults.integer(forKey: kVideoCodecKey)]
+            let audioCodec = audioID[defaults.integer(forKey: kAudioCodecKey)]
+            let lpcmDepth = lpcmBPC[defaults.integer(forKey: kAudioCodecKey)]
+            
+            var param : [String:Any] = [:]
+            param[kAudioKbpsKey] = audioRate
+            param[kVideoKbpsKey] = videoRate
+            param[kCopyFieldKey] = copyField
+            param[kCopyOtherMediaKey] = copyOtherMedia
+            param[kVideoEncodeKey] = videoEncode
+            param[kAudioEncodeKey] = audioEncode
+            param[kVideoCodecKey] = videoCodec
+            param[kAudioCodecKey] = audioCodec
+            param[kLPCMDepthKey] = lpcmDepth
+            
+            try mutator.exportCustomMovie(to: url, fileType: fileType, settings: param)
+        }
+        
+        //Swift.print("##### EXPORT FINISHED #####")
+    }
+    
     /* ============================================ */
     // MARK : - AccessoryViewDelegate protocol
     /* ============================================ */
@@ -449,6 +535,14 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
     /* ============================================ */
     
     private var alert : NSAlert? = nil
+    
+    /// Update progress
+    public func updateProgress(_ progress : Float) {
+        guard let alert = self.alert else { return }
+        DispatchQueue.main.async {
+            alert.informativeText = String("Please hold on minute(s)... : \(Int(progress * 100)) %")
+        }
+    }
     
     /// Show busy modalSheet
     private func showBusySheet(_ message : String?, _ info : String?) {

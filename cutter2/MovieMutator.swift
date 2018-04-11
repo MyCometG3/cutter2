@@ -96,19 +96,9 @@ class MovieMutator: NSObject {
         return formatter
     }()
     
-    private var movieWriter : MovieWriter? = nil
-    
-    public var unblockUserInteraction : (() -> Void)? {
-        get {
-            guard let movieWriter = movieWriter else { return nil }
-            return movieWriter.unblockUserInteraction
-        }
-        set {
-            guard let movieWriter = movieWriter else { return }
-            movieWriter.unblockUserInteraction = newValue
-        }
-    }
-    
+    public var unblockUserInteraction : (() -> Void)? = nil
+    public var updateProgress : ((Float) -> Void)? = nil
+
     /* ============================================ */
     // MARK: - private method - Notification
     /* ============================================ */
@@ -1046,21 +1036,27 @@ class MovieMutator: NSObject {
     }
     
     /* ============================================ */
-    // MARK: - public method - exportSession methods
+    // MARK: - public method - export/write methods
     /* ============================================ */
     
     public func exportMovie(to url : URL, fileType type : AVFileType, presetName preset : String?) throws {
-        self.movieWriter = MovieWriter(internalMovie)
-        try movieWriter!.exportMovie(to: url, fileType: type, presetName: preset)
+        let movieWriter = MovieWriter(internalMovie)
+        movieWriter.unblockUserInteraction = self.unblockUserInteraction
+        movieWriter.updateProgress = self.updateProgress
+        try movieWriter.exportMovie(to: url, fileType: type, presetName: preset)
+    }
+
+    public func exportCustomMovie(to url : URL, fileType type : AVFileType, settings param : [String:Any]) throws {
+        let movieWriter = MovieWriter(internalMovie)
+        movieWriter.unblockUserInteraction = self.unblockUserInteraction
+        movieWriter.updateProgress = self.updateProgress
+        try movieWriter.exportCustomMovie(to: url, fileType: type, settings: param)
     }
     
-    /* ============================================ */
-    // MARK: - public/private method - write action/methods
-    /* ============================================ */
-    
     public func writeMovie(to url : URL, fileType type : AVFileType, copySampleData selfContained : Bool) throws {
-        self.movieWriter = MovieWriter(internalMovie)
-        try movieWriter!.writeMovie(to: url, fileType: type, copySampleData: selfContained)
+        let movieWriter = MovieWriter(internalMovie)
+        movieWriter.unblockUserInteraction = self.unblockUserInteraction
+        try movieWriter.writeMovie(to: url, fileType: type, copySampleData: selfContained)
     }
     
 }

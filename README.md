@@ -4,7 +4,6 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 
 - __Requirement__: MacOS X 10.11 or later.
 - __Framework__: AVFoundation (macOS native)
-- __Restriction__: Transcoding uses system native preset only.
 - __Restriction__: No autosave support.
 
 #### Basic feature

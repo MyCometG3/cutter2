@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		161D7BA2208C278500647FD3 /* CAPARViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161D7BA1208C278500647FD3 /* CAPARViewController.swift */; };
 		162ED4B1207A2F4E00DFAD7E /* MovieWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */; };
 		162ED4B3207A3F2A00DFAD7E /* SampleBufferChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */; };
 		168DAE1F204A3BBC00C1DEFA /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168DAE1E204A3BBC00C1DEFA /* Window.swift */; };
@@ -25,6 +26,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		161D7BA1208C278500647FD3 /* CAPARViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CAPARViewController.swift; sourceTree = "<group>"; };
 		162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieWriter.swift; sourceTree = "<group>"; };
 		162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleBufferChannel.swift; sourceTree = "<group>"; };
 		168DAE1E204A3BBC00C1DEFA /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
@@ -86,6 +88,7 @@
 				16EE2400200AFE3300980467 /* MyPlayerView.swift */,
 				16BCA6C2204B715900D4B2A5 /* AccessoryViewController.swift */,
 				16E189FE207876EE00A68696 /* TranscodeViewController.swift */,
+				161D7BA1208C278500647FD3 /* CAPARViewController.swift */,
 				16EE23F4200AF2C800980467 /* Assets.xcassets */,
 				16EE23F6200AF2C800980467 /* Main.storyboard */,
 				16EE23F9200AF2C800980467 /* Info.plist */,
@@ -123,7 +126,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0920;
-				LastUpgradeCheck = 0920;
+				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = MyCometG3;
 				TargetAttributes = {
 					16EE23EA200AF2C800980467 = {
@@ -176,6 +179,7 @@
 				162ED4B1207A2F4E00DFAD7E /* MovieWriter.swift in Sources */,
 				162ED4B3207A3F2A00DFAD7E /* SampleBufferChannel.swift in Sources */,
 				16C773CA2014348500033B74 /* TimelineView.swift in Sources */,
+				161D7BA2208C278500647FD3 /* CAPARViewController.swift in Sources */,
 				16E189FF207876EE00A68696 /* TranscodeViewController.swift in Sources */,
 				16BCA6C3204B715900D4B2A5 /* AccessoryViewController.swift in Sources */,
 				16EE23EF200AF2C800980467 /* AppDelegate.swift in Sources */,
@@ -216,6 +220,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -223,6 +228,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -273,6 +279,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -280,6 +287,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;

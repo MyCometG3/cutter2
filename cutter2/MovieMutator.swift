@@ -45,6 +45,11 @@ public struct boxSize {
 private let clipPBoardTypeRaw : String = "com.mycometg3.cutter.MovieMutator"
 private let clipPBoardType : NSPasteboard.PasteboardType = NSPasteboard.PasteboardType(rawValue: clipPBoardTypeRaw)
 
+let clapSizeKey : String = "clapSize" // NSSize
+let clapOffsetKey : String = "clapOffset" // NSPoint
+let paspRatioKey : String = "paspRatio" // NSSize
+let dimensionsKey : String = "dimensions" // NSSize
+
 /// Sample Presentation Info.
 ///
 /// NOTE: At final sample of segment, end position could be after end of segment.
@@ -1033,6 +1038,185 @@ class MovieMutator: NSObject {
         // perform delete
         self.doRemove(range, time)
         refreshMovie()
+    }
+    
+    /* ============================================ */
+    // MARK: - public method - clap/pasp
+    /* ============================================ */
+    
+    //
+    private func doReplace(_ movie: AVMutableMovie, _ range: CMTimeRange, _ time: CMTime) {
+        assert( validateRange(range, false), #function )
+        
+        // perform replacement
+        do {
+            //Swift.print(ts(), #function, #line)
+            internalMovie = movie
+            //Swift.print(ts(), #function, #line)
+            
+            // Update Marker
+            insertionTime = (time < movie.range.end) ? time : movie.range.end
+            selectedTimeRange = CMTimeRangeGetIntersection(range, movie.range)
+            internalMovieDidChange(insertionTime, selectedTimeRange)
+        }
+    }
+    
+    //
+    private func undoReplace(_ data: Data, _ range: CMTimeRange, _ time: CMTime) {
+        guard reloadAndNotify(from: data, range: range, time: time) else {
+            assert(false, #function) //
+            NSSound.beep(); return
+        }
+    }
+    
+    //
+    public func updateFormat(_ movie: AVMutableMovie, using undoManager : UndoManager) {
+        // Swift.print(#function, #line)
+        
+        let time = self.insertionTime
+        let range = self.selectedTimeRange
+        
+        if !validateRange(range, false) { NSSound.beep(); return; }
+        
+        guard let data = movieData() else { NSSound.beep(); return; }
+        
+        // register undo record
+        let undoPasteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in
+            // register redo replace
+            let redoPasteHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in
+                me2.updateFormat(movie, using: undoManager)
+            }
+            undoManager.registerUndo(withTarget: me1, handler: redoPasteHandler)
+            undoManager.setActionName("Update format")
+            
+            // perform undo replace
+            me1.undoReplace(data, range, time)
+        }
+        undoManager.registerUndo(withTarget: self, handler: undoPasteHandler)
+        undoManager.setActionName("Update format")
+        
+        // perform replacement
+        self.doReplace(movie, range, time)
+        refreshMovie()
+    }
+    
+    //
+    public func clappaspDictionary() -> [AnyHashable : Any]? {
+        var dict : [AnyHashable : Any] = [:]
+        
+        let vTracks : [AVMovieTrack] = internalMovie.tracks(withMediaType: .video)
+        guard vTracks.count > 0 else { NSSound.beep(); return nil }
+        
+        let formats : [Any] = (vTracks[0]).formatDescriptions
+        let format : CMVideoFormatDescription? = (formats[0] as! CMVideoFormatDescription)
+        guard let desc = format else { NSSound.beep(); return nil }
+        
+        dict[dimensionsKey] =
+            CMVideoFormatDescriptionGetPresentationDimensions(desc, false, false)
+        
+        let extCA : CFPropertyList? =
+            CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_CleanAperture)
+        if let extCA = extCA {
+            let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as! NSNumber
+            let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as! NSNumber
+            let wOffset = extCA[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] as! NSNumber
+            let hOffset = extCA[kCMFormatDescriptionKey_CleanApertureVerticalOffset] as! NSNumber
+            
+            dict[clapSizeKey] = NSSize(width: width.intValue, height: height.intValue)
+            dict[clapOffsetKey] = NSPoint(x: wOffset.intValue, y: hOffset.intValue)
+        } else {
+            dict[clapSizeKey] = dict[dimensionsKey]
+            dict[clapOffsetKey] = NSZeroPoint
+        }
+        
+        let extPA : CFPropertyList? =
+            CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_PixelAspectRatio)
+        if let extPA = extPA {
+            let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as! NSNumber
+            let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as! NSNumber
+            
+            dict[paspRatioKey] = NSSize(width: hSpacing.doubleValue, height: vSpacing.doubleValue)
+        } else {
+            dict[paspRatioKey] = NSSize(width: 1.0, height: 1.0)
+        }
+        
+        return dict
+    }
+    
+    //
+    public func applyClapPasp(_ dict : [AnyHashable:Any], using undoManager : UndoManager) {
+        guard #available(OSX 10.13, *) else { return }
+        
+        guard let clapSize = dict[clapSizeKey] as? NSSize else { return }
+        guard let clapOffset = dict[clapOffsetKey] as? NSPoint else { return }
+        guard let paspRatio = dict[paspRatioKey] as? NSSize else { return }
+        guard let dimensions = dict[dimensionsKey] as? NSSize else { return }
+        
+        var count : Int = 0
+        
+        let movie : AVMutableMovie = internalMovie.mutableCopy() as! AVMutableMovie
+        
+        let vTracks : [AVMutableMovieTrack] = movie.tracks(withMediaType: .video)
+        for track in vTracks {
+            if track.encodedPixelsDimensions != dimensions {
+                Swift.print(#function, #line, track.trackID, track.encodedPixelsDimensions)
+                continue
+            }
+            
+            let formats = (vTracks[0]).formatDescriptions as! [CMFormatDescription]
+            for format in formats {
+                // Prepare new extensionDictionary
+                guard let cfDict = CMFormatDescriptionGetExtensions(format) else { continue }
+                let dict : NSMutableDictionary = NSMutableDictionary(dictionary: cfDict)
+                
+                // Replace CleanAperture if available
+                if clapSize == NSZeroSize {
+                    dict[kCMFormatDescriptionExtension_CleanAperture] = nil
+                } else {
+                    let clap : NSMutableDictionary = [:]
+                    clap[kCMFormatDescriptionKey_CleanApertureWidth] = clapSize.width
+                    clap[kCMFormatDescriptionKey_CleanApertureHeight] = clapSize.height
+                    clap[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] = clapOffset.x
+                    clap[kCMFormatDescriptionKey_CleanApertureVerticalOffset] = clapOffset.y
+                    dict[kCMFormatDescriptionExtension_CleanAperture] = clap
+                }
+                
+                // Replace PixelAspectRatio if available
+                if paspRatio == NSZeroSize {
+                    dict[kCMFormatDescriptionExtension_PixelAspectRatio] = nil
+                } else {
+                    let pasp : NSMutableDictionary = [:]
+                    pasp[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] = paspRatio.width
+                    pasp[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] = paspRatio.height
+                    dict[kCMFormatDescriptionExtension_PixelAspectRatio] = pasp
+                }
+                
+                // Create New formatDescription as replacement
+                var newFormat : CMVideoFormatDescription? = nil
+                let codecType = CMFormatDescriptionGetMediaSubType(format) as CMVideoCodecType
+                let dimensions = CMVideoFormatDescriptionGetDimensions(format)
+                let result = CMVideoFormatDescriptionCreate(kCFAllocatorDefault,
+                                                               codecType,
+                                                               dimensions.width,
+                                                               dimensions.height,
+                                                               dict,
+                                                               &newFormat)
+                if result == noErr, let newFormat = newFormat {
+                    track.replaceFormatDescription(format, with: newFormat)
+                    count += 1
+                } else {
+                    //
+                }
+            }
+        }
+
+        if count > 0 {
+            // Replace movie object with undo record
+            self.updateFormat(movie, using: undoManager)
+            refreshMovie()
+        } else {
+            // TODO:
+        }
     }
     
     /* ============================================ */

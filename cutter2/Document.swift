@@ -405,7 +405,6 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
     
     @IBAction func transcode(_ sender: Any?) {
         // Swift.print(#function, #line)
-
         let storyboard : NSStoryboard = NSStoryboard(name: NSStoryboard.Name("Main"), bundle: nil)
         let sid : NSStoryboard.SceneIdentifier = NSStoryboard.SceneIdentifier("TranscodeSheet Controller")
         let transcodeWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController
@@ -415,7 +414,7 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         contVC.loadView()
         
         guard let transcodeVC = contVC as? TranscodeViewController else { return }
-
+        
         transcodeVC.beginSheetModal(for: self.window!, handler: {(response) in
             // Swift.print("(NSApplication.ModalResponse):", response.rawValue)
             //
@@ -528,6 +527,37 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
     public func didUpdateFileType(_ fileType: AVFileType, selfContained: Bool) {
         guard let savePanel = self.savePanel else { return }
         savePanel.allowedFileTypes = [fileType.rawValue]
+    }
+    
+    /* ============================================ */
+    // MARK: - modify clap/pasp
+    /* ============================================ */
+    
+    @IBAction func modifyClapPasp(_ sender : Any?) {
+         Swift.print(#function, #line)
+        
+        guard let mutator = self.movieMutator else { return }
+
+        let storyboard : NSStoryboard = NSStoryboard(name: NSStoryboard.Name("Main"), bundle: nil)
+        let sid : NSStoryboard.SceneIdentifier = NSStoryboard.SceneIdentifier("CAPARSheet Controller")
+        let caparWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController
+        caparWC.loadWindow()
+        
+        guard let contVC = caparWC.contentViewController else { return }
+        contVC.loadView()
+        
+        guard let caparVC = contVC as? CAPARViewController else { return }
+        
+        guard let dict : [AnyHashable:Any] = mutator.clappaspDictionary() else { return }
+        guard caparVC.applySource(dict) else { return }
+        
+        caparVC.beginSheetModal(for: self.window!, handler: {(response) in
+            // Swift.print(#function, #line)
+            guard response == .continue else { return }
+            
+            let result : [AnyHashable:Any] = caparVC.resultContent
+            mutator.applyClapPasp(result, using: self.undoManager!)
+        })
     }
     
     /* ============================================ */

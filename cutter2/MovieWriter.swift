@@ -391,15 +391,16 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
                 compressionProperties = [AVVideoAverageBitRateKey:targetBitRate]
             }
             
+            var cleanAperture : NSDictionary? = nil
+            var pixelAspectRatio : NSDictionary? = nil
+            var nclc : NSDictionary? = nil
+            
             var trackDimensions = track.naturalSize
             let descArray : [Any] = track.formatDescriptions
             if descArray.count > 0 {
                 let desc : CMFormatDescription = descArray[0] as! CMFormatDescription
                 trackDimensions = CMVideoFormatDescriptionGetPresentationDimensions(desc, false, false)
                 
-                var cleanAperture : NSDictionary? = nil
-                var pixelAspectRatio : NSDictionary? = nil
-                var nclc : NSDictionary? = nil
                 var fieldCount : NSNumber? = nil
                 var fieldDetail : NSString? = nil
                 
@@ -465,18 +466,9 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
                     }
                 }
                 
-                if cleanAperture != nil || pixelAspectRatio != nil || nclc != nil || fieldCount != nil || fieldDetail != nil {
+                if fieldCount != nil || fieldDetail != nil {
                     let dict : NSMutableDictionary = NSMutableDictionary()
                     
-                    if let cleanAperture = cleanAperture {
-                        dict[AVVideoCleanApertureKey] = cleanAperture
-                    }
-                    if let pixelAspectRatio = pixelAspectRatio {
-                        dict[AVVideoPixelAspectRatioKey] = pixelAspectRatio
-                    }
-                    if copyNCLC, let nclc = nclc {
-                        dict[AVVideoColorPropertiesKey] = nclc
-                    }
                     if copyField, let fieldCount = fieldCount, let fieldDetail = fieldDetail {
                         dict[kVTCompressionPropertyKey_FieldCount] = fieldCount
                         dict[kVTCompressionPropertyKey_FieldDetail] = fieldDetail
@@ -496,6 +488,16 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             awInputSetting[AVVideoHeightKey] = trackDimensions.height
             if let compressionProperties = compressionProperties {
                 awInputSetting[AVVideoCompressionPropertiesKey] = compressionProperties
+            }
+            
+            if let cleanAperture = cleanAperture {
+                awInputSetting[AVVideoCleanApertureKey] = cleanAperture
+            }
+            if let pixelAspectRatio = pixelAspectRatio {
+                awInputSetting[AVVideoPixelAspectRatioKey] = pixelAspectRatio
+            }
+            if copyNCLC, let nclc = nclc {
+                awInputSetting[AVVideoColorPropertiesKey] = nclc
             }
             
             let awInput : AVAssetWriterInput = AVAssetWriterInput(mediaType: .video, outputSettings: awInputSetting)

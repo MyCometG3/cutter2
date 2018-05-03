@@ -825,7 +825,7 @@ Gw
                                 <font key="font" metaFont="system"/>
                                 <tabViewItems>
                                     <tabViewItem label="0" identifier="" id="45l-T1-b0x">
-                                        <view key="view" ambiguous="YES" id="HjG-ir-1ZU">
+                                        <view key="view" id="HjG-ir-1ZU">
                                             <rect key="frame" x="10" y="7" width="303" height="229"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -1050,7 +1050,7 @@ Gw
                                         </view>
                                     </tabViewItem>
                                     <tabViewItem label="4" identifier="" id="5jA-k0-Rfw">
-                                        <view key="view" id="ogd-yp-Hq7">
+                                        <view key="view" ambiguous="YES" id="ogd-yp-Hq7">
                                             <rect key="frame" x="10" y="7" width="303" height="229"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -1187,7 +1187,7 @@ Gw
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <subviews>
                                                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="izx-7w-vTU">
-                                                                <rect key="frame" x="17" y="31" width="184" height="20"/>
+                                                                <rect key="frame" x="17" y="11" width="184" height="20"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <buttonCell key="cell" type="check" title="Copy Other media track" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="xtZ-Pk-Evw">
                                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1206,6 +1206,17 @@ Gw
                                                                 </buttonCell>
                                                                 <connections>
                                                                     <binding destination="aX0-52-9XP" name="value" keyPath="values.copyField" id="L4f-jK-aTF"/>
+                                                                </connections>
+                                                            </button>
+                                                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bxg-Bc-a9K">
+                                                                <rect key="frame" x="17" y="31" width="184" height="20"/>
+                                                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                                <buttonCell key="cell" type="check" title="Copy Video Color Properties" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="qgt-JB-nK6">
+                                                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                                    <font key="font" size="11" name=".HiraKakuInterface-W3"/>
+                                                                </buttonCell>
+                                                                <connections>
+                                                                    <binding destination="aX0-52-9XP" name="value" keyPath="values.copyNCLC" id="6yQ-z2-q52"/>
                                                                 </connections>
                                                             </button>
                                                         </subviews>

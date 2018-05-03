@@ -496,6 +496,7 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
             let audioRate = defaults.integer(forKey: kAudioKbpsKey)
             let videoRate = defaults.integer(forKey: kVideoKbpsKey)
             let copyField = defaults.bool(forKey: kCopyFieldKey)
+            let copyNCLC = defaults.bool(forKey: kCopyNCLCKey)
             let copyOtherMedia = defaults.bool(forKey: kCopyOtherMediaKey)
             let videoEncode = defaults.bool(forKey: kVideoEncodeKey)
             let audioEncode = defaults.bool(forKey: kAudioEncodeKey)
@@ -507,6 +508,7 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
             param[kAudioKbpsKey] = audioRate
             param[kVideoKbpsKey] = videoRate
             param[kCopyFieldKey] = copyField
+            param[kCopyNCLCKey] = copyNCLC
             param[kCopyOtherMediaKey] = copyOtherMedia
             param[kVideoEncodeKey] = videoEncode
             param[kAudioEncodeKey] = audioEncode

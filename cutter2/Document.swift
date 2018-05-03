@@ -1017,6 +1017,7 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         guard let mutator = self.movieMutator else { return }
         let player = self.player!
         Swift.print("##### ", mutator.ts(), " #####")
+        #if false
         do {
             let t = mutator.movieDuration()
             Swift.print(" movie duration",
@@ -1100,6 +1101,8 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
                 Swift.print("presentationInfo", "not available!!!")
             }
         }
+        #endif
+        Swift.print(mutator.clappaspDictionary() as Any)
     }
     
     public func timeOfPosition(_ position : Float64) -> CMTime {

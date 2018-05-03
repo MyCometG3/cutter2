@@ -161,7 +161,8 @@ class MovieMutator: NSObject {
     ///
     /// - Returns: Data
     private func movieData() -> Data? {
-        let movie : AVMovie = internalMovie.copy() as! AVMovie
+        // TODO: makeMovieHeader() seems to lost chages in CMVideoFormatDescription
+        let movie : AVMovie = internalMovie.mutableCopy() as! AVMutableMovie
         let data = try? movie.makeMovieHeader(fileType: AVFileType.mov)
         return data
     }
@@ -1097,7 +1098,8 @@ class MovieMutator: NSObject {
         
         // perform replacement
         self.doReplace(movie, range, time)
-        refreshMovie()
+        // TODO: makeMovieHeader(filetype:) breaks modification
+        //refreshMovie()
     }
     
     //
@@ -1163,6 +1165,14 @@ class MovieMutator: NSObject {
                 continue
             }
             
+            do {
+                let ratio = paspRatio.width / paspRatio.height
+                let newCAD = NSSize(width: clapSize.width * ratio, height: clapSize.height)
+                let newPAD = NSSize(width: dimensions.width * ratio, height: dimensions.height)
+                track.cleanApertureDimensions = newCAD
+                track.productionApertureDimensions = newPAD
+            }
+
             let formats = (vTracks[0]).formatDescriptions as! [CMFormatDescription]
             for format in formats {
                 // Prepare new extensionDictionary
@@ -1213,7 +1223,8 @@ class MovieMutator: NSObject {
         if count > 0 {
             // Replace movie object with undo record
             self.updateFormat(movie, using: undoManager)
-            refreshMovie()
+            // TODO:
+            Swift.print(self.clappaspDictionary()! as! [String:Any])
         } else {
             // TODO:
         }

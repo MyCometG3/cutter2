@@ -16,6 +16,7 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 #### Advanced feature
 - Save as reference movie (AVFoundation based)
 - Transcoding to ProRes422+LPCM.mov
+- Update CleanApreture/PixelAspectRatio (experimental)
 
 #### Development environment
 - MacOS X 10.12.6 Sierra

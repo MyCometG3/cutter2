@@ -11,12 +11,13 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 - Step mode as powerful key shortcuts for fine editing
 - Remuxer for mov/mp4/m4v/m4a
 - Transcoding to H264+AAC.mov/.mp4/m4v
-- Transcoding to HEVC+AAC.mov/.mp4/m4v on macOS 10.13 or later.
+- Transcoding to HEVC+AAC.mov/.mp4/m4v (macOS 10.13 or later)
 
 #### Advanced feature
 - Save as reference movie (AVFoundation based)
 - Transcoding to ProRes422+LPCM.mov
-- Update CleanApreture/PixelAspectRatio (experimental)
+- Update CleanApreture/PixelAspectRatio (experimental; macOS 10.13 or later)
+- Custom Export can preserve original video's colr/fiel/pasp/clap atom.
 
 #### Development environment
 - MacOS X 10.12.6 Sierra

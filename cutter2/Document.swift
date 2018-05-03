@@ -567,8 +567,15 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
     private var alert : NSAlert? = nil
     
     /// Update progress
+    var lastUpdateAt : UInt64 = 0
     public func updateProgress(_ progress : Float) {
         guard let alert = self.alert else { return }
+        guard progress.isNormal else { return }
+        
+        let t : UInt64 = CVGetCurrentHostTime()
+        guard (t - lastUpdateAt) > 100000000 else { return }
+        lastUpdateAt = t
+        
         DispatchQueue.main.async {
             alert.informativeText = String("Please hold on minute(s)... : \(Int(progress * 100)) %")
         }

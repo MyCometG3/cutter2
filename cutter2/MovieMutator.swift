@@ -490,7 +490,7 @@ class MovieMutator: MovieMutatorBase {
                 track.productionApertureDimensions = newPAD
             }
 
-            let formats = (vTracks[0]).formatDescriptions as! [CMFormatDescription]
+            let formats = track.formatDescriptions as! [CMFormatDescription]
             for format in formats {
                 // Prepare new extensionDictionary
                 guard let cfDict = CMFormatDescriptionGetExtensions(format) else { continue }

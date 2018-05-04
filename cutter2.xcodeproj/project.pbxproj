@@ -14,6 +14,7 @@
 		16BCA6C3204B715900D4B2A5 /* AccessoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BCA6C2204B715900D4B2A5 /* AccessoryViewController.swift */; };
 		16C773CA2014348500033B74 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C773C92014348500033B74 /* TimelineView.swift */; };
 		16CD66EE203835080089EB86 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CD66ED203835080089EB86 /* WindowController.swift */; };
+		16DBCF19209C643700887A77 /* MovieMutatorBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DBCF18209C643700887A77 /* MovieMutatorBase.swift */; };
 		16E189F92078405600A68696 /* DocumentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E189F82078405600A68696 /* DocumentController.swift */; };
 		16E189FF207876EE00A68696 /* TranscodeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E189FE207876EE00A68696 /* TranscodeViewController.swift */; };
 		16EE23EF200AF2C800980467 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EE23EE200AF2C800980467 /* AppDelegate.swift */; };
@@ -33,6 +34,7 @@
 		16BCA6C2204B715900D4B2A5 /* AccessoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessoryViewController.swift; sourceTree = "<group>"; };
 		16C773C92014348500033B74 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
 		16CD66ED203835080089EB86 /* WindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
+		16DBCF18209C643700887A77 /* MovieMutatorBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieMutatorBase.swift; sourceTree = "<group>"; };
 		16E189F82078405600A68696 /* DocumentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentController.swift; sourceTree = "<group>"; };
 		16E189FE207876EE00A68696 /* TranscodeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscodeViewController.swift; sourceTree = "<group>"; };
 		16EE23EB200AF2C800980467 /* cutter2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = cutter2.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -82,6 +84,7 @@
 				168DAE1E204A3BBC00C1DEFA /* Window.swift */,
 				16E189F82078405600A68696 /* DocumentController.swift */,
 				16EE23F2200AF2C800980467 /* Document.swift */,
+				16DBCF18209C643700887A77 /* MovieMutatorBase.swift */,
 				16EE2402200B036800980467 /* MovieMutator.swift */,
 				16EE23F0200AF2C800980467 /* ViewController.swift */,
 				16C773C92014348500033B74 /* TimelineView.swift */,
@@ -189,6 +192,7 @@
 				16EE2401200AFE3300980467 /* MyPlayerView.swift in Sources */,
 				16E189F92078405600A68696 /* DocumentController.swift in Sources */,
 				168DAE1F204A3BBC00C1DEFA /* Window.swift in Sources */,
+				16DBCF19209C643700887A77 /* MovieMutatorBase.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

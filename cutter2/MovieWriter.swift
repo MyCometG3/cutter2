@@ -642,24 +642,24 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         }
     }
     
-    func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer) {
+    internal func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer) {
         if let updateProgress = updateProgress {
             //Swift.print("Progress:", progress)
             let progress : Float = Float(calcProgress(of: buffer))
             updateProgress(progress)
         }
         
-//        if let imageBuffer : CVImageBuffer = CMSampleBufferGetImageBuffer(buffer) {
-//            if let pixelBuffer : CVPixelBuffer = imageBuffer as? CVPixelBuffer {
-//                CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags.readOnly)
-//                // TODO: Pixel processing?
-//                CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags.readOnly)
-//            }
-//        }
-        
-//        DispatchQueue.main.async {
-//            // Any GUI related processing - update GUI etc. here
-//        }
+        //if let imageBuffer : CVImageBuffer = CMSampleBufferGetImageBuffer(buffer) {
+        //    if let pixelBuffer : CVPixelBuffer = imageBuffer as? CVPixelBuffer {
+        //        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags.readOnly)
+        //        // Pixel processing?
+        //        CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags.readOnly)
+        //    }
+        //}
+        //
+        //DispatchQueue.main.async {
+        //    // Any GUI related processing - update GUI etc. here
+        //}
     }
     
     private func calcProgress(of sampleBuffer : CMSampleBuffer) -> Float64 {
@@ -704,7 +704,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     /// - writeSelfContaind: Flatten in SelfContained Movie
     /// - writeReferenceMovie: Flatten in Reference Movie
     /// - refreshMovieHeader: Refresh Movie Header (keep data box)
-    public enum FlattenMode {
+    private enum FlattenMode {
         case writeSelfContaind
         case writeReferenceMovie
         case refreshMovieHeader
@@ -715,7 +715,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     /// - Parameters:
     ///   - url: destination to write
     ///   - mode: FlattenMode
-    public func flattenMovie(to url : URL, with mode : FlattenMode) throws {
+    private func flattenMovie(to url : URL, with mode : FlattenMode) throws {
         // Swift.print(#function, #line, mode.hashValue, url.path)
         
         guard writerIsBusy == false else {

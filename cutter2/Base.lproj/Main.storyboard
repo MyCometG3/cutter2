@@ -182,6 +182,37 @@
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="hB3-LF-h0Y"/>
+                                        <menuItem title="Resize 50%" keyEquivalent="0" id="hn7-ab-A2S">
+                                            <connections>
+                                                <action selector="resizeWindow:" target="Ady-hI-5gd" id="cBO-9R-8sc"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Resize 100%" tag="1" keyEquivalent="1" id="dDA-F1-8lI">
+                                            <connections>
+                                                <action selector="resizeWindow:" target="Ady-hI-5gd" id="7cP-fH-K6e"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Resize 200%" tag="2" keyEquivalent="2" id="Ez8-zT-Qcs">
+                                            <connections>
+                                                <action selector="resizeWindow:" target="Ady-hI-5gd" id="kGR-Kj-TKw"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Fit to screen" tag="99" keyEquivalent="3" id="6zE-gG-gct">
+                                            <connections>
+                                                <action selector="resizeWindow:" target="Ady-hI-5gd" id="LUS-GG-gnP"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Resize -10%" tag="10" keyEquivalent="" id="H3V-uS-BHd">
+                                            <connections>
+                                                <action selector="resizeWindow:" target="Ady-hI-5gd" id="gs1-M9-vUp"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Resize +10%" tag="11" keyEquivalent="" id="76S-EU-ML5">
+                                            <connections>
+                                                <action selector="resizeWindow:" target="Ady-hI-5gd" id="jD6-W6-ZS6"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="3JJ-rp-5dX"/>
                                         <menuItem title="Show Sidebar" keyEquivalent="s" id="kIP-vf-haE">
                                             <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
                                             <connections>
@@ -272,8 +303,8 @@
                 <windowController storyboardIdentifier="Document Window Controller" id="jGA-0Y-lOj" customClass="WindowController" customModule="cutter2" customModuleProvider="target" sceneMemberID="viewController">
                     <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="Ckk-yw-fiv" customClass="Window" customModule="cutter2" customModuleProvider="target">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-                        <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
-                        <rect key="contentRect" x="0.0" y="997" width="480" height="270"/>
+                        <windowPositionMask key="initialPositionMask" leftStrut="YES" topStrut="YES"/>
+                        <rect key="contentRect" x="0.0" y="757" width="480" height="270"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
                         <connections>
                             <outlet property="delegate" destination="jGA-0Y-lOj" id="98r-iN-zZc"/>
@@ -825,7 +856,7 @@ Gw
                                 <font key="font" metaFont="system"/>
                                 <tabViewItems>
                                     <tabViewItem label="0" identifier="" id="45l-T1-b0x">
-                                        <view key="view" id="HjG-ir-1ZU">
+                                        <view key="view" ambiguous="YES" id="HjG-ir-1ZU">
                                             <rect key="frame" x="10" y="7" width="303" height="229"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -1050,7 +1081,7 @@ Gw
                                         </view>
                                     </tabViewItem>
                                     <tabViewItem label="4" identifier="" id="5jA-k0-Rfw">
-                                        <view key="view" ambiguous="YES" id="ogd-yp-Hq7">
+                                        <view key="view" id="ogd-yp-Hq7">
                                             <rect key="frame" x="10" y="7" width="303" height="229"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>

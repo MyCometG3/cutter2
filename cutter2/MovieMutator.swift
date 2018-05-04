@@ -50,6 +50,13 @@ let clapOffsetKey : String = "clapOffset" // NSPoint
 let paspRatioKey : String = "paspRatio" // NSSize
 let dimensionsKey : String = "dimensions" // NSSize
 
+/// type of dimensions - for use in dimensions(of:)
+enum dimensionsType {
+    case clean
+    case production
+    case encoded
+}
+
 /// Sample Presentation Info.
 ///
 /// NOTE: At final sample of segment, end position could be after end of segment.
@@ -225,6 +232,37 @@ class MovieMutator: NSObject {
     /* ============================================ */
     // MARK: - public method - utilities
     /* ============================================ */
+    
+    /// visual size of movie
+    public func dimensions(of type : dimensionsType) -> NSSize {
+        let movie = internalMovie
+        let tracks = movie.tracks(withMediaCharacteristic: .visual)
+        guard tracks.count > 0 else { return NSZeroSize }
+        
+        var targetRect : NSRect = NSZeroRect
+        for track in tracks {
+            let trackTransform : CGAffineTransform = track.preferredTransform
+            let size : NSSize
+            switch type {
+            case .clean:      size = track.cleanApertureDimensions
+            case .production: size = track.productionApertureDimensions
+            case .encoded:    size = track.encodedPixelsDimensions
+            }
+            
+            let rect : NSRect = NSRect(origin: NSPoint(x: -size.width/2, y: -size.height/2),
+                                       size: size)
+            let resultedRect : NSRect = rect.applying(trackTransform)
+            
+            targetRect = NSUnionRect(targetRect, resultedRect)
+        }
+        
+        let movieTransform : CGAffineTransform = movie.preferredTransform
+        targetRect = targetRect.applying(movieTransform)
+        //targetRect = NSOffsetRect(targetRect, -targetRect.minX, -targetRect.minY)
+        
+        let targetSize = NSSize(width: targetRect.width, height: targetRect.height)
+        return targetSize
+    }
     
     /// Calculate movie header size information
     public func headerSize() -> boxSize {

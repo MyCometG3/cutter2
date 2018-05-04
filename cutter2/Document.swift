@@ -60,7 +60,10 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
     
     // Transcode preferred type
     private var transcoding : Bool = false
-
+    
+    // Current Dimensions type
+    private var dimensionsType : dimensionsType = .clean
+    
     /* ============================================ */
     // MARK: - NSDocument methods/properties
     /* ============================================ */
@@ -110,6 +113,13 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         // Set viewController.delegate to self
         self.viewController?.delegate = self
         self.viewController?.setup()
+        
+        // Resize window 100%
+        if let _ = windowController.window {
+            let menu = NSMenuItem(title: "dummy", action: nil, keyEquivalent: "")
+            menu.tag = -1 // Resize to 100% keeping Top-Left corner
+            self.resizeWindow(menu)
+        }
         
         //
         self.updateGUI(kCMTimeZero, kCMTimeRangeZero, true)
@@ -529,6 +539,112 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
     public func didUpdateFileType(_ fileType: AVFileType, selfContained: Bool) {
         guard let savePanel = self.savePanel else { return }
         savePanel.allowedFileTypes = [fileType.rawValue]
+    }
+    
+    /* ============================================ */
+    // MARK: - Resize window
+    /* ============================================ */
+    
+    public func displayRatio(_ baseSize : CGSize?) -> CGFloat {
+        guard let mutator = self.movieMutator else { return 1.0 }
+        
+        let size = baseSize ?? mutator.dimensions(of: self.dimensionsType)
+        if size == NSZeroSize { return 1.0 }
+        
+        let viewSize = playerView!.frame.size
+        let hRatio = viewSize.width / size.width
+        let vRatio = viewSize.height / size.height
+        let ratio = (hRatio < vRatio) ? hRatio : vRatio
+        
+        return ratio
+    }
+    
+    @IBAction func resizeWindow(_ sender: Any?) {
+        // Swift.print(#function, #line)
+        
+        guard let mutator = self.movieMutator else { return }
+        
+        let screenRect = window!.screen!.visibleFrame
+        let viewSize = playerView!.frame.size
+        let windowSize = window!.frame.size
+        let extraSize = NSSize(width: windowSize.width - viewSize.width,
+                               height: windowSize.height - viewSize.height)
+        
+        // Calc new video size
+        var size = mutator.dimensions(of: self.dimensionsType)
+        var keepTopLeft = false
+        if let menuItem = sender as? NSMenuItem {
+            var ratio = displayRatio(size)
+            let tag = menuItem.tag
+            switch tag {
+            case 0: // 50%
+                size = NSSize(width: size.width/2, height: size.height/2)
+            case 1: // 100%
+                break
+            case 2: // 200%
+                size = NSSize(width: size.width*2, height: size.height*2)
+            case 10: // -10%
+                ratio = ceil(ratio * 10 - 1.0) / 10.0
+                ratio = min(max(ratio, 0.2), 5.0)
+                size = NSSize(width: size.width*ratio, height: size.height*ratio)
+            case 11: // +10%
+                ratio = floor(ratio * 10 + 1.0) / 10.0
+                ratio = min(max(ratio, 0.2), 5.0)
+                size = NSSize(width: size.width*ratio, height: size.height*ratio)
+            case 99: // fit to screen
+                size = NSSize(width: size.width*10, height: size.height*10)
+            default: // 100% resize from top-left
+                keepTopLeft = true
+            }
+        }
+        // Calc new window size
+        var newWindowSize = NSSize(width: extraSize.width + size.width,
+                                   height: extraSize.height + size.height)
+        if newWindowSize.width > screenRect.size.width || newWindowSize.height > screenRect.size.height {
+            // shrink; Limit window size to fit in
+            size = mutator.dimensions(of: self.dimensionsType)
+            let hRatio = (screenRect.size.width - extraSize.width) / size.width
+            let vRatio = (screenRect.size.height - extraSize.height) / size.height
+            let ratio = (hRatio < vRatio) ? hRatio : vRatio
+            size = NSSize(width: size.width * ratio, height: size.height * ratio)
+            newWindowSize = NSSize(width: extraSize.width + size.width,
+                                   height: extraSize.height + size.height)
+        }
+        // Transpose to anchor point
+        var origin = window!.frame.origin
+        do {
+            if keepTopLeft { // preserve top left corner
+                let newOrigin = NSPoint(x: origin.x,
+                                    y: origin.y - (newWindowSize.height - windowSize.height))
+                origin = newOrigin
+            } else { // preserve top center point
+                let newOrigin = NSPoint(x: origin.x + (windowSize.width/2) - (newWindowSize.width/2) ,
+                                    y: origin.y - (newWindowSize.height - windowSize.height))
+                origin = newOrigin
+            }
+        }
+        // Transpose into screenRect
+        do {
+            let scrXmax : CGFloat = screenRect.origin.x + screenRect.size.width
+            let scrYmax : CGFloat = screenRect.origin.y + screenRect.size.height
+            let errXmin : Bool = (origin.x < screenRect.origin.x)
+            let errXmax : Bool = (origin.x + newWindowSize.width > scrXmax)
+            let errYmin : Bool = (origin.y < screenRect.origin.y)
+            let errYmax : Bool = (origin.y + newWindowSize.height > scrYmax)
+            if errXmin || errXmax || errYmin || errYmax {
+                let hOffset : CGFloat =
+                    errXmax ? (scrXmax - (origin.x + newWindowSize.width)) :
+                    (errXmin ? (screenRect.origin.x - origin.x) : 0.0)
+                let vOffset : CGFloat =
+                    errYmax ? (scrYmax - (origin.y + newWindowSize.height)) :
+                    (errYmin ? (screenRect.origin.y - origin.y) : 0.0)
+                let newOrigin = NSPoint(x: origin.x + hOffset, y: origin.y + vOffset)
+                origin = newOrigin
+            }
+        }
+        // Apply new Rect to window
+        let newWindowRect = NSRect(origin: origin, size: newWindowSize)
+        window!.setFrame(newWindowRect, display: true, animate: false)
     }
     
     /* ============================================ */

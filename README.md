@@ -16,19 +16,17 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 #### Advanced feature
 - Save as reference movie (AVFoundation based)
 - Transcoding to ProRes422+LPCM.mov
-- Custom Export can preserve original audio's layout.
+- Custom Export can preserve original audio's channel layout.
 - Custom Export can preserve original video's colr/fiel/pasp/clap atom.
 - Custom Export can use H264/HEVC/ProRes422/ProRes422LT/ProRes422Proxy.
 - Custom Export can use AAC-LC/LPCM-16/-24/-32.
-- Customize CleanApreture/PixelAspectRatio (macOS 10.13 or later)
+- Customize Clean Aperture/PixelAspectRatio (macOS 10.13 or later)
 
-#### Known issue about CleanApreture/PixelAspectRatio customization
+#### Note: Clean Aperture/PixelAspectRatio customization
 - This feature requires macOS 10.13 or later.
-- Customized CleanApreture/PixelAspectRatio are "temporal" (= volatile).
-- Custom export supports customized CleanApreture/PixelAspectRatio.
-- They will be lost on next edit operation (cut/copy/paste/delete).
-- You can not save customized CleanApreture/PixelAspectRatio as CMVideoFormatDescription inside QuickTime File format.
-- These restriction is confirmed at 10.13.4 High Sierra.
+- It will update Video Track dimension and Media sample description.
+- Customizing CleanAperture/PixelAspectRatio does not modify media data.
+- Custom export keeps customized CleanAperture/PixelAspectRatio.
 
 #### Development environment
 - MacOS X 10.13.4 High Sierra

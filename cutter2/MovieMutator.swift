@@ -475,8 +475,8 @@ class MovieMutator: MovieMutatorBase {
         
         let vTracks : [AVMutableMovieTrack] = movie.tracks(withMediaType: .video)
         for track in vTracks {
-            if track.encodedPixelsDimensions != dimensions {
-                Swift.print(#function, #line, track.trackID, track.encodedPixelsDimensions)
+            if track.naturalSize != dimensions {
+                Swift.print(#function, #line, track.trackID, track.naturalSize)
                 continue
             }
             
@@ -484,9 +484,9 @@ class MovieMutator: MovieMutatorBase {
                 let ratio = paspRatio.width / paspRatio.height
                 let newCAD = NSSize(width: clapSize.width * ratio, height: clapSize.height)
                 let newPAD = NSSize(width: dimensions.width * ratio, height: dimensions.height)
+                track.encodedPixelsDimensions = track.naturalSize
                 track.cleanApertureDimensions = newCAD
                 track.productionApertureDimensions = newPAD
-                track.naturalSize = newPAD
             }
             
             let formats = track.formatDescriptions as! [CMFormatDescription]

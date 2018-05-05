@@ -269,6 +269,9 @@ class CAPARViewController: NSViewController {
         //
         loadSourceSettings()
         
+        // Clear result
+        resultContent = [:]
+        
         return true
     }
     
@@ -320,6 +323,10 @@ class CAPARViewController: NSViewController {
     private func updateUserDefaults() {
         // Swift.print(#function, #line)
         
+        let def : UserDefaults = UserDefaults.standard
+        let customFlag = def.bool(forKey: modClapPaspKey)
+        guard customFlag else { return }
+        
         // Synchronize
         self.updateStruct()
         
@@ -330,7 +337,6 @@ class CAPARViewController: NSViewController {
         guard let paspRatio = dict[paspRatioKey] as? NSSize else { return }
         guard let dimensions = dict[dimensionsKey] as? NSSize else { return }
 
-        let def : UserDefaults = UserDefaults.standard
         def.set(NSStringFromSize(clapSize), forKey: clapSizeKey)
         def.set(NSStringFromPoint(clapOffset), forKey: clapOffsetKey)
         def.set(NSStringFromSize(paspRatio), forKey: paspRatioKey)

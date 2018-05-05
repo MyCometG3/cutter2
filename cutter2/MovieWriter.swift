@@ -725,9 +725,11 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
         }
         
+        var completed : Bool = false
         writerIsBusy = true
         defer {
             writerIsBusy = false
+            Swift.print(#function, completed ? "completed" : "failed")
         }
 
         var selfContained : Bool = false
@@ -776,7 +778,6 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             NotificationCenter.default.post(notificationStart)
             
             //
-            var completed : Bool = false
             try newMovie.insertTimeRange(range, of: srcMovie, at: kCMTimeZero, copySampleData: selfContained)
             try newMovie.writeHeader(to: url, fileType: AVFileType.mov, options: option)
             completed = true

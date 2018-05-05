@@ -256,8 +256,10 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
                 let time : CMTime = mutator.insertionTime
                 let range : CMTimeRange = mutator.selectedTimeRange
                 let newMovieRange : CMTimeRange = newMovie.range
-                let newTime : CMTime = CMTimeClampToRange(time, newMovieRange)
+                var newTime : CMTime = CMTimeClampToRange(time, newMovieRange)
                 let newRange : CMTimeRange = CMTimeRangeGetIntersection(range, newMovieRange)
+                
+                newTime = CMTIME_IS_VALID(newTime) ? newTime : kCMTimeZero
                 
                 self.removeMutationObserver()
                 self.movieMutator = MovieMutator(with: newMovie)

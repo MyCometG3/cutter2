@@ -488,14 +488,17 @@ class MovieMutator: MovieMutatorBase {
                 let newPAD = NSSize(width: dimensions.width * ratio, height: dimensions.height)
                 track.cleanApertureDimensions = newCAD
                 track.productionApertureDimensions = newPAD
+                track.naturalSize = newPAD
             }
-
+            
             let formats = track.formatDescriptions as! [CMFormatDescription]
             for format in formats {
                 // Prepare new extensionDictionary
                 guard let cfDict = CMFormatDescriptionGetExtensions(format) else { continue }
                 let dict : NSMutableDictionary = NSMutableDictionary(dictionary: cfDict)
-                
+                dict[kCMFormatDescriptionExtension_VerbatimSampleDescription] = nil
+                dict[kCMFormatDescriptionExtension_VerbatimISOSampleEntry] = nil
+
                 // Replace CleanAperture if available
                 if clapSize == NSZeroSize {
                     dict[kCMFormatDescriptionExtension_CleanAperture] = nil

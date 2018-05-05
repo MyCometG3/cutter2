@@ -378,7 +378,6 @@ class MovieMutator: MovieMutatorBase {
 
         // register undo redord
         let undoDeleteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in
-            
             // register redo record
             let redoDeleteHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in
                 me2.deleteSelection(using: undoManager)
@@ -454,8 +453,7 @@ class MovieMutator: MovieMutatorBase {
         
         // perform replacement
         self.doReplace(movie, range, time)
-        // TODO: makeMovieHeader(filetype:) breaks modification
-        //refreshMovie()
+        refreshMovie()
     }
     
     /* ============================================ */
@@ -543,10 +541,10 @@ class MovieMutator: MovieMutatorBase {
         if count > 0 {
             // Replace movie object with undo record
             self.updateFormat(movie, using: undoManager)
-            // TODO:
-            Swift.print(self.clappaspDictionary()! as! [String:Any])
+            //Swift.print(self.clappaspDictionary()! as! [String:Any])
         } else {
-            // TODO:
+            Swift.print(ts(), "ERROR: Failed to modify CAPAR extensions.")
+            assert(false, #function); return
         }
     }
     

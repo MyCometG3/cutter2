@@ -158,7 +158,6 @@ class MovieMutatorBase: NSObject {
     ///
     /// - Returns: Data
     internal func movieData() -> Data? {
-        // TODO: makeMovieHeader() seems to lost chages in CMVideoFormatDescription
         let movie : AVMovie = internalMovie.mutableCopy() as! AVMutableMovie
         let data = try? movie.makeMovieHeader(fileType: AVFileType.mov)
         return data

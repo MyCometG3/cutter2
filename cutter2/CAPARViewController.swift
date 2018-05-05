@@ -170,16 +170,19 @@ class CAPARViewController: NSViewController {
         // Check clapSize
         let encSize : NSSize = content[dimensionsKey] as! NSSize
         let size : NSSize = content[clapSizeKey] as! NSSize
+        if size.width.isNaN || size.height.isNaN { result = false }
         if !(size.width <= encSize.width && size.height <= encSize.height) { result = false }
         
         // Check clapOffset
         let offset : NSPoint = content[clapOffsetKey] as! NSPoint
+        if offset.x.isNaN || offset.y.isNaN { result = false }
         let checkX : Bool = abs(offset.x) <= (encSize.width - size.width) / 2.0
         let checkY : Bool = abs(offset.y) <= (encSize.height - size.height) / 2.0
         if !(checkX && checkY) { result = false }
         
         // Check paspRatio
         let par = content[paspRatioKey] as! NSSize
+        if par.width.isNaN || par.height.isNaN { result = false }
         let ratio : CGFloat = (par.width / par.height)
         if ratio > 3.0 || ratio < (1.0/3.0) { result = false }
         
@@ -228,20 +231,20 @@ class CAPARViewController: NSViewController {
         let content : NSMutableDictionary = objectController.content as! NSMutableDictionary
         
         do {
-            let width = content[clapSizeWidthKey] as! CGFloat
-            let height = content[clapSizeHeightKey] as! CGFloat
+            let width = content[clapSizeWidthKey] as? CGFloat ?? CGFloat.nan
+            let height = content[clapSizeHeightKey] as? CGFloat ?? CGFloat.nan
             let size = CGSize(width: width, height: height)
             content[clapSizeKey] = size
         }
         do {
-            let x = content[clapOffsetXKey] as! CGFloat
-            let y = content[clapOffsetYKey] as! CGFloat
+            let x = content[clapOffsetXKey] as? CGFloat ?? CGFloat.nan
+            let y = content[clapOffsetYKey] as? CGFloat ?? CGFloat.nan
             let point = CGPoint(x: x, y: y)
             content[clapOffsetKey] = point
         }
         do {
-            let width = content[paspRatioWidthKey] as! CGFloat
-            let height = content[paspRatioHeightKey] as! CGFloat
+            let width = content[paspRatioWidthKey] as? CGFloat ?? CGFloat.nan
+            let height = content[paspRatioHeightKey] as? CGFloat ?? CGFloat.nan
             let size = CGSize(width: width, height: height)
             content[paspRatioKey] = size
         }

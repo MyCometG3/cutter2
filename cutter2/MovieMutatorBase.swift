@@ -143,6 +143,17 @@ class MovieMutatorBase: NSObject {
         return min(max(position, 0.0), 1.0)
     }
     
+    @inline(__always) internal func validSize(_ size : NSSize) -> Bool {
+        if size.width.isNaN || size.height.isNaN { return false }
+        if size.width <= 0 || size.height <= 0 { return false }
+        return true
+    }
+    
+    @inline(__always) internal func validPoint(_ point : NSPoint) -> Bool {
+        if point.x.isNaN || point.y.isNaN { return false }
+        return true
+    }
+    
     /// Get Data representation of Internal movie
     ///
     /// - Returns: Data

@@ -500,7 +500,7 @@ class MovieMutator: MovieMutatorBase {
                 dict[kCMFormatDescriptionExtension_VerbatimISOSampleEntry] = nil
 
                 // Replace CleanAperture if available
-                if clapSize == NSZeroSize {
+                if !validSize(clapSize) || !validPoint(clapOffset) {
                     dict[kCMFormatDescriptionExtension_CleanAperture] = nil
                 } else {
                     let clap : NSMutableDictionary = [:]
@@ -512,7 +512,7 @@ class MovieMutator: MovieMutatorBase {
                 }
                 
                 // Replace PixelAspectRatio if available
-                if paspRatio == NSZeroSize {
+                if !validSize(paspRatio) {
                     dict[kCMFormatDescriptionExtension_PixelAspectRatio] = nil
                 } else {
                     let pasp : NSMutableDictionary = [:]

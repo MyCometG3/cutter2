@@ -860,7 +860,7 @@ Gw
                                 <font key="font" metaFont="system"/>
                                 <tabViewItems>
                                     <tabViewItem label="0" identifier="" id="45l-T1-b0x">
-                                        <view key="view" ambiguous="YES" id="HjG-ir-1ZU">
+                                        <view key="view" id="HjG-ir-1ZU">
                                             <rect key="frame" x="10" y="7" width="303" height="229"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -1085,7 +1085,7 @@ Gw
                                         </view>
                                     </tabViewItem>
                                     <tabViewItem label="4" identifier="" id="5jA-k0-Rfw">
-                                        <view key="view" id="ogd-yp-Hq7">
+                                        <view key="view" ambiguous="YES" id="ogd-yp-Hq7">
                                             <rect key="frame" x="10" y="7" width="303" height="229"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>

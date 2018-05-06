@@ -238,20 +238,50 @@ class MovieMutatorBase: NSObject {
     // MARK: - public method - utilities
     /* ============================================ */
     
+    /// visual size of media in a track
+    public func mediaDimensions(of type : dimensionsType, in track : AVMutableMovieTrack) -> NSSize {
+        var size = NSZeroSize
+        
+        let formats = track.formatDescriptions as! [CMFormatDescription]
+        for format in formats {
+            switch type {
+            case .clean:
+                size = CMVideoFormatDescriptionGetPresentationDimensions(format, true, true)
+            case .production:
+                size = CMVideoFormatDescriptionGetPresentationDimensions(format, true, false)
+            case .encoded:
+                size = CMVideoFormatDescriptionGetPresentationDimensions(format, false, false)
+            }
+            if size != NSZeroSize {
+                break
+            }
+        }
+        
+        return size
+    }
+    
     /// visual size of movie
     public func dimensions(of type : dimensionsType) -> NSSize {
         let movie = internalMovie
         let tracks = movie.tracks(withMediaCharacteristic: .visual)
-        guard tracks.count > 0 else { return NSZeroSize }
+        guard tracks.count > 0 else {
+            // use dummy size for 16:9 (commonly used for .m4a format)
+            return NSSize(width: 320, height: 180)
+        }
         
         var targetRect : NSRect = NSZeroRect
         for track in tracks {
             let trackTransform : CGAffineTransform = track.preferredTransform
-            let size : NSSize
+            var size : NSSize
             switch type {
             case .clean:      size = track.cleanApertureDimensions
             case .production: size = track.productionApertureDimensions
             case .encoded:    size = track.encodedPixelsDimensions
+            }
+            
+            if size == NSZeroSize {
+                size = mediaDimensions(of: type, in: track)
+                assert(size != NSZeroSize, "ERROR: Failed to get presentation dimensions.")
             }
             
             let rect : NSRect = NSRect(origin: NSPoint(x: -size.width/2, y: -size.height/2),

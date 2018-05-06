@@ -314,11 +314,27 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
                     numChannel = Int(asbd.mChannelsPerFrame)
                 }
                 
-                var layoutSize : Int = 0
-                let aclPtr = CMAudioFormatDescriptionGetChannelLayout(desc, &layoutSize)
-                if let acl = aclPtr?.pointee {
-                    var audioChannelLayout : AudioChannelLayout = acl
-                    avacLayout = AVAudioChannelLayout(layout: &audioChannelLayout)
+                if numChannel == 1 {
+                    avacLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Mono)!
+                } else if numChannel == 2 {
+                    avacLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Stereo)!
+                } else {
+                    var layoutSize : Int = 0
+                    let aclPtr = CMAudioFormatDescriptionGetChannelLayout(desc, &layoutSize)
+                    if let acl = aclPtr?.pointee {
+                        var audioChannelLayout : AudioChannelLayout = acl
+                        avacLayout = AVAudioChannelLayout(layout: &audioChannelLayout)
+                    }
+                    
+                    //TODO: try to translate layout as predefined tag
+                    // if fourcc == 'aac '. Reference :
+                    // CoreAudioTypes.h : kAudioChannelLayoutTag_AAC_xxxxx
+                    // L/R/C : Front
+                    // Lfe : Low Freq.
+                    // Ls/Rs/Cs : Surround (near rear)
+                    // Rls/Rrs : Rear Surround (far; 5 rear)
+                    // Lc/Rc : Mid of L/C and R/C (5 front)
+                    // Vhl/Vhr/Vhc : Vertical height
                 }
             }
             
@@ -326,6 +342,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             let acDescCount : UInt32 = avacLayout.layout.pointee.mNumberChannelDescriptions
             let acDescSize : Int = MemoryLayout<AudioChannelDescription>.size
             let acLayoutSize : Int = MemoryLayout<AudioChannelLayout>.size + (Int(acDescCount) - 1) * acDescSize
+            
             var acl : AudioChannelLayout = avacLayout.layout.pointee
             let aclData : Data = Data.init(bytes: &acl, count: acLayoutSize)
             

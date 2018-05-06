@@ -216,33 +216,36 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
                         originalContentsURL absoluteOriginalContentsURL: URL?) throws {
         // Swift.print(#function, #line, url.lastPathComponent, typeName)
         
-        if saveOperation == .saveToOperation {
-            let transcodePreset : String? = UserDefaults.standard.string(forKey: "transcodePreset")
-            guard let preset = transcodePreset else { return }
-            do {
+        do {
+            if saveOperation == .saveToOperation {
+                // Export...
+                let transcodePreset : String? = UserDefaults.standard.string(forKey: "transcodePreset")
+                guard let preset = transcodePreset else { return }
                 if preset == kCustomKey {
                     try exportCustom(to: url, ofType: typeName)
                 } else {
                     try export(to: url, ofType: typeName, preset: preset)
                 }
-            } catch {
-                // Don't use NSDocument default error handling
-                DispatchQueue.main.async {
-                    let alert = NSAlert(error: error)
-                    if let reason = (error as NSError).localizedFailureReason {
-                        alert.informativeText = reason
-                    }
-                    alert.beginSheetModal(for: self.window!, completionHandler: nil)
+            } else {
+                // Save.../Save as...
+                try super.write(to: url, ofType: typeName, for: saveOperation,
+                                originalContentsURL: absoluteOriginalContentsURL)
+                
+                if saveOperation == .saveAsOperation {
+                    self.refreshMovie()
                 }
             }
-            return
-        }
-        
-        try super.write(to: url, ofType: typeName, for: saveOperation,
-                        originalContentsURL: absoluteOriginalContentsURL)
-        
-        if saveOperation == .saveAsOperation {
-            self.refreshMovie()
+        } catch {
+            // Don't use NSDocument default error handling
+            DispatchQueue.main.async {
+                let alert = NSAlert(error: error)
+                if let reason = (error as NSError).localizedFailureReason {
+                    alert.messageText = String(format: "%@ / %@", error.localizedDescription, reason)
+                }
+                alert.informativeText = (error as NSError).description
+                alert.beginSheetModal(for: self.window!, completionHandler: nil)
+            }
+            throw error // rethrow to abort write operation
         }
     }
     

@@ -778,8 +778,14 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             NotificationCenter.default.post(notificationStart)
             
             //
+            //Swift.print(#function, #line, "working url =", url)
+            //Swift.print(#function, #line, "start insertTimeRange()", (selfContained ? "selfContained" : "referenceOnly"))
             try newMovie.insertTimeRange(range, of: srcMovie, at: kCMTimeZero, copySampleData: selfContained)
+            
+            //Swift.print(#function, #line, "start writeHeader()")
             try newMovie.writeHeader(to: url, fileType: AVFileType.mov, options: option)
+            
+            //Swift.print(#function, #line, "end writeHeader()")
             completed = true
             
             //

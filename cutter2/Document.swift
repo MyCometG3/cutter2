@@ -212,10 +212,21 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         // NOTE: following initialization is performed at makeWindowControllers()
     }
     
+    override func writeSafely(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
+        // Swift.print(#function, #line, typeName, url)
+        
+        try super.writeSafely(to: url, ofType: typeName, for: saveOperation)
+        
+        // Refresh internal movie (to sync selfcontained <> referece movie change)
+        if saveOperation == .saveAsOperation {
+            self.refreshMovie()
+        }
+    }
+    
     override func write(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType,
                         originalContentsURL absoluteOriginalContentsURL: URL?) throws {
-        // Swift.print(#function, #line, url.lastPathComponent, typeName)
-        
+        // Swift.print(#function, #line, typeName, url)
+
         do {
             if saveOperation == .saveToOperation {
                 // Export...
@@ -230,10 +241,6 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
                 // Save.../Save as...
                 try super.write(to: url, ofType: typeName, for: saveOperation,
                                 originalContentsURL: absoluteOriginalContentsURL)
-                
-                if saveOperation == .saveAsOperation {
-                    self.refreshMovie()
-                }
             }
         } catch {
             // Don't use NSDocument default error handling

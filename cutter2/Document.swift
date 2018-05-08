@@ -228,6 +228,16 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         // Swift.print(#function, #line, typeName, url)
 
         do {
+            let fileType : AVFileType = AVFileType.init(rawValue: typeName)
+            
+            // Check UTI for AVFileType
+            if AVMovie.movieTypes().contains(fileType) == false {
+                var info : [String:Any] = [:]
+                info[NSLocalizedDescriptionKey] = "Incompatible file type detected."
+                info[NSDetailedErrorsKey] = "(UTI:" + typeName + ")"
+                throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
+            }
+            
             if saveOperation == .saveToOperation {
                 // Export...
                 let transcodePreset : String? = UserDefaults.standard.string(forKey: "transcodePreset")
@@ -284,21 +294,7 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         // Swift.print(#function, #line, url.lastPathComponent, typeName)
         guard let mutator = self.movieMutator else { return }
         
-        // NOTE: We ignore the typeName here, and infer from url/file extension instead
         var fileType : AVFileType = AVFileType.init(rawValue: typeName)
-        let urlFileType : AVFileType = fileTypeForURL(url) ?? fileType
-        if fileType != urlFileType {
-            Swift.print("##### Type mismatch detected : urlFileType:", urlFileType, ", writeType:", fileType, "#####")
-            fileType = urlFileType
-        }
-        
-        // Check UTI for AVFileType
-        if AVMovie.movieTypes().contains(fileType) == false {
-            var info : [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Incompatible file type detected."
-            info[NSDetailedErrorsKey] = "(UTI:" + typeName + ")"
-            throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
-        }
         
         //Swift.print("##### WRITE STARTED #####")
         showBusySheet("Writing...", "Please hold on second(s)...")
@@ -458,14 +454,6 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         
         let fileType : AVFileType = AVFileType.init(rawValue: typeName)
 
-        // Check UTI for AVFileType
-        if AVMovie.movieTypes().contains(fileType) == false {
-            var info : [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Incompatible file type detected."
-            info[NSDetailedErrorsKey] = "(UTI:" + typeName + ")"
-            throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
-        }
-        
         //Swift.print("##### EXPORT STARTED #####")
         showBusySheet("Exporting...", "Please hold on minute(s)...")
         mutator.unblockUserInteraction = { self.unblockUserInteraction() }
@@ -487,14 +475,6 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         guard let mutator = self.movieMutator else { return }
         
         let fileType : AVFileType = AVFileType.init(rawValue: typeName)
-        
-        // Check UTI for AVFileType
-        if AVMovie.movieTypes().contains(fileType) == false {
-            var info : [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Incompatible file type detected."
-            info[NSDetailedErrorsKey] = "(UTI:" + typeName + ")"
-            throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
-        }
         
         //Swift.print("##### EXPORT STARTED #####")
         showBusySheet("Exporting...", "Please hold on minute(s)...")

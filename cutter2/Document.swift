@@ -188,7 +188,7 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         if AVMovie.movieTypes().contains(fileType) == false {
             var info : [String:Any] = [:]
             info[NSLocalizedDescriptionKey] = "Incompatible file type detected."
-            info[NSDetailedErrorsKey] = "(UTI:" + typeName + ")"
+            info[NSLocalizedFailureReasonErrorKey] = "(UTI:" + typeName + ")"
             throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: info)
         }
         
@@ -203,7 +203,7 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         } else {
             var info : [String:Any] = [:]
             info[NSLocalizedDescriptionKey] = "Unable to open specified file as AVMovie."
-            info[NSDetailedErrorsKey] = url.lastPathComponent + " at " + url.deletingLastPathComponent().path
+            info[NSLocalizedFailureReasonErrorKey] = url.lastPathComponent + " at " + url.deletingLastPathComponent().path
             throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
         }
         
@@ -234,7 +234,7 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
             if AVMovie.movieTypes().contains(fileType) == false {
                 var info : [String:Any] = [:]
                 info[NSLocalizedDescriptionKey] = "Incompatible file type detected."
-                info[NSDetailedErrorsKey] = "(UTI:" + typeName + ")"
+                info[NSLocalizedFailureReasonErrorKey] = "(UTI:" + typeName + ")"
                 throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
             }
             
@@ -253,15 +253,7 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
                                 originalContentsURL: absoluteOriginalContentsURL)
             }
         } catch {
-            // Don't use NSDocument default error handling
-            DispatchQueue.main.async {
-                let alert = NSAlert(error: error)
-                if let reason = (error as NSError).localizedFailureReason {
-                    alert.messageText = String(format: "%@ / %@", error.localizedDescription, reason)
-                }
-                alert.informativeText = (error as NSError).description
-                alert.beginSheetModal(for: self.window!, completionHandler: nil)
-            }
+            showErrorSheet(error)
             throw error // rethrow to abort write operation
         }
     }
@@ -666,7 +658,15 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
             guard response == .continue else { return }
             
             let result : [AnyHashable:Any] = caparVC.resultContent
-            mutator.applyClapPasp(result, using: self.undoManager!)
+            let done : Bool = mutator.applyClapPasp(result, using: self.undoManager!)
+            if !done {
+                var info : [String:Any] = [:]
+                info[NSLocalizedDescriptionKey] = "Failed to modify CAPAR extensions."
+                info[NSLocalizedFailureReasonErrorKey] = "Check if video track has same dimensions."
+                let err = NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: info)
+                
+                self.showErrorSheet(err)
+            }
         })
     }
     
@@ -718,6 +718,34 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
             
             window.endSheet(alert.window)
             self.alert = nil
+        }
+    }
+    
+    /// Present ErrorSheet asynchronously
+    private func showErrorSheet(_ error: Error) {
+        // Don't use NSDocument default error handling
+        DispatchQueue.main.async {
+            let alert = NSAlert(error: error)
+            do {
+                let err = error as NSError
+                let userInfo : [String:Any]? = err.userInfo
+                if let info = userInfo {
+                    var showDebugInfo: Bool = false
+                    let keys = info.keys
+                    if keys.contains(NSUnderlyingErrorKey) || keys.contains(NSDebugDescriptionErrorKey) {
+                        showDebugInfo = true
+                    }
+                    if #available(OSX 10.13, *), keys.contains(NSLocalizedFailureErrorKey) {
+                        showDebugInfo = true
+                    }
+                    if showDebugInfo {
+                        alert.informativeText = err.description
+                    } else if keys.contains(NSLocalizedFailureReasonErrorKey) {
+                        alert.informativeText =  info[NSLocalizedFailureReasonErrorKey] as! String
+                    }
+                }
+            }
+            alert.beginSheetModal(for: self.window!, completionHandler: nil)
         }
     }
     

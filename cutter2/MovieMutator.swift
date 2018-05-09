@@ -461,13 +461,13 @@ class MovieMutator: MovieMutatorBase {
     /* ============================================ */
     
     //
-    public func applyClapPasp(_ dict : [AnyHashable:Any], using undoManager : UndoManager) {
-        guard #available(OSX 10.13, *) else { return }
+    public func applyClapPasp(_ dict : [AnyHashable:Any], using undoManager : UndoManager) -> Bool {
+        guard #available(OSX 10.13, *) else { return false }
         
-        guard let clapSize = dict[clapSizeKey] as? NSSize else { return }
-        guard let clapOffset = dict[clapOffsetKey] as? NSPoint else { return }
-        guard let paspRatio = dict[paspRatioKey] as? NSSize else { return }
-        guard let dimensions = dict[dimensionsKey] as? NSSize else { return }
+        guard let clapSize = dict[clapSizeKey] as? NSSize else { return false }
+        guard let clapOffset = dict[clapOffsetKey] as? NSPoint else { return false }
+        guard let paspRatio = dict[paspRatioKey] as? NSSize else { return false }
+        guard let dimensions = dict[dimensionsKey] as? NSSize else { return false }
         
         var count : Int = 0
         
@@ -542,9 +542,10 @@ class MovieMutator: MovieMutatorBase {
             // Replace movie object with undo record
             self.updateFormat(movie, using: undoManager)
             //Swift.print(self.clappaspDictionary()! as! [String:Any])
+            return true
         } else {
             Swift.print(ts(), "ERROR: Failed to modify CAPAR extensions.")
-            assert(false, #function); return
+            return false
         }
     }
     

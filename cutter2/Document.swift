@@ -10,14 +10,24 @@ import Cocoa
 import AVKit
 import AVFoundation
 
-let kCustomKey = "Custom"
+// Document + TranscodeViewController
+let kTranscodePresetKey = "transcodePreset"
+let kTranscodeTypeKey = "transcodeType"
+let kTrancode0Key = "transcode0"
+let kTrancode1Key = "transcode1"
+let kTrancode2Key = "transcode2"
+let kTrancode3Key = "transcode3"
+let kAVFileTypeKey = "avFileType"
+let kHEVCReadyKey = "hevcReady" // Check 10.13 or later
+let kTranscodePresetCustom = "Custom"
+
+// MovieWriter + Document
 let kLPCMDepthKey = "lpcmDepth"
 let kAudioKbpsKey = "audioKbps"
 let kVideoKbpsKey = "videoKbps"
 let kCopyFieldKey = "copyField"
 let kCopyNCLCKey = "copyNCLC"
 let kCopyOtherMediaKey = "copyOtherMedia"
-
 let kVideoEncodeKey = "videoEncode"
 let kAudioEncodeKey = "audioEncode"
 let kVideoCodecKey = "videoCodec"
@@ -240,9 +250,9 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
             
             if saveOperation == .saveToOperation {
                 // Export...
-                let transcodePreset : String? = UserDefaults.standard.string(forKey: "transcodePreset")
+                let transcodePreset : String? = UserDefaults.standard.string(forKey: kTranscodePresetKey)
                 guard let preset = transcodePreset else { return }
-                if preset == kCustomKey {
+                if preset == kTranscodePresetCustom {
                     try exportCustom(to: url, ofType: typeName)
                 } else {
                     try export(to: url, ofType: typeName, preset: preset)
@@ -337,7 +347,7 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         // prepare file types same as current source
         var uti : String = self.fileType ?? AVFileType.mov.rawValue
         if self.transcoding {
-            let avFileTypeRaw : String? = UserDefaults.standard.string(forKey: "avFileType")
+            let avFileTypeRaw : String? = UserDefaults.standard.string(forKey: kAVFileTypeKey)
             if let avFileTypeRaw = avFileTypeRaw {
                 uti = AVFileType.init(avFileTypeRaw).rawValue
             }
@@ -834,13 +844,13 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         
         // Prepare userInfo
         var userInfo : [AnyHashable:Any] = [:]
-        userInfo["time"] = NSValue(time: time)
-        userInfo["range"] = NSValue(timeRange: range)
-        userInfo["curPosition"] = NSNumber(value: positionOfTime(time))
-        userInfo["startPosition"] = NSNumber(value: positionOfTime(range.start))
-        userInfo["endPosition"] = NSNumber(value: positionOfTime(range.end))
-        userInfo["string"] = mutator.shortTimeString(time, withDecimals: true)
-        userInfo["duration"] = NSNumber(value: CMTimeGetSeconds(mutator.movieDuration()))
+        userInfo[timeInfoKey] = NSValue(time: time)
+        userInfo[rangeInfoKey] = NSValue(timeRange: range)
+        userInfo[curPositionInfoKey] = NSNumber(value: positionOfTime(time))
+        userInfo[startPositionInfoKey] = NSNumber(value: positionOfTime(range.start))
+        userInfo[endPositionInfoKey] = NSNumber(value: positionOfTime(range.end))
+        userInfo[stringInfoKey] = mutator.shortTimeString(time, withDecimals: true)
+        userInfo[durationInfoKey] = NSNumber(value: CMTimeGetSeconds(mutator.movieDuration()))
         
         // Post notification (.timelineUpdateReq)
         let notification = Notification(name: .timelineUpdateReq,
@@ -968,8 +978,8 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
             
             // extract CMTime/CMTimeRange from userInfo
             guard let userInfo = notification.userInfo else { return }
-            guard let timeValue = userInfo["timeValue"] as? NSValue else { return }
-            guard let timeRangeValue = userInfo["timeRangeValue"] as? NSValue else { return }
+            guard let timeValue = userInfo[timeValueInfoKey] as? NSValue else { return }
+            guard let timeRangeValue = userInfo[timeRangeValueInfoKey] as? NSValue else { return }
             
             let time : CMTime = timeValue.timeValue
             let timeRange : CMTimeRange = timeRangeValue.timeRangeValue

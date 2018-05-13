@@ -10,6 +10,16 @@ import Cocoa
 import AVKit
 import AVFoundation
 
+// MovieMutatorBase + Document
+let timeValueInfoKey : String = "timeValue" // CMTime
+let timeRangeValueInfoKey : String = "timeRangeValue" // CMTimeRange
+
+// MovieMutator + MovieMutatorBase + CAPARViewController
+let clapSizeKey : String = "clapSize" // NSSize
+let clapOffsetKey : String = "clapOffset" // NSPoint
+let paspRatioKey : String = "paspRatio" // NSSize
+let dimensionsKey : String = "dimensions" // NSSize
+
 extension Notification.Name {
     static let movieWasMutated = Notification.Name("movieWasMutated")
     static let movieWillExportSession = Notification.Name("movieWillExportSession")
@@ -44,11 +54,6 @@ public struct boxSize {
 
 private let clipPBoardTypeRaw : String = "com.mycometg3.cutter.MovieMutator"
 internal let clipPBoardType : NSPasteboard.PasteboardType = NSPasteboard.PasteboardType(rawValue: clipPBoardTypeRaw)
-
-let clapSizeKey : String = "clapSize" // NSSize
-let clapOffsetKey : String = "clapOffset" // NSPoint
-let paspRatioKey : String = "paspRatio" // NSSize
-let dimensionsKey : String = "dimensions" // NSSize
 
 /// type of dimensions - for use in dimensions(of:)
 enum dimensionsType {
@@ -219,7 +224,7 @@ class MovieMutatorBase: NSObject {
     }
     
     /// Trigger notification to update GUI when the internal movie is edited.
-    /// userInfo will contain "timeValue" and "timeRangeValue".
+    /// userInfo will contain timeValueKey and timeRangeValueKey.
     ///
     /// - Parameters:
     ///   - time: Preferred cursor position in CMTime
@@ -227,8 +232,8 @@ class MovieMutatorBase: NSObject {
     internal func internalMovieDidChange(_ time : CMTime, _ range : CMTimeRange) {
         let timeValue : NSValue = NSValue(time: time)
         let timeRangeValue : NSValue = NSValue(timeRange: range)
-        let userInfo : [AnyHashable:Any] = ["timeValue":timeValue,
-                                            "timeRangeValue":timeRangeValue]
+        let userInfo : [AnyHashable:Any] = [timeValueInfoKey:timeValue,
+                                            timeRangeValueInfoKey:timeRangeValue]
         let notification = Notification(name: .movieWasMutated,
                                         object: self, userInfo: userInfo)
         NotificationCenter.default.post(notification)

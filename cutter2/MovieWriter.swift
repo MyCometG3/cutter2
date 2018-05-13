@@ -10,6 +10,19 @@ import Cocoa
 import AVFoundation
 import VideoToolbox
 
+// MovieWriter
+let urlInfoKey : String = "url" // URL
+let startInfoKey : String = "start" // Date
+let endInfoKey : String = "end" // Date
+let completedInfoKey : String = "completed" // Bool
+let intervalInfoKey : String = "interval" // TimeInterval
+
+let progressInfoKey : String = "progress" // Float
+let statusInfoKey : String = "status" // String
+let elapsedInfoKey : String = "elapsed" // TimeInterval
+let estimatedRemainingInfoKey : String = "estimatedRemaining" // TimeInterval
+let estimatedTotalInfoKey : String = "estimatedTotal" // TimeInterval
+
 class MovieWriter: NSObject, SampleBufferChannelDelegate {
     private var internalMovie : AVMutableMovie
     
@@ -100,8 +113,8 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         
         // Issue start notification
         let dateStart : Date = Date()
-        let userInfoStart : [AnyHashable:Any] = ["url":url,
-                                                 "start":dateStart]
+        let userInfoStart : [AnyHashable:Any] = [urlInfoKey:url,
+                                                 startInfoKey:dateStart]
         let notificationStart = Notification(name: .movieWillExportSession,
                                              object: self, userInfo: userInfoStart)
         NotificationCenter.default.post(notificationStart)
@@ -131,10 +144,10 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             }
             
             // Issue end notification
-            let userInfoEnd : [AnyHashable:Any] = ["completed":completed,
-                                                   "url":url,
-                                                   "end":dateEnd,
-                                                   "interval":interval]
+            let userInfoEnd : [AnyHashable:Any] = [completedInfoKey:completed,
+                                                   urlInfoKey:url,
+                                                   endInfoKey:dateEnd,
+                                                   intervalInfoKey:interval]
             let notificationEnd = Notification(name: .movieDidExportSession,
                                                object: self, userInfo: userInfoEnd)
             NotificationCenter.default.post(notificationEnd)
@@ -195,27 +208,27 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
                 // exportSession is running
                 let progress : Float = session.progress
                 let status : AVAssetExportSessionStatus = session.status
-                result["progress"] = progress // 0.0 - 1.0 : Float
-                result["status"] = statusString(of: status)
+                result[progressInfoKey] = progress // 0.0 - 1.0 : Float
+                result[statusInfoKey] = statusString(of: status)
                 
                 let dateNow : Date = Date()
                 let interval : TimeInterval = dateNow.timeIntervalSince(dateStart)
-                result["elapsed"] = interval // seconds : Double
+                result[elapsedInfoKey] = interval // seconds : Double
                 
                 let estimatedTotal : TimeInterval = interval / Double(progress)
                 let estimatedRemaining : TimeInterval = estimatedTotal * Double(1.0 - progress)
-                result["estimatedRemaining"] = estimatedRemaining // seconds : Double
-                result["estimatedTotal"] = estimatedTotal // seconds : Double
+                result[estimatedRemainingInfoKey] = estimatedRemaining // seconds : Double
+                result[estimatedTotalInfoKey] = estimatedTotal // seconds : Double
             } else {
                 // exportSession is not running
                 let progress : Float = self.exportSessionProgress
                 let status : AVAssetExportSessionStatus = self.exportSessionStatus
-                result["progress"] = progress // 0.0 - 1.0 : Float
-                result["status"] = statusString(of: status)
+                result[progressInfoKey] = progress // 0.0 - 1.0 : Float
+                result[statusInfoKey] = statusString(of: status)
                 
                 if let dateEnd = self.exportSessionEnd {
                     let interval : TimeInterval = dateEnd.timeIntervalSince(dateStart)
-                    result["elapsed"] = interval // seconds : Double
+                    result[elapsedInfoKey] = interval // seconds : Double
                 }
             }
         }
@@ -841,7 +854,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             
             //
             let dateStart : Date = Date()
-            let userInfoStart : [AnyHashable:Any] = ["url":url]
+            let userInfoStart : [AnyHashable:Any] = [urlInfoKey:url]
             let notificationStart = Notification(name: before, object: self, userInfo: userInfoStart)
             NotificationCenter.default.post(notificationStart)
             
@@ -859,7 +872,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             //
             let dateEnd : Date = Date()
             let interval : TimeInterval = dateEnd.timeIntervalSince(dateStart)
-            let userInfoEnd : [AnyHashable:Any] = ["completed":completed, "url":url, "interval":interval]
+            let userInfoEnd : [AnyHashable:Any] = [completedInfoKey:completed, urlInfoKey:url, intervalInfoKey:interval]
             let notificationEnd = Notification(name: after, object: self, userInfo: userInfoEnd)
             NotificationCenter.default.post(notificationEnd)
         }

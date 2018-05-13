@@ -9,6 +9,15 @@
 import Cocoa
 import AVFoundation
 
+// ViewController + Document
+let timeInfoKey : String = "time" // CMTime
+let rangeInfoKey : String = "range" // CMTimeRange
+let curPositionInfoKey : String = "curPosition" // Float64
+let startPositionInfoKey : String = "startPosition" // Float64
+let endPositionInfoKey : String = "endPosition" // Float64
+let stringInfoKey : String = "string" // String
+let durationInfoKey : String = "duration" // CMTime
+
 extension Notification.Name {
     static let timelineUpdateReq = Notification.Name("timelineUpdateReq")
 }
@@ -179,10 +188,10 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             }
             
             if let userInfo = notification.userInfo {
-                let curPosition = Float64((userInfo["curPosition"] as! NSNumber).doubleValue)
-                let startPosition = Float64((userInfo["startPosition"] as! NSNumber).doubleValue)
-                let endPosition = Float64((userInfo["endPosition"] as! NSNumber).doubleValue)
-                let string = (userInfo["string"] as! String)
+                let curPosition = Float64((userInfo[curPositionInfoKey] as! NSNumber).doubleValue)
+                let startPosition = Float64((userInfo[startPositionInfoKey] as! NSNumber).doubleValue)
+                let endPosition = Float64((userInfo[endPositionInfoKey] as! NSNumber).doubleValue)
+                let string = (userInfo[stringInfoKey] as! String)
                 
                 self.updateTimeline(current: curPosition,
                                     from: startPosition,

@@ -299,13 +299,15 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             let arOutput : AVAssetReaderOutput = AVAssetReaderTrackOutput(track: track, outputSettings: arOutputSetting)
             ar.add(arOutput)
             
-            // preseve original sampleRate, numChannel, and audioChannelLayout
+            // preseve original sampleRate, numChannel, and audioChannelLayout(best effort)
             var sampleRate = 48000
             var numChannel = 2
-            var avacLayout : AVAudioChannelLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Stereo)!
+            var avacSrcLayout : AVAudioChannelLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Stereo)!
+            var avacDstLayout : AVAudioChannelLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Stereo)!
+            var aclData : Data? = nil
             
-            let descArray : [Any] = track.formatDescriptions
-            if descArray.count > 0 {
+            do {
+                let descArray : [Any] = track.formatDescriptions
                 let desc : CMFormatDescription = descArray[0] as! CMFormatDescription
                 
                 let asbdPtr = CMAudioFormatDescriptionGetStreamBasicDescription(desc)
@@ -315,40 +317,67 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
                 }
                 
                 if numChannel == 1 {
-                    avacLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Mono)!
+                    avacSrcLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Mono)!
+                    avacDstLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Mono)!
                 } else if numChannel == 2 {
-                    avacLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Stereo)!
+                    avacSrcLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Stereo)!
+                    avacDstLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Stereo)!
                 } else {
-                    var layoutSize : Int = 0
-                    let aclPtr = CMAudioFormatDescriptionGetChannelLayout(desc, &layoutSize)
-                    if let acl = aclPtr?.pointee {
-                        var audioChannelLayout : AudioChannelLayout = acl
-                        avacLayout = AVAudioChannelLayout(layout: &audioChannelLayout)
-                    }
+                    // Multi channel (surround audio) requires AudioChannelLayout
+                    let conv : LayoutConverter = LayoutConverter()
+                    var dataSrc : AudioChannelLayoutData? = nil
+                    var dataDst : AudioChannelLayoutData? = nil
                     
-                    //TODO: try to translate layout as predefined tag
-                    // if fourcc == 'aac '. Reference :
-                    // CoreAudioTypes.h : kAudioChannelLayoutTag_AAC_xxxxx
-                    // L/R/C : Front
-                    // Lfe : Low Freq.
-                    // Ls/Rs/Cs : Surround (near rear)
-                    // Rls/Rrs : Rear Surround (far; 5 rear)
-                    // Lc/Rc : Mid of L/C and R/C (5 front)
-                    // Vhl/Vhr/Vhc : Vertical height
+                    var layoutSize : Int = 0
+                    let aclPtr : UnsafePointer<AudioChannelLayout>? =
+                        CMAudioFormatDescriptionGetChannelLayout(desc, &layoutSize)
+                    if let aclPtr = aclPtr {
+                        avacDstLayout = AVAudioChannelLayout(layout: aclPtr)
+                        dataSrc = conv.dataFor(layoutBytes: aclPtr, size: layoutSize)
+                    }
+                    if let dataSrc = dataSrc {
+                        // Try to translate layout as predefined tag
+                        if fourcc == "lpcm" {
+                            dataDst = conv.convertAsPCMTag(from: dataSrc)
+                            if dataDst == nil {
+                                dataDst = conv.convertAsBitmap(from: dataSrc)
+                            }
+                            if dataDst == nil {
+                                dataDst = conv.convertAsDescriptions(from: dataSrc)
+                            }
+                        }
+                        if fourcc == "aac " {
+                            dataDst = conv.convertAsAACTag(from: dataSrc)
+                        }
+                    }
+                    if let data1 = dataSrc, let data2 = dataDst {
+                        data1.withUnsafeBytes({(ptr) in
+                            avacSrcLayout = AVAudioChannelLayout(layout: ptr)
+                        })
+                        data2.withUnsafeBytes({(ptr) in
+                            avacDstLayout = AVAudioChannelLayout(layout: ptr)
+                        })
+                    } else {
+                        assert(false, "ERROR: Failed to convert layout")
+                    }
                 }
+                
+                //
+                let acDescCount : UInt32 = avacDstLayout.layout.pointee.mNumberChannelDescriptions
+                let acDescSize : Int = MemoryLayout<AudioChannelDescription>.size
+                let acLayoutSize : Int = MemoryLayout<AudioChannelLayout>.size + (Int(acDescCount) - 1) * acDescSize
+                aclData = Data.init(bytes: avacDstLayout.layout, count: acLayoutSize)
             }
-            
-            //
-            let acDescCount : UInt32 = avacLayout.layout.pointee.mNumberChannelDescriptions
-            let acDescSize : Int = MemoryLayout<AudioChannelDescription>.size
-            let acLayoutSize : Int = MemoryLayout<AudioChannelLayout>.size + (Int(acDescCount) - 1) * acDescSize
-            
-            var acl : AudioChannelLayout = avacLayout.layout.pointee
-            let aclData : Data = Data.init(bytes: &acl, count: acLayoutSize)
             
             // destination
             var awInputSetting : [String:Any] = [:]
             awInputSetting[AVFormatIDKey] = UTGetOSTypeFromString(fourcc)
+            awInputSetting[AVSampleRateKey] = sampleRate
+            awInputSetting[AVNumberOfChannelsKey] = numChannel
+            awInputSetting[AVChannelLayoutKey] = aclData
+            awInputSetting[AVSampleRateConverterAlgorithmKey] = AVSampleRateConverterAlgorithm_Normal
+            //awInputSetting[AVSampleRateConverterAudioQualityKey] = AVAudioQuality.medium
+            
             if fourcc == "lpcm" {
                 awInputSetting[AVLinearPCMIsBigEndianKey] = false
                 awInputSetting[AVLinearPCMIsFloatKey] = false
@@ -356,10 +385,28 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
                 awInputSetting[AVLinearPCMIsNonInterleaved] = false
             } else {
                 awInputSetting[AVEncoderBitRateKey] = targetBitRate
+                awInputSetting[AVEncoderBitRateStrategyKey] = AVAudioBitRateStrategy_LongTermAverage
+                //awInputSetting[AVEncoderAudioQualityKey] = AVAudioQuality.medium
             }
-            awInputSetting[AVSampleRateKey] = sampleRate
-            awInputSetting[AVNumberOfChannelsKey] = numChannel
-            awInputSetting[AVChannelLayoutKey] = aclData
+            
+            // Validate bitrate
+            if let _ = awInputSetting[AVEncoderBitRateKey] {
+                let inFormat = AVAudioFormat(standardFormatWithSampleRate: Double(sampleRate),
+                                             channelLayout: avacSrcLayout)
+                let outFormat = AVAudioFormat(settings: awInputSetting)!
+                let converter = AVAudioConverter(from: inFormat, to: outFormat)!
+                let bitrateArray = converter.applicableEncodeBitRates!.map{($0).intValue}
+                if bitrateArray.contains(targetBitRate) == false {
+                    // bitrate adjustment
+                    var prev = bitrateArray.first!
+                    for item in bitrateArray {
+                        if item > targetBitRate { break }
+                        prev = item
+                    }
+                    awInputSetting[AVEncoderBitRateKey] = prev
+                    Swift.print("NOTE: Bitrate adjustment to", prev, "from", targetBitRate)
+                }
+            }
             
             let awInput : AVAssetWriterInput = AVAssetWriterInput(mediaType: .audio, outputSettings: awInputSetting)
             // awInput.mediaTimeScale = track.naturalTimeScale // Audio track is unable to change
@@ -641,6 +688,10 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             waitSem.signal()
         })
         waitSem.wait()
+        
+        if finalSuccess == false, let error = finalError {
+            throw error
+        }
     }
     
     public func cancelCustomMovie(_ sender : Any) {

@@ -678,7 +678,6 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         caparWC.loadWindow()
         
         guard let contVC = caparWC.contentViewController else { return }
-        contVC.loadView()
         
         guard let caparVC = contVC as? CAPARViewController else { return }
         

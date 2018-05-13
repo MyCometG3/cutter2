@@ -82,6 +82,28 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         super.init()
         
         self.hasUndoManager = true
+        
+        let def = UserDefaults.standard
+        def.register(defaults: [
+            kTranscodePresetKey: kTranscodePresetCustom,
+            kTranscodeTypeKey:4, // = Custom
+            kTrancode0Key:3,
+            kTrancode1Key:2,
+            kTrancode2Key:0,
+            kTrancode3Key:6,
+            kAVFileTypeKey:AVFileType.mov,
+            kHEVCReadyKey:false,
+            kLPCMDepthKey:0, // "aac "
+            kAudioKbpsKey:192, // 192Kbps
+            kVideoKbpsKey:4096, // 4096Kbps
+            kCopyFieldKey:true,
+            kCopyNCLCKey:true,
+            kCopyOtherMediaKey:true,
+            kVideoEncodeKey:true,
+            kAudioEncodeKey:true,
+            kVideoCodecKey:0, // "avc1"
+            kAudioCodecKey:0, // "aac "
+            ])
     }
     
     override class var autosavesInPlace: Bool {

@@ -41,6 +41,20 @@ class CAPARViewController: NSViewController {
         super.viewDidLoad()
         // Do view setup here.
         
+        let def = UserDefaults.standard
+        def.register(defaults: [
+            modClapPaspKey:false,
+            labelEncodedKey:"n/a",
+            labelCleanKey:"n/a",
+            labelProductionKey:"n/a",
+            clapSizeWidthKey:1920.0,
+            clapSizeHeightKey:1080.0,
+            clapOffsetXKey:0.0,
+            clapOffsetYKey:0.0,
+            paspRatioWidthKey:1.0,
+            paspRatioHeightKey:1.0,
+            validKey:true,
+            ])
     }
     
     //

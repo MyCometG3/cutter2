@@ -11,6 +11,7 @@
 		162ED4B1207A2F4E00DFAD7E /* MovieWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */; };
 		162ED4B3207A3F2A00DFAD7E /* SampleBufferChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */; };
 		168DAE1F204A3BBC00C1DEFA /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168DAE1E204A3BBC00C1DEFA /* Window.swift */; };
+		16B60C2520A3DFB7003065AC /* LayoutConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B60C2420A3DFB7003065AC /* LayoutConverter.swift */; };
 		16BCA6C3204B715900D4B2A5 /* AccessoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BCA6C2204B715900D4B2A5 /* AccessoryViewController.swift */; };
 		16C773CA2014348500033B74 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C773C92014348500033B74 /* TimelineView.swift */; };
 		16CD66EE203835080089EB86 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CD66ED203835080089EB86 /* WindowController.swift */; };
@@ -31,6 +32,7 @@
 		162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieWriter.swift; sourceTree = "<group>"; };
 		162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleBufferChannel.swift; sourceTree = "<group>"; };
 		168DAE1E204A3BBC00C1DEFA /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
+		16B60C2420A3DFB7003065AC /* LayoutConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutConverter.swift; sourceTree = "<group>"; };
 		16BCA6C2204B715900D4B2A5 /* AccessoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessoryViewController.swift; sourceTree = "<group>"; };
 		16C773C92014348500033B74 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
 		16CD66ED203835080089EB86 /* WindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 				16EE23FA200AF2C800980467 /* cutter2.entitlements */,
 				162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */,
 				162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */,
+				16B60C2420A3DFB7003065AC /* LayoutConverter.swift */,
 			);
 			path = cutter2;
 			sourceTree = "<group>";
@@ -184,6 +187,7 @@
 				16C773CA2014348500033B74 /* TimelineView.swift in Sources */,
 				161D7BA2208C278500647FD3 /* CAPARViewController.swift in Sources */,
 				16E189FF207876EE00A68696 /* TranscodeViewController.swift in Sources */,
+				16B60C2520A3DFB7003065AC /* LayoutConverter.swift in Sources */,
 				16BCA6C3204B715900D4B2A5 /* AccessoryViewController.swift in Sources */,
 				16EE23EF200AF2C800980467 /* AppDelegate.swift in Sources */,
 				16CD66EE203835080089EB86 /* WindowController.swift in Sources */,

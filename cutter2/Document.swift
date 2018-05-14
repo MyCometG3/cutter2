@@ -453,7 +453,6 @@ class Document: NSDocument, ViewControllerDelegate, NSOpenSavePanelDelegate, Acc
         transcodeWC.loadWindow()
         
         guard let contVC = transcodeWC.contentViewController else { return }
-        contVC.loadView()
         
         guard let transcodeVC = contVC as? TranscodeViewController else { return }
         

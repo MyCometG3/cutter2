@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1605508520AC14910029AE1C /* Document+Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1605508420AC14910029AE1C /* Document+Delegate.swift */; };
+		1605508720AC232A0029AE1C /* Document+Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1605508620AC232A0029AE1C /* Document+Utilities.swift */; };
 		161D7BA2208C278500647FD3 /* CAPARViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161D7BA1208C278500647FD3 /* CAPARViewController.swift */; };
 		162ED4B1207A2F4E00DFAD7E /* MovieWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */; };
 		162ED4B3207A3F2A00DFAD7E /* SampleBufferChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */; };
@@ -28,6 +30,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1605508420AC14910029AE1C /* Document+Delegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Document+Delegate.swift"; sourceTree = "<group>"; };
+		1605508620AC232A0029AE1C /* Document+Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Document+Utilities.swift"; sourceTree = "<group>"; };
 		161D7BA1208C278500647FD3 /* CAPARViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CAPARViewController.swift; sourceTree = "<group>"; };
 		162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieWriter.swift; sourceTree = "<group>"; };
 		162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleBufferChannel.swift; sourceTree = "<group>"; };
@@ -86,6 +90,8 @@
 				168DAE1E204A3BBC00C1DEFA /* Window.swift */,
 				16E189F82078405600A68696 /* DocumentController.swift */,
 				16EE23F2200AF2C800980467 /* Document.swift */,
+				1605508420AC14910029AE1C /* Document+Delegate.swift */,
+				1605508620AC232A0029AE1C /* Document+Utilities.swift */,
 				16DBCF18209C643700887A77 /* MovieMutatorBase.swift */,
 				16EE2402200B036800980467 /* MovieMutator.swift */,
 				16EE23F0200AF2C800980467 /* ViewController.swift */,
@@ -197,6 +203,8 @@
 				16E189F92078405600A68696 /* DocumentController.swift in Sources */,
 				168DAE1F204A3BBC00C1DEFA /* Window.swift in Sources */,
 				16DBCF19209C643700887A77 /* MovieMutatorBase.swift in Sources */,
+				1605508520AC14910029AE1C /* Document+Delegate.swift in Sources */,
+				1605508720AC232A0029AE1C /* Document+Utilities.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

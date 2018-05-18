@@ -838,7 +838,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         
         do {
             //
-            let srcMovie : AVMutableMovie = internalMovie.mutableCopy() as! AVMutableMovie
+            let srcMovie : AVMutableMovie = internalMovie
             let range : CMTimeRange = srcMovie.range
             let tmp : AVMutableMovie? = try AVMutableMovie(settingsFrom: srcMovie, options: nil)
             guard let newMovie : AVMutableMovie = tmp else {

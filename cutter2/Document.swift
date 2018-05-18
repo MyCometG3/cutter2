@@ -351,12 +351,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     }
     
     private func refreshMovie() {
-        // Refresh internal movie (to sync selfcontained <> referece movie change)
+        // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
         DispatchQueue.main.async {[unowned self] in
             guard let url : URL = self.fileURL else { return }
             let newMovie : AVMovie? = AVMovie(url: url, options: nil)
             if let newMovie = newMovie {
                 guard let mutator = self.movieMutator else { return }
+                guard let data = try? newMovie.makeMovieHeader(fileType: .mov) else { return }
+                
                 let time : CMTime = mutator.insertionTime
                 let range : CMTimeRange = mutator.selectedTimeRange
                 let newMovieRange : CMTimeRange = newMovie.range
@@ -366,10 +368,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 newTime = CMTIME_IS_VALID(newTime) ? newTime : kCMTimeZero
                 
                 self.removeMutationObserver()
-                self.movieMutator = MovieMutator(with: newMovie)
+                _ = mutator.reloadAndNotify(from: data, range: newRange, time: newTime)
                 self.addMutationObserver()
-                
-                self.updateGUI(newTime, newRange, true)
             }
         }
     }

@@ -6,6 +6,7 @@
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14109"/>
         <capability name="box content view" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+        <capability name="stacking Non-gravity area distributions on NSStackView" minToolsVersion="7.0" minSystemVersion="10.11"/>
     </dependencies>
     <scenes>
         <!--Application-->
@@ -261,6 +262,12 @@
                                                 <action selector="performZoom:" target="Ady-hI-5gd" id="DIl-cC-cCs"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="OIy-lz-E8P"/>
+                                        <menuItem title="Inspector" keyEquivalent="i" id="pau-V1-1WM">
+                                            <connections>
+                                                <segue destination="PEt-Rb-z8M" kind="show" id="HbR-Gd-ivU"/>
+                                            </connections>
+                                        </menuItem>
                                         <menuItem isSeparatorItem="YES" id="eu3-7i-yIM"/>
                                         <menuItem title="Bring All to Front" id="LE2-aR-0XJ">
                                             <modifierMask key="keyEquivalentModifierMask"/>
@@ -302,7 +309,7 @@
             <objects>
                 <windowController storyboardIdentifier="Document Window Controller" id="jGA-0Y-lOj" customClass="WindowController" customModule="cutter2" customModuleProvider="target" sceneMemberID="viewController">
                     <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="Ckk-yw-fiv" customClass="Window" customModule="cutter2" customModuleProvider="target">
-                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" texturedBackground="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" topStrut="YES"/>
                         <rect key="contentRect" x="0.0" y="757" width="480" height="270"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
@@ -469,6 +476,524 @@ Audio size = 0 KiB</string>
                 <customObject id="pAo-kJ-Zqt" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1062" y="342"/>
+        </scene>
+        <!--Inspector Panel Controller-->
+        <scene sceneID="pWU-Pd-7jj">
+            <objects>
+                <windowController showSeguePresentationStyle="single" id="PEt-Rb-z8M" userLabel="Inspector Panel Controller" sceneMemberID="viewController">
+                    <window key="window" title="Inspector Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="utilityWindow" frameAutosaveName="InspectorWindow" tabbingMode="disallowed" titlebarAppearsTransparent="YES" id="0U4-iu-IPx" userLabel="Inspector Panel" customClass="NSPanel">
+                        <windowStyleMask key="styleMask" titled="YES" closable="YES" resizable="YES" utility="YES" nonactivatingPanel="YES" HUD="YES"/>
+                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+                        <rect key="contentRect" x="1746" y="787" width="360" height="300"/>
+                        <rect key="screenRect" x="1440" y="0.0" width="1920" height="1057"/>
+                        <connections>
+                            <outlet property="delegate" destination="PEt-Rb-z8M" id="BXs-yi-bC7"/>
+                        </connections>
+                    </window>
+                    <connections>
+                        <segue destination="WAy-li-bv5" kind="relationship" relationship="window.shadowedContentViewController" id="3sA-94-6vl"/>
+                    </connections>
+                </windowController>
+                <customObject id="62B-s8-tve" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1588" y="342"/>
+        </scene>
+        <!--Inspector View Controller-->
+        <scene sceneID="tLZ-8O-NRq">
+            <objects>
+                <viewController id="WAy-li-bv5" userLabel="Inspector View Controller" customClass="InspectorViewController" customModule="cutter2" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" id="YnU-IC-5MZ">
+                        <rect key="frame" x="0.0" y="0.0" width="360" height="300"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <stackView distribution="fillEqually" orientation="vertical" alignment="leading" horizontalStackHuggingPriority="240" verticalStackHuggingPriority="240" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sC1-wA-pSt">
+                                <rect key="frame" x="20" y="20" width="320" height="260"/>
+                                <subviews>
+                                    <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Sds-lF-hFT">
+                                        <rect key="frame" x="74" y="246" width="238" height="14"/>
+                                        <subviews>
+                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="mY8-cK-fFe">
+                                                <rect key="frame" x="-2" y="0.0" width="31" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Title:" id="zqj-Q8-myX">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </textField>
+                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="0Lh-Fu-Rw3">
+                                                <rect key="frame" x="33" y="0.0" width="207" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="O3C-uZ-7gU">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                                <connections>
+                                                    <binding destination="LGU-Ta-ISZ" name="value" keyPath="selection.title" id="hB9-WY-i7P">
+                                                        <dictionary key="options">
+                                                            <string key="NSNullPlaceholder">not available</string>
+                                                        </dictionary>
+                                                    </binding>
+                                                </connections>
+                                            </textField>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                    <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5wB-jJ-AZs">
+                                        <rect key="frame" x="34" y="223" width="278" height="15"/>
+                                        <subviews>
+                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="8nc-Wp-WN4">
+                                                <rect key="frame" x="-2" y="1" width="71" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Source Path:" id="Cc0-tk-8hN">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </textField>
+                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="sV4-8y-QJs">
+                                                <rect key="frame" x="73" y="1" width="207" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="HLw-0S-fq6">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                                <connections>
+                                                    <binding destination="LGU-Ta-ISZ" name="value" keyPath="selection.path" id="hxL-jM-OXo"/>
+                                                </connections>
+                                            </textField>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                    <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MbH-18-IUj">
+                                        <rect key="frame" x="27" y="201" width="285" height="14"/>
+                                        <subviews>
+                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="KVL-1Y-QYq">
+                                                <rect key="frame" x="-2" y="0.0" width="78" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Video Format:" id="uh3-5K-A44">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </textField>
+                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="ttc-tt-VJK">
+                                                <rect key="frame" x="80" y="0.0" width="207" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="80X-Wv-NOT">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                                <connections>
+                                                    <binding destination="LGU-Ta-ISZ" name="value" keyPath="selection.videoFormat" id="vJo-sq-12f"/>
+                                                </connections>
+                                            </textField>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                    <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vay-Xr-6oT">
+                                        <rect key="frame" x="14" y="179" width="298" height="14"/>
+                                        <subviews>
+                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="3Rs-dF-4MW">
+                                                <rect key="frame" x="-2" y="0.0" width="91" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Video Data Size:" id="znj-2Z-8eN">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </textField>
+                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="AHQ-vG-h1y">
+                                                <rect key="frame" x="93" y="0.0" width="207" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="ksv-Ef-eON">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                                <connections>
+                                                    <binding destination="LGU-Ta-ISZ" name="value" keyPath="selection.videoDataSize" id="fXs-yI-y8S"/>
+                                                </connections>
+                                            </textField>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                    <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Zi8-Bc-sWH">
+                                        <rect key="frame" x="44" y="156" width="268" height="15"/>
+                                        <subviews>
+                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="BFj-YO-IBh">
+                                                <rect key="frame" x="-2" y="1" width="61" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Video FPS:" id="wPg-Af-nXo">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </textField>
+                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="H6b-I7-Ma9">
+                                                <rect key="frame" x="63" y="1" width="207" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="qrf-ue-ioi">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                                <connections>
+                                                    <binding destination="LGU-Ta-ISZ" name="value" keyPath="selection.videoFPS" id="Q84-WL-dRz"/>
+                                                </connections>
+                                            </textField>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                    <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="DHc-PJ-Oc1">
+                                        <rect key="frame" x="27" y="134" width="285" height="14"/>
+                                        <subviews>
+                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="9DC-25-WV3">
+                                                <rect key="frame" x="-2" y="0.0" width="78" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Audio Format:" id="bId-YB-0bn">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </textField>
+                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="fTp-Zl-f6p">
+                                                <rect key="frame" x="80" y="0.0" width="207" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="umr-w3-9sM">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                                <connections>
+                                                    <binding destination="LGU-Ta-ISZ" name="value" keyPath="selection.audioFormat" id="QmJ-Qv-ubg"/>
+                                                </connections>
+                                            </textField>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                    <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="uCc-Ms-cq0">
+                                        <rect key="frame" x="15" y="112" width="297" height="14"/>
+                                        <subviews>
+                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="MVR-Lh-7Hn">
+                                                <rect key="frame" x="-2" y="0.0" width="90" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Audio Data Size:" id="Teb-37-coU">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </textField>
+                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="axf-2j-V2M">
+                                                <rect key="frame" x="92" y="0.0" width="207" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="H3m-8v-5zh">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                                <connections>
+                                                    <binding destination="LGU-Ta-ISZ" name="value" keyPath="selection.audioDataSize" id="6K1-PR-DGH"/>
+                                                </connections>
+                                            </textField>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                    <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5Wp-z3-L4W">
+                                        <rect key="frame" x="29" y="89" width="283" height="15"/>
+                                        <subviews>
+                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="RPh-X4-Pvk">
+                                                <rect key="frame" x="-2" y="1" width="76" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Current Time:" id="C67-do-oIy">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </textField>
+                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="y76-Cu-IQL">
+                                                <rect key="frame" x="78" y="1" width="207" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="LqW-ph-fnu">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                                <connections>
+                                                    <binding destination="LGU-Ta-ISZ" name="value" keyPath="selection.currentTime" id="FTE-5y-Kvy"/>
+                                                </connections>
+                                            </textField>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                    <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9eS-Jt-g0f">
+                                        <rect key="frame" x="18" y="67" width="294" height="14"/>
+                                        <subviews>
+                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="mW6-Ld-6mF">
+                                                <rect key="frame" x="-2" y="0.0" width="87" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Movie Duration:" id="SE5-lD-diG">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </textField>
+                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="WiK-tf-lw8">
+                                                <rect key="frame" x="89" y="0.0" width="207" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="YPj-LV-hFT">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                                <connections>
+                                                    <binding destination="LGU-Ta-ISZ" name="value" keyPath="selection.movieDuration" id="Cs7-wW-Gdb"/>
+                                                </connections>
+                                            </textField>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                    <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tKT-hF-CiM">
+                                        <rect key="frame" x="19" y="45" width="293" height="14"/>
+                                        <subviews>
+                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="w8d-kd-NC4">
+                                                <rect key="frame" x="-2" y="0.0" width="86" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Selection Start:" id="km5-me-mvr">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </textField>
+                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="4rc-YD-HLG">
+                                                <rect key="frame" x="88" y="0.0" width="207" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="CzV-uY-P0Q">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                                <connections>
+                                                    <binding destination="LGU-Ta-ISZ" name="value" keyPath="selection.selectionStart" id="5ke-3M-VVr"/>
+                                                </connections>
+                                            </textField>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                    <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Aav-ox-GP2">
+                                        <rect key="frame" x="25" y="22" width="287" height="15"/>
+                                        <subviews>
+                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="pVW-RV-Rbr">
+                                                <rect key="frame" x="-2" y="1" width="80" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Selection End:" id="ocJ-FK-cWo">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </textField>
+                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="1I4-ho-ati">
+                                                <rect key="frame" x="82" y="1" width="207" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="uiP-JA-3zq">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                                <connections>
+                                                    <binding destination="LGU-Ta-ISZ" name="value" keyPath="selection.selectionEnd" id="0hv-b4-6bm"/>
+                                                </connections>
+                                            </textField>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                    <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="PZ2-fl-h3q">
+                                        <rect key="frame" x="0.0" y="0.0" width="312" height="14"/>
+                                        <subviews>
+                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="83i-R5-c0O">
+                                                <rect key="frame" x="-2" y="0.0" width="105" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Selection Duration:" id="bfp-6a-teV">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </textField>
+                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="8hd-JS-Caq">
+                                                <rect key="frame" x="107" y="0.0" width="207" height="14"/>
+                                                <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="XhI-6H-6kD">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                                <connections>
+                                                    <binding destination="LGU-Ta-ISZ" name="value" keyPath="selection.selectionDuration" id="Vdl-Mh-Lug"/>
+                                                </connections>
+                                            </textField>
+                                        </subviews>
+                                        <visibilityPriorities>
+                                            <integer value="1000"/>
+                                            <integer value="1000"/>
+                                        </visibilityPriorities>
+                                        <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
+                                            <real value="3.4028234663852886e+38"/>
+                                        </customSpacing>
+                                    </stackView>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstAttribute="trailing" secondItem="tKT-hF-CiM" secondAttribute="trailing" constant="8" id="0C3-zj-YcZ"/>
+                                    <constraint firstItem="RPh-X4-Pvk" firstAttribute="trailing" secondItem="mY8-cK-fFe" secondAttribute="trailing" id="4DW-M0-6u3"/>
+                                    <constraint firstItem="H6b-I7-Ma9" firstAttribute="leading" secondItem="0Lh-Fu-Rw3" secondAttribute="leading" id="61O-D3-m68"/>
+                                    <constraint firstItem="y76-Cu-IQL" firstAttribute="leading" secondItem="0Lh-Fu-Rw3" secondAttribute="leading" id="7nQ-xL-vIT"/>
+                                    <constraint firstItem="1I4-ho-ati" firstAttribute="leading" secondItem="0Lh-Fu-Rw3" secondAttribute="leading" id="8le-3q-i37"/>
+                                    <constraint firstItem="9DC-25-WV3" firstAttribute="trailing" secondItem="mY8-cK-fFe" secondAttribute="trailing" id="9Ir-Xs-2FO"/>
+                                    <constraint firstAttribute="trailing" secondItem="vay-Xr-6oT" secondAttribute="trailing" constant="8" id="G3I-gW-Kq1"/>
+                                    <constraint firstItem="ttc-tt-VJK" firstAttribute="leading" secondItem="0Lh-Fu-Rw3" secondAttribute="leading" id="HEJ-5I-sSP"/>
+                                    <constraint firstItem="KVL-1Y-QYq" firstAttribute="trailing" secondItem="mY8-cK-fFe" secondAttribute="trailing" id="HdM-a7-fhQ"/>
+                                    <constraint firstItem="fTp-Zl-f6p" firstAttribute="leading" secondItem="0Lh-Fu-Rw3" secondAttribute="leading" id="Ic1-1P-10p"/>
+                                    <constraint firstItem="WiK-tf-lw8" firstAttribute="leading" secondItem="0Lh-Fu-Rw3" secondAttribute="leading" id="Ij1-yd-5fn"/>
+                                    <constraint firstItem="8hd-JS-Caq" firstAttribute="leading" secondItem="0Lh-Fu-Rw3" secondAttribute="leading" id="Isg-U2-es2"/>
+                                    <constraint firstItem="83i-R5-c0O" firstAttribute="trailing" secondItem="mY8-cK-fFe" secondAttribute="trailing" id="LX8-qf-jPg"/>
+                                    <constraint firstItem="4rc-YD-HLG" firstAttribute="leading" secondItem="0Lh-Fu-Rw3" secondAttribute="leading" id="LiM-5K-epL"/>
+                                    <constraint firstItem="sV4-8y-QJs" firstAttribute="leading" secondItem="0Lh-Fu-Rw3" secondAttribute="leading" id="Njt-q5-ArE"/>
+                                    <constraint firstAttribute="trailing" secondItem="5wB-jJ-AZs" secondAttribute="trailing" constant="8" id="OPj-5n-3WB"/>
+                                    <constraint firstItem="axf-2j-V2M" firstAttribute="leading" secondItem="0Lh-Fu-Rw3" secondAttribute="leading" id="PaW-EE-CSN"/>
+                                    <constraint firstAttribute="trailing" secondItem="PZ2-fl-h3q" secondAttribute="trailing" constant="8" id="Piq-sL-Y9j"/>
+                                    <constraint firstAttribute="trailing" secondItem="uCc-Ms-cq0" secondAttribute="trailing" constant="8" id="Xae-N3-KvZ"/>
+                                    <constraint firstAttribute="trailing" secondItem="Aav-ox-GP2" secondAttribute="trailing" constant="8" id="ZhH-ux-rAP"/>
+                                    <constraint firstItem="3Rs-dF-4MW" firstAttribute="trailing" secondItem="mY8-cK-fFe" secondAttribute="trailing" id="cnB-sc-d3t"/>
+                                    <constraint firstItem="w8d-kd-NC4" firstAttribute="trailing" secondItem="mY8-cK-fFe" secondAttribute="trailing" id="hWE-LY-wR7"/>
+                                    <constraint firstItem="BFj-YO-IBh" firstAttribute="trailing" secondItem="mY8-cK-fFe" secondAttribute="trailing" id="j6K-sr-eem"/>
+                                    <constraint firstItem="8nc-Wp-WN4" firstAttribute="trailing" secondItem="mY8-cK-fFe" secondAttribute="trailing" id="lEG-gw-CM9"/>
+                                    <constraint firstAttribute="trailing" secondItem="5Wp-z3-L4W" secondAttribute="trailing" constant="8" id="mcv-JK-Z52"/>
+                                    <constraint firstAttribute="trailing" secondItem="DHc-PJ-Oc1" secondAttribute="trailing" constant="8" id="olV-aF-Crs"/>
+                                    <constraint firstItem="MVR-Lh-7Hn" firstAttribute="trailing" secondItem="mY8-cK-fFe" secondAttribute="trailing" id="poJ-lG-sXg"/>
+                                    <constraint firstAttribute="trailing" secondItem="Sds-lF-hFT" secondAttribute="trailing" constant="8" id="rpV-jA-KSE"/>
+                                    <constraint firstAttribute="trailing" secondItem="Zi8-Bc-sWH" secondAttribute="trailing" constant="8" id="s35-EC-V71"/>
+                                    <constraint firstItem="mW6-Ld-6mF" firstAttribute="trailing" secondItem="mY8-cK-fFe" secondAttribute="trailing" id="ti4-fl-cpu"/>
+                                    <constraint firstAttribute="trailing" secondItem="MbH-18-IUj" secondAttribute="trailing" constant="8" id="uVc-MI-JuM"/>
+                                    <constraint firstItem="pVW-RV-Rbr" firstAttribute="trailing" secondItem="mY8-cK-fFe" secondAttribute="trailing" id="vzD-8W-aSQ"/>
+                                    <constraint firstItem="AHQ-vG-h1y" firstAttribute="leading" secondItem="0Lh-Fu-Rw3" secondAttribute="leading" id="w5X-DA-dEE"/>
+                                    <constraint firstAttribute="trailing" secondItem="9eS-Jt-g0f" secondAttribute="trailing" constant="8" id="yOC-Xe-JLi"/>
+                                </constraints>
+                                <visibilityPriorities>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                </visibilityPriorities>
+                                <customSpacing>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                </customSpacing>
+                            </stackView>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="sC1-wA-pSt" firstAttribute="top" secondItem="YnU-IC-5MZ" secondAttribute="top" constant="20" id="9le-1z-IYe"/>
+                            <constraint firstItem="sC1-wA-pSt" firstAttribute="leading" secondItem="YnU-IC-5MZ" secondAttribute="leading" constant="20" id="ZLe-2q-WX1"/>
+                            <constraint firstAttribute="trailing" secondItem="sC1-wA-pSt" secondAttribute="trailing" constant="20" id="mH9-qV-bTj"/>
+                            <constraint firstAttribute="bottom" secondItem="sC1-wA-pSt" secondAttribute="bottom" constant="20" id="yPL-5M-36R"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="objectController" destination="LGU-Ta-ISZ" id="TaH-37-exx"/>
+                    </connections>
+                </viewController>
+                <customObject id="5Oo-VG-7SA" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+                <objectController automaticallyPreparesContent="YES" id="LGU-Ta-ISZ">
+                    <declaredKeys>
+                        <string>title</string>
+                        <string>path</string>
+                        <string>videoFormat</string>
+                        <string>videoFPS</string>
+                        <string>audioFormat</string>
+                        <string>videoDataSize</string>
+                        <string>audioDataSize</string>
+                        <string>currentTime</string>
+                        <string>movieDuration</string>
+                        <string>selectionStart</string>
+                        <string>selectionEnd</string>
+                        <string>selectionDuration</string>
+                    </declaredKeys>
+                </objectController>
+            </objects>
+            <point key="canvasLocation" x="1588" y="808"/>
         </scene>
         <!--CAPARView Controller-->
         <scene sceneID="g4x-H1-MGM">
@@ -860,7 +1385,7 @@ Gw
                                 <font key="font" metaFont="system"/>
                                 <tabViewItems>
                                     <tabViewItem label="0" identifier="" id="45l-T1-b0x">
-                                        <view key="view" id="HjG-ir-1ZU">
+                                        <view key="view" ambiguous="YES" id="HjG-ir-1ZU">
                                             <rect key="frame" x="10" y="7" width="303" height="229"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -1085,7 +1610,7 @@ Gw
                                         </view>
                                     </tabViewItem>
                                     <tabViewItem label="4" identifier="" id="5jA-k0-Rfw">
-                                        <view key="view" ambiguous="YES" id="ogd-yp-Hq7">
+                                        <view key="view" id="ogd-yp-Hq7">
                                             <rect key="frame" x="10" y="7" width="303" height="229"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1605508520AC14910029AE1C /* Document+Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1605508420AC14910029AE1C /* Document+Delegate.swift */; };
 		1605508720AC232A0029AE1C /* Document+Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1605508620AC232A0029AE1C /* Document+Utilities.swift */; };
+		160CFA1720AFA7C7002813D2 /* InspectorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160CFA1520AFA7C7002813D2 /* InspectorViewController.swift */; };
 		161D7BA2208C278500647FD3 /* CAPARViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161D7BA1208C278500647FD3 /* CAPARViewController.swift */; };
 		162ED4B1207A2F4E00DFAD7E /* MovieWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */; };
 		162ED4B3207A3F2A00DFAD7E /* SampleBufferChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */; };
@@ -32,6 +33,7 @@
 /* Begin PBXFileReference section */
 		1605508420AC14910029AE1C /* Document+Delegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Document+Delegate.swift"; sourceTree = "<group>"; };
 		1605508620AC232A0029AE1C /* Document+Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Document+Utilities.swift"; sourceTree = "<group>"; };
+		160CFA1520AFA7C7002813D2 /* InspectorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectorViewController.swift; sourceTree = "<group>"; };
 		161D7BA1208C278500647FD3 /* CAPARViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CAPARViewController.swift; sourceTree = "<group>"; };
 		162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieWriter.swift; sourceTree = "<group>"; };
 		162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleBufferChannel.swift; sourceTree = "<group>"; };
@@ -107,6 +109,7 @@
 				162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */,
 				162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */,
 				16B60C2420A3DFB7003065AC /* LayoutConverter.swift */,
+				160CFA1520AFA7C7002813D2 /* InspectorViewController.swift */,
 			);
 			path = cutter2;
 			sourceTree = "<group>";
@@ -189,6 +192,7 @@
 			files = (
 				16EE23F1200AF2C800980467 /* ViewController.swift in Sources */,
 				162ED4B1207A2F4E00DFAD7E /* MovieWriter.swift in Sources */,
+				160CFA1720AFA7C7002813D2 /* InspectorViewController.swift in Sources */,
 				162ED4B3207A3F2A00DFAD7E /* SampleBufferChannel.swift in Sources */,
 				16C773CA2014348500033B74 /* TimelineView.swift in Sources */,
 				161D7BA2208C278500647FD3 /* CAPARViewController.swift in Sources */,

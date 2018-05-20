@@ -92,7 +92,51 @@ extension Document {
 // MARK: - Misc utilities
 /* ============================================ */
 
+let titleInspectKey : String = "title" // String
+let pathInspectKey : String = "path" // String (numTracks)
+let videoFormatInspectKey : String = "videoFormat" // String (numTracks)
+let videoFPSInspectKey : String = "videoFPS" // String (numTracks)
+let audioFormatInspectKey : String = "audioFormat" // String (numTracks)
+let videoDataSizeInspectKey : String = "videoDataSize" // String (numTracks)
+let audioDataSizeInspectKey : String = "audioDataSize" // String (numTracks)
+let currentTimeInspectKey : String = "currentTime" // String
+let movieDurationInspectKey : String = "movieDuration" // String
+let selectionStartInspectKey : String = "selectionStart" // String
+let selectionEndInspectKey : String = "selectionEnd" // String
+let selectionDurationInspectKey : String = "selectionDuration" // String
 extension Document {
+    internal func inspecterDictionary() -> [String:Any] {
+        var dict : [String:Any] = [:]
+        guard let mutator = self.movieMutator else { return dict }
+
+        dict[titleInspectKey] = self.displayName
+        
+        dict[pathInspectKey] = {
+            var urlString = ""
+            if let urlArray = mutator.mediaDataURLs() {
+                let urlStringArray : [String] = urlArray.map{(url) in url.path}
+                urlString = urlStringArray.joined(separator: ", ")
+            }
+            return urlString
+        }()
+        
+        dict[videoFormatInspectKey] = mutator.videoFormats()?.joined(separator: "\n")
+        dict[videoFPSInspectKey] = mutator.videoFPS()?.joined(separator: "\n")
+        dict[audioFormatInspectKey] = mutator.audioFormat()?.joined(separator: "\n")
+        dict[videoDataSizeInspectKey] = mutator.videoDataSize()?.joined(separator: "\n")
+        dict[audioDataSizeInspectKey] = mutator.audioDataSize()?.joined(separator: "\n")
+        dict[currentTimeInspectKey] = mutator.shortTimeString(mutator.insertionTime, withDecimals: true)
+        dict[movieDurationInspectKey] = mutator.shortTimeString(mutator.movieDuration(), withDecimals: true)
+        
+        let range : CMTimeRange = mutator.selectedTimeRange
+        dict[selectionStartInspectKey] = mutator.shortTimeString(range.start, withDecimals: true)
+        dict[selectionEndInspectKey] = mutator.shortTimeString(range.end, withDecimals: true)
+        dict[selectionDurationInspectKey] = mutator.shortTimeString(range.duration, withDecimals: true)
+        
+        return dict
+    }
+    
+    /// used in debugInfo()
     internal func modifier(_ mask : NSEvent.ModifierFlags) -> Bool {
         guard let current = NSApp.currentEvent?.modifierFlags else { return false }
         

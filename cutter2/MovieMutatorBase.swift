@@ -450,6 +450,200 @@ class MovieMutatorBase: NSObject {
         }
     }
     
+    //
+    public func videoFPS() -> [String]? {
+        var trackStrings : [String] = []
+        for track in internalMovie.tracks(withMediaType: .video) {
+            let trackID : Int = Int(track.trackID)
+            let fps : Float = track.nominalFrameRate
+            let trackString : String = String(format:"%d: %.2f fps", trackID, fps)
+            trackStrings.append(trackString)
+        }
+        return (trackStrings.count > 0) ? trackStrings : ["-"]
+    }
+    
+    //
+    public func videoDataSize() -> [String]? {
+        var trackStrings : [String] = []
+        for track in internalMovie.tracks(withMediaType: .video) {
+            let trackID : Int = Int(track.trackID)
+            let size: Int64 = track.totalSampleDataLength
+            let rate: Float = track.estimatedDataRate
+            let trackString : String = String(format:"%d: %.2f MB, %.3f Mbps", trackID,
+                                              Float(size)/1000000.0,
+                                              rate/1000000.0)
+            trackStrings.append(trackString)
+        }
+        return (trackStrings.count > 0) ? trackStrings : ["-"]
+    }
+    
+    //
+    public func audioDataSize() -> [String]? {
+        var trackStrings : [String] = []
+        for track in internalMovie.tracks(withMediaType: .audio) {
+            let trackID : Int = Int(track.trackID)
+            let size: Int64 = track.totalSampleDataLength
+            let rate: Float = track.estimatedDataRate
+            let trackString : String = String(format:"%d: %.2f MB, %.3f Mbps", trackID,
+                                              Float(size)/1000000.0,
+                                              rate/1000000.0)
+            trackStrings.append(trackString)
+        }
+        return (trackStrings.count > 0) ? trackStrings : ["-"]
+    }
+    
+    //
+    @inline(__always) private func stringForOne(_ size1 : CGSize) -> String {
+        return String(format: "%dx%d",
+                         Int(size1.width), Int(size1.height))
+    }
+    
+    //
+    @inline(__always) private func stringForTwo(_ size1 : CGSize, _ size2 : CGSize) -> String {
+        return String(format: "%d:%d(%d:%d)",
+                         Int(size1.width), Int(size1.height),
+                         Int(size2.width), Int(size2.height))
+    }
+    
+    //
+    @inline(__always) private func stringForThree(_ size1 : CGSize, _ size2 : CGSize, _ size3 : CGSize) -> String {
+        return String(format: "%d:%d(%d:%d/%d:%d)",
+                         Int(size1.width), Int(size1.height),
+                         Int(size2.width), Int(size2.height),
+                         Int(size3.width), Int(size3.height))
+    }
+    
+    //
+    public func videoFormats() -> [String]? {
+        var trackStrings : [String] = []
+        for track in internalMovie.tracks(withMediaType: .video) {
+            var trackString : [String] = []
+            let trackID : Int = Int(track.trackID)
+            let reference : Bool = !(track.isSelfContained)
+            for desc in track.formatDescriptions as! [CMVideoFormatDescription] {
+                var name : String = ""
+                do {
+                    let ext : CFPropertyList? = CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_FormatName)
+                    if let ext = ext {
+                        let nameStr = ext as! NSString
+                        name = String(nameStr)
+                    } else {
+                        let fcc : FourCharCode = CMFormatDescriptionGetMediaSubType(desc)
+                        let fccString : NSString = UTCreateStringForOSType(fcc).takeUnretainedValue()
+                        name = "FourCC(\(fccString))"
+                    }
+                }
+                var dimension : String = ""
+                do {
+                    let encoded : CGSize = CMVideoFormatDescriptionGetPresentationDimensions(desc, false, false)
+                    let prod : CGSize = CMVideoFormatDescriptionGetPresentationDimensions(desc, true, false)
+                    let clean : CGSize = CMVideoFormatDescriptionGetPresentationDimensions(desc, true, true)
+                    if encoded != prod || encoded != clean {
+                        dimension = (prod == clean) ?
+                            stringForTwo(encoded, prod) :
+                            stringForThree(encoded, prod, clean)
+                    } else {
+                        dimension = stringForOne(encoded)
+                    }
+                }
+                if reference {
+                    trackString.append("\(trackID): \(name), \(dimension), Reference")
+                } else {
+                    trackString.append("\(trackID): \(name), \(dimension)")
+                }
+            }
+            trackStrings.append(contentsOf: trackString)
+        }
+        return (trackStrings.count > 0) ? trackStrings : ["-"]
+    }
+    
+    //
+    public func audioFormat() -> [String]? {
+        var trackStrings : [String] = []
+        for track in internalMovie.tracks(withMediaType: .audio) {
+            var trackString : [String] = []
+            let trackID : Int = Int(track.trackID)
+            let reference : Bool = !(track.isSelfContained)
+            for desc in track.formatDescriptions as! [CMVideoFormatDescription] {
+                var rateString : String = ""
+                do {
+                    let basic = CMAudioFormatDescriptionGetStreamBasicDescription(desc)
+                    if let ptr = basic {
+                        let rate : Float64 = ptr.pointee.mSampleRate
+                        rateString = String(format:"%.3f kHz", rate/1000.0)
+                    }
+                }
+                var formatString : String = ""
+                do {
+                    // get AudioStreamBasicDescription ptr
+                    let asbdSize : UInt32 = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
+                    let asbdPtr : UnsafePointer<AudioStreamBasicDescription>? =
+                        CMAudioFormatDescriptionGetStreamBasicDescription(desc)
+                    
+                    var formatSize : UInt32 = UInt32(MemoryLayout<CFString>.size)
+                    var format : CFString!
+                    let err : OSStatus =
+                        AudioFormatGetProperty(kAudioFormatProperty_FormatName,
+                                               asbdSize, asbdPtr, &formatSize,
+                                               &format)
+                    assert(err == noErr && formatSize > 0)
+                    formatString = String(format as NSString)
+                }
+                var layoutString : String = ""
+                do {
+                    // get AudioChannelLayout ptr
+                    var aclSize : Int = 0
+                    let aclPtr : UnsafePointer<AudioChannelLayout>? =
+                        CMAudioFormatDescriptionGetChannelLayout(desc, &aclSize)
+                    
+                    #if true
+                        var name : CFString!
+                        var nameSize : UInt32 = UInt32(MemoryLayout<CFString>.size)
+                        let err : OSStatus =
+                            AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
+                                                   UInt32(aclSize), aclPtr,
+                                                   &nameSize, &name)
+                        assert(err == noErr && nameSize > 0)
+                        layoutString = String(name as NSString)
+
+                    #else
+                        // get bytecount of ChannelLayoutName
+                        var nameSize : UInt32 = 0
+                        let err1 : OSStatus =
+                            AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutName,
+                                                       UInt32(aclSize), aclPtr, &nameSize)
+                        assert(err1 == noErr)
+                    
+                        // allocate buffer
+                        let count : Int = Int(nameSize) / MemoryLayout<CFString>.size
+                        let ptr : UnsafeMutablePointer<CFString> =
+                            UnsafeMutablePointer<CFString>.allocate(capacity: count)
+                    
+                        // get unmanaged CFString
+                        let err2 : OSStatus =
+                            AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
+                                                   UInt32(aclSize), aclPtr, &nameSize, ptr)
+                        assert(err2 == noErr)
+                    
+                        // do something here
+                        let name : NSString = ptr.pointee as NSString
+                        layoutString = String(name)
+                    
+                        // deallocate buffer
+                        ptr.deallocate() // This is not same as CFRelease()
+                    #endif
+                }
+                if reference {
+                    trackString.append("\(trackID): \(formatString), \(layoutString), \(rateString), Reference")
+                } else {
+                    trackString.append("\(trackID): \(formatString), \(layoutString), \(rateString)")
+                }
+            }
+            trackStrings.append(contentsOf: trackString)
+        }
+        return (trackStrings.count > 0) ? trackStrings : ["-"]
+    }
+    
     /// Make new AVPlayerItem for internalMovie
     ///
     /// - Returns: AVPlayerItem

@@ -34,7 +34,7 @@ extension Document : ViewControllerDelegate {
         guard let mutator = self.movieMutator else { return }
         let player = self.player!
         Swift.print("##### ", mutator.ts(), " #####")
-        #if false
+        #if true
         do {
             let t = mutator.movieDuration()
             Swift.print(" movie duration",
@@ -119,7 +119,9 @@ extension Document : ViewControllerDelegate {
             }
         }
         #endif
+        #if false
         Swift.print(mutator.clappaspDictionary() as Any)
+        #endif
     }
     
     public func timeOfPosition(_ position : Float64) -> CMTime {

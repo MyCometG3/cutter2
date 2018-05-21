@@ -596,42 +596,14 @@ class MovieMutatorBase: NSObject {
                     let aclPtr : UnsafePointer<AudioChannelLayout>? =
                         CMAudioFormatDescriptionGetChannelLayout(desc, &aclSize)
                     
-                    #if true
-                        var name : CFString!
-                        var nameSize : UInt32 = UInt32(MemoryLayout<CFString>.size)
-                        let err : OSStatus =
-                            AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
-                                                   UInt32(aclSize), aclPtr,
-                                                   &nameSize, &name)
-                        assert(err == noErr && nameSize > 0)
-                        layoutString = String(name as NSString)
-
-                    #else
-                        // get bytecount of ChannelLayoutName
-                        var nameSize : UInt32 = 0
-                        let err1 : OSStatus =
-                            AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutName,
-                                                       UInt32(aclSize), aclPtr, &nameSize)
-                        assert(err1 == noErr)
-                    
-                        // allocate buffer
-                        let count : Int = Int(nameSize) / MemoryLayout<CFString>.size
-                        let ptr : UnsafeMutablePointer<CFString> =
-                            UnsafeMutablePointer<CFString>.allocate(capacity: count)
-                    
-                        // get unmanaged CFString
-                        let err2 : OSStatus =
-                            AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
-                                                   UInt32(aclSize), aclPtr, &nameSize, ptr)
-                        assert(err2 == noErr)
-                    
-                        // do something here
-                        let name : NSString = ptr.pointee as NSString
-                        layoutString = String(name)
-                    
-                        // deallocate buffer
-                        ptr.deallocate() // This is not same as CFRelease()
-                    #endif
+                    var name : CFString!
+                    var nameSize : UInt32 = UInt32(MemoryLayout<CFString>.size)
+                    let err : OSStatus =
+                        AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
+                                               UInt32(aclSize), aclPtr,
+                                               &nameSize, &name)
+                    assert(err == noErr && nameSize > 0)
+                    layoutString = String(name as NSString)
                 }
                 if reference {
                     trackString.append("\(trackID): \(formatString), \(layoutString), \(rateString), Reference")

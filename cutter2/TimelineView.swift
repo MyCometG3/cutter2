@@ -164,6 +164,9 @@ class TimelineView: NSView, CALayerDelegate {
     private let fillColorInactive : CGColor = NSColor.lightGray.cgColor
     private let backGroundColor : CGColor = NSColor.controlColor.cgColor
     
+    // NSView Instance Property
+    override var mouseDownCanMoveWindow: Bool { return false }
+    
     /* ============================================ */
     // MARK: - NSView methods
     /* ============================================ */

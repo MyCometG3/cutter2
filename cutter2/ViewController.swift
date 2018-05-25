@@ -578,6 +578,20 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         doMoveRight(option, shift)
     }
     
+    override func moveToLeftEndOfLine(_ sender: Any?) {
+        // Command + left
+        // Swift.print(#function, #line, #file)
+        guard let document = delegate else { return }
+        document.doSetRate(-1)
+    }
+    
+    override func moveToRightEndOfLine(_ sender: Any?) {
+        // Command + right
+        // Swift.print(#function, #line, #file)
+        guard let document = delegate else { return }
+        document.doSetRate(+1)
+    }
+    
     override func insertText(_ insertString: Any) {
         // Swift.print(#function, #line, #file)
         // Swift.print("#####", "insertText: ", insertString as! String)

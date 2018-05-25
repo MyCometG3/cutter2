@@ -121,10 +121,10 @@ extension Document {
         }()
         
         dict[videoFormatInspectKey] = mutator.videoFormats()?.joined(separator: "\n")
-        dict[videoFPSInspectKey] = mutator.videoFPS()?.joined(separator: "\n")
-        dict[audioFormatInspectKey] = mutator.audioFormat()?.joined(separator: "\n")
-        dict[videoDataSizeInspectKey] = mutator.videoDataSize()?.joined(separator: "\n")
-        dict[audioDataSizeInspectKey] = mutator.audioDataSize()?.joined(separator: "\n")
+        dict[videoFPSInspectKey] = mutator.videoFPSs()?.joined(separator: "\n")
+        dict[audioFormatInspectKey] = mutator.audioFormats()?.joined(separator: "\n")
+        dict[videoDataSizeInspectKey] = mutator.videoDataSizes()?.joined(separator: "\n")
+        dict[audioDataSizeInspectKey] = mutator.audioDataSizes()?.joined(separator: "\n")
         dict[currentTimeInspectKey] = mutator.shortTimeString(mutator.insertionTime, withDecimals: true)
         dict[movieDurationInspectKey] = mutator.shortTimeString(mutator.movieDuration(), withDecimals: true)
         

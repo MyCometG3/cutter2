@@ -115,6 +115,14 @@ class MovieMutatorBase: NSObject {
     public var unblockUserInteraction : (() -> Void)? = nil
     public var updateProgress : ((Float) -> Void)? = nil
     
+    // Caching inspector properties
+    private var cachedMediaDataURLs : [URL]? = nil
+    private var cachedVideoFPSs : [String]? = nil
+    private var cachedVideoDataSizes : [String]? = nil
+    private var cachedAudioDataSizes : [String]? = nil
+    private var cachedVideoFormats : [String]? = nil
+    private var cachedAudioFormats : [String]? = nil
+    
     /* ============================================ */
     // MARK: - private method - utilities
     /* ============================================ */
@@ -177,6 +185,7 @@ class MovieMutatorBase: NSObject {
             let newMovie : AVMutableMovie? = AVMutableMovie(data: data, options: nil)
             if let newMovie = newMovie {
                 internalMovie = newMovie
+                flushCachedValues() // Reset inspector properties cache
                 return true
             }
         }
@@ -237,6 +246,17 @@ class MovieMutatorBase: NSObject {
         let notification = Notification(name: .movieWasMutated,
                                         object: self, userInfo: userInfo)
         NotificationCenter.default.post(notification)
+    }
+    
+    /// Reset inspector properties cache (on movie edit)
+    internal func flushCachedValues() {
+        // Swift.print(ts(), #function, #line)
+        cachedMediaDataURLs = nil
+        cachedVideoFPSs = nil
+        cachedVideoDataSizes = nil
+        cachedAudioDataSizes = nil
+        cachedVideoFormats = nil
+        cachedAudioFormats = nil
     }
     
     /* ============================================ */
@@ -425,10 +445,14 @@ class MovieMutatorBase: NSObject {
         return !selfContained
     }
     
-    //
+    /// Get track reference - 'dref' Data Reference atom
+    ///
+    /// - Parameters:
+    ///   - track: AVMutableMovieTrack
+    ///   - urlSet: url set to put result
     fileprivate func checkTrackReference(_ track: AVMutableMovieTrack, _ urlSet: NSMutableSet) {
-        // TODO: Too heavy and buggy
-        // This func is based on TN2404 URL reference movie support
+        // TODO: Too heavy and buggy (No support for Muxed/Timecode track)
+        // This func is based on TN2404 : URL reference movie support
         
         //Swift.print("\n### movie url:", movieURL)
         //Swift.print("### track:", track.trackID, "type:", track.mediaType)
@@ -466,6 +490,10 @@ class MovieMutatorBase: NSObject {
     ///
     /// - Returns: URL array including movie source URL
     public func mediaDataURLs() -> [URL]? {
+        if let cache = cachedMediaDataURLs {
+            return cache
+        }
+        
         guard let movieURL = internalMovie.url else { return nil }
         
         let urlSet : NSMutableSet = NSMutableSet()
@@ -477,21 +505,28 @@ class MovieMutatorBase: NSObject {
                 urlSet.add(url)
             }
             else {
-                //checkTrackReference(track, urlSet)
+                checkTrackReference(track, urlSet)
             }
         }
         if let storage = internalMovie.defaultMediaDataStorage, let url = storage.url() {
             urlSet.add(url)
         }
         if urlSet.count > 0 {
-            return urlSet.allObjects as? [URL]
+            cachedMediaDataURLs = urlSet.allObjects as? [URL]
+            return cachedMediaDataURLs
         } else {
             return nil
         }
     }
     
-    //
-    public func videoFPS() -> [String]? {
+    /// Inspector - VideoFPS Description
+    ///
+    /// - Returns: human readable description
+    public func videoFPSs() -> [String]? {
+        if let cache = cachedVideoFPSs {
+            return cache
+        }
+        
         var trackStrings : [String] = []
         for track in internalMovie.tracks(withMediaType: .video) {
             let trackID : Int = Int(track.trackID)
@@ -499,11 +534,18 @@ class MovieMutatorBase: NSObject {
             let trackString : String = String(format:"%d: %.2f fps", trackID, fps)
             trackStrings.append(trackString)
         }
-        return (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedVideoFPSs = (trackStrings.count > 0) ? trackStrings : ["-"]
+        return cachedVideoFPSs
     }
     
-    //
-    public func videoDataSize() -> [String]? {
+    /// Inspector - VideoDataSize/Rate Description
+    ///
+    /// - Returns: human readable description
+    public func videoDataSizes() -> [String]? {
+        if let cache = cachedVideoDataSizes {
+            return cache
+        }
+        
         var trackStrings : [String] = []
         for track in internalMovie.tracks(withMediaType: .video) {
             let trackID : Int = Int(track.trackID)
@@ -514,11 +556,18 @@ class MovieMutatorBase: NSObject {
                                               rate/1000000.0)
             trackStrings.append(trackString)
         }
-        return (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedVideoDataSizes = (trackStrings.count > 0) ? trackStrings : ["-"]
+        return cachedVideoDataSizes
     }
     
-    //
-    public func audioDataSize() -> [String]? {
+    /// Inspector - AudioDataSize/Rate Description
+    ///
+    /// - Returns: human readable description
+    public func audioDataSizes() -> [String]? {
+        if let cache = cachedAudioDataSizes {
+            return cache
+        }
+        
         var trackStrings : [String] = []
         for track in internalMovie.tracks(withMediaType: .audio) {
             let trackID : Int = Int(track.trackID)
@@ -529,7 +578,8 @@ class MovieMutatorBase: NSObject {
                                               rate/1000000.0)
             trackStrings.append(trackString)
         }
-        return (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedAudioDataSizes = (trackStrings.count > 0) ? trackStrings : ["-"]
+        return cachedAudioDataSizes
     }
     
     //
@@ -553,8 +603,14 @@ class MovieMutatorBase: NSObject {
                          Int(size3.width), Int(size3.height))
     }
     
-    //
+    /// Inspector - VideoFormats Description
+    ///
+    /// - Returns: human readable description
     public func videoFormats() -> [String]? {
+        if let cache = cachedVideoFormats {
+            return cache
+        }
+        
         var trackStrings : [String] = []
         for track in internalMovie.tracks(withMediaType: .video) {
             var trackString : [String] = []
@@ -594,11 +650,18 @@ class MovieMutatorBase: NSObject {
             }
             trackStrings.append(contentsOf: trackString)
         }
-        return (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedVideoFormats = (trackStrings.count > 0) ? trackStrings : ["-"]
+        return cachedVideoFormats
     }
     
-    //
-    public func audioFormat() -> [String]? {
+    /// Inspector - AudioFormats Description
+    ///
+    /// - Returns: human readable description
+    public func audioFormats() -> [String]? {
+        if let cache = cachedAudioFormats {
+            return cache
+        }
+        
         var trackStrings : [String] = []
         for track in internalMovie.tracks(withMediaType: .audio) {
             var trackString : [String] = []
@@ -653,7 +716,8 @@ class MovieMutatorBase: NSObject {
             }
             trackStrings.append(contentsOf: trackString)
         }
-        return (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedAudioFormats = (trackStrings.count > 0) ? trackStrings : ["-"]
+        return cachedAudioFormats
     }
     
     /// Make new AVPlayerItem for internalMovie

@@ -816,19 +816,19 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         var selfContained : Bool = false
         var option : AVMovieWritingOptions = .truncateDestinationToMovieHeaderOnly
         var before : Notification.Name = .movieWillWriteHeaderOnly
-        var after : Notification.Name = .movieWillWriteHeaderOnly
+        var after : Notification.Name = .movieDidWriteHeaderOnly
         
         switch mode {
         case .writeSelfContaind:
             selfContained = true
             option = .addMovieHeaderToDestination
             before = .movieWillWriteWithData
-            after = .movieWillWriteWithData
+            after = .movieDidWriteWithData
         case .writeReferenceMovie:
             selfContained = false
             option = .truncateDestinationToMovieHeaderOnly
             before = .movieWillWriteHeaderOnly
-            after = .movieWillWriteHeaderOnly
+            after = .movieDidWriteHeaderOnly
         case .refreshMovieHeader:
             selfContained = false
             option = .addMovieHeaderToDestination

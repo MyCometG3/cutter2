@@ -263,6 +263,10 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // NOTE: following initialization is performed at makeWindowControllers()
     }
     
+    override class func canConcurrentlyReadDocuments(ofType typeName: String) -> Bool {
+        return true
+    }
+    
     /* ============================================ */
     // MARK: - Write
     /* ============================================ */

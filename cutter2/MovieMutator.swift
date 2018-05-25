@@ -41,11 +41,11 @@ class MovieMutator: MovieMutatorBase {
             // convert all into different timescale
             do {
                 let movieRange : CMTimeRange = self.movieRange()
-                Swift.print(ts(), #function, #line)
+                Swift.print(ts(), #function, #line, #file)
                 try clip.insertTimeRange(movieRange, of: internalMovie, at: kCMTimeZero, copySampleData: false)
-                Swift.print(ts(), #function, #line)
+                Swift.print(ts(), #function, #line, #file)
             } catch {
-                Swift.print(error)
+                Swift.print(ts(), error)
                 assert(false, #function)
             }
         }
@@ -61,7 +61,7 @@ class MovieMutator: MovieMutatorBase {
         }
         
         if range.duration != clip.range.duration {
-            Swift.print(ts(), "NOTICE: diff", CMTimeGetSeconds(range.duration),
+            Swift.print(ts(), "diff", CMTimeGetSeconds(range.duration),
                         CMTimeGetSeconds(clip.range.duration), "at", #function, #line)
             Swift.print(ts(), range.duration)
             Swift.print(ts(), clip.range.duration)
@@ -92,9 +92,9 @@ class MovieMutator: MovieMutatorBase {
         
         if let data = data {
             // create movie from movieHeader data
-            //Swift.print(ts(), #function, #line)
+            // Swift.print(ts(), #function, #line, #file)
             let clip : AVMutableMovie? = AVMutableMovie(data: data, options: nil)
-            //Swift.print(ts(), #function, #line)
+            // Swift.print(ts(), #function, #line, #file)
             
             if let clip = clip, validateClip(clip) {
                 return clip
@@ -117,9 +117,9 @@ class MovieMutator: MovieMutatorBase {
         
         // create movieHeader data from movie
         do {
-            //Swift.print(ts(), #function, #line)
+            // Swift.print(ts(), #function, #line, #file)
             let data : Data? = try clip.makeMovieHeader(fileType: AVFileType.mov)
-            //Swift.print(ts(), #function, #line)
+            // Swift.print(ts(), #function, #line, #file)
             
             if let data = data {
                 // register data to PBoard
@@ -133,7 +133,7 @@ class MovieMutator: MovieMutatorBase {
                 return false
             }
         } catch {
-            Swift.print(error)
+            Swift.print("ERROR:", error)
             assert(false, #function)
         }
         return false
@@ -180,9 +180,9 @@ class MovieMutator: MovieMutatorBase {
         
         // perform delete selection
         do {
-            //Swift.print(ts(), #function, #line)
+            // Swift.print(ts(), #function, #line, #file)
             internalMovie.removeTimeRange(range)
-            //Swift.print(ts(), #function, #line)
+            // Swift.print(ts(), #function, #line, #file)
             
             // Update Marker
             insertionTime = (time < range.start ? time
@@ -231,12 +231,12 @@ class MovieMutator: MovieMutatorBase {
             }
             let beforeDuration = self.movieDuration()
             
-            Swift.print(ts(), #function, #line)
+            Swift.print(ts(), #function, #line, #file)
             try internalMovie.insertTimeRange(clipRange,
                                               of: clip,
                                               at: time,
                                               copySampleData: false)
-            Swift.print(ts(), #function, #line)
+            Swift.print(ts(), #function, #line, #file)
             
             // Update Marker
             let afterDuration = self.movieDuration()
@@ -246,7 +246,7 @@ class MovieMutator: MovieMutatorBase {
             
             internalMovieDidChange(insertionTime, selectedTimeRange)
         } catch {
-            Swift.print(error)
+            Swift.print("ERROR:", error)
             assert(false, #function) //
         }
     }
@@ -279,7 +279,7 @@ class MovieMutator: MovieMutatorBase {
     
     /// Copy selection of internalMovie
     public func copySelection() {
-        // Swift.print(#function, #line)
+        // Swift.print(ts(), #function, #line, #file)
         
         // perform copy selection
         let range = self.selectedTimeRange
@@ -295,7 +295,7 @@ class MovieMutator: MovieMutatorBase {
     ///
     /// - Parameter undoManager: UndoManager for this operation
     public func cutSelection(using undoManager : UndoManager) {
-        // Swift.print(#function, #line)
+        // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
         let range = self.selectedTimeRange
@@ -329,7 +329,7 @@ class MovieMutator: MovieMutatorBase {
     ///
     /// - Parameter undoManager: UndoManager for this operation
     public func pasteAtInsertionTime(using undoManager : UndoManager) {
-        // Swift.print(#function, #line)
+        // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
         let range = self.selectedTimeRange
@@ -363,7 +363,7 @@ class MovieMutator: MovieMutatorBase {
     ///
     /// - Parameter undoManager: UndoManager for this operation
     public func deleteSelection(using undoManager : UndoManager) {
-        // Swift.print(#function, #line)
+        // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
         let range = self.selectedTimeRange
@@ -406,9 +406,9 @@ class MovieMutator: MovieMutatorBase {
         
         // perform replacement
         do {
-            //Swift.print(ts(), #function, #line)
+            // Swift.print(ts(), #function, #line, #file)
             internalMovie = movie
-            //Swift.print(ts(), #function, #line)
+            // Swift.print(ts(), #function, #line, #file)
             
             // Update Marker
             insertionTime = (time < movie.range.end) ? time : movie.range.end
@@ -427,7 +427,7 @@ class MovieMutator: MovieMutatorBase {
     
     //
     private func updateFormat(_ movie: AVMutableMovie, using undoManager : UndoManager) {
-        // Swift.print(#function, #line)
+        // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
         let range = self.selectedTimeRange
@@ -476,7 +476,7 @@ class MovieMutator: MovieMutatorBase {
         let vTracks : [AVMutableMovieTrack] = movie.tracks(withMediaType: .video)
         for track in vTracks {
             if track.naturalSize != dimensions {
-                Swift.print(#function, #line, track.trackID, track.naturalSize)
+                Swift.print(ts(), "Different dimension:", track.trackID, track.naturalSize)
                 continue
             }
             
@@ -541,7 +541,7 @@ class MovieMutator: MovieMutatorBase {
         if count > 0 {
             // Replace movie object with undo record
             self.updateFormat(movie, using: undoManager)
-            //Swift.print(self.clappaspDictionary()! as! [String:Any])
+            // Swift.print(ts(), self.clappaspDictionary()! as! [String:Any])
             return true
         } else {
             Swift.print(ts(), "ERROR: Failed to modify CAPAR extensions.")

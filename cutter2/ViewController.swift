@@ -274,7 +274,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     }
     
     private func keyMimic(with event: NSEvent) -> Bool {
-        // Swift.print(#function)
+        // Swift.print(#function, #line, #file)
         guard let document = delegate else { return false }
         
         let code : UInt = UInt(event.keyCode)
@@ -284,23 +284,23 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         
         switch code {
         case 0x26: // J key
-            //Swift.print("J : backward play / accelarate")
+            // Swift.print("#####", "J : backward play / accelarate")
             document.doSetRate(-1)
             return true
         case 0x28 : // K key
-            //Swift.print("K : pause")
+            // Swift.print("#####", "K : pause")
             document.doSetRate(0)
             return true
         case 0x25 : // L key
-            //Swift.print("L : forward play / accelarate")
+            // Swift.print("#####", "L : forward play / accelarate")
             document.doSetRate(+1)
             return true
         case 0x22 : // I key
-            //Swift.print("I : set selection start")
+            // Swift.print("#####", "I : set selection start")
             doSetStart(to: .current)
             return true
         case 0x1f : // O key
-            //Swift.print("O : set selection end")
+            // Swift.print("#####", "O : set selection end")
             doSetEnd(to: .current)
             return true
         default:
@@ -310,7 +310,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     }
     
     private func keyStep(with event: NSEvent) -> Bool {
-        // Swift.print(#function)
+        // Swift.print(#function, #line, #file)
         guard let document = delegate else { return false }
         
         let code : UInt = UInt(event.keyCode)
@@ -319,7 +319,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         
         switch code {
         case 0x26 : // J key
-            //Swift.print("J : toggle marker-backward")
+            // Swift.print("#####", "J : toggle marker-backward")
             if option && shift {
                 break
             } else if shift {
@@ -331,7 +331,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             }
             return true
         case 0x28 : // K key
-            //Swift.print("K : step backward")
+            // Swift.print("#####", "K : step backward")
             if option && shift {
                 break
             } else if shift {
@@ -343,7 +343,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             }
             return true
         case 0x25 : // L key
-            //Swift.print("L : step forward")
+            // Swift.print("#####", "L : step forward")
             if option && shift {
                 break
             } else if shift {
@@ -355,7 +355,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             }
             return true
         case 0x29 : // ; key (depends on keymapping)
-            //Swift.print("; : toggle marker-forward")
+            // Swift.print("#####", "; : toggle marker-forward")
             if option && shift {
                 break
             } else if shift {
@@ -367,7 +367,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             }
             return true
         case 0x22 : // I key
-            //Swift.print("I : set selection start")
+            // Swift.print("#####", "I : set selection start")
             if option && shift {
                 break
             } else if shift {
@@ -379,7 +379,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             }
             return true
         case 0x1f : // O key
-            //Swift.print("O : set selection end")
+            // Swift.print("#####", "O : set selection end")
             if option && shift {
                 break
             } else if shift {
@@ -397,14 +397,14 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     }
     
     override func keyDown(with event: NSEvent) {
-        // Swift.print(#function)
+        // Swift.print(#function, #line, #file)
         
         let code : UInt = UInt(event.keyCode)
         let mod : UInt = event.modifierFlags.rawValue
         let noMod = (mod & NSEvent.ModifierFlags.deviceIndependentFlagsMask.rawValue) == 0
         
         #if false
-            Swift.print("DEBUG: code:", code,
+            Swift.print("#####", "code:", code,
                         "/ mod:", mod,
                         "/ noMod:", (noMod ? "true" : "false"))
         #endif
@@ -421,7 +421,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                                          shift ? "shi" : "---",
                                          control ? "ctr" : "---",
                                          command ? "cmd" : "---")
-            Swift.print(string)
+            Swift.print("#####", "keyDown =", string)
         #endif
         
         if mimicJKLcombination {
@@ -491,28 +491,28 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     
     override func insertNewline(_ sender: Any?) {
         // enter
-        //print(#function)
+        // Swift.print(#function, #line, #file)
         guard let document = delegate else { return }
         document.doTogglePlay()
     }
     
     override func insertTab(_ sender: Any?) {
         // tab
-        //print(#function)
+        // Swift.print(#function, #line, #file)
         guard let window = timelineView.window else { return }
         window.selectNextKeyView(self)
     }
     
     override func insertBacktab(_ sender: Any?) {
         // Shift + tab
-        //print(#function)
+        // Swift.print(#function, #line, #file)
         guard let window = timelineView.window else { return }
         window.selectPreviousKeyView(self)
     }
     
     override func moveUp(_ sender: Any?) {
         // up arrow
-        //print(#function)
+        // Swift.print(#function, #line, #file)
         guard let document = delegate else { return }
         let offset : Int = modifier(.option) ? 100 : 10
         document.doVolumeOffset(offset)
@@ -520,7 +520,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     
     override func moveDown(_ sender: Any?) {
         // down arrow
-        //print(#function)
+        // Swift.print(#function, #line, #file)
         guard let document = delegate else { return }
         let offset : Int = modifier(.option) ? -100 : -10
         document.doVolumeOffset(offset)
@@ -528,43 +528,43 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     
     override func moveLeft(_ sender: Any?) {
         // left arrow
-        //print(#function)
+        // Swift.print(#function, #line, #file)
         doMoveLeft(modifier(.option), modifier(.shift))
     }
     
     override func moveRight(_ sender: Any?) {
         // right arrow
-        //print(#function)
+        // Swift.print(#function, #line, #file)
         doMoveRight(modifier(.option), modifier(.shift))
     }
     
     override func moveWordLeft(_ sender: Any?) {
         // Option + left
-        //print(#function)
+        // Swift.print(#function, #line, #file)
         doMoveLeft(modifier(.option), modifier(.shift))
     }
     
     override func moveWordRight(_ sender: Any?) {
         // Option + right
-        //print(#function)
+        // Swift.print(#function, #line, #file)
         doMoveRight(modifier(.option), modifier(.shift))
     }
     
     override func moveLeftAndModifySelection(_ sender: Any?) {
         // Shift + left
-        //print(#function)
+        // Swift.print(#function, #line, #file)
         doMoveLeft(modifier(.option), modifier(.shift))
     }
     
     override func moveRightAndModifySelection(_ sender: Any?) {
         // Shift + right
-        //print(#function)
+        // Swift.print(#function, #line, #file)
         doMoveRight(modifier(.option), modifier(.shift))
     }
     
     override func moveWordLeftAndModifySelection(_ sender: Any?) {
         // Shift + Option + left
-        //print(#function)
+        // Swift.print(#function, #line, #file)
         let option : Bool = ignoreOptionWhenShift ? false : true
         let shift : Bool = true
         doMoveLeft(option, shift)
@@ -572,15 +572,15 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     
     override func moveWordRightAndModifySelection(_ sender: Any?) {
         // Shift + Option + right
-        //print(#function)
+        // Swift.print(#function, #line, #file)
         let option : Bool = ignoreOptionWhenShift ? false : true
         let shift : Bool = true
         doMoveRight(option, shift)
     }
     
     override func insertText(_ insertString: Any) {
-        //print(#function)
-        //print("DEBUG: insertText: ", insertString as! String)
+        // Swift.print(#function, #line, #file)
+        // Swift.print("#####", "insertText: ", insertString as! String)
         //NSSound.beep()
         
         guard let document = delegate else { return }

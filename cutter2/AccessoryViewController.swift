@@ -27,7 +27,7 @@ class AccessoryViewController: NSViewController {
     }()
     
     override func viewDidLoad() {
-        // Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         
         super.viewDidLoad()
         // Do view setup here.

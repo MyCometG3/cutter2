@@ -250,7 +250,7 @@ class MovieMutatorBase: NSObject {
     
     /// Reset inspector properties cache (on movie edit)
     internal func flushCachedValues() {
-        // Swift.print(ts(), #function, #line)
+        // Swift.print(ts(), #function, #line, #file)
         cachedMediaDataURLs = nil
         cachedVideoFPSs = nil
         cachedVideoDataSizes = nil
@@ -401,7 +401,7 @@ class MovieMutatorBase: NSObject {
     ///   - flag: includes 3rd decimals of second.
     /// - Returns: Format in "01:02:03" or "01:02:03.004"
     public func shortTimeString(_ time : CMTime, withDecimals flag: Bool) -> String {
-        //Swift.print(#function, #line)
+        // Swift.print(ts(), #function, #line, #file)
         var string : String = ""
         let timeInSec : Float64 = CMTimeGetSeconds(time)
         let timeInt : Int = Int(floor(timeInSec))
@@ -454,8 +454,8 @@ class MovieMutatorBase: NSObject {
         // TODO: Too heavy and buggy (No support for Muxed/Timecode track)
         // This func is based on TN2404 : URL reference movie support
         
-        //Swift.print("\n### movie url:", movieURL)
-        //Swift.print("### track:", track.trackID, "type:", track.mediaType)
+        // Swift.print("\n", ts(), "### movie url:", movieURL)
+        // Swift.print(ts(), "### track:", track.trackID, "type:", track.mediaType)
         let reader : AVAssetReader? = try? AVAssetReader(asset: internalMovie)
         let output : AVAssetReaderSampleReferenceOutput? = AVAssetReaderSampleReferenceOutput(track: track)
         if let reader = reader, let output = output {
@@ -469,20 +469,20 @@ class MovieMutatorBase: NSObject {
                 let url = CMGetAttachment(sample, kCMSampleBufferAttachmentKey_SampleReferenceURL, &mode)
                 if let url = url {
                     urlSet.add(url)
-                    //Swift.print("url:", url, "/ mode:", mode)
+                    // Swift.print(ts(), "url:", url, "/ mode:", mode)
                 } else {
-                    //Swift.print("url:", "n/a", "/ mode:", "-")
+                    // Swift.print(ts(), "url:", "n/a", "/ mode:", "-")
                 }
                 //let attach1 = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sample, kCMAttachmentMode_ShouldPropagate)
                 //let attach2 = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sample, kCMAttachmentMode_ShouldNotPropagate)
-                //Swift.print("ShouldPropagate:", attach1 ?? "none")
-                //Swift.print("ShouldNotPropagate:", attach2 ?? "none")
+                // Swift.print(ts(), "ShouldPropagate:", attach1 ?? "none")
+                // Swift.print(ts(), "ShouldNotPropagate:", attach2 ?? "none")
                 return
             } else {
-                //Swift.print("Failed on AVAssetReader:", reader.error ?? "n/a")
+                Swift.print("ERROR: Failed on AVAssetReader:", reader.error ?? "n/a")
             }
         } else {
-            //Swift.print("Unable to use AVAssetReaderSampleReferenceOutput:")
+            Swift.print("ERROR: Unable to use AVAssetReaderSampleReferenceOutput:")
         }
     }
     

@@ -125,45 +125,45 @@ extension Document : ViewControllerDelegate {
     }
     
     public func timeOfPosition(_ position : Float64) -> CMTime {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return kCMTimeZero }
         return mutator.timeOfPosition(position)
     }
     
     public func positionOfTime(_ time : CMTime) -> Float64 {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return 0.0 }
         return mutator.positionOfTime(time)
     }
     
     public func doCut() throws {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         mutator.cutSelection(using: self.undoManager!)
     }
     
     public func doCopy() throws {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         mutator.copySelection()
     }
     
     public func doPaste() throws {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         mutator.pasteAtInsertionTime(using: self.undoManager!)
     }
     
     /// Delete selection range
     public func doDelete() throws {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         mutator.deleteSelection(using: self.undoManager!)
     }
     
     /// Select all range of movie
     public func selectAll() {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         let time = mutator.insertionTime
         let range : CMTimeRange = mutator.movieRange()
@@ -172,13 +172,14 @@ extension Document : ViewControllerDelegate {
     
     /// offset current marker by specified step
     public func doStepByCount(_ count : Int64, _ resetStart : Bool, _ resetEnd : Bool) {
+        // Swift.print(#function, #line, #file)
         var target : CMTime? = nil
         doStepByCount(count, resetStart, resetEnd, &target)
     }
     
     /// offset current marker by specified step (private)
     private func doStepByCount(_ count : Int64, _ resetStart : Bool, _ resetEnd : Bool, _ target : inout CMTime?) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         guard let player = player, let item = playerItem else { return }
         
@@ -231,13 +232,14 @@ extension Document : ViewControllerDelegate {
     
     /// offset current marker by specified seconds
     public func doStepBySecond(_ offset : Float64, _ resetStart : Bool, _ resetEnd : Bool) {
+        // Swift.print(#function, #line, #file)
         var target : CMTime? = nil
         doStepBySecond(offset, resetStart, resetEnd, &target)
     }
     
     /// offset current marker by specified seconds (private)
     private func doStepBySecond(_ offset: Float64, _ resetStart : Bool, _ resetEnd : Bool, _ target : inout CMTime?) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         guard let player = self.player else { return }
         let movieRange : CMTimeRange = mutator.movieRange()
@@ -276,7 +278,7 @@ extension Document : ViewControllerDelegate {
     
     /// offset current volume by specified percent
     public func doVolumeOffset(_ percent: Int) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let player = self.player else { return }
         
         // Mute/Unmute handling
@@ -293,7 +295,7 @@ extension Document : ViewControllerDelegate {
     
     /// move left current marker by key combination
     public func doMoveLeft(_ optionKey : Bool, _ shiftKey : Bool, _ resetStart : Bool, _ resetEnd : Bool) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         var target : CMTime? = nil
         if optionKey {
@@ -319,7 +321,7 @@ extension Document : ViewControllerDelegate {
     
     /// move right current marker by key combination
     public func doMoveRight(_ optionKey : Bool, _ shiftKey : Bool, _ resetStart : Bool, _ resetEnd : Bool) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         var target : CMTime? = nil
         if optionKey {
@@ -345,7 +347,7 @@ extension Document : ViewControllerDelegate {
     
     /// Set playback rate
     public func doSetRate(_ offset : Int) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let player = self.player else { return }
         guard let item = self.playerItem else { return }
         var currentRate : Float = player.rate
@@ -399,7 +401,7 @@ extension Document : ViewControllerDelegate {
     
     /// Toggle play
     public func doTogglePlay() {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let player = self.player else { return }
         let currentRate : Float = player.rate
         if currentRate != 0.0 { // play => pause
@@ -419,7 +421,7 @@ extension Document : ViewControllerDelegate {
     
     /// called on mouse down/drag event
     public func didUpdateCursor(to position : Float64) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         let time : CMTime = quantize(position)
         updateGUI(time, mutator.selectedTimeRange, false)
@@ -427,7 +429,7 @@ extension Document : ViewControllerDelegate {
     
     /// called on mouse down/drag event
     public func didUpdateStart(to position : Float64) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         let fromTime : CMTime = quantize(position)
         let toTime : CMTime = mutator.selectedTimeRange.end
@@ -437,7 +439,7 @@ extension Document : ViewControllerDelegate {
     
     /// called on mouse down/drag event
     public func didUpdateEnd(to position : Float64) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         let fromTime : CMTime = mutator.selectedTimeRange.start
         let toTime : CMTime = quantize(position)
@@ -447,7 +449,7 @@ extension Document : ViewControllerDelegate {
     
     /// called on mouse down/drag event
     public func didUpdateSelection(from fromPos : Float64, to toPos : Float64) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         let fromTime : CMTime = quantize(fromPos)
         let toTime : CMTime = quantize(toPos)
@@ -457,28 +459,28 @@ extension Document : ViewControllerDelegate {
     
     /// get PresentationInfo at specified position
     public func presentationInfo(at position: Float64) -> PresentationInfo? {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return nil }
         return mutator.presentationInfoAtPosition(position)
     }
     
     /// get PresentationInfo at prior to specified range
     public func previousInfo(of range: CMTimeRange) -> PresentationInfo? {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return nil }
         return mutator.previousInfo(of: range)
     }
     
     /// get PresentationInfo at next to specified range
     public func nextInfo(of range: CMTimeRange) -> PresentationInfo? {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return nil }
         return mutator.nextInfo(of: range)
     }
     
     /// Move current marker to specified anchor point
     public func doSetCurrent(to anchor : anchor) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         let current : CMTime = mutator.insertionTime
         let start : CMTime = mutator.selectedTimeRange.start
@@ -534,7 +536,7 @@ extension Document : ViewControllerDelegate {
     
     /// Move selection start marker to specified anchor point
     public func doSetStart(to anchor : anchor) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         let current : CMTime = mutator.insertionTime
         let start : CMTime = mutator.selectedTimeRange.start
@@ -571,7 +573,7 @@ extension Document : ViewControllerDelegate {
     
     /// Move selection end marker to specified anchor point
     public func doSetEnd(to anchor : anchor) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         let current : CMTime = mutator.insertionTime
         let start : CMTime = mutator.selectedTimeRange.start

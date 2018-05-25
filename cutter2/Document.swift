@@ -122,7 +122,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     }
     
     override func makeWindowControllers() {
-        // Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         
         if self.fileURL == nil {
             // Prepare null AVMutableMovie
@@ -171,7 +171,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     override func canClose(withDelegate delegate: Any, shouldClose shouldCloseSelector: Selector?,
                            contextInfo: UnsafeMutableRawPointer?) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         
         // Prepare C function and closingBlock()
         let obj : AnyObject = delegate as AnyObject
@@ -181,7 +181,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         let function = unsafeBitCast(method, to: signature.self)
         
         self.closingBlock = {[unowned obj, shouldCloseSelector, contextInfo] (flag) -> Void in
-            //Swift.print("closingBlock()", #line, "shouldClose =", flag)
+            // Swift.print(#function, #line, #file, "shouldClose =", flag)
             function(obj, shouldCloseSelector!, self, flag, contextInfo)
         }
         
@@ -192,7 +192,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     }
     
     @objc func document(_ document : NSDocument, shouldClose flag : Bool, contextInfo: UnsafeMutableRawPointer?) {
-        //Swift.print(#function, #line, "shouldClose =", flag)
+        // Swift.print(#function, #line, #file, "shouldClose =", flag)
 
         if flag {
             self.cleanup() // my cleanup method
@@ -205,12 +205,12 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     }
     
     override func close() {
-        //Swift.print(#function, #line, #file)
+        // Swift.print(#function, #line, #file)
         super.close()
     }
     
     deinit {
-        //Swift.print(#function, #line, #file)
+        // Swift.print(#function, #line, #file)
     }
     
     /* ============================================ */
@@ -218,7 +218,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     /* ============================================ */
     
     override func revert(toContentsOf url: URL, ofType typeName: String) throws {
-        // Swift.print(#function, #line, url.lastPathComponent, typeName)
+        // Swift.print(#function, #line, #file)
         
         try super.revert(toContentsOf: url, ofType: typeName)
         
@@ -232,7 +232,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     /* ============================================ */
     
     override func read(from url: URL, ofType typeName: String) throws {
-        // Swift.print(#function, #line, url.lastPathComponent, typeName)
+        // Swift.print(#function, #line, #file)
         
         // Check UTI for AVMovie fileType
         let fileType = AVFileType.init(rawValue: typeName)
@@ -243,7 +243,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: info)
         }
         
-        //Swift.print("##### READ STARTED #####")
+        // Swift.print("##### READ STARTED #####")
         
         // Setup document with new AVMovie
         let movie :AVMutableMovie? = AVMutableMovie(url: url, options: nil)
@@ -258,7 +258,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
         }
         
-        //Swift.print("##### RELOADED #####")
+        // Swift.print("##### RELOADED #####")
         
         // NOTE: following initialization is performed at makeWindowControllers()
     }
@@ -268,7 +268,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     /* ============================================ */
     
     override func writeSafely(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
-        // Swift.print(#function, #line, typeName, url)
+        // Swift.print(#function, #line, #file)
         
         try super.writeSafely(to: url, ofType: typeName, for: saveOperation)
         
@@ -280,7 +280,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     override func write(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType,
                         originalContentsURL absoluteOriginalContentsURL: URL?) throws {
-        // Swift.print(#function, #line, typeName, url)
+        // Swift.print(#function, #line, #file)
 
         do {
             let fileType : AVFileType = AVFileType.init(rawValue: typeName)
@@ -314,12 +314,12 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     }
     
     override func write(to url: URL, ofType typeName: String) throws {
-        // Swift.print(#function, #line, url.lastPathComponent, typeName)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         
         var fileType : AVFileType = AVFileType.init(rawValue: typeName)
         
-        //Swift.print("##### WRITE STARTED #####")
+        // Swift.print("##### WRITE STARTED #####")
         showBusySheet("Writing...", "Please hold on second(s)...")
         mutator.unblockUserInteraction = { self.unblockUserInteraction() }
         defer {
@@ -342,7 +342,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             try mutator.exportMovie(to: url, fileType: fileType, presetName: nil)
         }
         
-        //Swift.print("##### WRITE FINISHED #####")
+        // Swift.print("##### WRITE FINISHED #####")
     }
     
     override func canAsynchronouslyWrite(to url: URL, ofType typeName: String,
@@ -379,7 +379,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     /* ============================================ */
     
     override func prepareSavePanel(_ savePanel: NSSavePanel) -> Bool {
-        // Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return false }
         
         // prepare accessory view controller
@@ -432,7 +432,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     }
     
     override var fileTypeFromLastRunSavePanel: String? {
-        // Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         
         if let accessoryVC = self.accessoryVC {
             let type : String = accessoryVC.fileType.rawValue
@@ -444,7 +444,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     // NSOpenSavePanelDelegate protocol
     public func panel(_ sender: Any, validate url: URL) throws {
-        // Swift.print(#function, #line, url.lastPathComponent)
+        // Swift.print(#function, #line, #file)
         
         guard let accessoryVC = self.accessoryVC else {
             throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: nil)
@@ -468,7 +468,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     // NSOpenSavePanelDelegate protocol
     public func panel(_ sender: Any, userEnteredFilename filename: String, confirmed okFlag: Bool) -> String? {
-        // Swift.print(#function, #line, filename, (okFlag ? "confirmed" : "not yet"))
+        // Swift.print(#function, #line, #file, (okFlag ? "confirmed" : "not yet"))
         
         return filename
     }
@@ -499,7 +499,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     /* ============================================ */
     
     @IBAction func transcode(_ sender: Any?) {
-        // Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         let storyboard : NSStoryboard = NSStoryboard(name: NSStoryboard.Name("Main"), bundle: nil)
         let sid : NSStoryboard.SceneIdentifier = NSStoryboard.SceneIdentifier("TranscodeSheet Controller")
         let transcodeWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController
@@ -510,8 +510,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         guard let transcodeVC = contVC as? TranscodeViewController else { return }
         
         transcodeVC.beginSheetModal(for: self.window!, handler: {(response) in
-            // Swift.print("(NSApplication.ModalResponse):", response.rawValue)
-            //
+            // Swift.print(#function, #line, #file)
             guard response == NSApplication.ModalResponse.continue else { return }
             
             DispatchQueue.main.async {[unowned self] in
@@ -520,17 +519,15 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 self.transcoding = false
             }
         })
-        
-        // Swift.print(#function, #line)
     }
     
     private func export(to url: URL, ofType typeName: String, preset: String) throws {
-        // Swift.print(#function, #line, url.lastPathComponent, typeName)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         
         let fileType : AVFileType = AVFileType.init(rawValue: typeName)
 
-        //Swift.print("##### EXPORT STARTED #####")
+        // Swift.print("##### EXPORT STARTED #####")
         showBusySheet("Exporting...", "Please hold on minute(s)...")
         mutator.unblockUserInteraction = { self.unblockUserInteraction() }
         defer {
@@ -543,16 +540,16 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             try mutator.exportMovie(to: url, fileType: fileType, presetName: preset)
         }
         
-        //Swift.print("##### EXPORT FINISHED #####")
+        // Swift.print("##### EXPORT FINISHED #####")
     }
     
     private func exportCustom(to url: URL, ofType typeName: String) throws {
-        // Swift.print(#function, #line, url.lastPathComponent, typeName)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         
         let fileType : AVFileType = AVFileType.init(rawValue: typeName)
         
-        //Swift.print("##### EXPORT STARTED #####")
+        // Swift.print("##### EXPORT STARTED #####")
         showBusySheet("Exporting...", "Please hold on minute(s)...")
         mutator.unblockUserInteraction = { self.unblockUserInteraction() }
         defer {
@@ -597,7 +594,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             try mutator.exportCustomMovie(to: url, fileType: fileType, settings: param)
         }
         
-        //Swift.print("##### EXPORT FINISHED #####")
+        // Swift.print("##### EXPORT FINISHED #####")
     }
     
     /* ============================================ */
@@ -619,7 +616,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     }
     
     @IBAction func resizeWindow(_ sender: Any?) {
-        // Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         
@@ -711,7 +708,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     /* ============================================ */
     
     @IBAction func modifyClapPasp(_ sender : Any?) {
-         Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
 
@@ -728,7 +725,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         guard caparVC.applySource(dict) else { return }
         
         caparVC.beginSheetModal(for: self.window!, handler: {(response) in
-            // Swift.print(#function, #line)
+            // Swift.print(#function, #line, #file)
             guard response == .continue else { return }
             
             let result : [AnyHashable:Any] = caparVC.resultContent

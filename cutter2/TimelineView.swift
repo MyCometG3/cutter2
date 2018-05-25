@@ -183,7 +183,7 @@ class TimelineView: NSView, CALayerDelegate {
     }
     
     override func layout() {
-        //Swift.print(#function)
+        // Swift.print(#function, #line, #file)
         
         // On initial/resized state, update tracking area
         if needsUpdateTrackingArea {
@@ -583,12 +583,12 @@ class TimelineView: NSView, CALayerDelegate {
     
     override func mouseMoved(with event: NSEvent) {
         //let point = self.convert(event.locationInWindow, from: nil)
-        //print(point, position(from: event))
+        // Swift.print("#####", point, position(from: event))
     }
     
     override func mouseDown(with event: NSEvent) {
         let point = self.convert(event.locationInWindow, from: nil)
-        //print(point, position(from: event))
+        // Swift.print("#####", point, position(from: event))
         
         if let layer = self.layer, let target = layer.hitTest(point) {
             //print (target)
@@ -612,8 +612,8 @@ class TimelineView: NSView, CALayerDelegate {
     }
     
     override func mouseDragged(with event: NSEvent) {
-        //let point = self.convert(event.locationInWindow, to: self)
-        //print(point, position(from: event))
+        // let point = self.convert(event.locationInWindow, to: self)
+        // Swift.print("#####", point, position(from: event))
         
         if let marker = selectedMarker {
             updateMarkerPosition(marker, with: event)

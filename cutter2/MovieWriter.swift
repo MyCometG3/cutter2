@@ -76,7 +76,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     ///   - preset: AVAssetExportSessionPreset. Specify nil for pass-through
     /// - Throws: Raised by any internal error
     public func exportMovie(to url : URL, fileType type : AVFileType, presetName preset : String?) throws {
-        // Swift.print(#function, #line, url.path, type)
+        // Swift.print(#function, #line, #file)
         
         guard writerIsBusy == false else {
             var info : [String:Any] = [:]
@@ -137,10 +137,10 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             let interval : TimeInterval = dateEnd.timeIntervalSince(dateStart)
             if result == .completed {
                 completed = true
-                Swift.print("result:", "completed", "progress:", progress, "elapsed:", interval)
+                Swift.print("#####", "result:", "completed", "progress:", progress, "elapsed:", interval)
             } else {
                 let error : Error? = exportSession.error
-                Swift.print("result:", result, "progress:", progress, "elapsed:", interval, "error", (error ?? "n/a"))
+                Swift.print("#####", "result:", result, "progress:", progress, "elapsed:", interval, "error", (error ?? "n/a"))
             }
             
             // Issue end notification
@@ -417,7 +417,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
                         prev = item
                     }
                     awInputSetting[AVEncoderBitRateKey] = prev
-                    Swift.print("NOTE: Bitrate adjustment to", prev, "from", targetBitRate)
+                    Swift.print("#####", "Bitrate adjustment to", prev, "from", targetBitRate)
                 }
             }
             
@@ -590,7 +590,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     }
     
     public func exportCustomMovie(to url : URL, fileType type : AVFileType, settings param : [String:Any]) throws {
-        // Swift.print(#function, #line, url.path, type)
+        // Swift.print(#function, #line, #file)
 
         guard writerIsBusy == false else {
             var info : [String:Any] = [:]
@@ -725,7 +725,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     
     internal func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer) {
         if let updateProgress = updateProgress {
-            //Swift.print("Progress:", progress)
+            // Swift.print("#####", "Progress:", progress)
             let progress : Float = Float(calcProgress(of: buffer))
             updateProgress(progress)
         }
@@ -766,7 +766,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     ///   - selfContained: Other than AVFileType.mov should be true.
     /// - Throws: Misc Error while exporting AVMovie
     public func writeMovie(to url : URL, fileType type : AVFileType, copySampleData selfContained : Bool) throws {
-        // Swift.print(#function, #line, url.lastPathComponent, type.rawValue,
+        // Swift.print(#function, #line, #file, url.lastPathComponent, type.rawValue,
         //     selfContained ? "selfContained movie" : "reference movie")
         
         if type == .mov {
@@ -797,7 +797,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     ///   - url: destination to write
     ///   - mode: FlattenMode
     private func flattenMovie(to url : URL, with mode : FlattenMode) throws {
-        // Swift.print(#function, #line, mode.hashValue, url.path)
+        // Swift.print(#function, #line, #file)
         
         guard writerIsBusy == false else {
             var info : [String:Any] = [:]
@@ -810,7 +810,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         writerIsBusy = true
         defer {
             writerIsBusy = false
-            Swift.print(#function, completed ? "completed" : "failed")
+            Swift.print("#####", completed ? "completed" : "failed")
         }
 
         var selfContained : Bool = false
@@ -859,14 +859,14 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             NotificationCenter.default.post(notificationStart)
             
             //
-            //Swift.print(#function, #line, "working url =", url)
-            //Swift.print(#function, #line, "start insertTimeRange()", (selfContained ? "selfContained" : "referenceOnly"))
+            // Swift.print("#####", "working url =", url)
+            // Swift.print("#####", "start insertTimeRange()", (selfContained ? "selfContained" : "referenceOnly"))
             try newMovie.insertTimeRange(range, of: srcMovie, at: kCMTimeZero, copySampleData: selfContained)
             
-            //Swift.print(#function, #line, "start writeHeader()")
+            // Swift.print("#####", "start writeHeader()")
             try newMovie.writeHeader(to: url, fileType: AVFileType.mov, options: option)
             
-            //Swift.print(#function, #line, "end writeHeader()")
+            // Swift.print("#####", "end writeHeader()")
             completed = true
             
             //

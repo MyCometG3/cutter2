@@ -163,7 +163,7 @@ extension Document {
     
     /// Update Timeline view, seek, and refresh AVPlayerItem if required
     internal func updateGUI(_ time : CMTime, _ timeRange : CMTimeRange, _ reload : Bool) {
-        // Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         
         // update GUI
         self.updateTimeline(time, range: timeRange)
@@ -182,7 +182,7 @@ extension Document {
         
         do {
             let t = time
-            Swift.print("resumeAfterSeek",
+            Swift.print("#####", "resumeAfterSeek",
                         mutator.shortTimeString(t, withDecimals: true),
                         mutator.rawTimeString(t))
         }
@@ -198,7 +198,7 @@ extension Document {
     
     /// Update marker position in Timeline view
     internal func updateTimeline(_ time : CMTime, range : CMTimeRange) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         
         // Update marker position
@@ -225,7 +225,7 @@ extension Document {
     
     /// Refresh AVPlayerItem and seek as is
     private func updatePlayer() {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = movieMutator, let pv = playerView else { return }
         
         if let player = pv.player {
@@ -255,7 +255,7 @@ extension Document {
     
     /// Setup polling timer - queryPosition()
     private func useUpdateTimer(_ enable : Bool) {
-        //Swift.print(#function, #line, (enable ? "on" : "off"))
+        // Swift.print(#function, #line, #file)
         
         if enable {
             if self.timer == nil {
@@ -275,7 +275,7 @@ extension Document {
     
     /// Poll AVPlayer/AVPlayerItem status and refresh Timeline
     @objc func queryPosition() {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         guard let player = self.player else { return }
         guard let playerItem = self.playerItem else { return }
@@ -306,7 +306,7 @@ extension Document {
     
     /// Add AVPlayer properties observer
     private func addPlayerObserver() {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let player = self.player else { return }
         
         player.addObserver(self,
@@ -321,7 +321,7 @@ extension Document {
     
     /// Remove AVPlayer properties observer
     private func removePlayerObserver() {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let player = self.player else { return }
         
         player.removeObserver(self,
@@ -335,7 +335,7 @@ extension Document {
     // NSKeyValueObserving protocol - observeValue(forKeyPath:of:change:context:)
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?,
                                context: UnsafeMutableRawPointer?) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard context == &(self.kvoContext) else { return }
         guard let object = object as? AVPlayer else { return }
         guard let keyPath = keyPath, let change = change else { return }
@@ -343,7 +343,7 @@ extension Document {
         guard let player = self.player else { return }
         
         if object == player && keyPath == #keyPath(AVPlayer.status) {
-            // Swift.print(#function, #line, "#keyPath(AVPlayer.status)")
+            // Swift.print("#####", "#keyPath(AVPlayer.status)")
             
             // Force redraw when AVPlayer.status is updated
             let newStatus = change[.newKey] as! NSNumber
@@ -358,7 +358,7 @@ extension Document {
             }
             return
         } else if object == player && keyPath == #keyPath(AVPlayer.rate) {
-            //Swift.print(#function, #line, "#keyPath(AVPlayer.rate)")
+            // Swift.print("#####", "#keyPath(AVPlayer.rate)")
             
             // Check special case : movie play reached at end of movie
             let oldRate = change[.oldKey] as! NSNumber
@@ -386,9 +386,9 @@ extension Document {
     
     /// Register observer for movie mutation
     internal func addMutationObserver() {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         let handler : (Notification) -> Void = {[unowned self] (notification) in
-            Swift.print("========================== Received : .movieWasMutated ==========================")
+            Swift.print("#####", "======================== Received : .movieWasMutated ========================")
             
             // extract CMTime/CMTimeRange from userInfo
             guard let userInfo = notification.userInfo else { return }
@@ -408,7 +408,7 @@ extension Document {
     
     /// Unregister observer for movie mutation
     internal func removeMutationObserver() {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         let center = NotificationCenter.default
         center.removeObserver(self,
                               name: .movieWasMutated,
@@ -424,7 +424,7 @@ extension Document {
 
     /// Move either start/end marker at current marker (nearest marker do sync)
     internal func syncSelection(_ current: CMTime) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         let selection : CMTimeRange = mutator.selectedTimeRange
         let start : CMTime = selection.start
@@ -440,7 +440,7 @@ extension Document {
     
     /// Move either Or both start/end marker to current marker
     internal func resetSelection(_ newTime : CMTime, _ resetStart : Bool, _ resetEnd : Bool) {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         let selection : CMTimeRange = mutator.selectedTimeRange
         let start : CMTime = selection.start
@@ -458,7 +458,7 @@ extension Document {
     
     /// Check if it is head of movie
     internal func checkHeadOfMovie() -> Bool {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let player = self.player else { return false }
         
         // NOTE: Return false if player is not paused.
@@ -473,7 +473,7 @@ extension Document {
     
     /// Check if it is tail of movie
     internal func checkTailOfMovie() -> Bool {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return false }
         guard let player = self.player else { return false }
         
@@ -507,7 +507,7 @@ extension Document {
     
     /// Snap to grid - Adjust Timeline resolution
     internal func quantize(_ position : Float64) -> CMTime {
-        //Swift.print(#function, #line)
+        // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return kCMTimeZero }
         let position : Float64 = min(max(position, 0.0), 1.0)
         if let info = mutator.presentationInfoAtPosition(position) {

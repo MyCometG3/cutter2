@@ -425,6 +425,43 @@ class MovieMutatorBase: NSObject {
         return !selfContained
     }
     
+    //
+    fileprivate func checkTrackReference(_ track: AVMutableMovieTrack, _ urlSet: NSMutableSet) {
+        // TODO: Too heavy and buggy
+        // This func is based on TN2404 URL reference movie support
+        
+        //Swift.print("\n### movie url:", movieURL)
+        //Swift.print("### track:", track.trackID, "type:", track.mediaType)
+        let reader : AVAssetReader? = try? AVAssetReader(asset: internalMovie)
+        let output : AVAssetReaderSampleReferenceOutput? = AVAssetReaderSampleReferenceOutput(track: track)
+        if let reader = reader, let output = output {
+            reader.add(output)
+            let start : Bool = reader.startReading()
+            defer {
+                reader.cancelReading()
+            }
+            if start, let sample = output.copyNextSampleBuffer() {
+                var mode : CMAttachmentMode = 0
+                let url = CMGetAttachment(sample, kCMSampleBufferAttachmentKey_SampleReferenceURL, &mode)
+                if let url = url {
+                    urlSet.add(url)
+                    //Swift.print("url:", url, "/ mode:", mode)
+                } else {
+                    //Swift.print("url:", "n/a", "/ mode:", "-")
+                }
+                //let attach1 = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sample, kCMAttachmentMode_ShouldPropagate)
+                //let attach2 = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sample, kCMAttachmentMode_ShouldNotPropagate)
+                //Swift.print("ShouldPropagate:", attach1 ?? "none")
+                //Swift.print("ShouldNotPropagate:", attach2 ?? "none")
+                return
+            } else {
+                //Swift.print("Failed on AVAssetReader:", reader.error ?? "n/a")
+            }
+        } else {
+            //Swift.print("Unable to use AVAssetReaderSampleReferenceOutput:")
+        }
+    }
+    
     /// URLs which contains media data
     ///
     /// - Returns: URL array including movie source URL
@@ -438,6 +475,9 @@ class MovieMutatorBase: NSObject {
             }
             else if let storage = track.mediaDataStorage, let url = storage.url() {
                 urlSet.add(url)
+            }
+            else {
+                //checkTrackReference(track, urlSet)
             }
         }
         if let storage = internalMovie.defaultMediaDataStorage, let url = storage.url() {

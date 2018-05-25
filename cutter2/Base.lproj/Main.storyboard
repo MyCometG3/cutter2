@@ -268,6 +268,11 @@
                                                 <segue destination="PEt-Rb-z8M" kind="show" id="HbR-Gd-ivU"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Next Document" keyEquivalent="/" id="toI-aN-gnD">
+                                            <connections>
+                                                <action selector="nextDocument:" target="Voe-Tx-rLC" id="UUv-LG-Pkg"/>
+                                            </connections>
+                                        </menuItem>
                                         <menuItem isSeparatorItem="YES" id="eu3-7i-yIM"/>
                                         <menuItem title="Bring All to Front" id="LE2-aR-0XJ">
                                             <modifierMask key="keyEquivalentModifierMask"/>

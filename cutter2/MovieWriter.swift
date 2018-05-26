@@ -29,6 +29,9 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     /// callback for NSDocument.unblockUserInteraction()
     public var unblockUserInteraction : (() -> Void)? = nil
     
+    /// Progress update block
+    public var updateProgress : ((Float) -> Void)? = nil
+    
     /// Flag if writer is running
     public private(set) var writerIsBusy : Bool = false
     
@@ -54,6 +57,42 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     
     /// Status of last exportSession (update after finished)
     private var exportSessionStatus : AVAssetExportSessionStatus = .unknown
+    
+    /// Status polling timer
+    private var exportSessionTimer : Timer? = nil
+    
+    /// Status polling timer interval
+    private let exportSessionTimerRefreshInterval : TimeInterval = 1.0/10
+    
+    /// Status update timer
+    ///
+    /// - Parameter timer: Timer object
+    @objc dynamic func timerFireMethod(_ timer : Timer) {
+        guard let session = self.exportSession, session.status == .exporting else { return }
+        guard let updateProgress = updateProgress else { return }
+        
+        let progress : Float = session.progress
+        updateProgress(progress)
+        // Swift.print("#####", "Progress:", progress)
+    }
+    
+    /// Install status polling timer on main thread
+    private func exportSessionStartTimer() {
+        DispatchQueue.main.sync {
+            let timer = Timer.scheduledTimer(timeInterval: exportSessionTimerRefreshInterval,
+                                             target: self, selector: #selector(timerFireMethod),
+                                             userInfo: nil, repeats: true)
+            self.exportSessionTimer = timer
+        }
+    }
+    
+    /// Uninstall status polling timer
+    private func exportSessionStopTimer() {
+        DispatchQueue.main.sync {
+            self.exportSessionTimer?.invalidate()
+            self.exportSessionTimer = nil
+        }
+    }
     
     /// Status string representation
     ///
@@ -118,6 +157,13 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         let notificationStart = Notification(name: .movieWillExportSession,
                                              object: self, userInfo: userInfoStart)
         NotificationCenter.default.post(notificationStart)
+        
+        
+        // Start progress timer
+        exportSessionStartTimer()
+        defer {
+            exportSessionStopTimer()
+        }
         
         // Start ExportSession
         self.exportSession = exportSession
@@ -242,7 +288,6 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     
     public private(set) var finalSuccess : Bool = true
     public private(set) var finalError : Error? = nil
-    public var updateProgress : ((Float) -> Void)? = nil
     
     private var queue : DispatchQueue? = nil
     private var sampleBufferChannels : [SampleBufferChannel] = []
@@ -725,9 +770,9 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     
     internal func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer) {
         if let updateProgress = updateProgress {
-            // Swift.print("#####", "Progress:", progress)
             let progress : Float = Float(calcProgress(of: buffer))
             updateProgress(progress)
+            // Swift.print("#####", "Progress:", progress)
         }
         
         //if let imageBuffer : CVImageBuffer = CMSampleBufferGetImageBuffer(buffer) {

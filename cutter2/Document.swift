@@ -538,6 +538,10 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
+        mutator.updateProgress = {(progress) in self.updateProgress(progress) }
+        defer {
+            mutator.updateProgress = nil
+        }
         
         do {
             // Export as specified file type with AVAssetExportPresetPassthrough

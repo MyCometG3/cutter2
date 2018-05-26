@@ -650,65 +650,70 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         }
         
         //
+        let queue : DispatchQueue = DispatchQueue(label: "exportCustomMovie")
         self.param = param
-        self.queue = DispatchQueue(label: "exportCustomMovie")
+        self.queue = queue
         self.sampleBufferChannels = []
         self.cancelled = false
-        guard let queue = self.queue else { return }
 
         //
         let movie : AVMutableMovie = internalMovie
-        var assetReader : AVAssetReader? = nil
-        var assetWriter : AVAssetWriter? = nil
+        let startTime : CMTime = movie.range.start
+        let endTime : CMTime = movie.range.end
+        var ar : AVAssetReader
+        var aw : AVAssetWriter
         do {
-            assetReader = try AVAssetReader(asset: movie)
-            assetWriter = try AVAssetWriter(url: url, fileType: type)
+            let assetReader : AVAssetReader? = try AVAssetReader(asset: movie)
+            let assetWriter : AVAssetWriter? = try AVAssetWriter(url: url, fileType: type)
+            if let assetReader = assetReader, let assetWriter = assetWriter {
+                ar = assetReader
+                aw = assetWriter
+            } else {
+                var info : [String:Any] = [:]
+                info[NSLocalizedDescriptionKey] = "Internal error"
+                info[NSLocalizedFailureReasonErrorKey] = "Either AVAssetReader or AVAssetWriter is not available."
+                self.finalError = NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+                self.finalSuccess = false
+                return
+            }
         } catch {
             self.finalSuccess = false
             self.finalError = error
             return
         }
-        guard let ar = assetReader, let aw = assetWriter else {
-            var info : [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Internal error"
-            info[NSLocalizedFailureReasonErrorKey] = "Either AVAssetReader or AVAssetWriter is not available."
-            self.finalError = NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
-            self.finalSuccess = false
-            return
+        
+        do {
+            // setup aw parameters here
+            aw.movieTimeScale = movie.timescale
+            aw.movieFragmentInterval = kCMTimeInvalid
+            aw.shouldOptimizeForNetworkUse = true
+            
+            // setup sampleBufferChannels for each track
+            prepareAudioChannels(movie, ar, aw)
+            prepareVideoChannels(movie, ar, aw)
+            prepareOtherMediaChannels(movie, ar, aw)
+            
+            // start assetReader/assetWriter
+            let readyReader : Bool = ar.startReading()
+            let readyWriter : Bool = aw.startWriting()
+            guard readyReader && readyWriter else {
+                let error = (readyReader == false) ? ar.error : aw.error
+                ar.cancelReading()
+                aw.cancelWriting()
+                self.rwDidFinish(result: false, error: error)
+                self.finalSuccess = false
+                self.finalError = error
+                return
+            }
+            
+            // start writing session
+            aw.startSession(atSourceTime: startTime)
         }
 
-        // setup aw parameters here
-        aw.movieTimeScale = movie.timescale
-        aw.movieFragmentInterval = kCMTimeInvalid
-        aw.shouldOptimizeForNetworkUse = true
-        
-        //
-        prepareAudioChannels(movie, ar, aw)
-        prepareVideoChannels(movie, ar, aw)
-        prepareOtherMediaChannels(movie, ar, aw)
-        
-        //
-        let readyReader : Bool = ar.startReading()
-        let readyWriter : Bool = aw.startWriting()
-        guard readyReader && readyWriter else {
-            let error = (readyReader == false) ? ar.error : aw.error
-            ar.cancelReading()
-            aw.cancelWriting()
-            self.rwDidFinish(result: false, error: error)
-            self.finalSuccess = false
-            self.finalError = error
-            return
-        }
-
-        // Start writing session
-        let startTime : CMTime = movie.range.start
-        let endTime : CMTime = movie.range.end
-        aw.startSession(atSourceTime: startTime)
-        
         // Allow sheet to show
         self.unblockUserInteraction?()
 
-        //
+        // Register and run each sampleBufferChannel as DispatchGroup
         let dg : DispatchGroup = DispatchGroup()
         for sbc in sampleBufferChannels {
             dg.enter()
@@ -716,6 +721,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             sbc.start(with: self, completionHandler: handler)
         }
         
+        // Wait till finish
         let waitSem  = DispatchSemaphore(value: 0)
         dg.notify(queue: queue, execute: {[unowned self, ar, aw] in
             if self.cancelled == false { // either completed or failed

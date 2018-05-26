@@ -23,12 +23,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return false
     }
     
+    /// Select next document
+    ///
+    /// - Parameter sender: Any
     @IBAction func nextDocument(_ sender: Any) {
         let docList : [Document]? = NSApp.orderedDocuments as? [Document]
         if let docList = docList, docList.count > 1 {
-            let document : Document = docList.last!
-            let window = document.window
-            if let window = window {
+            if let doc = docList.last, let window = doc.window {
                 window.makeKeyAndOrderFront(self)
             }
         }

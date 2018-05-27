@@ -99,9 +99,10 @@ class AccessoryViewController: NSViewController {
         let audioSize : Int64 = size.audioSize, audioCount : Int64 = size.audioCount
         let otherSize : Int64 = size.otherSize, otherCount : Int64 = size.otherCount
         
-        var text = "Movie Header: \(format(headerSize/1024)) KB\n"
-        text += "Data: \(format(videoSize/1024)) KB / \(format(audioSize/1024)) KB / \(format(otherSize/1024)) KB\n"
-        text += "Track: Video:\(format(videoCount)) / Audio:\(format(audioCount)) / Other:\(format(otherCount))\n"
+        let text = "Movie header size: \(format(headerSize/1000)) KB\n"
+            + "Video tracks (\(format(videoCount))): \(format(videoSize/1000)) KB\n"
+            + "Audio tracks (\(format(audioCount))): \(format(audioSize/1000)) KB\n"
+            + "Other tracks (\(format(otherCount))): \(format(otherSize/1000)) KB"
         
         dataSizeTextField.stringValue = text
     }

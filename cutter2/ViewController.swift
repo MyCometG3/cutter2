@@ -108,11 +108,13 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     public func updateTimeline(current curPosition : Float64,
                                from startPosition : Float64,
                                to endPosition : Float64,
-                               label string : String) {
+                               label string : String,
+                               isValid valid : Bool) {
         //
         let result = self.timelineView.updateTimeline(current: curPosition,
                                                       from: startPosition,
-                                                      to: endPosition)
+                                                      to: endPosition,
+                                                      isValid: valid)
         if result {
             self.timelineView.updateTimeLabel(to: string)
             self.timelineView.needsLayout = true
@@ -192,11 +194,12 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 let startPosition = Float64((userInfo[startPositionInfoKey] as! NSNumber).doubleValue)
                 let endPosition = Float64((userInfo[endPositionInfoKey] as! NSNumber).doubleValue)
                 let string = (userInfo[stringInfoKey] as! String)
-                
+                let valid = (userInfo[durationInfoKey] as! NSNumber).doubleValue > 0.0
                 self.updateTimeline(current: curPosition,
                                     from: startPosition,
                                     to: endPosition,
-                                    label: string)
+                                    label: string,
+                                    isValid: valid)
             }
         }
         center.addObserver(forName: .timelineUpdateReq,

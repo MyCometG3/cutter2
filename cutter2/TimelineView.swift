@@ -98,12 +98,19 @@ class TimelineView: NSView, CALayerDelegate {
     /// Update 3 marker positions
     public func updateTimeline(current curPosition : Float64,
                                from startPosition : Float64,
-                               to endPosition : Float64) -> Bool {
+                               to endPosition : Float64,
+                               isValid valid : Bool) -> Bool {
         // Check if update is not required
         if (self.currentPosition == curPosition &&
             self.startPosition == startPosition &&
-            self.endPosition == endPosition) {
+            self.endPosition == endPosition &&
+            self.isValid == valid) {
             return false
+        }
+        
+        //
+        if !valid && marker() != .none {
+            _ = unselectMarker()
         }
         
         // Check if either value is NaN
@@ -115,8 +122,15 @@ class TimelineView: NSView, CALayerDelegate {
             return true
         }
         
+        // select current marker if none is selected
+        if valid && marker() == .none {
+            if let cur = self.currentMarker {
+                _ = selectNewMarker(cur)
+            }
+        }
+        
         // update as is
-        self.isValid = true
+        self.isValid = valid
         self.currentPosition = curPosition
         self.startPosition = startPosition
         self.endPosition = endPosition
@@ -520,6 +534,29 @@ class TimelineView: NSView, CALayerDelegate {
             }
             return true
         }
+    }
+    
+    /// Inactivate(unselect) selected marker
+    ///
+    /// - Returns: true if marker selection is updated.
+    private func unselectMarker() -> Bool {
+        guard let cMark = currentMarker else { return false }
+        guard let sMark = startMarker, let eMark = endMarker else { return false }
+        
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        cMark.strokeColor = strokeColorInactive
+        cMark.fillColor = fillColorInactive
+        sMark.strokeColor = strokeColorInactive
+        sMark.fillColor = fillColorInactive
+        eMark.strokeColor = strokeColorInactive
+        eMark.fillColor = fillColorInactive
+        CATransaction.commit()
+        
+        selectedMarker = nil
+        self.needsLayout = true
+        
+        return true
     }
     
     /// Update marker position according to mouse event

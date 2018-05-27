@@ -411,7 +411,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             try accessoryVC.updateDataSizeText(mutator.headerSize())
             
             accessoryVC.fileType = AVFileType.init(uti)
-            if accessoryVC.fileType == .mov {
+            if accessoryVC.fileType == .mov && self.transcoding == false {
                 accessoryVC.selfContained = !mutator.hasExternalReference()
             } else {
                 accessoryVC.selfContained = true

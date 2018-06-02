@@ -274,6 +274,22 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     override func writeSafely(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
         // Swift.print(#function, #line, #file)
         
+        // Sandbox support - keep source document security scope bookmark
+        if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
+            DispatchQueue.main.async {
+                let fileType : AVFileType = AVFileType.init(rawValue: typeName)
+                guard fileType == .mov else { return }
+                
+                guard let accessoryVC = self.accessoryVC else { return }
+                let saveAsRefMov : Bool = (accessoryVC.selfContained == false)
+                guard saveAsRefMov else { return }
+                
+                // SaveAs reference movie - Need to keep readonly access to original
+                let app : AppDelegate = NSApp.delegate as! AppDelegate
+                app.addBookmark(for: srcURL)
+            }
+        }
+        
         try super.writeSafely(to: url, ofType: typeName, for: saveOperation)
         
         // Refresh internal movie (to sync selfcontained <> referece movie change)

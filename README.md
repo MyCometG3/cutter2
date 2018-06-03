@@ -29,8 +29,8 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 - Custom export keeps customized CleanAperture/PixelAspectRatio.
 
 #### Development environment
-- MacOS X 10.13.4 High Sierra
-- Xcode 9.3.0
+- MacOS X 10.13.5 High Sierra
+- Xcode 9.4.0
 - Swift 4.1.0
 
 #### License

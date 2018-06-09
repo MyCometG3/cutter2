@@ -557,7 +557,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             // source
             var arOutputSetting : [String:Any] = [:]
             addDecompressionProperties(track, copyField, &arOutputSetting)
-            arOutputSetting[String(kCVPixelBufferPixelFormatTypeKey)] = kCVPixelFormatType_422YpCbCr8_yuvs
+            arOutputSetting[String(kCVPixelBufferPixelFormatTypeKey)] = kCVPixelFormatType_422YpCbCr8
             let arOutput : AVAssetReaderOutput = AVAssetReaderTrackOutput(track: track, outputSettings: arOutputSetting)
             ar.add(arOutput)
             

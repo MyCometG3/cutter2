@@ -478,6 +478,61 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         } // for track in movie.tracks(withMediaType: .audio)
     }
     
+    fileprivate func hasFieldModeSupport(of track : AVMovieTrack) -> Bool {
+        let descArray : [Any] = track.formatDescriptions
+        guard descArray.count > 0 else { return false }
+        
+        let desc : CMFormatDescription = descArray[0] as! CMFormatDescription
+        var dict : CFDictionary? = nil
+        do {
+            var status : OSStatus = noErr
+            var spec : NSMutableDictionary? = nil
+            //spec = NSMutableDictionary()
+            //spec![kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder] = false
+            var decompSession : VTDecompressionSession? = nil
+            status = VTDecompressionSessionCreate(kCFAllocatorDefault, desc, spec, nil, nil, &decompSession)
+            guard status == noErr else { return false }
+            
+            defer { VTDecompressionSessionInvalidate(decompSession!) }
+            
+            status = VTSessionCopySupportedPropertyDictionary(decompSession!, &dict)
+            guard status == noErr else { return false }
+        }
+        
+        if let dict = dict as? [NSString:Any] {
+            if let propFieldMode = dict[kVTDecompressionPropertyKey_FieldMode] as? [NSString:Any] {
+                if let propList = propFieldMode[kVTPropertySupportedValueListKey] as? [NSString] {
+                    let hasDF = propList.contains(kVTDecompressionProperty_FieldMode_DeinterlaceFields)
+                    let hasBF = propList.contains(kVTDecompressionProperty_FieldMode_BothFields)
+                    return (hasDF && hasBF)
+                }
+            }
+        }
+        return false
+    }
+    
+    fileprivate func addDecompressionProperties(_ track: AVMovieTrack, _ copyField: Bool, _ arOutputSetting: inout [String : Any]) {
+        if #available(OSX 10.13, *), hasFieldModeSupport(of: track) {
+            var decompressionProperties : NSDictionary? = nil
+            if copyField {
+                // Keep both fields
+                // Swift.print("Decoder : FieldMode_BothFields")
+                let dict : NSMutableDictionary = NSMutableDictionary()
+                dict[kVTDecompressionPropertyKey_FieldMode] = kVTDecompressionProperty_FieldMode_BothFields
+                decompressionProperties = (dict.copy() as! NSDictionary)
+            } else {
+                // Allow deinterlace - only DV decoder works...?
+                // Swift.print("Decoder : FieldMode_DeinterlaceFields")
+                let dict : NSMutableDictionary = NSMutableDictionary()
+                dict[kVTDecompressionPropertyKey_FieldMode] = kVTDecompressionProperty_FieldMode_DeinterlaceFields
+                dict[kVTDecompressionPropertyKey_DeinterlaceMode] = kVTDecompressionProperty_DeinterlaceMode_VerticalFilter
+                decompressionProperties = (dict.copy() as! NSDictionary)
+            }
+            
+            arOutputSetting[AVVideoDecompressionPropertiesKey] = decompressionProperties
+        }
+    }
+    
     fileprivate func prepareVideoChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
         let numVideoEncode = param[kVideoEncodeKey] as? NSNumber
         let videoEncode : Bool = numVideoEncode?.boolValue ?? true
@@ -501,6 +556,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         for track in movie.tracks(withMediaType: .video) {
             // source
             var arOutputSetting : [String:Any] = [:]
+            addDecompressionProperties(track, copyField, &arOutputSetting)
             arOutputSetting[String(kCVPixelBufferPixelFormatTypeKey)] = kCVPixelFormatType_422YpCbCr8_yuvs
             let arOutput : AVAssetReaderOutput = AVAssetReaderTrackOutput(track: track, outputSettings: arOutputSetting)
             ar.add(arOutput)

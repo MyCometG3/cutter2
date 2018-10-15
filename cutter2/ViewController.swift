@@ -219,7 +219,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     // MARK: - Validate menu
     /* ============================================ */
     
-    override func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         guard let document = delegate else { return false }
         if menuItem.action == #selector(ViewController.cut(_:)) {
             return document.hasSelection()
@@ -236,9 +236,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         if menuItem.action == #selector(ViewController.selectAll(_:)) {
             return document.hasDuration()
         }
-        do {
-            return super.validateMenuItem(menuItem)
-        }
+        return false
     }
     
     /* ============================================ */

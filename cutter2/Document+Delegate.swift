@@ -17,12 +17,12 @@ extension Document : ViewControllerDelegate {
     
     public func hasSelection() -> Bool {
         guard let mutator = self.movieMutator else { return false }
-        return (mutator.selectedTimeRange.duration > kCMTimeZero) ? true : false
+        return (mutator.selectedTimeRange.duration > CMTime.zero) ? true : false
     }
     
     public func hasDuration() -> Bool {
         guard let mutator = self.movieMutator else { return false }
-        return (mutator.movieDuration() > kCMTimeZero) ? true : false
+        return (mutator.movieDuration() > CMTime.zero) ? true : false
     }
     
     public func hasClipOnPBoard() -> Bool {
@@ -126,7 +126,7 @@ extension Document : ViewControllerDelegate {
     
     public func timeOfPosition(_ position : Float64) -> CMTime {
         // Swift.print(#function, #line, #file)
-        guard let mutator = self.movieMutator else { return kCMTimeZero }
+        guard let mutator = self.movieMutator else { return CMTime.zero }
         return mutator.timeOfPosition(position)
     }
     
@@ -210,17 +210,17 @@ extension Document : ViewControllerDelegate {
         // step and resume
         let duration = mutator.movieDuration()
         let okForward = (count > 0 && item.canStepForward && nowTime < duration)
-        let okBackward = (count < 0 && item.canStepBackward && kCMTimeZero < nowTime)
+        let okBackward = (count < 0 && item.canStepBackward && CMTime.zero < nowTime)
         if okForward {
             guard let info = mutator.presentationInfoAtTime(nowTime) else { return }
-            let newTime = CMTimeClampToRange(info.timeRange.end, mutator.movieRange())
+            let newTime = CMTimeClampToRange(info.timeRange.end, range: mutator.movieRange())
             resetSelection(newTime, resetStart, resetEnd)
             resumeAfterSeek(to: newTime, with: rate)
             target = newTime
         } else if okBackward {
             guard let info = mutator.presentationInfoAtTime(nowTime) else { return }
             guard let prev = mutator.previousInfo(of: info.timeRange) else { return }
-            let newTime = CMTimeClampToRange(prev.timeRange.start, mutator.movieRange())
+            let newTime = CMTimeClampToRange(prev.timeRange.start, range: mutator.movieRange())
             resetSelection(newTime, resetStart, resetEnd)
             resumeAfterSeek(to: newTime, with: rate)
             target = newTime
@@ -251,7 +251,7 @@ extension Document : ViewControllerDelegate {
         // calc target time
         var adjust : Bool = true
         let nowTime = mutator.insertionTime
-        let offsetTime = CMTimeMakeWithSeconds(offset, nowTime.timescale)
+        let offsetTime = CMTimeMakeWithSeconds(offset, preferredTimescale: nowTime.timescale)
         var newTime = nowTime + offsetTime
         if newTime < movieRange.start {
             newTime = movieRange.start; adjust = false
@@ -303,7 +303,7 @@ extension Document : ViewControllerDelegate {
             let selection : CMTimeRange = mutator.selectedTimeRange
             let start : CMTime = selection.start
             let end : CMTime = selection.end
-            let limit : CMTime = kCMTimeZero
+            let limit : CMTime = CMTime.zero
             current = (
                 (end < current) ? end :
                     (start < current) ? start : limit
@@ -378,7 +378,7 @@ extension Document : ViewControllerDelegate {
         if newRate > 0.0 && okForward {
             if newRate == 1.0 || (newRate > 1.0 && okFastForward) {
                 if checkTailOfMovie() { // Restart from head of movie
-                    self.resumeAfterSeek(to: kCMTimeZero, with: newRate)
+                    self.resumeAfterSeek(to: CMTime.zero, with: newRate)
                 } else { // Start play
                     player.rate = newRate
                 }
@@ -408,7 +408,7 @@ extension Document : ViewControllerDelegate {
             doSetRate(0)
         } else { // pause => play
             if checkTailOfMovie() { // Restart play from head of the movie
-                self.resumeAfterSeek(to: kCMTimeZero, with: 1.0)
+                self.resumeAfterSeek(to: CMTime.zero, with: 1.0)
             } else { // Start play
                 doSetRate(+1)
             }
@@ -433,7 +433,7 @@ extension Document : ViewControllerDelegate {
         guard let mutator = self.movieMutator else { return }
         let fromTime : CMTime = quantize(position)
         let toTime : CMTime = mutator.selectedTimeRange.end
-        let newRange = CMTimeRangeFromTimeToTime(fromTime, toTime)
+        let newRange = CMTimeRangeFromTimeToTime(start: fromTime, end: toTime)
         updateGUI(mutator.insertionTime, newRange, false)
     }
     
@@ -443,7 +443,7 @@ extension Document : ViewControllerDelegate {
         guard let mutator = self.movieMutator else { return }
         let fromTime : CMTime = mutator.selectedTimeRange.start
         let toTime : CMTime = quantize(position)
-        let newRange = CMTimeRangeFromTimeToTime(fromTime, toTime)
+        let newRange = CMTimeRangeFromTimeToTime(start: fromTime, end: toTime)
         updateGUI(mutator.insertionTime, newRange, false)
     }
     
@@ -453,7 +453,7 @@ extension Document : ViewControllerDelegate {
         guard let mutator = self.movieMutator else { return }
         let fromTime : CMTime = quantize(fromPos)
         let toTime : CMTime = quantize(toPos)
-        let newRange = CMTimeRangeFromTimeToTime(fromTime, toTime)
+        let newRange = CMTimeRangeFromTimeToTime(start: fromTime, end: toTime)
         updateGUI(mutator.insertionTime, newRange, false)
     }
     
@@ -489,7 +489,7 @@ extension Document : ViewControllerDelegate {
         
         switch anchor {
         case .head :
-            mutator.insertionTime = kCMTimeZero
+            mutator.insertionTime = CMTime.zero
         case .start :
             mutator.insertionTime = start
         case .end :
@@ -500,7 +500,7 @@ extension Document : ViewControllerDelegate {
             if mutator.insertionTime != start {
                 mutator.insertionTime = start
             } else {
-                mutator.insertionTime = kCMTimeZero
+                mutator.insertionTime = CMTime.zero
             }
         case .endOrTail :
             if mutator.insertionTime != end {
@@ -522,7 +522,7 @@ extension Document : ViewControllerDelegate {
             } else if start < current {
                 mutator.insertionTime = start
             } else {
-                mutator.insertionTime = kCMTimeZero
+                mutator.insertionTime = CMTime.zero
             }
         default:
             NSSound.beep()
@@ -546,23 +546,23 @@ extension Document : ViewControllerDelegate {
         
         switch anchor {
         case .headOrCurrent :
-            if start != kCMTimeZero {
-                newRange = CMTimeRangeFromTimeToTime(kCMTimeZero, end)
+            if start != CMTime.zero {
+                newRange = CMTimeRangeFromTimeToTime(start: CMTime.zero, end: end)
             } else {
                 fallthrough
             }
         case .current :
             if current < end {
-                newRange = CMTimeRangeFromTimeToTime(current, end)
+                newRange = CMTimeRangeFromTimeToTime(start: current, end: end)
             } else {
-                newRange = CMTimeRangeFromTimeToTime(current, current)
+                newRange = CMTimeRangeFromTimeToTime(start: current, end: current)
             }
         case .head :
-            newRange = CMTimeRangeFromTimeToTime(kCMTimeZero, end)
+            newRange = CMTimeRangeFromTimeToTime(start: CMTime.zero, end: end)
         case .end :
-            newRange = CMTimeRangeFromTimeToTime(end, end)
+            newRange = CMTimeRangeFromTimeToTime(start: end, end: end)
         case .tail :
-            newRange = CMTimeRangeFromTimeToTime(duration, duration)
+            newRange = CMTimeRangeFromTimeToTime(start: duration, end: duration)
         default:
             NSSound.beep()
             return
@@ -584,22 +584,22 @@ extension Document : ViewControllerDelegate {
         switch anchor {
         case .tailOrCurrent :
             if end != duration {
-                newRange = CMTimeRangeFromTimeToTime(start, duration)
+                newRange = CMTimeRangeFromTimeToTime(start: start, end: duration)
             } else {
                 fallthrough
             }
         case .current :
             if start < current {
-                newRange = CMTimeRangeFromTimeToTime(start, current)
+                newRange = CMTimeRangeFromTimeToTime(start: start, end: current)
             } else {
-                newRange = CMTimeRangeFromTimeToTime(current, current)
+                newRange = CMTimeRangeFromTimeToTime(start: current, end: current)
             }
         case .head :
-            newRange = CMTimeRangeFromTimeToTime(kCMTimeZero, kCMTimeZero)
+            newRange = CMTimeRangeFromTimeToTime(start: CMTime.zero, end: CMTime.zero)
         case .start :
-            newRange = CMTimeRangeFromTimeToTime(start, start)
+            newRange = CMTimeRangeFromTimeToTime(start: start, end: start)
         case .tail:
-            newRange = CMTimeRangeFromTimeToTime(start, duration)
+            newRange = CMTimeRangeFromTimeToTime(start: start, end: duration)
         default:
             NSSound.beep()
             return

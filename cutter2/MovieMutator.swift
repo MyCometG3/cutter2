@@ -35,14 +35,14 @@ class MovieMutator: MovieMutatorBase {
             clip.timescale = scale
             clip.preferredRate = 1.0
             clip.preferredVolume = 1.0
-            clip.interleavingPeriod = CMTimeMakeWithSeconds(0.5, scale)
+            clip.interleavingPeriod = CMTimeMakeWithSeconds(0.5, preferredTimescale: scale)
             clip.preferredTransform = CGAffineTransform.identity
             clip.isModified = false
             // convert all into different timescale
             do {
                 let movieRange : CMTimeRange = self.movieRange()
                 Swift.print(ts(), #function, #line, #file)
-                try clip.insertTimeRange(movieRange, of: internalMovie, at: kCMTimeZero, copySampleData: false)
+                try clip.insertTimeRange(movieRange, of: internalMovie, at: CMTime.zero, copySampleData: false)
                 Swift.print(ts(), #function, #line, #file)
             } catch {
                 Swift.print(ts(), error)
@@ -51,12 +51,12 @@ class MovieMutator: MovieMutatorBase {
         }
         
         // Trim clip
-        let rangeAfter : CMTimeRange = CMTimeRangeMake(range.end, clip.range.duration - range.end)
-        if rangeAfter.duration > kCMTimeZero {
+        let rangeAfter : CMTimeRange = CMTimeRangeMake(start: range.end, duration: clip.range.duration - range.end)
+        if rangeAfter.duration > CMTime.zero {
             clip.removeTimeRange(rangeAfter)
         }
-        let rangeBefore : CMTimeRange = CMTimeRangeMake(kCMTimeZero, range.start)
-        if rangeBefore.duration > kCMTimeZero {
+        let rangeBefore : CMTimeRange = CMTimeRangeMake(start: CMTime.zero, duration: range.start)
+        if rangeBefore.duration > CMTime.zero {
             clip.removeTimeRange(rangeBefore)
         }
         
@@ -186,8 +186,8 @@ class MovieMutator: MovieMutatorBase {
             
             // Update Marker
             insertionTime = (time < range.start ? time
-                : (CMTimeRangeContainsTime(range, time) ? range.start : time - range.duration))
-            selectedTimeRange = CMTimeRangeMake(range.start, kCMTimeZero)
+                : (CMTimeRangeContainsTime(range, time: time) ? range.start : time - range.duration))
+            selectedTimeRange = CMTimeRangeMake(start: range.start, duration: CMTime.zero)
             internalMovieDidChange(insertionTime, selectedTimeRange)
         }
     }
@@ -219,14 +219,14 @@ class MovieMutator: MovieMutatorBase {
         
         // perform insert clip at marker
         do {
-            var clipRange : CMTimeRange = CMTimeRange(start: kCMTimeZero,
+            var clipRange : CMTimeRange = CMTimeRange(start: CMTime.zero,
                                                       duration: clip.range.duration)
             if clip.timescale != internalMovie.timescale {
                 // Shorten if fraction is not zero
                 let duration : CMTime = CMTimeConvertScale(clip.range.duration,
-                                                           internalMovie.timescale,
-                                                           .roundTowardZero)
-                clipRange = CMTimeRange(start: kCMTimeZero,
+                                                           timescale: internalMovie.timescale,
+                                                           method: .roundTowardZero)
+                clipRange = CMTimeRange(start: CMTime.zero,
                                         duration: duration)
             }
             let beforeDuration = self.movieDuration()
@@ -242,7 +242,7 @@ class MovieMutator: MovieMutatorBase {
             let afterDuration = self.movieDuration()
             let actualDelta = afterDuration - beforeDuration
             insertionTime = time + actualDelta
-            selectedTimeRange = CMTimeRangeMake(time, actualDelta)
+            selectedTimeRange = CMTimeRangeMake(start: time, duration: actualDelta)
             
             internalMovieDidChange(insertionTime, selectedTimeRange)
         } catch {
@@ -412,7 +412,7 @@ class MovieMutator: MovieMutatorBase {
             
             // Update Marker
             insertionTime = (time < movie.range.end) ? time : movie.range.end
-            selectedTimeRange = CMTimeRangeGetIntersection(range, movie.range)
+            selectedTimeRange = CMTimeRangeGetIntersection(range, otherRange: movie.range)
             internalMovieDidChange(insertionTime, selectedTimeRange)
         }
     }
@@ -523,12 +523,12 @@ class MovieMutator: MovieMutatorBase {
                 var newFormat : CMVideoFormatDescription? = nil
                 let codecType = CMFormatDescriptionGetMediaSubType(format) as CMVideoCodecType
                 let dimensions = CMVideoFormatDescriptionGetDimensions(format)
-                let result = CMVideoFormatDescriptionCreate(kCFAllocatorDefault,
-                                                               codecType,
-                                                               dimensions.width,
-                                                               dimensions.height,
-                                                               dict,
-                                                               &newFormat)
+                let result = CMVideoFormatDescriptionCreate(allocator: kCFAllocatorDefault,
+                                                               codecType: codecType,
+                                                               width: dimensions.width,
+                                                               height: dimensions.height,
+                                                               extensions: dict,
+                                                               formatDescriptionOut: &newFormat)
                 if result == noErr, let newFormat = newFormat {
                     track.replaceFormatDescription(format, with: newFormat)
                     count += 1

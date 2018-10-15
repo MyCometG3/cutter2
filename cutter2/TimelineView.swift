@@ -17,15 +17,15 @@ public extension NSBezierPath {
         for i in 0 ..< self.elementCount {
             let type = self.element(at: i, associatedPoints: &points)
             switch type {
-            case .moveToBezierPathElement:
+            case .moveTo:
                 path.move(to: points[0])
-            case .lineToBezierPathElement:
+            case .lineTo:
                 path.addLine(to: points[0])
-            case .curveToBezierPathElement:
+            case .curveTo:
                 path.addCurve(to: points[2], control1: points[0], control2: points[1])
-            case .closePathBezierPathElement:
+            case .closePath:
                 path.closeSubpath()
-            }
+}
         }
         return path
     }
@@ -289,7 +289,7 @@ class TimelineView: NSView, CALayerDelegate {
     // MARK: - NSLayerDelegateContentsScaleUpdating
     /* ============================================ */
     
-    override func layer(_ layer: CALayer, shouldInheritContentsScale newScale: CGFloat, from window: NSWindow) -> Bool {
+    func layer(_ layer: CALayer, shouldInheritContentsScale newScale: CGFloat, from window: NSWindow) -> Bool {
         return true
     }
     
@@ -306,7 +306,7 @@ class TimelineView: NSView, CALayerDelegate {
             label.fontSize = 11.5
             label.backgroundColor = NSColor.controlColor.cgColor
             label.foregroundColor = NSColor.darkGray.cgColor
-            label.alignmentMode = kCAAlignmentCenter
+            label.alignmentMode = CATextLayerAlignmentMode.center
             label.string = "00:00:00.000"
             label.delegate = self // CATextLayer requires NSLayerDelegateContentsScaleUpdating
             label.bounds = CGRect(x: 0, y: 0, width: labelWidth, height: labelHeight)

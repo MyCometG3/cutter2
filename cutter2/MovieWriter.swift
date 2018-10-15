@@ -56,7 +56,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     private var exportSessionProgress : Float = 0.0
     
     /// Status of last exportSession (update after finished)
-    private var exportSessionStatus : AVAssetExportSessionStatus = .unknown
+    private var exportSessionStatus : AVAssetExportSession.Status = .unknown
     
     /// Status polling timer
     private var exportSessionTimer : Timer? = nil
@@ -98,7 +98,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     ///
     /// - Parameter status: AVAssetExportSessionStatus
     /// - Returns: String representation of status
-    private func statusString(of status : AVAssetExportSessionStatus) -> String {
+    private func statusString(of status : AVAssetExportSession.Status) -> String {
         let statusStrArray : [String] =
             ["unknown(0)","waiting(1)","exporting(2)","completed(3)","failed(4)","cancelled(5)"]
         
@@ -177,7 +177,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             
             // Check results
             var completed : Bool = false
-            let result : AVAssetExportSessionStatus = exportSession.status
+            let result : AVAssetExportSession.Status = exportSession.status
             let progress : Float = exportSession.progress
             let dateEnd : Date = Date()
             let interval : TimeInterval = dateEnd.timeIntervalSince(dateStart)
@@ -253,7 +253,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             if let session = self.exportSession {
                 // exportSession is running
                 let progress : Float = session.progress
-                let status : AVAssetExportSessionStatus = session.status
+                let status : AVAssetExportSession.Status = session.status
                 result[progressInfoKey] = progress // 0.0 - 1.0 : Float
                 result[statusInfoKey] = statusString(of: status)
                 
@@ -268,7 +268,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             } else {
                 // exportSession is not running
                 let progress : Float = self.exportSessionProgress
-                let status : AVAssetExportSessionStatus = self.exportSessionStatus
+                let status : AVAssetExportSession.Status = self.exportSessionStatus
                 result[progressInfoKey] = progress // 0.0 - 1.0 : Float
                 result[statusInfoKey] = statusString(of: status)
                 
@@ -388,7 +388,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
                     
                     var layoutSize : Int = 0
                     let aclPtr : UnsafePointer<AudioChannelLayout>? =
-                        CMAudioFormatDescriptionGetChannelLayout(desc, &layoutSize)
+                        CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &layoutSize)
                     if let aclPtr = aclPtr {
                         avacDstLayout = AVAudioChannelLayout(layout: aclPtr)
                         dataSrc = conv.dataFor(layoutBytes: aclPtr, size: layoutSize)
@@ -490,12 +490,18 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             //spec = NSMutableDictionary()
             //spec![kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder] = false
             var decompSession : VTDecompressionSession? = nil
-            status = VTDecompressionSessionCreate(kCFAllocatorDefault, desc, spec, nil, nil, &decompSession)
+            status = VTDecompressionSessionCreate(allocator: kCFAllocatorDefault,
+                                                  formatDescription: desc,
+                                                  decoderSpecification: spec,
+                                                  imageBufferAttributes: nil,
+                                                  outputCallback: nil,
+                                                  decompressionSessionOut: &decompSession)
             guard status == noErr else { return false }
             
             defer { VTDecompressionSessionInvalidate(decompSession!) }
             
-            status = VTSessionCopySupportedPropertyDictionary(decompSession!, &dict)
+            status = VTSessionCopySupportedPropertyDictionary(decompSession!,
+                                                              supportedPropertyDictionaryOut: &dict)
             guard status == noErr else { return false }
         }
         
@@ -577,13 +583,16 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             let descArray : [Any] = track.formatDescriptions
             if descArray.count > 0 {
                 let desc : CMFormatDescription = descArray[0] as! CMFormatDescription
-                trackDimensions = CMVideoFormatDescriptionGetPresentationDimensions(desc, false, false)
+                trackDimensions = CMVideoFormatDescriptionGetPresentationDimensions(desc,
+                                                                                    usePixelAspectRatio: false,
+                                                                                    useCleanAperture: false)
                 
                 var fieldCount : NSNumber? = nil
                 var fieldDetail : NSString? = nil
                 
                 let extCA : CFPropertyList? =
-                    CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_CleanAperture)
+                    CMFormatDescriptionGetExtension(desc,
+                                                    extensionKey: kCMFormatDescriptionExtension_CleanAperture)
                 if let extCA = extCA {
                     let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as! NSNumber
                     let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as! NSNumber
@@ -600,7 +609,8 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
                 }
                 
                 let extPA : CFPropertyList? =
-                    CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_PixelAspectRatio)
+                    CMFormatDescriptionGetExtension(desc,
+                                                    extensionKey: kCMFormatDescriptionExtension_PixelAspectRatio)
                 if let extPA = extPA {
                     let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as! NSNumber
                     let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as! NSNumber
@@ -614,11 +624,14 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
                 
                 if copyNCLC {
                     let extCP : CFPropertyList? =
-                        CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_ColorPrimaries)
+                        CMFormatDescriptionGetExtension(desc,
+                                                        extensionKey: kCMFormatDescriptionExtension_ColorPrimaries)
                     let extTF : CFPropertyList? =
-                        CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_TransferFunction)
+                        CMFormatDescriptionGetExtension(desc,
+                                                        extensionKey: kCMFormatDescriptionExtension_TransferFunction)
                     let extMX : CFPropertyList? =
-                        CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_YCbCrMatrix)
+                        CMFormatDescriptionGetExtension(desc,
+                                                        extensionKey: kCMFormatDescriptionExtension_YCbCrMatrix)
                     if let extCP  = extCP, let extTF = extTF, let extMX = extMX {
                         let colorPrimaries = extCP as! NSString
                         let transferFunction = extTF as! NSString
@@ -635,9 +648,11 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
                 
                 if copyField {
                     let extFC : CFPropertyList? =
-                        CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_FieldCount)
+                        CMFormatDescriptionGetExtension(desc,
+                                                        extensionKey: kCMFormatDescriptionExtension_FieldCount)
                     let extFD : CFPropertyList? =
-                        CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_FieldDetail)
+                        CMFormatDescriptionGetExtension(desc,
+                                                        extensionKey: kCMFormatDescriptionExtension_FieldDetail)
                     if let extFC = extFC, let extFD = extFD {
                         fieldCount = (extFC as! NSNumber)
                         fieldDetail = (extFD as! NSString)
@@ -741,7 +756,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         do {
             // setup aw parameters here
             aw.movieTimeScale = movie.timescale
-            aw.movieFragmentInterval = kCMTimeInvalid
+            aw.movieFragmentInterval = CMTime.invalid
             aw.shouldOptimizeForNetworkUse = true
             
             // setup sampleBufferChannels for each track
@@ -968,7 +983,10 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             //
             // Swift.print("#####", "working url =", url)
             // Swift.print("#####", "start insertTimeRange()", (selfContained ? "selfContained" : "referenceOnly"))
-            try newMovie.insertTimeRange(range, of: srcMovie, at: kCMTimeZero, copySampleData: selfContained)
+            try newMovie.insertTimeRange(range,
+                                         of: srcMovie,
+                                         at: CMTime.zero,
+                                         copySampleData: selfContained)
             
             // Swift.print("#####", "start writeHeader()")
             try newMovie.writeHeader(to: url, fileType: AVFileType.mov, options: option)

@@ -51,11 +51,12 @@ class TranscodeViewController: NSViewController {
     private func checkHEVCEncoder() -> Bool {
         if #available(OSX 10.13, *) {
             let encoderSpecification: [CFString: Any] = [ kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder: true ]
-            let error = VTCopySupportedPropertyDictionaryForEncoder(3840, 2160,
-                                                                    kCMVideoCodecType_HEVC,
-                                                                    encoderSpecification as CFDictionary,
-                                                                    nil,
-                                                                    nil)
+            let error =
+                VTCopySupportedPropertyDictionaryForEncoder(width: 3840, height: 2160,
+                                                            codecType: kCMVideoCodecType_HEVC,
+                                                            encoderSpecification: encoderSpecification as CFDictionary,
+                                                            encoderIDOut: nil,
+                                                            supportedPropertiesOut: nil)
             return error == kVTCouldNotFindVideoEncoderErr ? false : true
         }
         return false

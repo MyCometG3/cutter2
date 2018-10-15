@@ -193,7 +193,7 @@ extension Document {
             player.rate = rate
             self.updateTimeline(time, range: mutator.selectedTimeRange)
         }
-        player.seek(to: time, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero, completionHandler: handler)
+        player.seek(to: time, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero, completionHandler: handler)
     }
     
     /// Update marker position in Timeline view
@@ -237,7 +237,7 @@ extension Document {
             let handler : (Bool) -> Void = {[unowned pv] (finished) in
                 pv.needsDisplay = true
             }
-            playerItem.seek(to: mutator.insertionTime, toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero,
+            playerItem.seek(to: mutator.insertionTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero,
                             completionHandler: handler)
         } else {
             // Initial setup
@@ -347,12 +347,12 @@ extension Document {
             
             // Force redraw when AVPlayer.status is updated
             let newStatus = change[.newKey] as! NSNumber
-            if newStatus.intValue == AVPlayerStatus.readyToPlay.rawValue {
+            if newStatus.intValue == AVPlayer.Status.readyToPlay.rawValue {
                 // Seek and refresh View
                 let time = mutator.insertionTime
                 let range = mutator.selectedTimeRange
                 self.updateGUI(time, range, false)
-            } else if newStatus.intValue == AVPlayerStatus.failed.rawValue {
+            } else if newStatus.intValue == AVPlayer.Status.failed.rawValue {
                 //
                 Swift.print("ERROR: AVPlayerStatus.failed detected.")
             }
@@ -430,11 +430,11 @@ extension Document {
         let start : CMTime = selection.start
         let end : CMTime = selection.end
         
-        let halfDuration : CMTime = CMTimeMultiplyByRatio(selection.duration, 1, 2)
+        let halfDuration : CMTime = CMTimeMultiplyByRatio(selection.duration, multiplier: 1, divisor: 2)
         let centerOfRange : CMTime = start + halfDuration
         let t1 : CMTime = (current < centerOfRange) ? current : start
         let t2 : CMTime = (current > centerOfRange) ? current : end
-        let newSelection : CMTimeRange = CMTimeRangeFromTimeToTime(t1, t2)
+        let newSelection : CMTimeRange = CMTimeRangeFromTimeToTime(start: t1, end: t2)
         mutator.selectedTimeRange = newSelection
     }
     
@@ -451,7 +451,7 @@ extension Document {
         if sFlag || eFlag {
             let t1 : CMTime = sFlag ? newTime : start
             let t2 : CMTime = eFlag ? newTime : end
-            let newSelection : CMTimeRange = CMTimeRangeFromTimeToTime(t1, t2)
+            let newSelection : CMTimeRange = CMTimeRangeFromTimeToTime(start: t1, end: t2)
             mutator.selectedTimeRange = newSelection
         }
     }
@@ -465,7 +465,7 @@ extension Document {
         if player.rate != 0.0 { return false }
         
         let current = player.currentTime()
-        if current == kCMTimeZero {
+        if current == CMTime.zero {
             return true
         }
         return false
@@ -491,7 +491,7 @@ extension Document {
             // reset cache
             cachedTime = current
             cachedWithinLastSampleRange = false
-            cachedLastSampleRange = kCMTimeRangeInvalid
+            cachedLastSampleRange = CMTimeRange.invalid
             
             if let info = mutator.presentationInfoAtTime(current) {
                 let endOfRange : Bool = info.timeRange.end == duration
@@ -508,13 +508,13 @@ extension Document {
     /// Snap to grid - Adjust Timeline resolution
     internal func quantize(_ position : Float64) -> CMTime {
         // Swift.print(#function, #line, #file)
-        guard let mutator = self.movieMutator else { return kCMTimeZero }
+        guard let mutator = self.movieMutator else { return CMTime.zero }
         let position : Float64 = min(max(position, 0.0), 1.0)
         if let info = mutator.presentationInfoAtPosition(position) {
             let ratio : Float64 = (position - info.startPosition) / (info.endPosition - info.startPosition)
             return (ratio < 0.5) ? info.timeRange.start : info.timeRange.end
         } else {
-            return CMTimeMultiplyByFloat64(mutator.movieDuration(), position)
+            return CMTimeMultiplyByFloat64(mutator.movieDuration(), multiplier: position)
         }
     }
     

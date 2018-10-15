@@ -81,7 +81,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     internal var lastUpdateAt : UInt64 = 0
     
     //
-    internal var cachedTime = kCMTimeInvalid
+    internal var cachedTime = CMTime.invalid
     internal var cachedWithinLastSampleRange : Bool = false
     internal var cachedLastSampleRange : CMTimeRange? = nil
     
@@ -132,7 +132,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 movie.timescale = scale
                 movie.preferredRate = 1.0
                 movie.preferredVolume = 1.0
-                movie.interleavingPeriod = CMTimeMakeWithSeconds(0.5, scale)
+                movie.interleavingPeriod = CMTimeMakeWithSeconds(0.5, preferredTimescale: scale)
                 movie.preferredTransform = CGAffineTransform.identity
                 movie.isModified = false
                 
@@ -146,10 +146,10 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         }
         
         // Returns the Storyboard that contains your Document window.
-        let storyboard : NSStoryboard = NSStoryboard(name: NSStoryboard.Name("Main"), bundle: nil)
+        let storyboard : NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
         
         // Instantiate and Register Window Controller
-        let sid : NSStoryboard.SceneIdentifier = NSStoryboard.SceneIdentifier("Document Window Controller")
+        let sid : NSStoryboard.SceneIdentifier = "Document Window Controller"
         let windowController = storyboard.instantiateController(withIdentifier: sid) as! WindowController
         self.addWindowController(windowController)
         
@@ -165,7 +165,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         }
         
         //
-        self.updateGUI(kCMTimeZero, kCMTimeRangeZero, true)
+        self.updateGUI(CMTime.zero, CMTimeRange.zero, true)
         self.doVolumeOffset(100)
     }
     
@@ -223,7 +223,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         try super.revert(toContentsOf: url, ofType: typeName)
         
         // reset GUI when revert
-        self.updateGUI(kCMTimeZero, kCMTimeRangeZero, true)
+        self.updateGUI(CMTime.zero, CMTimeRange.zero, true)
         self.doVolumeOffset(100)
     }
     
@@ -382,10 +382,10 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 let time : CMTime = mutator.insertionTime
                 let range : CMTimeRange = mutator.selectedTimeRange
                 let newMovieRange : CMTimeRange = newMovie.range
-                var newTime : CMTime = CMTimeClampToRange(time, newMovieRange)
-                let newRange : CMTimeRange = CMTimeRangeGetIntersection(range, newMovieRange)
+                var newTime : CMTime = CMTimeClampToRange(time, range: newMovieRange)
+                let newRange : CMTimeRange = CMTimeRangeGetIntersection(range, otherRange: newMovieRange)
                 
-                newTime = CMTIME_IS_VALID(newTime) ? newTime : kCMTimeZero
+                newTime = CMTIME_IS_VALID(newTime) ? newTime : CMTime.zero
                 
                 self.removeMutationObserver()
                 _ = mutator.reloadAndNotify(from: data, range: newRange, time: newTime)
@@ -404,8 +404,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         // prepare accessory view controller
         if self.accessoryVC == nil {
-            let storyboard : NSStoryboard = NSStoryboard(name: NSStoryboard.Name("Main"), bundle: nil)
-            let sid : NSStoryboard.SceneIdentifier = NSStoryboard.SceneIdentifier("Accessory View Controller")
+            let storyboard : NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
+            let sid : NSStoryboard.SceneIdentifier = "Accessory View Controller"
             let accessoryVC = storyboard.instantiateController(withIdentifier: sid) as! AccessoryViewController
             self.accessoryVC = accessoryVC
             accessoryVC.loadView()
@@ -520,8 +520,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     @IBAction func transcode(_ sender: Any?) {
         // Swift.print(#function, #line, #file)
-        let storyboard : NSStoryboard = NSStoryboard(name: NSStoryboard.Name("Main"), bundle: nil)
-        let sid : NSStoryboard.SceneIdentifier = NSStoryboard.SceneIdentifier("TranscodeSheet Controller")
+        let storyboard : NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
+        let sid : NSStoryboard.SceneIdentifier = "TranscodeSheet Controller"
         let transcodeWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController
         transcodeWC.loadWindow()
         
@@ -736,8 +736,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         guard let mutator = self.movieMutator else { return }
 
-        let storyboard : NSStoryboard = NSStoryboard(name: NSStoryboard.Name("Main"), bundle: nil)
-        let sid : NSStoryboard.SceneIdentifier = NSStoryboard.SceneIdentifier("CAPARSheet Controller")
+        let storyboard : NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
+        let sid : NSStoryboard.SceneIdentifier = "CAPARSheet Controller"
         let caparWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController
         caparWC.loadWindow()
         

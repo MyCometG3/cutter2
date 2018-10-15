@@ -131,7 +131,7 @@ class CAPARViewController: NSViewController {
     }
     
     // NSControl - Control Editing Notification
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
         // Swift.print(#function, #line, #file)
         
         self.updateStruct()

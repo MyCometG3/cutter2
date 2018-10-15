@@ -27,13 +27,13 @@ class SampleBufferChannel: NSObject {
         arOutput = readerOutput
         awInput = writerInput
         
-        queue = DispatchQueue.init(label: String(format:"SBC-\(arOutput.mediaType)"))
+        queue = DispatchQueue.init(label: String(format:"SBC-\(arOutput.mediaType.rawValue)"))
         
         super.init()
     }
     
     public var mediaType : String {
-        return arOutput.mediaType
+        return arOutput.mediaType.rawValue
     }
     
     public func start(with delegate : SampleBufferChannelDelegate,

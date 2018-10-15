@@ -37,9 +37,9 @@ extension AVMovie {
     ///
     /// NOTE: See MovieMutator.refreshMovie()
     public var range : CMTimeRange {
-        var range : CMTimeRange = kCMTimeRangeZero
+        var range : CMTimeRange = CMTimeRange.zero
         for track : AVMovieTrack in self.tracks {
-            range = CMTimeRangeGetUnion(range, track.timeRange)
+            range = CMTimeRangeGetUnion(range, otherRange: track.timeRange)
         }
         return range
     }
@@ -66,7 +66,7 @@ enum dimensionsType {
 ///
 /// NOTE: At final sample of segment, end position could be after end of segment.
 public struct PresentationInfo {
-    var timeRange : CMTimeRange = kCMTimeRangeZero
+    var timeRange : CMTimeRange = CMTimeRange.zero
     var startSecond : Float64 = 0.0
     var endSecond : Float64 = 0.0
     var movieDuration : Float64 = 0.0
@@ -100,7 +100,7 @@ class MovieMutatorBase: NSObject {
     internal var internalMovie : AVMutableMovie
 
     /// Current Marker
-    public var insertionTime : CMTime = kCMTimeZero
+    public var insertionTime : CMTime = CMTime.zero
     
     /// Selection Marker Range
     public var selectedTimeRange : CMTimeRange = CMTimeRange()
@@ -128,7 +128,7 @@ class MovieMutatorBase: NSObject {
     /* ============================================ */
     
     @inline(__always) internal func validateClip(_ clip : AVMovie) -> Bool {
-        return clip.range.duration > kCMTimeZero
+        return clip.range.duration > CMTime.zero
     }
     
     @inline(__always) internal func validateTime (_ time : CMTime) -> Bool {
@@ -138,14 +138,14 @@ class MovieMutatorBase: NSObject {
     
     @inline(__always) internal func validateRange(_ range : CMTimeRange, _ needsDuration : Bool) -> Bool {
         let movieRange : CMTimeRange = self.movieRange()
-        return (range.duration > kCMTimeZero)
-            ? CMTimeRangeContainsTimeRange(movieRange, range)
+        return (range.duration > CMTime.zero)
+            ? CMTimeRangeContainsTimeRange(movieRange, otherRange: range)
             : (needsDuration ? false : validateTime(range.start))
     }
     
     @inline(__always) internal func clampRange(_ range : CMTimeRange) -> CMTimeRange {
         let movieRange : CMTimeRange = self.movieRange()
-        return CMTimeRangeGetIntersection(range, movieRange)
+        return CMTimeRangeGetIntersection(range, otherRange: movieRange)
     }
     
     @inline(__always) internal func validatePosition(_ position : Float64) -> Bool {
@@ -271,11 +271,17 @@ class MovieMutatorBase: NSObject {
         for format in formats {
             switch type {
             case .clean:
-                size = CMVideoFormatDescriptionGetPresentationDimensions(format, true, true)
+                size = CMVideoFormatDescriptionGetPresentationDimensions(format,
+                                                                         usePixelAspectRatio: true,
+                                                                         useCleanAperture: true)
             case .production:
-                size = CMVideoFormatDescriptionGetPresentationDimensions(format, true, false)
+                size = CMVideoFormatDescriptionGetPresentationDimensions(format,
+                                                                         usePixelAspectRatio: true,
+                                                                         useCleanAperture: false)
             case .encoded:
-                size = CMVideoFormatDescriptionGetPresentationDimensions(format, false, false)
+                size = CMVideoFormatDescriptionGetPresentationDimensions(format,
+                                                                         usePixelAspectRatio: false,
+                                                                         useCleanAperture: false)
             }
             if size != NSZeroSize {
                 break
@@ -383,7 +389,7 @@ class MovieMutatorBase: NSObject {
     /// - Returns: CMTime of 1 per movie timeScale
     public func movieResolution() -> CMTime {
         let timeScale : CMTimeScale = internalMovie.timescale
-        let resolution : CMTime = CMTimeMake(1, timeScale)
+        let resolution : CMTime = CMTimeMake(value: 1, timescale: timeScale)
         return resolution
     }
     
@@ -466,7 +472,9 @@ class MovieMutatorBase: NSObject {
             }
             if start, let sample = output.copyNextSampleBuffer() {
                 var mode : CMAttachmentMode = 0
-                let url = CMGetAttachment(sample, kCMSampleBufferAttachmentKey_SampleReferenceURL, &mode)
+                let url = CMGetAttachment(sample,
+                                          key: kCMSampleBufferAttachmentKey_SampleReferenceURL,
+                                          attachmentModeOut: &mode)
                 if let url = url {
                     urlSet.add(url)
                     // Swift.print(ts(), "url:", url, "/ mode:", mode)
@@ -619,7 +627,9 @@ class MovieMutatorBase: NSObject {
             for desc in track.formatDescriptions as! [CMVideoFormatDescription] {
                 var name : String = ""
                 do {
-                    let ext : CFPropertyList? = CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_FormatName)
+                    let ext : CFPropertyList? =
+                        CMFormatDescriptionGetExtension(desc,
+                                                        extensionKey: kCMFormatDescriptionExtension_FormatName)
                     if let ext = ext {
                         let nameStr = ext as! NSString
                         name = String(nameStr)
@@ -631,9 +641,18 @@ class MovieMutatorBase: NSObject {
                 }
                 var dimension : String = ""
                 do {
-                    let encoded : CGSize = CMVideoFormatDescriptionGetPresentationDimensions(desc, false, false)
-                    let prod : CGSize = CMVideoFormatDescriptionGetPresentationDimensions(desc, true, false)
-                    let clean : CGSize = CMVideoFormatDescriptionGetPresentationDimensions(desc, true, true)
+                    let encoded : CGSize =
+                        CMVideoFormatDescriptionGetPresentationDimensions(desc,
+                                                                          usePixelAspectRatio: false,
+                                                                          useCleanAperture: false)
+                    let prod : CGSize =
+                        CMVideoFormatDescriptionGetPresentationDimensions(desc,
+                                                                          usePixelAspectRatio: true,
+                                                                          useCleanAperture: false)
+                    let clean : CGSize =
+                        CMVideoFormatDescriptionGetPresentationDimensions(desc,
+                                                                          usePixelAspectRatio: true,
+                                                                          useCleanAperture: true)
                     if encoded != prod || encoded != clean {
                         dimension = (prod == clean) ?
                             stringForTwo(encoded, prod) :
@@ -697,7 +716,7 @@ class MovieMutatorBase: NSObject {
                     // get AudioChannelLayout ptr
                     var aclSize : Int = 0
                     let aclPtr : UnsafePointer<AudioChannelLayout>? =
-                        CMAudioFormatDescriptionGetChannelLayout(desc, &aclSize)
+                        CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &aclSize)
                     
                     var name : CFString!
                     var nameSize : UInt32 = UInt32(MemoryLayout<CFString>.size)
@@ -751,7 +770,7 @@ class MovieMutatorBase: NSObject {
     public func timeOfPosition(_ position : Float64) -> CMTime {
         let position : Float64 = clampPosition(position)
         let duration : CMTime = self.movieDuration()
-        let target : CMTime = CMTimeMultiplyByFloat64(duration, position)
+        let target : CMTime = CMTimeMultiplyByFloat64(duration, multiplier: position)
         return target
     }
     
@@ -767,8 +786,10 @@ class MovieMutatorBase: NSObject {
             position = Float64(target.value) / Float64(duration.value)
         } else {
             let timescale : CMTimeScale = internalMovie.timescale
-            let target2 : CMTime = CMTimeConvertScale(target, timescale, .roundAwayFromZero)
-            let duration2 : CMTime = CMTimeConvertScale(duration, timescale, .roundAwayFromZero)
+            let target2 : CMTime =
+                CMTimeConvertScale(target, timescale: timescale, method: .roundAwayFromZero)
+            let duration2 : CMTime =
+                CMTimeConvertScale(duration, timescale: timescale, method: .roundAwayFromZero)
             position = Float64(target2.value) / Float64(duration2.value)
         }
         return clampPosition(position)
@@ -797,14 +818,14 @@ class MovieMutatorBase: NSObject {
     ///   - mapping: timeMapping
     /// - Returns: PresentationInfo (trackTime)
     private func samplePresentationInfo(_ startPTS : CMTime, _ endPTS : CMTime, from mapping : CMTimeMapping) -> PresentationInfo? {
-        if (mapping.source.duration > kCMTimeZero) == false {
+        if (mapping.source.duration > CMTime.zero) == false {
             return nil
         }
         
         // Get sample timeRange and PresentationInfo
         let start : CMTime = trackTime(of: startPTS, from: mapping)
         let end : CMTime = trackTime(of: endPTS, from: mapping)
-        let range : CMTimeRange = CMTimeRangeFromTimeToTime(start, end)
+        let range : CMTimeRange = CMTimeRangeFromTimeToTime(start: start, end: end)
         let info : PresentationInfo = PresentationInfo(range: range, of: internalMovie)
         return info
     }
@@ -819,9 +840,10 @@ class MovieMutatorBase: NSObject {
         let mediaSegment : CMTimeRange = mapping.source
         let trackSegment : CMTimeRange = mapping.target
         
-        var time : CMTime = CMTimeMapTimeFromRangeToRange(samplePTS, mediaSegment, trackSegment)
-        time = CMTimeConvertScale(time, internalMovie.timescale, .roundAwayFromZero)
-        time = CMTimeClampToRange(time, trackSegment)
+        var time : CMTime =
+            CMTimeMapTimeFromRangeToRange(samplePTS, fromRange: mediaSegment, toRange: trackSegment)
+        time = CMTimeConvertScale(time, timescale: internalMovie.timescale, method: .roundAwayFromZero)
+        time = CMTimeClampToRange(time, range: trackSegment)
         return time
     }
     
@@ -835,9 +857,10 @@ class MovieMutatorBase: NSObject {
         let mediaSegment : CMTimeRange = mapping.source
         let trackSegment : CMTimeRange = mapping.target
         
-        var time : CMTime = CMTimeMapTimeFromRangeToRange(trackTime, trackSegment, mediaSegment)
+        var time : CMTime =
+            CMTimeMapTimeFromRangeToRange(trackTime, fromRange: trackSegment, toRange: mediaSegment)
         //time = CMTimeConvertScale(time, mapping.source.duration.timescale, .roundTowardZero)
-        time = CMTimeClampToRange(time, mediaSegment)
+        time = CMTimeClampToRange(time, range: mediaSegment)
         return time
     }
     
@@ -860,7 +883,7 @@ class MovieMutatorBase: NSObject {
     /// - Parameter time: CMTime at the position of internalMovie
     /// - Returns: PresentationInfo of the position
     public func presentationInfoAtTime(_ time : CMTime) -> PresentationInfo? {
-        var time : CMTime = CMTimeClampToRange(time, internalMovie.range)
+        var time : CMTime = CMTimeClampToRange(time, range: internalMovie.range)
         let lastSample : Bool = (time == internalMovie.range.end) ? true : false
         if lastSample {
             // Adjust micro difference from tail of movie
@@ -884,7 +907,7 @@ class MovieMutatorBase: NSObject {
                                                                        endPTS,
                                                                        from: mapping)
                 else { continue }
-            if info.timeRange.duration > kCMTimeZero {
+            if info.timeRange.duration > CMTime.zero {
                 return info
             } else {
                 // Exact sample is invisible (zero length in track timescale)
@@ -902,7 +925,7 @@ class MovieMutatorBase: NSObject {
     /// - Returns: PresentationInfo of previous sample
     public func previousInfo(of range : CMTimeRange) -> PresentationInfo? {
         // Check if this is initial sample in internalMovie
-        if range.start == kCMTimeZero {
+        if range.start == CMTime.zero {
             return nil
         }
         
@@ -927,12 +950,14 @@ class MovieMutatorBase: NSObject {
                     let sampleStartPTS : CMTime = cursor.presentationTimeStamp
                     let sampleStartTT : CMTime = trackTime(of: sampleStartPTS, from: mapping)
                     if (range.start - sampleStartTT) < resolution { continue }
-                    let pRange : CMTimeRange = CMTimeRangeFromTimeToTime(sampleStartTT, range.start)
+                    let pRange : CMTimeRange =
+                        CMTimeRangeFromTimeToTime(start: sampleStartTT, end: range.start)
                     let info : PresentationInfo = PresentationInfo(range: pRange, of: internalMovie)
                     return info
                 } else {
                     if (range.start - trackSegmentMin) < resolution { break }
-                    let pRange : CMTimeRange = CMTimeRangeFromTimeToTime(trackSegmentMin, range.start)
+                    let pRange : CMTimeRange =
+                        CMTimeRangeFromTimeToTime(start: trackSegmentMin, end: range.start)
                     let info : PresentationInfo = PresentationInfo(range: pRange, of: internalMovie)
                     return info
                 }
@@ -981,12 +1006,14 @@ class MovieMutatorBase: NSObject {
                     let sampleStartPTS : CMTime = cursor.presentationTimeStamp
                     let sampleStartTT : CMTime = trackTime(of: sampleStartPTS, from: mapping)
                     if (sampleStartTT - range.end) < resolution { continue }
-                    let nRange : CMTimeRange = CMTimeRangeFromTimeToTime(range.end, sampleStartTT)
+                    let nRange : CMTimeRange =
+                        CMTimeRangeFromTimeToTime(start: range.end, end: sampleStartTT)
                     let info : PresentationInfo = PresentationInfo(range: nRange, of: internalMovie)
                     return info
                 } else {
                     if (trackSegmentMax - range.end) < resolution { break }
-                    let nRange: CMTimeRange = CMTimeRangeFromTimeToTime(range.end, trackSegmentMax)
+                    let nRange: CMTimeRange =
+                        CMTimeRangeFromTimeToTime(start: range.end, end: trackSegmentMax)
                     let info : PresentationInfo = PresentationInfo(range: nRange, of: internalMovie)
                     return info
                 }
@@ -1020,10 +1047,13 @@ class MovieMutatorBase: NSObject {
         guard let desc = format else { NSSound.beep(); return nil }
         
         dict[dimensionsKey] =
-            CMVideoFormatDescriptionGetPresentationDimensions(desc, false, false)
+            CMVideoFormatDescriptionGetPresentationDimensions(desc,
+                                                              usePixelAspectRatio: false,
+                                                              useCleanAperture: false)
         
         let extCA : CFPropertyList? =
-            CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_CleanAperture)
+            CMFormatDescriptionGetExtension(desc,
+                                            extensionKey: kCMFormatDescriptionExtension_CleanAperture)
         if let extCA = extCA {
             let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as! NSNumber
             let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as! NSNumber
@@ -1038,7 +1068,8 @@ class MovieMutatorBase: NSObject {
         }
         
         let extPA : CFPropertyList? =
-            CMFormatDescriptionGetExtension(desc, kCMFormatDescriptionExtension_PixelAspectRatio)
+            CMFormatDescriptionGetExtension(desc,
+                                            extensionKey: kCMFormatDescriptionExtension_PixelAspectRatio)
         if let extPA = extPA {
             let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as! NSNumber
             let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as! NSNumber

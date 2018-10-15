@@ -62,6 +62,12 @@ enum dimensionsType {
     case encoded
 }
 
+struct RefOrSelfCont : OptionSet {
+    let rawValue: Int
+    static let hasReferenceTrack = RefOrSelfCont(rawValue: 1<<0)
+    static let hasSelfContTrack = RefOrSelfCont(rawValue: 1<<1)
+}
+
 /// Sample Presentation Info.
 ///
 /// NOTE: At final sample of segment, end position could be after end of segment.
@@ -449,6 +455,21 @@ class MovieMutatorBase: NSObject {
             }
         }
         return !selfContained
+    }
+    
+    /// Validate all tracks and return Reference or Self-Contained state.
+    ///
+    /// - Returns: OptionSet with .hasSelfContTrack and .hasReferenceTrack
+    public func evalRefOrSelfCont() -> RefOrSelfCont {
+        var flag : RefOrSelfCont = []
+        for track in internalMovie.tracks {
+            if track.isSelfContained {
+                flag = flag.union(.hasSelfContTrack)
+            } else {
+                flag = flag.union(.hasReferenceTrack)
+            }
+        }
+        return flag
     }
     
     /// Get track reference - 'dref' Data Reference atom

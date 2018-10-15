@@ -373,6 +373,24 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             
             // Write mov file as either self-contained movie or reference movie
             try mutator.writeMovie(to: url, fileType: fileType, copySampleData: !isReferenceMovie)
+            
+            // test - not functional yet
+//            let flag : RefOrSelfCont = mutator.evalRefOrSelfCont()
+//            let hasRT : Bool = flag.contains(.hasReferenceTrack)
+//            let hasSC : Bool = flag.contains(.hasSelfContTrack)
+//            var copyData : Bool = hasSC
+//            if self.useAccessory, let accessoryVC = self.accessoryVC {
+//                // Check savePanel accessoryView to know to save as ReferenceMovie
+//                copyData = accessoryVC.selfContained
+//            }
+//            if copyData == false && hasSC && self.overwriteFlag {
+//                var info : [String:Any] = [:]
+//                info[NSLocalizedDescriptionKey] = "Please choose different file name."
+//                info[NSLocalizedFailureReasonErrorKey] = "You cannot overwrite self-contained movie with reference movie."
+//                throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+//            }
+//            // Write mov file as either self-contained movie or reference movie
+//            try mutator.writeMovie(to: url, fileType: fileType, copySampleData: copyData)
         } else {
             // Export as specified file type with AVAssetExportPresetPassthrough
             try mutator.exportMovie(to: url, fileType: fileType, presetName: nil)
@@ -445,6 +463,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             accessoryVC.fileType = AVFileType.init(uti)
             if accessoryVC.fileType == .mov && self.transcoding == false {
                 accessoryVC.selfContained = !mutator.hasExternalReference()
+                // accessoryVC.selfContained = mutator.evalRefOrSelfCont().contains(.hasSelfContTrack)
             } else {
                 accessoryVC.selfContained = true
             }

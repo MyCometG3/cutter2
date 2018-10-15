@@ -176,8 +176,21 @@ class TimelineView: NSView, CALayerDelegate {
     private let fillColorActive : CGColor = NSColor.red.cgColor
     private let strokeColorInactive : CGColor = NSColor.gray.cgColor
     private let fillColorInactive : CGColor = NSColor.lightGray.cgColor
-    private let backGroundColor : CGColor = NSColor.controlColor.cgColor
-    
+    private var backGroundColor : CGColor {
+        if #available(OSX 10.14, *) {
+            return NSColor.unemphasizedSelectedContentBackgroundColor.cgColor
+        } else {
+            return NSColor.controlColor.cgColor
+        }
+    }
+    private var labelColor : CGColor {
+        if #available(OSX 10.14, *) {
+            return NSColor.unemphasizedSelectedTextColor.cgColor
+        } else {
+            return NSColor.darkGray.cgColor
+        }
+    }
+
     // NSView Instance Property
     override var mouseDownCanMoveWindow: Bool { return false }
     
@@ -188,16 +201,19 @@ class TimelineView: NSView, CALayerDelegate {
     required init?(coder decoder: NSCoder) {
         super.init(coder: decoder)
         self.wantsLayer = true
-        if let layer = self.layer {
-            layer.backgroundColor = backGroundColor
-            setupLabel()
-            setupSublayer()
-            needsUpdateTrackingArea = true // setupTrackingArea()
-        }
+        
+        setupLabel()
+        setupSublayer()
+        needsUpdateTrackingArea = true // setupTrackingArea()
     }
     
     override func layout() {
         // Swift.print(#function, #line, #file)
+        
+        // dark mode support
+        if let layer = self.layer {
+            layer.backgroundColor = backGroundColor
+        }
         
         // On initial/resized state, update tracking area
         if needsUpdateTrackingArea {
@@ -279,6 +295,10 @@ class TimelineView: NSView, CALayerDelegate {
                                  width: width,
                                  height: height)
             label.frame = newRect
+            
+            // dark mode support
+            label.backgroundColor = backGroundColor
+            label.foregroundColor = labelColor
         }
         CATransaction.commit()
         
@@ -304,8 +324,6 @@ class TimelineView: NSView, CALayerDelegate {
             let fontName : CFString = "Helvetica" as CFString
             label.font = fontName
             label.fontSize = 11.5
-            label.backgroundColor = NSColor.controlColor.cgColor
-            label.foregroundColor = NSColor.darkGray.cgColor
             label.alignmentMode = CATextLayerAlignmentMode.center
             label.string = "00:00:00.000"
             label.delegate = self // CATextLayer requires NSLayerDelegateContentsScaleUpdating

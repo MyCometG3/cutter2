@@ -85,6 +85,10 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     internal var cachedWithinLastSampleRange : Bool = false
     internal var cachedLastSampleRange : CMTimeRange? = nil
     
+    //
+    internal var overwriteFlag : Bool = false
+    internal var useAccessory : Bool = false
+    
     /* ============================================ */
     // MARK: - NSDocument methods/properties
     /* ============================================ */
@@ -273,6 +277,18 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     override func writeSafely(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
         // Swift.print(#function, #line, #file)
+        
+        if let original = self.fileURL, original == url {
+            Swift.print("NOTE: Overwrite request detected.")
+            overwriteFlag = true
+        } else {
+            overwriteFlag = false
+        }
+        if saveOperation == .saveAsOperation || saveOperation == .saveToOperation {
+            useAccessory = true
+        } else {
+            useAccessory = false
+        }
         
         // Sandbox support - keep source document security scope bookmark
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {

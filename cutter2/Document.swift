@@ -539,7 +539,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         let storyboard : NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
         let sid : NSStoryboard.SceneIdentifier = "TranscodeSheet Controller"
         let transcodeWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController
-        transcodeWC.loadWindow()
+        // transcodeWC.loadWindow()
         
         guard let contVC = transcodeWC.contentViewController else { return }
         
@@ -755,7 +755,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         let storyboard : NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
         let sid : NSStoryboard.SceneIdentifier = "CAPARSheet Controller"
         let caparWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController
-        caparWC.loadWindow()
+        // caparWC.loadWindow()
         
         guard let contVC = caparWC.contentViewController else { return }
         

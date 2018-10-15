@@ -475,7 +475,26 @@ class MovieMutator: MovieMutatorBase {
         
         let vTracks : [AVMutableMovieTrack] = movie.tracks(withMediaType: .video)
         for track in vTracks {
-            if track.naturalSize != dimensions {
+            let formats = track.formatDescriptions as! [CMFormatDescription]
+            
+            // Verify if track.encodedDimension is equal to target dimensions
+            var valid : Bool = false
+            for format in formats {
+                let rawSize : CGSize =
+                    CMVideoFormatDescriptionGetPresentationDimensions(format,
+                                                                      usePixelAspectRatio: false,
+                                                                      useCleanAperture: false)
+                if dimensions == rawSize {
+                    valid = true
+                    break
+                }
+            }
+            guard valid else {
+                Swift.print("     encodedPixelsDimensions:", track.encodedPixelsDimensions)
+                Swift.print("productionApertureDimensions:", track.productionApertureDimensions)
+                Swift.print("     cleanApertureDimensions:", track.cleanApertureDimensions)
+                Swift.print("           track naturalSize:", track.naturalSize)
+                Swift.print("         required dimension :", dimensions)
                 Swift.print(ts(), "Different dimension:", track.trackID, track.naturalSize)
                 continue
             }
@@ -484,12 +503,11 @@ class MovieMutator: MovieMutatorBase {
                 let ratio = paspRatio.width / paspRatio.height
                 let newCAD = NSSize(width: clapSize.width * ratio, height: clapSize.height)
                 let newPAD = NSSize(width: dimensions.width * ratio, height: dimensions.height)
-                track.encodedPixelsDimensions = track.naturalSize
+                track.encodedPixelsDimensions = dimensions
                 track.cleanApertureDimensions = newCAD
                 track.productionApertureDimensions = newPAD
             }
             
-            let formats = track.formatDescriptions as! [CMFormatDescription]
             for format in formats {
                 // Prepare new extensionDictionary
                 guard let cfDict = CMFormatDescriptionGetExtensions(format) else { continue }

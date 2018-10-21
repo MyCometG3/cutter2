@@ -441,22 +441,6 @@ class MovieMutatorBase: NSObject {
         return rawTimeString
     }
     
-    /// Validate if movie contains external reference track
-    ///
-    /// - Returns: true if movie has external reference
-    public func hasExternalReference() -> Bool {
-        guard internalMovie.tracks.count > 0 else { return false }
-        
-        var selfContained : Bool = true
-        for track in internalMovie.tracks {
-            if track.isSelfContained == false {
-                selfContained = false
-                break
-            }
-        }
-        return !selfContained
-    }
-    
     /// Validate all tracks and return Reference or Self-Contained state.
     ///
     /// - Returns: OptionSet with .hasSelfContTrack and .hasReferenceTrack
@@ -470,82 +454,6 @@ class MovieMutatorBase: NSObject {
             }
         }
         return flag
-    }
-    
-    /// Get track reference - 'dref' Data Reference atom
-    ///
-    /// - Parameters:
-    ///   - track: AVMutableMovieTrack
-    ///   - urlSet: url set to put result
-    fileprivate func checkTrackReference(_ track: AVMutableMovieTrack, _ urlSet: NSMutableSet) {
-        // TODO: Too heavy and buggy (No support for Muxed/Timecode track)
-        // This func is based on TN2404 : URL reference movie support
-        
-        // Swift.print("\n", ts(), "### movie url:", movieURL)
-        // Swift.print(ts(), "### track:", track.trackID, "type:", track.mediaType)
-        let reader : AVAssetReader? = try? AVAssetReader(asset: internalMovie)
-        let output : AVAssetReaderSampleReferenceOutput? = AVAssetReaderSampleReferenceOutput(track: track)
-        if let reader = reader, let output = output {
-            reader.add(output)
-            let start : Bool = reader.startReading()
-            defer {
-                reader.cancelReading()
-            }
-            if start, let sample = output.copyNextSampleBuffer() {
-                var mode : CMAttachmentMode = 0
-                let url = CMGetAttachment(sample,
-                                          key: kCMSampleBufferAttachmentKey_SampleReferenceURL,
-                                          attachmentModeOut: &mode)
-                if let url = url {
-                    urlSet.add(url)
-                    // Swift.print(ts(), "url:", url, "/ mode:", mode)
-                } else {
-                    // Swift.print(ts(), "url:", "n/a", "/ mode:", "-")
-                }
-                //let attach1 = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sample, kCMAttachmentMode_ShouldPropagate)
-                //let attach2 = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sample, kCMAttachmentMode_ShouldNotPropagate)
-                // Swift.print(ts(), "ShouldPropagate:", attach1 ?? "none")
-                // Swift.print(ts(), "ShouldNotPropagate:", attach2 ?? "none")
-                return
-            } else {
-                Swift.print("ERROR: Failed on AVAssetReader:", reader.error ?? "n/a")
-            }
-        } else {
-            Swift.print("ERROR: Unable to use AVAssetReaderSampleReferenceOutput:")
-        }
-    }
-    
-    /// URLs which contains media data
-    ///
-    /// - Returns: URL array including movie source URL
-    public func mediaDataURLs() -> [URL]? {
-        if let cache = cachedMediaDataURLs {
-            return cache
-        }
-        
-        guard let movieURL = internalMovie.url else { return nil }
-        
-        let urlSet : NSMutableSet = NSMutableSet()
-        for track in internalMovie.tracks {
-            if track.isSelfContained {
-                urlSet.add(movieURL)
-            }
-            else if let storage = track.mediaDataStorage, let url = storage.url() {
-                urlSet.add(url)
-            }
-            else {
-                checkTrackReference(track, urlSet)
-            }
-        }
-        if let storage = internalMovie.defaultMediaDataStorage, let url = storage.url() {
-            urlSet.add(url)
-        }
-        if urlSet.count > 0 {
-            cachedMediaDataURLs = urlSet.allObjects as? [URL]
-            return cachedMediaDataURLs
-        } else {
-            return nil
-        }
     }
     
     /// Inspector - VideoFPS Description

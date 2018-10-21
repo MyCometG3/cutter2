@@ -86,6 +86,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     internal var cachedLastSampleRange : CMTimeRange? = nil
     
     //
+    internal var selfcontainedFlag : Bool = false
     internal var overwriteFlag : Bool = false
     internal var useAccessory : Bool = false
     
@@ -278,8 +279,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     override func writeSafely(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
         // Swift.print(#function, #line, #file)
         
+        selfcontainedFlag = validateIfSelfContained(for: url)
         if let original = self.fileURL, original == url {
-            Swift.print("NOTE: Overwrite request detected.")
             overwriteFlag = true
         } else {
             overwriteFlag = false
@@ -289,7 +290,10 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         } else {
             useAccessory = false
         }
-        
+        Swift.print("NOTE: selfcontainedFlag:", selfcontainedFlag)
+        Swift.print("NOTE: overwriteFlag:", overwriteFlag)
+        Swift.print("NOTE: useAccessory:", useAccessory)
+
         // Sandbox support - keep source document security scope bookmark
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
             DispatchQueue.main.async {
@@ -366,31 +370,21 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Check fileType (mov or other)
         if fileType == .mov {
             // Check savePanel accessoryView to know to save as ReferenceMovie
-            var isReferenceMovie : Bool = mutator.hasExternalReference()
-            if let accessoryVC = self.accessoryVC {
-                isReferenceMovie = !(accessoryVC.selfContained)
+            var copyData : Bool = selfcontainedFlag
+            if useAccessory, let accessoryVC = self.accessoryVC {
+                copyData = accessoryVC.selfContained
+            }
+            
+            // Avoid referenced data lost
+            if overwriteFlag && selfcontainedFlag && copyData == false {
+                var info : [String:Any] = [:]
+                info[NSLocalizedDescriptionKey] = "Please choose different file name."
+                info[NSLocalizedFailureReasonErrorKey] = "You cannot overwrite self-contained movie with reference movie."
+                throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
             }
             
             // Write mov file as either self-contained movie or reference movie
-            try mutator.writeMovie(to: url, fileType: fileType, copySampleData: !isReferenceMovie)
-            
-            // test - not functional yet
-//            let flag : RefOrSelfCont = mutator.evalRefOrSelfCont()
-//            let hasRT : Bool = flag.contains(.hasReferenceTrack)
-//            let hasSC : Bool = flag.contains(.hasSelfContTrack)
-//            var copyData : Bool = hasSC
-//            if self.useAccessory, let accessoryVC = self.accessoryVC {
-//                // Check savePanel accessoryView to know to save as ReferenceMovie
-//                copyData = accessoryVC.selfContained
-//            }
-//            if copyData == false && hasSC && self.overwriteFlag {
-//                var info : [String:Any] = [:]
-//                info[NSLocalizedDescriptionKey] = "Please choose different file name."
-//                info[NSLocalizedFailureReasonErrorKey] = "You cannot overwrite self-contained movie with reference movie."
-//                throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
-//            }
-//            // Write mov file as either self-contained movie or reference movie
-//            try mutator.writeMovie(to: url, fileType: fileType, copySampleData: copyData)
+            try mutator.writeMovie(to: url, fileType: fileType, copySampleData: copyData)
         } else {
             // Export as specified file type with AVAssetExportPresetPassthrough
             try mutator.exportMovie(to: url, fileType: fileType, presetName: nil)
@@ -462,8 +456,11 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             
             accessoryVC.fileType = AVFileType.init(uti)
             if accessoryVC.fileType == .mov && self.transcoding == false {
-                accessoryVC.selfContained = !mutator.hasExternalReference()
-                // accessoryVC.selfContained = mutator.evalRefOrSelfCont().contains(.hasSelfContTrack)
+                if let url = self.fileURL {
+                    accessoryVC.selfContained = validateIfSelfContained(for: url)
+                } else {
+                    accessoryVC.selfContained = false
+                }
             } else {
                 accessoryVC.selfContained = true
             }

@@ -39,9 +39,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         internalMovie = movie.mutableCopy() as! AVMutableMovie
     }
     
-    /* ============================================ */
-    // MARK: - exportSession methods
-    /* ============================================ */
+    // exportSession support
     
     /// ExportSession
     private var exportSession : AVAssetExportSession? = nil
@@ -64,6 +62,22 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     /// Status polling timer interval
     private let exportSessionTimerRefreshInterval : TimeInterval = 1.0/10
     
+    // exportCustomMovie support
+    
+    public private(set) var finalSuccess : Bool = true
+    public private(set) var finalError : Error? = nil
+    
+    private var queue : DispatchQueue? = nil
+    private var sampleBufferChannels : [SampleBufferChannel] = []
+    private var cancelled : Bool = false
+    private var param : [String:Any] = [:]
+}
+
+/* ============================================ */
+// MARK: - exportSession methods
+/* ============================================ */
+
+extension MovieWriter {
     /// Status update timer
     ///
     /// - Parameter timer: Timer object
@@ -281,19 +295,13 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         
         return result
     }
+}
     
     /* ============================================ */
     // MARK: - exportCustomMovie methods
     /* ============================================ */
     
-    public private(set) var finalSuccess : Bool = true
-    public private(set) var finalError : Error? = nil
-    
-    private var queue : DispatchQueue? = nil
-    private var sampleBufferChannels : [SampleBufferChannel] = []
-    private var cancelled : Bool = false
-    private var param : [String:Any] = [:]
-    
+extension MovieWriter {
     fileprivate func prepareCopyChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter, _ mediaType : AVMediaType) {
         for track in movie.tracks(withMediaType: mediaType) {
             // source
@@ -875,11 +883,13 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         let lenSec : Float64 = CMTimeGetSeconds(internalMovie.range.duration)
         return (lenSec != 0.0) ? (ptsSec/lenSec) : 0.0
     }
+}
+
+/* ============================================ */
+// MARK: - writeMovie methods
+/* ============================================ */
     
-    /* ============================================ */
-    // MARK: - writeMovie methods
-    /* ============================================ */
-    
+extension MovieWriter {
     /// Write internalMovie to destination url (as self-contained or reference movie)
     ///
     /// - Parameters:
@@ -1002,5 +1012,4 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
             NotificationCenter.default.post(notificationEnd)
         }
     }
-
 }

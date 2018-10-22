@@ -39,7 +39,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
         internalMovie = movie.mutableCopy() as! AVMutableMovie
     }
     
-    // exportSession support
+    // MARK: - exportSession support
     
     /// ExportSession
     private var exportSession : AVAssetExportSession? = nil
@@ -62,14 +62,14 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     /// Status polling timer interval
     private let exportSessionTimerRefreshInterval : TimeInterval = 1.0/10
     
-    // exportCustomMovie support
+    // MARK: - exportCustomMovie support
     
     public private(set) var finalSuccess : Bool = true
     public private(set) var finalError : Error? = nil
-    
+    public private(set) var cancelled : Bool = false
+
     private var queue : DispatchQueue? = nil
     private var sampleBufferChannels : [SampleBufferChannel] = []
-    private var cancelled : Bool = false
     private var param : [String:Any] = [:]
 }
 
@@ -726,6 +726,15 @@ extension MovieWriter {
         writerIsBusy = true
         defer {
             writerIsBusy = false
+            
+            if self.finalSuccess {
+                Swift.print("#####", "result:", "completed")
+            } else if self.cancelled {
+                Swift.print("#####", "result:", "canceled")
+            } else {
+                let error = self.finalError
+                Swift.print("#####", "result:", "failed", "error:", (error ?? "n/a"))
+            }
         }
         
         //
@@ -733,6 +742,8 @@ extension MovieWriter {
         self.param = param
         self.queue = queue
         self.sampleBufferChannels = []
+        self.finalSuccess = false
+        self.finalError = nil
         self.cancelled = false
 
         //
@@ -942,7 +953,7 @@ extension MovieWriter {
         writerIsBusy = true
         defer {
             writerIsBusy = false
-            Swift.print("#####", completed ? "completed" : "failed")
+            Swift.print("#####", "result:", completed ? "completed" : "failed")
         }
 
         var selfContained : Bool = false

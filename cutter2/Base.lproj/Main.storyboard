@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="14109" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="14313.18" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.AVKitIBPlugin" version="14109"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14109"/>
-        <capability name="box content view" minToolsVersion="7.0"/>
+        <plugIn identifier="com.apple.AVKitIBPlugin" version="14313.18"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14313.18"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
-        <capability name="stacking Non-gravity area distributions on NSStackView" minToolsVersion="7.0" minSystemVersion="10.11"/>
     </dependencies>
     <scenes>
         <!--Application-->
@@ -313,7 +311,7 @@
         <scene sceneID="R2V-B0-nI4">
             <objects>
                 <windowController storyboardIdentifier="Document Window Controller" id="jGA-0Y-lOj" customClass="WindowController" customModule="cutter2" customModuleProvider="target" sceneMemberID="viewController">
-                    <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="Ckk-yw-fiv" customClass="Window" customModule="cutter2" customModuleProvider="target">
+                    <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="Ckk-yw-fiv" customClass="Window" customModule="cutter2" customModuleProvider="target">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" texturedBackground="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" topStrut="YES"/>
                         <rect key="contentRect" x="0.0" y="757" width="480" height="270"/>
@@ -363,7 +361,6 @@
                                         <outlet property="nextKeyView" destination="fnW-Ep-sKb" id="hQ3-84-inb"/>
                                     </connections>
                                 </view>
-                                <font key="titleFont" metaFont="message" size="11"/>
                                 <connections>
                                     <outlet property="nextKeyView" destination="fnW-Ep-sKb" id="EcU-xi-4Lx"/>
                                 </connections>
@@ -399,11 +396,11 @@
                                     <font key="font" metaFont="menu"/>
                                     <menu key="menu" id="qOW-K1-Png">
                                         <items>
-                                            <menuItem title="mov (reference movie)" state="on" tag="-1" id="grx-7Q-6dE"/>
+                                            <menuItem title="mov (reference movie)" state="on" tag="-1" keyEquivalent="1" id="grx-7Q-6dE"/>
                                             <menuItem isSeparatorItem="YES" id="Vcg-im-wh4"/>
-                                            <menuItem title="mov (self-contained)" tag="1" id="boe-24-Ow1"/>
+                                            <menuItem title="mov (self-contained)" tag="1" keyEquivalent="2" id="boe-24-Ow1"/>
                                             <menuItem isSeparatorItem="YES" id="6vV-3X-62a"/>
-                                            <menuItem title="mp4" tag="2" id="dlZ-ce-ere"/>
+                                            <menuItem title="mp4" tag="2" keyEquivalent="3" id="dlZ-ce-ere"/>
                                             <menuItem title="m4v" tag="3" id="Dk7-4f-mfy">
                                                 <modifierMask key="keyEquivalentModifierMask"/>
                                             </menuItem>
@@ -452,7 +449,7 @@ Audio size = 0 KiB
         <scene sceneID="gxA-Eo-oyS">
             <objects>
                 <windowController storyboardIdentifier="TranscodeSheet Controller" id="4eK-11-jos" userLabel="TranscodeSheet Controller" sceneMemberID="viewController">
-                    <window key="window" title="TranscodeSheet" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="Y3C-BP-FMZ" customClass="Window" customModule="cutter2" customModuleProvider="target">
+                    <window key="window" title="TranscodeSheet" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="Y3C-BP-FMZ" customClass="Window" customModule="cutter2" customModuleProvider="target">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
                         <rect key="contentRect" x="1734" y="313" width="480" height="270"/>
@@ -473,7 +470,7 @@ Audio size = 0 KiB
         <scene sceneID="fPT-ad-ZBb">
             <objects>
                 <windowController storyboardIdentifier="CAPARSheet Controller" id="Ssb-Rn-3WJ" userLabel="CAPARSheet Controller" sceneMemberID="viewController">
-                    <window key="window" title="CleanAperture/PixelAspectRatio" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="QFA-kR-AjF" customClass="Window" customModule="cutter2" customModuleProvider="target">
+                    <window key="window" title="CleanAperture/PixelAspectRatio" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="QFA-kR-AjF" customClass="Window" customModule="cutter2" customModuleProvider="target">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
                         <rect key="contentRect" x="1734" y="313" width="480" height="270"/>
@@ -494,7 +491,7 @@ Audio size = 0 KiB
         <scene sceneID="pWU-Pd-7jj">
             <objects>
                 <windowController showSeguePresentationStyle="single" id="PEt-Rb-z8M" userLabel="Inspector Panel Controller" sceneMemberID="viewController">
-                    <window key="window" title="Inspector Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="utilityWindow" frameAutosaveName="InspectorWindow" tabbingMode="disallowed" titlebarAppearsTransparent="YES" id="0U4-iu-IPx" userLabel="Inspector Panel" customClass="NSPanel">
+                    <window key="window" title="Inspector Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="utilityWindow" frameAutosaveName="InspectorWindow" tabbingMode="disallowed" titlebarAppearsTransparent="YES" id="0U4-iu-IPx" userLabel="Inspector Panel" customClass="NSPanel">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" resizable="YES" utility="YES" nonactivatingPanel="YES" HUD="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
                         <rect key="contentRect" x="1746" y="787" width="360" height="300"/>
@@ -1032,7 +1029,7 @@ Audio size = 0 KiB
                                                     <real key="maximum" value="3840"/>
                                                 </numberFormatter>
                                                 <font key="font" metaFont="smallSystem"/>
-                                                <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                             <connections>
@@ -1081,7 +1078,7 @@ Audio size = 0 KiB
                                                     <real key="maximum" value="2160"/>
                                                 </numberFormatter>
                                                 <font key="font" metaFont="smallSystem"/>
-                                                <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                             <connections>
@@ -1112,7 +1109,7 @@ Audio size = 0 KiB
                                                     <real key="maximum" value="32"/>
                                                 </numberFormatter>
                                                 <font key="font" metaFont="smallSystem"/>
-                                                <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                             <connections>
@@ -1134,7 +1131,7 @@ Audio size = 0 KiB
                                                     <real key="maximum" value="32"/>
                                                 </numberFormatter>
                                                 <font key="font" metaFont="smallSystem"/>
-                                                <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                             <connections>
@@ -1149,7 +1146,6 @@ Audio size = 0 KiB
                                         </textField>
                                     </subviews>
                                 </view>
-                                <font key="titleFont" metaFont="message" size="11"/>
                             </box>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ypw-cj-Yzp">
                                 <rect key="frame" x="407" y="13" width="59" height="32"/>
@@ -1288,7 +1284,6 @@ Gw
                                         </textField>
                                     </subviews>
                                 </view>
-                                <font key="titleFont" metaFont="message" size="11"/>
                             </box>
                             <box autoresizesSubviews="NO" fixedFrame="YES" borderType="line" title="Pixel Aspect Ratio (pasp)" translatesAutoresizingMaskIntoConstraints="NO" id="oa3-ZA-fMI">
                                 <rect key="frame" x="190" y="69" width="273" height="75"/>
@@ -1315,7 +1310,7 @@ Gw
                                                     <real key="maximum" value="3840"/>
                                                 </numberFormatter>
                                                 <font key="font" metaFont="smallSystem"/>
-                                                <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                             <connections>
@@ -1337,7 +1332,7 @@ Gw
                                                     <real key="maximum" value="2160"/>
                                                 </numberFormatter>
                                                 <font key="font" metaFont="smallSystem"/>
-                                                <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                             <connections>
@@ -1361,7 +1356,6 @@ Gw
                                         </textField>
                                     </subviews>
                                 </view>
-                                <font key="titleFont" metaFont="message" size="11"/>
                             </box>
                         </subviews>
                     </view>
@@ -1401,7 +1395,7 @@ Gw
                                 <font key="font" metaFont="system"/>
                                 <tabViewItems>
                                     <tabViewItem label="0" identifier="" id="45l-T1-b0x">
-                                        <view key="view" ambiguous="YES" id="HjG-ir-1ZU">
+                                        <view key="view" id="HjG-ir-1ZU">
                                             <rect key="frame" x="10" y="7" width="303" height="229"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -1465,7 +1459,6 @@ Gw
                                                             </matrix>
                                                         </subviews>
                                                     </view>
-                                                    <font key="titleFont" metaFont="message" size="11"/>
                                                 </box>
                                             </subviews>
                                         </view>
@@ -1520,7 +1513,6 @@ Gw
                                                             </matrix>
                                                         </subviews>
                                                     </view>
-                                                    <font key="titleFont" metaFont="message" size="11"/>
                                                 </box>
                                             </subviews>
                                         </view>
@@ -1560,7 +1552,6 @@ Gw
                                                             </matrix>
                                                         </subviews>
                                                     </view>
-                                                    <font key="titleFont" metaFont="message" size="11"/>
                                                 </box>
                                             </subviews>
                                         </view>
@@ -1624,13 +1615,12 @@ Gw
                                                             </matrix>
                                                         </subviews>
                                                     </view>
-                                                    <font key="titleFont" metaFont="message" size="11"/>
                                                 </box>
                                             </subviews>
                                         </view>
                                     </tabViewItem>
                                     <tabViewItem label="4" identifier="" id="5jA-k0-Rfw">
-                                        <view key="view" id="ogd-yp-Hq7">
+                                        <view key="view" ambiguous="YES" id="ogd-yp-Hq7">
                                             <rect key="frame" x="10" y="7" width="303" height="229"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -1650,7 +1640,7 @@ Gw
                                                                         <real key="maximum" value="65536"/>
                                                                     </numberFormatter>
                                                                     <font key="font" metaFont="smallSystem"/>
-                                                                    <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
                                                                 <connections>
@@ -1666,7 +1656,7 @@ Gw
                                                                         <real key="maximum" value="5120"/>
                                                                     </numberFormatter>
                                                                     <font key="font" metaFont="smallSystem"/>
-                                                                    <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
                                                                 <connections>
@@ -1758,7 +1748,6 @@ Gw
                                                             </popUpButton>
                                                         </subviews>
                                                     </view>
-                                                    <font key="titleFont" metaFont="message" size="11"/>
                                                 </box>
                                                 <box fixedFrame="YES" title="Options" translatesAutoresizingMaskIntoConstraints="NO" id="k9a-BV-ZbF">
                                                     <rect key="frame" x="11" y="7" width="281" height="105"/>
@@ -1802,7 +1791,6 @@ Gw
                                                             </button>
                                                         </subviews>
                                                     </view>
-                                                    <font key="titleFont" metaFont="message" size="11"/>
                                                 </box>
                                             </subviews>
                                         </view>
@@ -1886,7 +1874,6 @@ Gw
                                         </matrix>
                                     </subviews>
                                 </view>
-                                <font key="titleFont" metaFont="message" size="11"/>
                             </box>
                         </subviews>
                     </view>

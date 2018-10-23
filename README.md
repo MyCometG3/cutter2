@@ -12,6 +12,7 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 - Support remux b/w mov/mp4/m4v/m4a
 - Transcoding to H264+AAC.mov/.mp4/m4v
 - Transcoding to HEVC+AAC.mov/.mp4/m4v (macOS 10.13 or later)
+- Dark mode (macOS 10.14 or later)
 
 #### Advanced feature
 - Save as reference movie (AVFoundation based)
@@ -29,9 +30,9 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 - Custom export keeps customized CleanAperture/PixelAspectRatio.
 
 #### Development environment
-- MacOS X 10.13.5 High Sierra
-- Xcode 9.4.0
-- Swift 4.1.0
+- MacOS X 10.13.6 High Sierra
+- Xcode 10.0.0
+- Swift 4.1.2
 
 #### License
 - The MIT License

@@ -304,6 +304,10 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             // Swift.print("#####", "O : set selection end")
             doSetEnd(to: .current)
             return true
+        case 0x31 : // space bar
+            // Swift.print("#####", "space : toggle play/pause")
+            document.doTogglePlay()
+            return true
         default:
             break
         }
@@ -390,6 +394,10 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             } else {
                 doSetEnd(to: .current)
             }
+            return true
+        case 0x31 : // space bar
+            // Swift.print("#####", "space : toggle play/pause")
+            document.doTogglePlay()
             return true
         default:
             break

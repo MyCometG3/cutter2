@@ -396,11 +396,17 @@
                                     <font key="font" metaFont="menu"/>
                                     <menu key="menu" id="qOW-K1-Png">
                                         <items>
-                                            <menuItem title="mov (reference movie)" state="on" tag="-1" keyEquivalent="1" id="grx-7Q-6dE"/>
+                                            <menuItem title="mov (reference movie)" state="on" tag="-1" keyEquivalent="1" id="grx-7Q-6dE">
+                                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                            </menuItem>
                                             <menuItem isSeparatorItem="YES" id="Vcg-im-wh4"/>
-                                            <menuItem title="mov (self-contained)" tag="1" keyEquivalent="2" id="boe-24-Ow1"/>
+                                            <menuItem title="mov (self-contained)" tag="1" keyEquivalent="2" id="boe-24-Ow1">
+                                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                            </menuItem>
                                             <menuItem isSeparatorItem="YES" id="6vV-3X-62a"/>
-                                            <menuItem title="mp4" tag="2" keyEquivalent="3" id="dlZ-ce-ere"/>
+                                            <menuItem title="mp4" tag="2" keyEquivalent="3" id="dlZ-ce-ere">
+                                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                            </menuItem>
                                             <menuItem title="m4v" tag="3" id="Dk7-4f-mfy">
                                                 <modifierMask key="keyEquivalentModifierMask"/>
                                             </menuItem>
@@ -1395,7 +1401,7 @@ Gw
                                 <font key="font" metaFont="system"/>
                                 <tabViewItems>
                                     <tabViewItem label="0" identifier="" id="45l-T1-b0x">
-                                        <view key="view" id="HjG-ir-1ZU">
+                                        <view key="view" ambiguous="YES" id="HjG-ir-1ZU">
                                             <rect key="frame" x="10" y="7" width="303" height="229"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -1620,7 +1626,7 @@ Gw
                                         </view>
                                     </tabViewItem>
                                     <tabViewItem label="4" identifier="" id="5jA-k0-Rfw">
-                                        <view key="view" ambiguous="YES" id="ogd-yp-Hq7">
+                                        <view key="view" id="ogd-yp-Hq7">
                                             <rect key="frame" x="10" y="7" width="303" height="229"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>

@@ -231,13 +231,20 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Menu" id="e14-77-cm5">
                                     <items>
-                                        <menuItem title="Step mode" keyEquivalent="," id="juF-8R-my1">
+                                        <menuItem title="Step mode" id="juF-8R-my1">
+                                            <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
                                             <connections>
                                                 <binding destination="OgH-HK-cuj" name="value" keyPath="values.useStepMode" id="fxk-dh-r4h"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="1kV-5J-5B7"/>
-                                        <menuItem title="Modify Aperture" keyEquivalent="7" id="2wh-lA-ac8">
+                                        <menuItem title="Modify Aperture" id="2wh-lA-ac8">
+                                            <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                                            <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                             <connections>
                                                 <action selector="modifyClapPasp:" target="Ady-hI-5gd" id="lHr-yr-nS9"/>
                                             </connections>

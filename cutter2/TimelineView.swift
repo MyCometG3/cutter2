@@ -152,6 +152,12 @@ class TimelineView: NSView, CALayerDelegate {
     private var currentPosition : Float64 = 0.0
     private var startPosition : Float64 = 0.0
     private var endPosition : Float64 = 0.0
+    public var jklMode : Bool = false {
+        didSet {
+            selectedMarker?.fillColor = fillColorActive
+            selection?.fillColor = fillColorActive
+        }
+    }
     
     // CATextLayer
     private var timeLabel : CATextLayer? = nil
@@ -173,7 +179,13 @@ class TimelineView: NSView, CALayerDelegate {
     private let wUnit : CGFloat = 8.0
     private let hUnit : CGFloat = 8.0
     private let strokeColorActive : CGColor = NSColor.black.cgColor
-    private let fillColorActive : CGColor = NSColor.red.cgColor
+    private var fillColorActive : CGColor {
+        if jklMode {
+            return NSColor.blue.cgColor
+        } else {
+            return NSColor.red.cgColor
+        }
+    }
     private let strokeColorInactive : CGColor = NSColor.gray.cgColor
     private let fillColorInactive : CGColor = NSColor.lightGray.cgColor
     private var backGroundColor : CGColor {
@@ -423,7 +435,7 @@ class TimelineView: NSView, CALayerDelegate {
                               width: width, height: height)
             let path = NSBezierPath(rect: rect)
             let shape = CAShapeLayer()
-            shape.strokeColor = NSColor.red.cgColor//strokeColorInactive
+            shape.strokeColor = strokeColorInactive
             shape.fillColor = fillColorActive
             shape.lineWidth = 1.0
             shape.path = path.cgPath

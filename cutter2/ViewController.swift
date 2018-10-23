@@ -83,6 +83,8 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        applyMode()
     }
     
     public func setup() {
@@ -150,6 +152,8 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             let new : Bool = !newNumber.boolValue
             if mimicJKLcombination != new {
                 mimicJKLcombination = new
+                
+                applyMode()
             }
         }
     }
@@ -213,6 +217,11 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         center.removeObserver(self,
                               name: .timelineUpdateReq,
                               object: delegate)
+    }
+    
+    private func applyMode() {
+        self.timelineView.jklMode = mimicJKLcombination
+        self.timelineView.needsLayout = true
     }
     
     /* ============================================ */

@@ -835,6 +835,8 @@ extension MovieWriter {
                         if awFailed {
                             self.finalSuccess = false
                             self.finalError = aw.error
+                        } else {
+                            self.finalSuccess = true
                         }
                         sem.signal()
                     })

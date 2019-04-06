@@ -417,10 +417,16 @@ extension MovieWriter {
                         }
                     }
                     if let data1 = dataSrc, let data2 = dataDst {
-                        data1.withUnsafeBytes({(ptr) in
+                        let count1 : Int = data1.count
+                        data1.withUnsafeBytes({(p : UnsafeRawBufferPointer) in
+                            let ptr : UnsafePointer<AudioChannelLayout> =
+                                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: count1)
                             avacSrcLayout = AVAudioChannelLayout(layout: ptr)
                         })
-                        data2.withUnsafeBytes({(ptr) in
+                        let count2 : Int = data2.count
+                        data2.withUnsafeBytes({(p : UnsafeRawBufferPointer) in
+                            let ptr : UnsafePointer<AudioChannelLayout> =
+                                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: count2)
                             avacDstLayout = AVAudioChannelLayout(layout: ptr)
                         })
                     } else {

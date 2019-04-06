@@ -598,7 +598,7 @@ extension Document {
         let start : Int = 4
         let end : Int = data.count - pattern.count
         var set : Set<URL> = []
-        data.withUnsafeBytes { (ptr : UnsafePointer<UInt8>) in
+        data.withUnsafeBytes { (ptr : UnsafeRawBufferPointer) in
             for n in start..<end {
                 // search pattern
                 if ptr[n] != pattern[0] {

@@ -56,8 +56,11 @@ class LayoutConverter {
         assert(tag != 0)
         assert(tag != kAudioChannelLayoutTag_UseChannelDescriptions)
         assert(tag != kAudioChannelLayoutTag_UseChannelBitmap)
-        var aclData : Data = Data.init(count: dataSize(descCount: 0))
-        aclData.withUnsafeMutableBytes({(ptr : MutableLayoutPtr) in
+        let count : Int = dataSize(descCount: 0)
+        var aclData : Data = Data.init(count: count)
+        aclData.withUnsafeMutableBytes({(p : UnsafeMutableRawBufferPointer) in
+            let ptr : MutableLayoutPtr =
+                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: count)
             ptr.pointee.mChannelLayoutTag = tag
         })
         return aclData
@@ -65,8 +68,11 @@ class LayoutConverter {
     
     private func dataFor(bitmap : AudioChannelBitmap) -> AudioChannelLayoutData {
         assert(bitmap != [])
-        var aclData : Data = Data.init(count: dataSize(descCount: 0))
-        aclData.withUnsafeMutableBytes({(ptr : MutableLayoutPtr) in
+        let count : Int = dataSize(descCount: 0)
+        var aclData : Data = Data.init(count: count)
+        aclData.withUnsafeMutableBytes({(p : UnsafeMutableRawBufferPointer) in
+            let ptr : MutableLayoutPtr =
+                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: count)
             ptr.pointee.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap
             ptr.pointee.mChannelBitmap = bitmap
         })
@@ -76,8 +82,11 @@ class LayoutConverter {
     private func dataFor(desciptions array :[AudioChannelDescription]) -> AudioChannelLayoutData {
         let acDescCount = array.count
         assert(acDescCount > 0)
-        var aclData : Data = Data.init(count: dataSize(descCount: acDescCount))
-        aclData.withUnsafeMutableBytes({(ptr : MutableLayoutPtr) in
+        let count : Int = dataSize(descCount: acDescCount)
+        var aclData : Data = Data.init(count: count)
+        aclData.withUnsafeMutableBytes({(p : UnsafeMutableRawBufferPointer) in
+            let ptr : MutableLayoutPtr =
+                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: count)
             ptr.pointee.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions
             ptr.pointee.mNumberChannelDescriptions = UInt32(acDescCount)
             let descPtr = MutableDescriptionsPtr(start: &(ptr.pointee.mChannelDescriptions),
@@ -106,7 +115,10 @@ class LayoutConverter {
     /// - Returns: AudioChannelLayoutData
     public func convertAsAACTag(from aclData : AudioChannelLayoutData) -> AudioChannelLayoutData? {
         var pos : Set<AudioChannelLabel>!
-        aclData.withUnsafeBytes({(ptr : LayoutPtr) in
+        let count : Int = aclData.count
+        aclData.withUnsafeBytes({ (p : UnsafeRawBufferPointer) in
+            let ptr : LayoutPtr =
+                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: count)
             pos = channelLabelSet(ptr)
         })
         var tag : AudioChannelLayoutTag = channelLayoutTagAACForChannelLabelSet(pos, true)
@@ -128,7 +140,10 @@ class LayoutConverter {
     /// - Returns: AudioChannelLayoutData
     public func convertAsPCMTag(from aclData : AudioChannelLayoutData) -> AudioChannelLayoutData? {
         var pos : Set<AudioChannelLabel>!
-        aclData.withUnsafeBytes({(ptr : LayoutPtr) in
+        let count : Int = aclData.count
+        aclData.withUnsafeBytes({ (p : UnsafeRawBufferPointer) in
+            let ptr : LayoutPtr =
+                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: count)
             pos = channelLabelSet(ptr)
         })
         let tag : AudioChannelLayoutTag = channelLayoutTagLPCMForChannelLabelSet(pos)
@@ -146,7 +161,10 @@ class LayoutConverter {
     /// - Returns: AudioChannelLayoutData
     public func convertAsBitmap(from aclData : AudioChannelLayoutData) -> AudioChannelLayoutData? {
         var pos : Set<AudioChannelLabel>!
-        aclData.withUnsafeBytes({(ptr : LayoutPtr) in
+        let count : Int = aclData.count
+        aclData.withUnsafeBytes({ (p : UnsafeRawBufferPointer) in
+            let ptr : LayoutPtr =
+                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: count)
             pos = channelLabelSet(ptr)
         })
         let bitmap : AudioChannelBitmap = channelBitmapForChannelLabelSet(pos)
@@ -164,7 +182,10 @@ class LayoutConverter {
     /// - Returns: AudioChannelLayoutData
     public func convertAsDescriptions(from aclData : AudioChannelLayoutData) -> AudioChannelLayoutData? {
         var pos : Set<AudioChannelLabel>!
-        aclData.withUnsafeBytes({(ptr : LayoutPtr) in
+        let count : Int = aclData.count
+        aclData.withUnsafeBytes({ (p : UnsafeRawBufferPointer) in
+            let ptr : LayoutPtr =
+                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: count)
             pos = channelLabelSet(ptr)
         })
         let descs : [AudioChannelDescription] = channelDescriptionsForChannelLabelSet(pos)

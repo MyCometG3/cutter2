@@ -90,7 +90,7 @@ enum marker {
     case none
 }
 
-class TimelineView: NSView, CALayerDelegate {
+class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     /// Delegate object which conforms TimelineUpdateDelegate protocol
     public weak var delegate : TimelineUpdateDelegate? = nil
     
@@ -320,7 +320,7 @@ class TimelineView: NSView, CALayerDelegate {
     }
     
     /* ============================================ */
-    // MARK: - NSLayerDelegateContentsScaleUpdating
+    // MARK: - NSViewLayerContentScaleDelegate
     /* ============================================ */
     
     func layer(_ layer: CALayer, shouldInheritContentsScale newScale: CGFloat, from window: NSWindow) -> Bool {

@@ -90,9 +90,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.6.1</string>
+	<string>0.6.2</string>
 	<key>CFBundleVersion</key>
-	<string>20190715</string>
+	<string>20191009</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHighResolutionCapable</key>
@@ -103,5 +103,7 @@
 	<string>Main</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSAppleScriptEnabled</key>
+	<true/>
 </dict>
 </plist>

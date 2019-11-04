@@ -123,6 +123,12 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         }
     }
     
+    @IBOutlet weak var controllerBox: NSBox!
+    
+    public func showController(_ flag : Bool) {
+        controllerBox.isHidden = !flag
+    }
+    
     /* ============================================ */
     // MARK: - Observer utilities
     /* ============================================ */

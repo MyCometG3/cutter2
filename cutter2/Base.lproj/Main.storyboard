@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="15505" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.AVKitIBPlugin" version="14490.70"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
+        <plugIn identifier="com.apple.AVKitIBPlugin" version="15505"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15505"/>
+        <capability name="System colors introduced in macOS 10.13" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -344,41 +345,81 @@ DQ
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" preferredMaxLayoutWidth="246" translatesAutoresizingMaskIntoConstraints="NO" id="TyV-c9-G0C">
-                                <rect key="frame" x="116" y="156" width="248" height="22"/>
+                                <rect key="frame" x="116" y="157" width="248" height="21"/>
                                 <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="center" title="Your document contents here" id="Cc7-nU-5Mv">
                                     <font key="font" metaFont="system" size="18"/>
                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <avPlayerView focusRingType="exterior" fixedFrame="YES" controlsStyle="none" showsFullScreenToggleButton="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fnW-Ep-sKb" customClass="MyPlayerView" customModule="cutter2" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="64" width="480" height="270"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                <connections>
-                                    <outlet property="nextKeyView" destination="Icb-9d-L6c" id="sXI-Wk-m3N"/>
-                                </connections>
-                            </avPlayerView>
-                            <box wantsLayer="YES" fixedFrame="YES" boxType="custom" cornerRadius="4" title="Box" translatesAutoresizingMaskIntoConstraints="NO" id="0wm-PR-wXe">
-                                <rect key="frame" x="9" y="9" width="463" height="45"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
-                                <view key="contentView" focusRingType="exterior" ambiguous="YES" id="Icb-9d-L6c" customClass="TimelineView" customModule="cutter2" customModuleProvider="target">
-                                    <rect key="frame" x="1" y="1" width="461" height="43"/>
-                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                    <connections>
-                                        <outlet property="nextKeyView" destination="fnW-Ep-sKb" id="hQ3-84-inb"/>
-                                    </connections>
-                                </view>
-                                <connections>
-                                    <outlet property="nextKeyView" destination="fnW-Ep-sKb" id="EcU-xi-4Lx"/>
-                                </connections>
-                            </box>
+                            <stackView distribution="fill" orientation="vertical" alignment="leading" spacing="0.0" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2Ht-l1-CsR">
+                                <rect key="frame" x="0.0" y="0.0" width="480" height="334"/>
+                                <subviews>
+                                    <avPlayerView focusRingType="exterior" controlsStyle="none" showsFullScreenToggleButton="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fnW-Ep-sKb" customClass="MyPlayerView" customModule="cutter2" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="48" width="480" height="286"/>
+                                        <connections>
+                                            <outlet property="nextKeyView" destination="Icb-9d-L6c" id="sXI-Wk-m3N"/>
+                                        </connections>
+                                    </avPlayerView>
+                                    <box boxType="custom" borderType="none" cornerRadius="4" title="Box" transparent="YES" translatesAutoresizingMaskIntoConstraints="NO" id="GBf-J7-Z7x">
+                                        <rect key="frame" x="0.0" y="0.0" width="480" height="48"/>
+                                        <view key="contentView" id="wwj-VT-sG7">
+                                            <rect key="frame" x="0.0" y="0.0" width="480" height="48"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            <subviews>
+                                                <box wantsLayer="YES" fixedFrame="YES" boxType="custom" cornerRadius="4" title="Box" translatesAutoresizingMaskIntoConstraints="NO" id="0wm-PR-wXe">
+                                                    <rect key="frame" x="4" y="4" width="472" height="40"/>
+                                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                                                    <view key="contentView" focusRingType="exterior" ambiguous="YES" id="Icb-9d-L6c" customClass="TimelineView" customModule="cutter2" customModuleProvider="target">
+                                                        <rect key="frame" x="1" y="1" width="470" height="38"/>
+                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                        <connections>
+                                                            <outlet property="nextKeyView" destination="fnW-Ep-sKb" id="hQ3-84-inb"/>
+                                                        </connections>
+                                                    </view>
+                                                    <connections>
+                                                        <outlet property="nextKeyView" destination="fnW-Ep-sKb" id="EcU-xi-4Lx"/>
+                                                    </connections>
+                                                </box>
+                                            </subviews>
+                                        </view>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="48" id="68W-Kd-zND"/>
+                                        </constraints>
+                                        <color key="fillColor" name="findHighlightColor" catalog="System" colorSpace="catalog"/>
+                                    </box>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="fnW-Ep-sKb" firstAttribute="top" secondItem="2Ht-l1-CsR" secondAttribute="top" id="3Uj-2c-IRb"/>
+                                    <constraint firstItem="fnW-Ep-sKb" firstAttribute="leading" secondItem="2Ht-l1-CsR" secondAttribute="leading" id="OEm-PB-IvD"/>
+                                    <constraint firstItem="fnW-Ep-sKb" firstAttribute="leading" secondItem="2Ht-l1-CsR" secondAttribute="leading" id="R5A-mF-s8l"/>
+                                    <constraint firstItem="GBf-J7-Z7x" firstAttribute="top" secondItem="fnW-Ep-sKb" secondAttribute="bottom" id="aBV-vu-6L0"/>
+                                    <constraint firstAttribute="trailing" secondItem="fnW-Ep-sKb" secondAttribute="trailing" id="ato-Zy-c5F"/>
+                                    <constraint firstItem="fnW-Ep-sKb" firstAttribute="top" secondItem="2Ht-l1-CsR" secondAttribute="top" id="jne-HV-M7m"/>
+                                    <constraint firstItem="GBf-J7-Z7x" firstAttribute="top" secondItem="fnW-Ep-sKb" secondAttribute="bottom" id="rzf-jU-z4L"/>
+                                    <constraint firstAttribute="trailing" secondItem="fnW-Ep-sKb" secondAttribute="trailing" id="tgR-fl-VwP"/>
+                                </constraints>
+                                <visibilityPriorities>
+                                    <integer value="1000"/>
+                                    <integer value="1000"/>
+                                </visibilityPriorities>
+                                <customSpacing>
+                                    <real value="3.4028234663852886e+38"/>
+                                    <real value="3.4028234663852886e+38"/>
+                                </customSpacing>
+                            </stackView>
                         </subviews>
                         <constraints>
+                            <constraint firstItem="2Ht-l1-CsR" firstAttribute="top" secondItem="ERx-hH-rdd" secondAttribute="top" id="Rwa-OL-GaT"/>
                             <constraint firstAttribute="centerY" secondItem="TyV-c9-G0C" secondAttribute="centerY" id="Rxv-Yd-F43"/>
+                            <constraint firstAttribute="trailing" secondItem="2Ht-l1-CsR" secondAttribute="trailing" id="SQ8-SF-h5o"/>
                             <constraint firstAttribute="centerX" secondItem="TyV-c9-G0C" secondAttribute="centerX" id="Zn4-Y4-lbg"/>
+                            <constraint firstAttribute="bottom" secondItem="2Ht-l1-CsR" secondAttribute="bottom" id="djn-7F-jOw"/>
+                            <constraint firstItem="2Ht-l1-CsR" firstAttribute="leading" secondItem="ERx-hH-rdd" secondAttribute="leading" id="uPH-Am-AQf"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="controllerBox" destination="GBf-J7-Z7x" id="qg0-VG-Yfk"/>
                         <outlet property="playerView" destination="fnW-Ep-sKb" id="5Xc-Ac-OR0"/>
                         <outlet property="timelineView" destination="Icb-9d-L6c" id="QrC-l7-R4z"/>
                     </connections>

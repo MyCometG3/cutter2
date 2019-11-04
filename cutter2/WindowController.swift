@@ -26,4 +26,22 @@ class WindowController: NSWindowController, NSWindowDelegate {
     func windowDidResize(_ notification: Notification) {
         synchronizeWindowTitleWithDocumentName()
     }
+    
+    func windowWillEnterFullScreen(_ notification: Notification) {
+        let vc = self.contentViewController as! ViewController
+        vc.showController(false)
+    }
+    
+    func windowWillExitFullScreen(_ notification: Notification) {
+        let vc = self.contentViewController as! ViewController
+        vc.showController(true)
+    }
+    
+    func windowDidEnterFullScreen(_ notification: Notification) {
+        self.window!.selectNextKeyView(self)
+    }
+    
+    func windowDidExitFullScreen(_ notification: Notification) {
+        self.window!.selectNextKeyView(self)
+    }
 }

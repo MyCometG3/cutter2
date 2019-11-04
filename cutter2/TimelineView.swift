@@ -190,13 +190,6 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     }
     private let strokeColorInactive : CGColor = NSColor.gray.cgColor
     private let fillColorInactive : CGColor = NSColor.lightGray.cgColor
-    private var backGroundColor : CGColor {
-        if #available(OSX 10.14, *) {
-            return NSColor.unemphasizedSelectedContentBackgroundColor.cgColor
-        } else {
-            return NSColor.controlColor.cgColor
-        }
-    }
     private var labelColor : CGColor {
         if #available(OSX 10.14, *) {
             return NSColor.unemphasizedSelectedTextColor.cgColor
@@ -225,11 +218,6 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         // Swift.print(#function, #line, #file)
         super.layout()
 
-        // dark mode support
-        if let layer = self.layer {
-            layer.backgroundColor = backGroundColor
-        }
-        
         // On initial/resized state, update tracking area
         if needsUpdateTrackingArea {
             needsUpdateTrackingArea = false
@@ -312,7 +300,6 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
             label.frame = newRect
             
             // dark mode support
-            label.backgroundColor = backGroundColor
             label.foregroundColor = labelColor
         }
         CATransaction.commit()

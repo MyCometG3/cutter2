@@ -396,20 +396,34 @@ extension Document {
             let timeRange : CMTimeRange = timeRangeValue.timeRangeValue
             self.updateGUI(time, timeRange, true)
         }
-        let center = NotificationCenter.default
-        center.addObserver(forName: .movieWasMutated,
-                           object: movieMutator,
-                           queue: OperationQueue.main,
-                           using: handler)
+        let addBlock : () -> Void = {
+            let center = NotificationCenter.default
+            center.addObserver(forName: .movieWasMutated,
+                               object: self.movieMutator,
+                               queue: OperationQueue.main,
+                               using: handler)
+        }
+        if (Thread.isMainThread) {
+            addBlock()
+        } else {
+            DispatchQueue.main.sync(execute: addBlock)
+        }
     }
     
     /// Unregister observer for movie mutation
     internal func removeMutationObserver() {
         // Swift.print(#function, #line, #file)
-        let center = NotificationCenter.default
-        center.removeObserver(self,
-                              name: .movieWasMutated,
-                              object: movieMutator)
+        let removeBlock = {
+            let center = NotificationCenter.default
+            center.removeObserver(self,
+                                  name: .movieWasMutated,
+                                  object: self.movieMutator)
+        }
+        if (Thread.isMainThread) {
+            removeBlock()
+        } else {
+            DispatchQueue.main.sync(execute: removeBlock)
+        }
     }
 }
 

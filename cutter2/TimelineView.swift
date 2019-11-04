@@ -223,7 +223,8 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     
     override func layout() {
         // Swift.print(#function, #line, #file)
-        
+        super.layout()
+
         // dark mode support
         if let layer = self.layer {
             layer.backgroundColor = backGroundColor
@@ -315,8 +316,6 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
             label.foregroundColor = labelColor
         }
         CATransaction.commit()
-        
-        super.layout()
     }
     
     /* ============================================ */

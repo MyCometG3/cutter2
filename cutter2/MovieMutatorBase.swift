@@ -615,7 +615,7 @@ class MovieMutatorBase: NSObject {
             var trackString : [String] = []
             let trackID : Int = Int(track.trackID)
             let reference : Bool = !(track.isSelfContained)
-            for desc in track.formatDescriptions as! [CMVideoFormatDescription] {
+            for desc in track.formatDescriptions as! [CMAudioFormatDescription] {
                 var rateString : String = ""
                 do {
                     let basic = CMAudioFormatDescriptionGetStreamBasicDescription(desc)

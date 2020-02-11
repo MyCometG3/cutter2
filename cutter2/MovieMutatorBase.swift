@@ -642,19 +642,51 @@ class MovieMutatorBase: NSObject {
                 }
                 var layoutString : String = ""
                 do {
-                    // get AudioChannelLayout ptr
+                    var nameSize : UInt32 = UInt32(MemoryLayout<CFString>.size)
+                    var name : CFString = "Unknown" as CFString
+                    let tagSize : UInt32 = UInt32(MemoryLayout<AudioChannelLayoutTag>.size)
+                    var tag : AudioChannelLayoutTag = kAudioChannelLayoutTag_Unknown
+                    var dataSize : UInt32 = 0
+                    var data : Data? = nil
+                    var err : OSStatus = noErr;
+                    let item : UnsafePointer<AudioFormatListItem>? =
+                        CMAudioFormatDescriptionGetMostCompatibleFormat(desc)
+                    if let item = item {
+                        tag = item.pointee.mChannelLayoutTag // kAudioChannelLayoutTag_Stereo //
+                        err = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag,
+                                                         tagSize, &tag, &dataSize)
+                        if err == noErr && dataSize > 0 {
+                            data = Data(count: Int(dataSize))
+                        }
+                    }
+                    data?.withUnsafeMutableBytes { (dataPtr) -> Void in
+                        var aclSize : UInt32 = dataSize
+                        let aclPtr : UnsafeMutableRawPointer? = dataPtr.baseAddress
+                        err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForTag,
+                                                     tagSize, &tag, &aclSize, aclPtr)
+                        if err == noErr {
+                            err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
+                                                         aclSize, aclPtr, &nameSize, &name)
+                            if err == noErr {
+                                layoutString = name as String
+                            }
+                        }
+                    }
+                }
+                do {
+                    var err : OSStatus = noErr;
+                    var nameSize : UInt32 = UInt32(MemoryLayout<CFString>.size)
+                    var name : CFString? = nil
                     var aclSize : Int = 0
                     let aclPtr : UnsafePointer<AudioChannelLayout>? =
                         CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &aclSize)
-                    
-                    var name : CFString!
-                    var nameSize : UInt32 = UInt32(MemoryLayout<CFString>.size)
-                    let err : OSStatus =
-                        AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
-                                               UInt32(aclSize), aclPtr,
-                                               &nameSize, &name)
-                    assert(err == noErr && nameSize > 0)
-                    layoutString = String(name as NSString)
+                    if aclSize > 0, let aclPtr = aclPtr {
+                        err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
+                                                     UInt32(aclSize), aclPtr, &nameSize, &name)
+                        if err == noErr, let name = name {
+                            layoutString = String(name as String)
+                        }
+                    }
                 }
                 if reference {
                     trackString.append("\(trackID): \(formatString), \(layoutString), \(rateString), Reference")

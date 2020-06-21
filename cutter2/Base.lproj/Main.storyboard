@@ -228,9 +228,9 @@
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="Menu" id="sVK-si-sV8">
+                            <menuItem title="Configure" id="sVK-si-sV8">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Menu" id="e14-77-cm5">
+                                <menu key="submenu" title="Configure" id="e14-77-cm5">
                                     <items>
                                         <menuItem title="Step mode" id="juF-8R-my1">
                                             <string key="keyEquivalent" base64-UTF8="YES">
@@ -241,7 +241,7 @@ DQ
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="1kV-5J-5B7"/>
-                                        <menuItem title="Modify Aperture" id="2wh-lA-ac8">
+                                        <menuItem title="clap / pasp" id="2wh-lA-ac8">
                                             <string key="keyEquivalent" base64-UTF8="YES">
 DQ
 </string>
@@ -433,12 +433,12 @@ DQ
         <scene sceneID="iRa-Xn-JCX">
             <objects>
                 <viewController storyboardIdentifier="Accessory View Controller" id="OzP-JU-yzb" customClass="AccessoryViewController" customModule="cutter2" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" id="UOp-mP-HVY">
-                        <rect key="frame" x="0.0" y="0.0" width="398" height="77"/>
+                    <view key="view" misplaced="YES" id="UOp-mP-HVY">
+                        <rect key="frame" x="0.0" y="0.0" width="398" height="65"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="dvf-GJ-U99">
-                                <rect key="frame" x="18" y="25" width="175" height="25"/>
+                                <rect key="frame" x="18" y="19" width="175" height="25"/>
                                 <popUpButtonCell key="cell" type="push" title="mov (reference movie)" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="-1" imageScaling="proportionallyDown" inset="2" selectedItem="grx-7Q-6dE" id="fdc-gv-YVW">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -469,9 +469,9 @@ DQ
                                 </connections>
                             </popUpButton>
                             <textField horizontalHuggingPriority="249" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="zgU-uH-d0R">
-                                <rect key="frame" x="198" y="8" width="180" height="61"/>
+                                <rect key="frame" x="198" y="8" width="180" height="49"/>
                                 <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="left" drawsBackground="YES" id="T0Z-i9-qh5">
-                                    <font key="font" metaFont="message" size="11"/>
+                                    <font key="font" size="10" name="Menlo-Regular"/>
                                     <string key="title">Header size = 0 KiB
 Video size = 0 KiB
 Audio size = 0 KiB
@@ -560,7 +560,7 @@ Audio size = 0 KiB
                 </windowController>
                 <customObject id="62B-s8-tve" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1588" y="342"/>
+            <point key="canvasLocation" x="1588" y="357"/>
         </scene>
         <!--Inspector View Controller-->
         <scene sceneID="tLZ-8O-NRq">
@@ -1057,7 +1057,7 @@ Audio size = 0 KiB
                     </declaredKeys>
                 </objectController>
             </objects>
-            <point key="canvasLocation" x="1588" y="808"/>
+            <point key="canvasLocation" x="1588" y="767"/>
         </scene>
         <!--CAPARView Controller-->
         <scene sceneID="g4x-H1-MGM">
@@ -1078,18 +1078,16 @@ Audio size = 0 KiB
                                             <rect key="frame" x="86" y="45" width="50" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="QcX-lc-tHw">
-                                                <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="uIP-9s-NHB">
-                                                    <real key="minimum" value="16"/>
-                                                    <real key="maximum" value="3840"/>
-                                                </numberFormatter>
+                                                <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" id="uIP-9s-NHB"/>
                                                 <font key="font" metaFont="message" size="11"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                             <connections>
-                                                <binding destination="fbh-bR-HaP" name="value" keyPath="selection.clapSizeWidth" id="Q4q-xl-4f5">
+                                                <binding destination="fbh-bR-HaP" name="value" keyPath="selection.clapSizeWidth" id="RyQ-XT-LAT">
                                                     <dictionary key="options">
                                                         <bool key="NSContinuouslyUpdatesValue" value="YES"/>
+                                                        <bool key="NSValidatesImmediately" value="YES"/>
                                                     </dictionary>
                                                 </binding>
                                                 <binding destination="TLA-uc-e5w" name="enabled" keyPath="values.modClapPasp" id="55J-ew-a14"/>
@@ -1127,18 +1125,16 @@ Audio size = 0 KiB
                                             <rect key="frame" x="201" y="45" width="50" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="70P-rc-OfY">
-                                                <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="ySu-y8-Cev">
-                                                    <real key="minimum" value="16"/>
-                                                    <real key="maximum" value="2160"/>
-                                                </numberFormatter>
+                                                <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" id="ySu-y8-Cev"/>
                                                 <font key="font" metaFont="message" size="11"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                             <connections>
-                                                <binding destination="fbh-bR-HaP" name="value" keyPath="selection.clapSizeHeight" id="3V8-6v-706">
+                                                <binding destination="fbh-bR-HaP" name="value" keyPath="selection.clapSizeHeight" id="d2A-QE-2tb">
                                                     <dictionary key="options">
                                                         <bool key="NSContinuouslyUpdatesValue" value="YES"/>
+                                                        <bool key="NSValidatesImmediately" value="YES"/>
                                                     </dictionary>
                                                 </binding>
                                                 <binding destination="TLA-uc-e5w" name="enabled" keyPath="values.modClapPasp" id="q9m-f8-zzh"/>
@@ -1158,18 +1154,16 @@ Audio size = 0 KiB
                                             <rect key="frame" x="86" y="18" width="40" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="JxE-5d-DBr">
-                                                <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="wTA-YS-M0S">
-                                                    <real key="minimum" value="-32"/>
-                                                    <real key="maximum" value="32"/>
-                                                </numberFormatter>
+                                                <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" id="wTA-YS-M0S"/>
                                                 <font key="font" metaFont="message" size="11"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                             <connections>
-                                                <binding destination="fbh-bR-HaP" name="value" keyPath="selection.clapOffsetX" id="f3O-2S-4XZ">
+                                                <binding destination="fbh-bR-HaP" name="value" keyPath="selection.clapOffsetX" id="Ew7-oU-xGm">
                                                     <dictionary key="options">
                                                         <bool key="NSContinuouslyUpdatesValue" value="YES"/>
+                                                        <bool key="NSValidatesImmediately" value="YES"/>
                                                     </dictionary>
                                                 </binding>
                                                 <binding destination="TLA-uc-e5w" name="enabled" keyPath="values.modClapPasp" id="pJj-tu-KpR"/>
@@ -1180,18 +1174,16 @@ Audio size = 0 KiB
                                             <rect key="frame" x="201" y="18" width="40" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="yfz-2o-az1">
-                                                <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="niP-oE-9a4">
-                                                    <real key="minimum" value="-32"/>
-                                                    <real key="maximum" value="32"/>
-                                                </numberFormatter>
+                                                <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" id="niP-oE-9a4"/>
                                                 <font key="font" metaFont="message" size="11"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                             <connections>
-                                                <binding destination="fbh-bR-HaP" name="value" keyPath="selection.clapOffsetY" id="Ewd-EU-cyu">
+                                                <binding destination="fbh-bR-HaP" name="value" keyPath="selection.clapOffsetY" id="yto-mD-9V8">
                                                     <dictionary key="options">
                                                         <bool key="NSContinuouslyUpdatesValue" value="YES"/>
+                                                        <bool key="NSValidatesImmediately" value="YES"/>
                                                     </dictionary>
                                                 </binding>
                                                 <binding destination="TLA-uc-e5w" name="enabled" keyPath="values.modClapPasp" id="VzY-yO-Sif"/>
@@ -1202,9 +1194,9 @@ Audio size = 0 KiB
                                 </view>
                             </box>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ypw-cj-Yzp">
-                                <rect key="frame" x="407" y="13" width="59" height="32"/>
+                                <rect key="frame" x="381" y="13" width="85" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="ZuI-nQ-kvm">
+                                <buttonCell key="cell" type="push" title="Update" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="ZuI-nQ-kvm">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                     <string key="keyEquivalent" base64-UTF8="YES">
@@ -1214,10 +1206,18 @@ DQ
                                 <connections>
                                     <action selector="ok:" target="UYa-fX-YNM" id="5r8-rf-N31"/>
                                     <binding destination="fbh-bR-HaP" name="enabled" keyPath="selection.valid" id="3Ht-xl-XwZ"/>
+                                    <binding destination="TLA-uc-e5w" name="enabled2" keyPath="values.modClapPasp" previousBinding="3Ht-xl-XwZ" id="SEe-3y-R5x">
+                                        <dictionary key="options">
+                                            <integer key="NSMultipleValuesPlaceholder" value="-1"/>
+                                            <integer key="NSNoSelectionPlaceholder" value="-1"/>
+                                            <integer key="NSNotApplicablePlaceholder" value="-1"/>
+                                            <integer key="NSNullPlaceholder" value="-1"/>
+                                        </dictionary>
+                                    </binding>
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mf3-S5-DoY">
-                                <rect key="frame" x="325" y="13" width="82" height="32"/>
+                                <rect key="frame" x="299" y="13" width="82" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Dur-pN-kyE">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -1231,9 +1231,9 @@ Gw
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="R8L-XR-QhW">
-                                <rect key="frame" x="18" y="22" width="121" height="18"/>
+                                <rect key="frame" x="18" y="22" width="89" height="18"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <buttonCell key="cell" type="check" title="Modify Aperture" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="5YC-fa-cf7">
+                                <buttonCell key="cell" type="check" title="Edit Values" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="5YC-fa-cf7">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
@@ -1243,9 +1243,9 @@ Gw
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Gu6-p8-T9b">
-                                <rect key="frame" x="187" y="13" width="138" height="32"/>
+                                <rect key="frame" x="161" y="13" width="139" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <buttonCell key="cell" type="push" title="Reset to current" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="bD6-E8-c3O">
+                                <buttonCell key="cell" type="push" title="Reset to original" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="bD6-E8-c3O">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
@@ -1359,18 +1359,16 @@ Gw
                                             <rect key="frame" x="86" y="18" width="40" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="zK5-lU-LiQ">
-                                                <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="o8X-bm-616">
-                                                    <real key="minimum" value="1"/>
-                                                    <real key="maximum" value="3840"/>
-                                                </numberFormatter>
+                                                <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="o8X-bm-616"/>
                                                 <font key="font" metaFont="message" size="11"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                             <connections>
-                                                <binding destination="fbh-bR-HaP" name="value" keyPath="selection.paspRatioWidth" id="7QV-3d-tq9">
+                                                <binding destination="fbh-bR-HaP" name="value" keyPath="selection.paspRatioWidth" id="gUc-rD-Gct">
                                                     <dictionary key="options">
                                                         <bool key="NSContinuouslyUpdatesValue" value="YES"/>
+                                                        <bool key="NSValidatesImmediately" value="YES"/>
                                                     </dictionary>
                                                 </binding>
                                                 <binding destination="TLA-uc-e5w" name="enabled" keyPath="values.modClapPasp" id="cRX-fj-N5k"/>
@@ -1381,18 +1379,16 @@ Gw
                                             <rect key="frame" x="201" y="18" width="40" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="I9B-KZ-Gqs">
-                                                <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="RDM-vd-iLs">
-                                                    <real key="minimum" value="1"/>
-                                                    <real key="maximum" value="2160"/>
-                                                </numberFormatter>
+                                                <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="RDM-vd-iLs"/>
                                                 <font key="font" metaFont="message" size="11"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                             <connections>
-                                                <binding destination="fbh-bR-HaP" name="value" keyPath="selection.paspRatioHeight" id="lLK-Q4-s4T">
+                                                <binding destination="fbh-bR-HaP" name="value" keyPath="selection.paspRatioHeight" id="mke-r6-nOr">
                                                     <dictionary key="options">
                                                         <bool key="NSContinuouslyUpdatesValue" value="YES"/>
+                                                        <bool key="NSValidatesImmediately" value="YES"/>
                                                     </dictionary>
                                                 </binding>
                                                 <binding destination="TLA-uc-e5w" name="enabled" keyPath="values.modClapPasp" id="WTs-h2-sR5"/>
@@ -1674,7 +1670,7 @@ Gw
                                         </view>
                                     </tabViewItem>
                                     <tabViewItem label="4" identifier="" id="5jA-k0-Rfw">
-                                        <view key="view" ambiguous="YES" id="ogd-yp-Hq7">
+                                        <view key="view" id="ogd-yp-Hq7">
                                             <rect key="frame" x="10" y="7" width="303" height="229"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>

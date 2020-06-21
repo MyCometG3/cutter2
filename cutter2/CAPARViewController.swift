@@ -69,6 +69,11 @@ class CAPARViewController: NSViewController {
         self.parentWindow = parent
         guard let sheet = self.view.window else { return }
         parent.beginSheet(sheet, completionHandler: handler)
+        
+        NotificationCenter.default.addObserver(forName: NSControl.textDidChangeNotification,
+                                               object: nil, queue: nil) { (notification) in
+                                                self.controlTextDidChange(notification)
+        }
     }
     
     //
@@ -77,6 +82,8 @@ class CAPARViewController: NSViewController {
         guard let parent = self.parentWindow else { return }
         guard let sheet = self.view.window else { return }
         parent.endSheet(sheet, returnCode: response)
+        
+        NotificationCenter.default.removeObserver(self)
     }
 
     /* ============================================ */
@@ -134,8 +141,10 @@ class CAPARViewController: NSViewController {
     func controlTextDidChange(_ obj: Notification) {
         // Swift.print(#function, #line, #file)
         
-        self.updateStruct()
-        self.updateLabels(self)
+        DispatchQueue.main.async{
+            self.updateStruct()
+            self.updateLabels(self)
+        }
     }
     
     /* ============================================ */
@@ -179,30 +188,40 @@ class CAPARViewController: NSViewController {
         // Swift.print(#function, #line, #file)
         
         let content : NSMutableDictionary = objectController.content as! NSMutableDictionary
-        var result : Bool = true
-        
-        // Check clapSize
+        var valid : Bool = true
         let encSize : NSSize = content[dimensionsKey] as! NSSize
-        let size : NSSize = content[clapSizeKey] as! NSSize
-        if size.width.isNaN || size.height.isNaN { result = false }
-        if !(size.width <= encSize.width && size.height <= encSize.height) { result = false }
+        let clapSize : NSSize = content[clapSizeKey] as! NSSize
+        let clapOffset : NSPoint = content[clapOffsetKey] as! NSPoint
+        let pasp = content[paspRatioKey] as! NSSize
         
-        // Check clapOffset
-        let offset : NSPoint = content[clapOffsetKey] as! NSPoint
-        if offset.x.isNaN || offset.y.isNaN { result = false }
-        let checkX : Bool = abs(offset.x) <= (encSize.width - size.width) / 2.0
-        let checkY : Bool = abs(offset.y) <= (encSize.height - size.height) / 2.0
-        if !(checkX && checkY) { result = false }
-        
-        // Check paspRatio
-        let par = content[paspRatioKey] as! NSSize
-        if par.width.isNaN || par.height.isNaN { result = false }
-        let ratio : CGFloat = (par.width / par.height)
-        if ratio > 3.0 || ratio < (1.0/3.0) { result = false }
+        if valid {
+            // Check NaN
+            let clapSizeNan:Bool = clapSize.width.isNaN || clapSize.height.isNaN
+            let clapOffsetNan:Bool = clapOffset.x.isNaN || clapOffset.y.isNaN
+            let paspNan:Bool = pasp.width.isNaN || pasp.height.isNaN
+            valid = !(clapSizeNan || clapOffsetNan || paspNan)
+        }
+        if valid {
+            // Check clapSize
+            let checkWidth:Bool = clapSize.width <= encSize.width
+            let checkHeight:Bool = clapSize.height <= encSize.height
+            let clapSizeValid:Bool = (checkWidth && checkHeight)
+            
+            // Check clapOffset
+            let checkX : Bool = abs(clapOffset.x) <= (encSize.width - clapSize.width) / 2.0
+            let checkY : Bool = abs(clapOffset.y) <= (encSize.height - clapSize.height) / 2.0
+            let clapOffsetValid:Bool = (checkX && checkY)
+            
+            // Check paspRatio
+            let ratio : CGFloat = (pasp.width / pasp.height)
+            let paspValid:Bool =  0.25 < ratio && ratio < 4.0
+            
+            valid = clapSizeValid && clapOffsetValid && paspValid
+        }
         
         // Trigger KVO
-        content[validKey] = result
-        return result
+        content[validKey] = valid
+        return valid
     }
     
     // Update label strings according to Struct values

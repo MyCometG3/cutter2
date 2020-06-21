@@ -433,7 +433,7 @@ DQ
         <scene sceneID="iRa-Xn-JCX">
             <objects>
                 <viewController storyboardIdentifier="Accessory View Controller" id="OzP-JU-yzb" customClass="AccessoryViewController" customModule="cutter2" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" misplaced="YES" id="UOp-mP-HVY">
+                    <view key="view" id="UOp-mP-HVY">
                         <rect key="frame" x="0.0" y="0.0" width="398" height="65"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
@@ -1416,7 +1416,7 @@ Gw
                 </viewController>
                 <customObject id="E0F-oI-Sps" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
                 <userDefaultsController id="TLA-uc-e5w"/>
-                <objectController automaticallyPreparesContent="YES" id="fbh-bR-HaP" customClass="CAPARContent" customModule="cutter2" customModuleProvider="target">
+                <objectController automaticallyPreparesContent="YES" id="fbh-bR-HaP">
                     <declaredKeys>
                         <string>labelEncoded</string>
                         <string>labelClean</string>

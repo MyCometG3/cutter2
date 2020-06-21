@@ -110,8 +110,6 @@ class CAPARViewController: NSViewController {
         // Swift.print(#function, #line, #file)
         
         loadSourceSettings()
-        
-        //dump()
     }
     
     // update ObjectController.content according to checkBox state
@@ -119,22 +117,22 @@ class CAPARViewController: NSViewController {
         // Swift.print(#function, #line, #file)
 
         let def : UserDefaults = UserDefaults.standard
-        
-        if #available(OSX 10.13, *) {
-            // AVMutableMovieTrack.replaceFormatDescription(_:with:) is supported
-        } else {
-            NSSound.beep()
-            def.set(false, forKey: modClapPaspKey)
+        var customFlag = def.bool(forKey: modClapPaspKey)
+
+        if customFlag {
+            if #available(OSX 10.13, *) {
+                // Supported: AVMutableMovieTrack.replaceFormatDescription(_:with:)
+            } else {
+                customFlag = false
+                def.set(customFlag, forKey: modClapPaspKey)
+            }
         }
         
-        let customFlag = def.bool(forKey: modClapPaspKey)
         if customFlag {
             loadLastSettings()
         } else {
             loadSourceSettings()
         }
-        
-        //dump()
     }
     
     // NSControl - Control Editing Notification
@@ -150,38 +148,6 @@ class CAPARViewController: NSViewController {
     /* ============================================ */
     // MARK: - synchronize
     /* ============================================ */
-    
-    //
-    private func dump() {
-        // Swift.print(#function, #line, #file)
-        
-        let content : NSMutableDictionary = objectController.content as! NSMutableDictionary
-        Swift.print("#####", content)
-    }
-    
-    // Update CGFloat Values according to Struct Values
-    private func updateFloat() {
-        // Swift.print(#function, #line, #file)
-        
-        let content : NSMutableDictionary = objectController.content as! NSMutableDictionary
-        
-        // NSSize/NSPoint -> CGFloat values
-        do {
-            let size = content[clapSizeKey] as! CGSize
-            content[clapSizeWidthKey] = size.width
-            content[clapSizeHeightKey] = size.height
-        }
-        do {
-            let point = content[clapOffsetKey] as! CGPoint
-            content[clapOffsetXKey] = point.x
-            content[clapOffsetYKey] = point.y
-        }
-        do {
-            let size = content[paspRatioKey] as! CGSize
-            content[paspRatioWidthKey] = size.width
-            content[paspRatioHeightKey] = size.height
-        }
-    }
     
     // Validate ObjectController.content values
     private func validate() -> Bool {
@@ -222,6 +188,30 @@ class CAPARViewController: NSViewController {
         // Trigger KVO
         content[validKey] = valid
         return valid
+    }
+    
+    // Update CGFloat Values according to Struct Values
+    private func updateFloat() {
+        // Swift.print(#function, #line, #file)
+        
+        let content : NSMutableDictionary = objectController.content as! NSMutableDictionary
+        
+        // NSSize/NSPoint -> CGFloat values
+        do {
+            let size = content[clapSizeKey] as! CGSize
+            content[clapSizeWidthKey] = size.width
+            content[clapSizeHeightKey] = size.height
+        }
+        do {
+            let point = content[clapOffsetKey] as! CGPoint
+            content[clapOffsetXKey] = point.x
+            content[clapOffsetYKey] = point.y
+        }
+        do {
+            let size = content[paspRatioKey] as! CGSize
+            content[paspRatioWidthKey] = size.width
+            content[paspRatioHeightKey] = size.height
+        }
     }
     
     // Update label strings according to Struct values
@@ -291,19 +281,22 @@ class CAPARViewController: NSViewController {
     public func applySource(_ dict : [AnyHashable : Any]) -> Bool {
         // Swift.print(#function, #line, #file)
         
-        guard let _ = dict[dimensionsKey] else { return false }
-        guard let _ = dict[clapSizeKey] else { return false }
-        guard let _ = dict[clapOffsetKey] else { return false }
-        guard let _ = dict[paspRatioKey] else { return false }
+        guard checkDict(dict) else { NSSound.beep(); return false}
         
         // 4 Keys for source video
         initialContent = dict
         
-        //
-        loadSourceSettings()
-        
         // Clear result
         resultContent = [:]
+        
+        return true
+    }
+    
+    private func checkDict(_ dict : [AnyHashable : Any]) -> Bool {
+        guard dict[dimensionsKey] != nil else { return false }
+        guard dict[clapSizeKey] != nil else { return false }
+        guard dict[clapOffsetKey] != nil else { return false }
+        guard dict[paspRatioKey] != nil else { return false }
         
         return true
     }
@@ -316,7 +309,7 @@ class CAPARViewController: NSViewController {
     private func loadSourceSettings() {
         // Swift.print(#function, #line, #file)
         
-        guard initialContent.count > 0 else { NSSound.beep(); return }
+        guard checkDict(initialContent) else { NSSound.beep(); return }
         
         objectController.content = NSMutableDictionary.init(dictionary: initialContent,
                                                             copyItems: true)
@@ -364,21 +357,25 @@ class CAPARViewController: NSViewController {
         self.updateStruct()
         
         //
-        guard let dict = objectController.content as? NSMutableDictionary else { NSSound.beep(); return }
-        guard let clapOffset = dict[clapOffsetKey] as? NSPoint else { return }
-        guard let clapSize = dict[clapSizeKey] as? NSSize else { return }
-        guard let paspRatio = dict[paspRatioKey] as? NSSize else { return }
-        guard let dimensions = dict[dimensionsKey] as? NSSize else { return }
+        let dict = objectController.content as? [AnyHashable : Any]
+        if let dict = dict, checkDict(dict) {
+            let clapOffset = dict[clapOffsetKey] as! NSPoint
+            let clapSize = dict[clapSizeKey] as! NSSize
+            let paspRatio = dict[paspRatioKey] as! NSSize
+            let dimensions = dict[dimensionsKey] as! NSSize
 
-        def.set(NSStringFromSize(clapSize), forKey: clapSizeKey)
-        def.set(NSStringFromPoint(clapOffset), forKey: clapOffsetKey)
-        def.set(NSStringFromSize(paspRatio), forKey: paspRatioKey)
-        def.set(NSStringFromSize(dimensions), forKey: dimensionsKey)
-        
-        // Fill resultContent
-        resultContent[clapSizeKey] = clapSize
-        resultContent[clapOffsetKey] = clapOffset
-        resultContent[paspRatioKey] = paspRatio
-        resultContent[dimensionsKey] = dimensions
+            def.set(NSStringFromSize(clapSize), forKey: clapSizeKey)
+            def.set(NSStringFromPoint(clapOffset), forKey: clapOffsetKey)
+            def.set(NSStringFromSize(paspRatio), forKey: paspRatioKey)
+            def.set(NSStringFromSize(dimensions), forKey: dimensionsKey)
+            
+            // Fill resultContent
+            resultContent[clapSizeKey] = clapSize
+            resultContent[clapOffsetKey] = clapOffset
+            resultContent[paspRatioKey] = paspRatio
+            resultContent[dimensionsKey] = dimensions
+        } else {
+            NSSound.beep(); return
+        }
     }
 }

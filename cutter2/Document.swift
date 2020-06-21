@@ -357,7 +357,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print(#function, #line, #file)
         guard let mutator = self.movieMutator else { return }
         
-        var fileType : AVFileType = AVFileType.init(rawValue: typeName)
+        let fileType : AVFileType = AVFileType.init(rawValue: typeName)
         
         // Swift.print("##### WRITE STARTED #####")
         showBusySheet("Writing...", "Please hold on second(s)...")

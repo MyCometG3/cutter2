@@ -149,6 +149,12 @@ class CAPARViewController: NSViewController {
     // MARK: - synchronize
     /* ============================================ */
     
+    @IBOutlet weak var encodedPixelLabel: NSTextField!
+    private func updateTextColor(for valid:Bool) {
+        let color : NSColor = (valid ? NSColor.labelColor : NSColor.systemRed)
+        encodedPixelLabel.textColor = color
+    }
+    
     // Validate ObjectController.content values
     private func validate() -> Bool {
         // Swift.print(#function, #line, #file)
@@ -160,6 +166,14 @@ class CAPARViewController: NSViewController {
         let clapOffset : NSPoint = content[clapOffsetKey] as! NSPoint
         let pasp = content[paspRatioKey] as! NSSize
         
+        do {
+            // Verify dimension is not changed
+            let encSizeSrc : NSSize = initialContent[dimensionsKey] as! NSSize
+            let encSizeNew : NSSize = encSize
+            
+            valid = encSizeSrc.equalTo(encSizeNew)
+            updateTextColor(for: valid)
+        }
         if valid {
             // Check NaN
             let clapSizeNan:Bool = clapSize.width.isNaN || clapSize.height.isNaN

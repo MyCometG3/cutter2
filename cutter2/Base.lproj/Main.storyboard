@@ -1410,6 +1410,7 @@ Gw
                         </subviews>
                     </view>
                     <connections>
+                        <outlet property="encodedPixelLabel" destination="hyA-4r-hKr" id="JNn-HN-qSg"/>
                         <outlet property="objectController" destination="fbh-bR-HaP" id="yk3-sw-Ttf"/>
                     </connections>
                 </viewController>

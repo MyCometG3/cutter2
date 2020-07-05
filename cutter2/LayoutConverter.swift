@@ -89,10 +89,11 @@ class LayoutConverter {
                 p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: count)
             ptr.pointee.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions
             ptr.pointee.mNumberChannelDescriptions = UInt32(acDescCount)
-            let descPtr = MutableDescriptionsPtr(start: &(ptr.pointee.mChannelDescriptions),
-                                         count: acDescCount)
-            for index in stride(from: 0, to: acDescCount, by: 1) {
-                descPtr[index] = array[index]
+            withUnsafeMutablePointer(to: &(ptr.pointee.mChannelDescriptions)) {offset in
+                let descPtr = MutableDescriptionsPtr(start: offset, count: acDescCount)
+                for index in 0..<acDescCount {
+                    descPtr[index] = array[index]
+                }
             }
         })
         return aclData
@@ -238,11 +239,13 @@ class LayoutConverter {
                                                      kAudioChannelLabel_UseCoordinates]
             let acDescCount = Int(layout.mNumberChannelDescriptions)
             var acLayout = layout
-            let acDescPtr = MutableDescriptionsPtr(start: &(acLayout.mChannelDescriptions), count: acDescCount)
-            for desc in acDescPtr {
-                let label : AudioChannelLabel = desc.mChannelLabel
-                if false == unsupported.contains(label) {
-                    pos.insert(label)
+            withUnsafeMutablePointer(to: &(acLayout.mChannelDescriptions)) {offset in
+                let acDescPtr = MutableDescriptionsPtr(start: offset, count: acDescCount)
+                for desc in acDescPtr {
+                    let label : AudioChannelLabel = desc.mChannelLabel
+                    if false == unsupported.contains(label) {
+                        pos.insert(label)
+                    }
                 }
             }
         default:

@@ -500,7 +500,8 @@ extension MovieWriter {
         var dict : CFDictionary? = nil
         do {
             var status : OSStatus = noErr
-            var spec : NSMutableDictionary? = nil
+            let spec : NSMutableDictionary? = nil
+            //var spec : NSMutableDictionary? = nil
             //spec = NSMutableDictionary()
             //spec![kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder] = false
             var decompSession : VTDecompressionSession? = nil

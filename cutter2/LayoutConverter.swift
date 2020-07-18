@@ -372,9 +372,16 @@ class LayoutConverter {
             // needs to be ORed with the actual number of channels
                 
             //case kAudioChannelLayoutTag_Unknown:        pos = [??]
-                // needs to be ORed with the actual number of channels
+            // needs to be ORed with the actual number of channels
 
             default:
+                // Fallback into numbered discrete channels
+                let discrete:AudioChannelLabel = kAudioChannelLabel_Discrete_0
+                let numChannels:UInt32 = layout.mChannelLayoutTag & 0x0000FFFF
+                for id:AudioChannelLabel in 0..<numChannels {
+                    let label:AudioChannelLabel = (discrete | id)
+                    pos.insert(label)
+                }
                 break
             }
         }
@@ -557,9 +564,16 @@ class LayoutConverter {
             
         //kAudioChannelLayoutTag_DiscreteInOrder
         // needs to be ORed with the actual number of channels
-
-        default:                        return kAudioChannelLayoutTag_Unknown
+            
+        //kAudioChannelLayoutTag_Unknown
         // needs to be ORed with the actual number of channels
+
+        default:
+            // Fallback into numbered discrete channels
+            let discrete = kAudioChannelLayoutTag_DiscreteInOrder
+            let numChannels = AudioChannelLayoutTag(pos.count) // The actual number of channels
+            let tag:AudioChannelLayoutTag = (discrete | numChannels)
+            return tag
         }
     }
     

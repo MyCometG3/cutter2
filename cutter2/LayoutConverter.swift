@@ -123,11 +123,11 @@ class LayoutConverter {
             pos = channelLabelSet(ptr)
         })
         var tag : AudioChannelLayoutTag = channelLayoutTagAACForChannelLabelSet(pos, true)
-        if tag == kAudioChannelLayoutTag_Unknown {
+        if (tag & 0xFFFF0000) == kAudioChannelLayoutTag_Unknown {
             let tag1 = channelLayoutTagAACForChannelLabelSet(pos, false)
             tag = tag1
         }
-        if tag != kAudioChannelLayoutTag_Unknown {
+        if (tag & 0xFFFF0000) != kAudioChannelLayoutTag_Unknown {
             let data = dataFor(tag: tag)
             return data
         } else {
@@ -148,7 +148,7 @@ class LayoutConverter {
             pos = channelLabelSet(ptr)
         })
         let tag : AudioChannelLayoutTag = channelLayoutTagLPCMForChannelLabelSet(pos)
-        if tag != kAudioChannelLayoutTag_Unknown {
+        if (tag & 0xFFFF0000) != kAudioChannelLayoutTag_Unknown {
             let data = dataFor(tag: tag)
             return data
         } else {
@@ -409,7 +409,11 @@ class LayoutConverter {
             break
         }
         if strict {
-            return kAudioChannelLayoutTag_Unknown
+            // Incompatible w/ AAC
+            let unknown = kAudioChannelLayoutTag_Unknown
+            let numChannels = AudioChannelLayoutTag(pos.count) // The actual number of channels
+            let tag:AudioChannelLayoutTag = (unknown | numChannels)
+            return tag
         } else {
             return channelLayoutTagAACForChannelLabelSetFallback(pos)
         }
@@ -439,13 +443,11 @@ class LayoutConverter {
         case [1,2,5,6,3,7,8]:           return kAudioChannelLayoutTag_AAC_Octagonal // horizontal
         
         default:
-            let verticalSet = Set<AudioChannelLabel>(12...18)
-            let hasVertical : Bool = (pos.intersection(verticalSet).count > 0)
-            if hasVertical {
-                return kAudioChannelLayoutTag_AAC_7_1_C // vertical
-            } else {
-                return kAudioChannelLayoutTag_AAC_Octagonal // horizontal
-            }
+            // Incompatible w/ AAC
+            let unknown = kAudioChannelLayoutTag_Unknown
+            let numChannels = AudioChannelLayoutTag(pos.count) // The actual number of channels
+            let tag:AudioChannelLayoutTag = (unknown | numChannels)
+            return tag
         }
     }
     

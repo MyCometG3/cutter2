@@ -214,24 +214,30 @@ class LayoutConverter {
         case kAudioChannelLayoutTag_UseChannelBitmap:
             // translate ChannelBitmap to AudioChannelLabel Set
             let bitmap : AudioChannelBitmap = layout.mChannelBitmap
-            if bitmap.contains(.bit_Left)                   { pos.insert(1) }
-            if bitmap.contains(.bit_Right)                  { pos.insert(2) }
-            if bitmap.contains(.bit_Center)                 { pos.insert(3) }
-            if bitmap.contains(.bit_LFEScreen)              { pos.insert(4) }
-            if bitmap.contains(.bit_LeftSurround)           { pos.insert(5) }
-            if bitmap.contains(.bit_RightSurround)          { pos.insert(6) }
-            if bitmap.contains(.bit_LeftCenter)             { pos.insert(7) }
-            if bitmap.contains(.bit_RightCenter)            { pos.insert(8) }
-            if bitmap.contains(.bit_CenterSurround)         { pos.insert(9) }
-            if bitmap.contains(.bit_LeftSurroundDirect)     { pos.insert(10) }
-            if bitmap.contains(.bit_RightSurroundDirect)    { pos.insert(11) }
-            if bitmap.contains(.bit_TopCenterSurround)      { pos.insert(12) }
-            if bitmap.contains(.bit_VerticalHeightLeft)     { pos.insert(13) }
-            if bitmap.contains(.bit_VerticalHeightCenter)   { pos.insert(14) }
-            if bitmap.contains(.bit_VerticalHeightRight)    { pos.insert(15) }
-            if bitmap.contains(.bit_TopBackLeft)            { pos.insert(16) }
-            if bitmap.contains(.bit_TopBackCenter)          { pos.insert(17) }
-            if bitmap.contains(.bit_TopBackRight)           { pos.insert(18) }
+            if bitmap.contains(.bit_Left)                   { pos.insert(kAudioChannelLabel_Left) }
+            if bitmap.contains(.bit_Right)                  { pos.insert(kAudioChannelLabel_Right) }
+            if bitmap.contains(.bit_Center)                 { pos.insert(kAudioChannelLabel_Center) }
+            if bitmap.contains(.bit_LFEScreen)              { pos.insert(kAudioChannelLabel_LFEScreen) }
+            if bitmap.contains(.bit_LeftSurround)           { pos.insert(kAudioChannelLabel_LeftSurround) }
+            if bitmap.contains(.bit_RightSurround)          { pos.insert(kAudioChannelLabel_RightSurround) }
+            if bitmap.contains(.bit_LeftCenter)             { pos.insert(kAudioChannelLabel_LeftCenter) }
+            if bitmap.contains(.bit_RightCenter)            { pos.insert(kAudioChannelLabel_RightCenter) }
+            if bitmap.contains(.bit_CenterSurround)         { pos.insert(kAudioChannelLabel_CenterSurround) }
+            if bitmap.contains(.bit_LeftSurroundDirect)     { pos.insert(kAudioChannelLabel_LeftSurroundDirect) }
+            if bitmap.contains(.bit_RightSurroundDirect)    { pos.insert(kAudioChannelLabel_RightSurroundDirect) }
+            if bitmap.contains(.bit_TopCenterSurround)      { pos.insert(kAudioChannelLabel_TopCenterSurround) }
+            if bitmap.contains(.bit_VerticalHeightLeft)     { pos.insert(kAudioChannelLabel_VerticalHeightLeft) }
+            if bitmap.contains(.bit_VerticalHeightCenter)   { pos.insert(kAudioChannelLabel_VerticalHeightCenter) }
+            if bitmap.contains(.bit_VerticalHeightRight)    { pos.insert(kAudioChannelLabel_VerticalHeightRight) }
+            if bitmap.contains(.bit_TopBackLeft)            { pos.insert(kAudioChannelLabel_TopBackLeft) }
+            if bitmap.contains(.bit_TopBackCenter)          { pos.insert(kAudioChannelLabel_TopBackCenter) }
+            if bitmap.contains(.bit_TopBackRight)           { pos.insert(kAudioChannelLabel_TopBackRight) }
+            
+            if bitmap.contains(.bit_LeftTopMiddle)          { pos.insert(kAudioChannelLabel_LeftTopMiddle) }
+            if bitmap.contains(.bit_RightTopMiddle)         { pos.insert(kAudioChannelLabel_RightTopMiddle) }
+            if bitmap.contains(.bit_LeftTopRear)            { pos.insert(kAudioChannelLabel_LeftTopRear) }
+            if bitmap.contains(.bit_CenterTopRear)          { pos.insert(kAudioChannelLabel_CenterTopRear) }
+            if bitmap.contains(.bit_RightTopRear)           { pos.insert(kAudioChannelLabel_RightTopRear) }
         case kAudioChannelLayoutTag_UseChannelDescriptions:
             // translate Channel Description(s) to AudioChannelLabel Set
             let unsupported : [AudioChannelLabel] = [kAudioChannelLabel_Unused,
@@ -257,7 +263,7 @@ class LayoutConverter {
             case kAudioChannelLayoutTag_MatrixStereo:   pos = [38,39]
             case kAudioChannelLayoutTag_MidSide:        pos = [204,205]
             case kAudioChannelLayoutTag_XY:             pos = [206,207]
-            //case kAudioChannelLayoutTag_Binaural:     pos = [xxx,xxx] // not available
+            case kAudioChannelLayoutTag_Binaural:       pos = [208,209]
             case kAudioChannelLayoutTag_Ambisonic_B_Format: pos = [200,201,202,203] // vertical
             case kAudioChannelLayoutTag_Quadraphonic:   pos = [1,2,5,6]
             case kAudioChannelLayoutTag_Pentagonal:     pos = [1,2,5,6,3]
@@ -305,6 +311,11 @@ class LayoutConverter {
             case kAudioChannelLayoutTag_AAC_7_1_C:      pos = [3,1,2,5,6,4,13,15] // vertical
             case kAudioChannelLayoutTag_AAC_Octagonal:  pos = [3,1,2,5,6,33,34,9]
                 
+            //case kAudioChannelLayoutTag_TMH_10_2_std:   pos = [1,2,3,14,10,11,5,6,13,15,35,36,44,9,??,37]
+            //case kAudioChannelLayoutTag_TMH_10_2_full:  pos = [1,2,3,14,10,11,5,6,13,15,35,36,44,9,??,37,7,8,40,??,45]
+            // NOTE: Missing value: LFE1. LFE1 is LFELeft, and LFE2 is LFERight
+            //       Missing value: VI.
+                
             case kAudioChannelLayoutTag_AC3_1_0_1:      pos = [3,4]
             case kAudioChannelLayoutTag_AC3_3_0:        pos = [1,3,2]
             case kAudioChannelLayoutTag_AC3_3_1:        pos = [1,3,2,9]
@@ -341,14 +352,30 @@ class LayoutConverter {
             case kAudioChannelLayoutTag_DTS_8_1_A:      pos = [7,8,1,2,5,6,33,34,4]
             case kAudioChannelLayoutTag_DTS_8_1_B:      pos = [7,3,8,1,2,5,9,6,4]
             case kAudioChannelLayoutTag_DTS_6_1_D:      pos = [3,1,2,5,6,4,9]
+                
+            case kAudioChannelLayoutTag_WAVE_4_0_B:     pos = [1,2,33,34]
+            case kAudioChannelLayoutTag_WAVE_5_0_B:     pos = [1,2,3,33,34]
+            case kAudioChannelLayoutTag_WAVE_5_1_B:     pos = [1,2,3,4,33,34]
+            case kAudioChannelLayoutTag_WAVE_6_1:       pos = [1,2,3,4,9,5,6]
+            case kAudioChannelLayoutTag_WAVE_7_1:       pos = [1,2,3,4,33,34,5,6]
+                
+            //case kAudioChannelLayoutTag_HOA_ACN_SN3D:   pos = [??]
+            // needs to be ORed with the actual number of channels (not the HOA order)
+            //case kAudioChannelLayoutTag_HOA_ACN_N3D:    pos = [??]
+            // needs to be ORed with the actual number of channels (not the HOA order)
+                
+            case kAudioChannelLayoutTag_Atmos_7_1_4:    pos = [1,2,3,4,5,6,33,34,13,15,52,54]
+            case kAudioChannelLayoutTag_Atmos_9_1_6:    pos = [1,2,3,4,5,6,33,34,35,36,13,15,49,51,52,54]
+            case kAudioChannelLayoutTag_Atmos_5_1_2:    pos = [1,2,3,4,5,6,52,54]
+                
+            //case kAudioChannelLayoutTag_DiscreteInOrder:  pos = [??]
+            // needs to be ORed with the actual number of channels
+                
+            //case kAudioChannelLayoutTag_Unknown:        pos = [??]
+                // needs to be ORed with the actual number of channels
 
             default:
                 break
-                // TODO: TMH, HOA_ACN, Discrete
-                // kAudioChannelLayoutTag_DiscreteInOrder          = (147U<<16) | 0,
-                //      needs to be ORed with the actual number of channels
-                // kAudioChannelLayoutTag_Unknown                  = 0xFFFF0000
-                //      needs to be ORed with the actual number of channels
             }
         }
         return pos
@@ -387,6 +414,7 @@ class LayoutConverter {
         case [38,39]:                   return kAudioChannelLayoutTag_Stereo
         case [204,205]:                 return kAudioChannelLayoutTag_Stereo
         case [206,207]:                 return kAudioChannelLayoutTag_Stereo
+        case [208,209]:                 return kAudioChannelLayoutTag_Stereo
         case [200,201,202,203]:         return kAudioChannelLayoutTag_AAC_7_1_C // vertical
         case [1,2,5,6,3,9,35,36]:       return kAudioChannelLayoutTag_AAC_Octagonal // horizontal
         case [1,2,33,34,13,15,16,18]:   return kAudioChannelLayoutTag_AAC_7_1_C // vertical
@@ -423,7 +451,7 @@ class LayoutConverter {
         case [38,39]:                   return kAudioChannelLayoutTag_MatrixStereo
         case [204,205]:                 return kAudioChannelLayoutTag_MidSide
         case [206,207]:                 return kAudioChannelLayoutTag_XY
-        //case [xxx,xxx]:               return kAudioChannelLayoutTag_Binaural // not available
+        case [208,209]:                 return kAudioChannelLayoutTag_Binaural
         case [200,201,202,203]:         return kAudioChannelLayoutTag_Ambisonic_B_Format
         case [1,2,5,6]:                 return kAudioChannelLayoutTag_Quadraphonic
         case [1,2,5,6,3]:               return kAudioChannelLayoutTag_Pentagonal
@@ -458,6 +486,7 @@ class LayoutConverter {
         case [1,2,4,5,6]:               return kAudioChannelLayoutTag_DVD_6
         case [1,2,3,4]:                 return kAudioChannelLayoutTag_DVD_10
         case [1,2,3,4,9]:               return kAudioChannelLayoutTag_DVD_11
+        case [1,2,5,6,4]:               return kAudioChannelLayoutTag_DVD_18
             
         case [1,2,5,6,3,9]:             return kAudioChannelLayoutTag_AudioUnit_6_0
         case [1,2,5,6,3,33,34]:         return kAudioChannelLayoutTag_AudioUnit_7_0
@@ -469,8 +498,68 @@ class LayoutConverter {
         case [3,1,2,5,6,33,34,4]:       return kAudioChannelLayoutTag_AAC_7_1_B
         case [3,1,2,5,6,4,13,15]:       return kAudioChannelLayoutTag_AAC_7_1_C
         case [3,1,2,5,6,33,34,9]:       return kAudioChannelLayoutTag_AAC_Octagonal
+            
+        // kAudioChannelLayoutTag_TMH_10_2_std
+        // kAudioChannelLayoutTag_TMH_10_2_full
+        // NOTE: Missing value: LFE1. LFE1 is LFELeft, and LFE2 is LFERight
+        //       Missing value: VI.
+
+        case [3,4]:                     return kAudioChannelLayoutTag_AC3_1_0_1
+        case [1,3,2]:                   return kAudioChannelLayoutTag_AC3_3_0
+        case [1,3,2,9]:                 return kAudioChannelLayoutTag_AC3_3_1
+        case [1,3,2,4]:                 return kAudioChannelLayoutTag_AC3_3_0_1
+        case [1,2,9,4]:                 return kAudioChannelLayoutTag_AC3_2_1_1
+        case [1,3,2,9,4]:               return kAudioChannelLayoutTag_AC3_3_1_1
+            
+        case [1,3,2,5,6,9]:             return kAudioChannelLayoutTag_EAC_6_0_A
+        case [1,3,2,5,6,33,34]:         return kAudioChannelLayoutTag_EAC_7_0_A
+        case [1,3,2,5,6,4,9]:           return kAudioChannelLayoutTag_EAC3_6_1_A
+        case [1,3,2,5,6,4,12]:          return kAudioChannelLayoutTag_EAC3_6_1_B
+        case [1,3,2,5,6,4,14]:          return kAudioChannelLayoutTag_EAC3_6_1_C
+        case [1,3,2,5,6,4,33,34]:       return kAudioChannelLayoutTag_EAC3_7_1_A
+        case [1,3,2,5,6,4,7,8]:         return kAudioChannelLayoutTag_EAC3_7_1_B
+        case [1,3,2,5,6,4,10,11]:       return kAudioChannelLayoutTag_EAC3_7_1_C
+        case [1,3,2,5,6,4,35,36]:       return kAudioChannelLayoutTag_EAC3_7_1_D
+        case [1,3,2,5,6,4,13,15]:       return kAudioChannelLayoutTag_EAC3_7_1_E
+        case [1,3,2,5,6,4,9,12]:        return kAudioChannelLayoutTag_EAC3_7_1_F
+        case [1,3,2,5,6,4,9,14]:        return kAudioChannelLayoutTag_EAC3_7_1_G
+        case [1,3,2,5,6,4,12,14]:       return kAudioChannelLayoutTag_EAC3_7_1_H
+            
+        case [3,1,2,4]:                 return kAudioChannelLayoutTag_DTS_3_1
+        case [3,1,2,9,4]:               return kAudioChannelLayoutTag_DTS_4_1
+        case [7,8,1,2,5,6]:             return kAudioChannelLayoutTag_DTS_6_0_A
+        case [3,1,2,33,34,12]:          return kAudioChannelLayoutTag_DTS_6_0_B
+        case [3,9,1,2,33,34]:           return kAudioChannelLayoutTag_DTS_6_0_C
+        case [7,8,1,2,5,6,4]:           return kAudioChannelLayoutTag_DTS_6_1_A
+        case [3,1,2,33,34,12,4]:        return kAudioChannelLayoutTag_DTS_6_1_B
+        case [3,9,1,2,33,34,4]:         return kAudioChannelLayoutTag_DTS_6_1_C
+        case [7,3,8,1,2,5,6]:           return kAudioChannelLayoutTag_DTS_7_0
+        case [7,3,8,1,2,5,6,4]:         return kAudioChannelLayoutTag_DTS_7_1
+        case [7,8,1,2,5,6,33,34]:       return kAudioChannelLayoutTag_DTS_8_0_A
+        case [7,3,8,1,2,5,9,6]:         return kAudioChannelLayoutTag_DTS_8_0_B
+        case [7,8,1,2,5,6,33,34,4]:     return kAudioChannelLayoutTag_DTS_8_1_A
+        case [7,3,8,1,2,5,9,6,4]:       return kAudioChannelLayoutTag_DTS_8_1_B
+        case [3,1,2,5,6,4,9]:           return kAudioChannelLayoutTag_DTS_6_1_D
+        case [1,2,33,34]:               return kAudioChannelLayoutTag_WAVE_4_0_B
+        case [1,2,3,33,34]:             return kAudioChannelLayoutTag_WAVE_5_0_B
+        case [1,2,3,4,33,34]:           return kAudioChannelLayoutTag_WAVE_5_1_B
+        case [1,2,3,4,9,5,6]:           return kAudioChannelLayoutTag_WAVE_6_1
+        case [1,2,3,4,33,34,5,6]:       return kAudioChannelLayoutTag_WAVE_7_1
+            
+        // kAudioChannelLayoutTag_HOA_ACN_SN3D
+        // needs to be ORed with the actual number of channels (not the HOA order)
+        // kAudioChannelLayoutTag_HOA_ACN_N3D
+        // needs to be ORed with the actual number of channels (not the HOA order)
+
+        case [1,2,3,4,5,6,33,34,13,15,52,54]:   return kAudioChannelLayoutTag_Atmos_7_1_4
+        case [1,2,3,4,5,6,33,34,35,36,13,15,49,51,52,54]:   return kAudioChannelLayoutTag_Atmos_9_1_6
+        case [1,2,3,4,5,6,52,54]:       return kAudioChannelLayoutTag_Atmos_5_1_2
+            
+        //kAudioChannelLayoutTag_DiscreteInOrder
+        // needs to be ORed with the actual number of channels
 
         default:                        return kAudioChannelLayoutTag_Unknown
+        // needs to be ORed with the actual number of channels
         }
     }
     
@@ -494,6 +583,12 @@ class LayoutConverter {
         if pos.contains(kAudioChannelLabel_TopBackLeft)         {bitmap.insert(.bit_TopBackLeft)}
         if pos.contains(kAudioChannelLabel_TopBackCenter)       {bitmap.insert(.bit_TopBackCenter)}
         if pos.contains(kAudioChannelLabel_TopBackRight)        {bitmap.insert(.bit_TopBackRight)}
+        
+        if pos.contains(kAudioChannelLabel_LeftTopMiddle)       {bitmap.insert(.bit_LeftTopMiddle)}
+        if pos.contains(kAudioChannelLabel_RightTopMiddle)      {bitmap.insert(.bit_RightTopMiddle)}
+        if pos.contains(kAudioChannelLabel_LeftTopRear)         {bitmap.insert(.bit_LeftTopRear)}
+        if pos.contains(kAudioChannelLabel_CenterTopRear)       {bitmap.insert(.bit_CenterTopRear)}
+        if pos.contains(kAudioChannelLabel_RightTopRear)        {bitmap.insert(.bit_RightTopRear)}
         return bitmap
     }
     

@@ -13,9 +13,9 @@ typealias AudioChannelLayoutData = Data
 
 /// LayoutConverter uses AudioChannelLabel as primary channel position.
 class LayoutConverter {
-    typealias LayoutPtr = UnsafePointer<AudioChannelLayout>
-    typealias MutableLayoutPtr = UnsafeMutablePointer<AudioChannelLayout>
-    typealias MutableDescriptionsPtr = UnsafeMutableBufferPointer<AudioChannelDescription>
+    private typealias LayoutPtr = UnsafePointer<AudioChannelLayout>
+    private typealias MutableLayoutPtr = UnsafeMutablePointer<AudioChannelLayout>
+    private typealias MutableDescriptionsPtr = UnsafeMutableBufferPointer<AudioChannelDescription>
 
     /* ============================================ */
     // MARK: - public AudioChannelLayoutData

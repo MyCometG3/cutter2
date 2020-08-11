@@ -229,11 +229,16 @@ class LayoutConverter {
             if bitmap.contains(.bit_VerticalHeightLeft)     { pos.insert(kAudioChannelLabel_VerticalHeightLeft) }
             if bitmap.contains(.bit_VerticalHeightCenter)   { pos.insert(kAudioChannelLabel_VerticalHeightCenter) }
             if bitmap.contains(.bit_VerticalHeightRight)    { pos.insert(kAudioChannelLabel_VerticalHeightRight) }
+            
             if bitmap.contains(.bit_TopBackLeft)            { pos.insert(kAudioChannelLabel_TopBackLeft) }
             if bitmap.contains(.bit_TopBackCenter)          { pos.insert(kAudioChannelLabel_TopBackCenter) }
             if bitmap.contains(.bit_TopBackRight)           { pos.insert(kAudioChannelLabel_TopBackRight) }
             
+            if bitmap.contains(.bit_LeftTopFront)           { pos.insert(kAudioChannelLabel_LeftTopFront) }
+            if bitmap.contains(.bit_CenterTopFront)         { pos.insert(kAudioChannelLabel_CenterTopFront) }
+            if bitmap.contains(.bit_RightTopFront)          { pos.insert(kAudioChannelLabel_RightTopFront) }
             if bitmap.contains(.bit_LeftTopMiddle)          { pos.insert(kAudioChannelLabel_LeftTopMiddle) }
+            if bitmap.contains(.bit_CenterTopMiddle)        { pos.insert(kAudioChannelLabel_CenterTopMiddle) }
             if bitmap.contains(.bit_RightTopMiddle)         { pos.insert(kAudioChannelLabel_RightTopMiddle) }
             if bitmap.contains(.bit_LeftTopRear)            { pos.insert(kAudioChannelLabel_LeftTopRear) }
             if bitmap.contains(.bit_CenterTopRear)          { pos.insert(kAudioChannelLabel_CenterTopRear) }
@@ -596,11 +601,16 @@ class LayoutConverter {
         if pos.contains(kAudioChannelLabel_VerticalHeightLeft)  {bitmap.insert(.bit_VerticalHeightLeft)}
         if pos.contains(kAudioChannelLabel_VerticalHeightCenter)    {bitmap.insert(.bit_VerticalHeightCenter)}
         if pos.contains(kAudioChannelLabel_VerticalHeightRight) {bitmap.insert(.bit_VerticalHeightRight)}
+        
         if pos.contains(kAudioChannelLabel_TopBackLeft)         {bitmap.insert(.bit_TopBackLeft)}
         if pos.contains(kAudioChannelLabel_TopBackCenter)       {bitmap.insert(.bit_TopBackCenter)}
         if pos.contains(kAudioChannelLabel_TopBackRight)        {bitmap.insert(.bit_TopBackRight)}
         
+        if pos.contains(kAudioChannelLabel_LeftTopFront)        {bitmap.insert(.bit_LeftTopFront)}
+        if pos.contains(kAudioChannelLabel_CenterTopFront)      {bitmap.insert(.bit_CenterTopFront)}
+        if pos.contains(kAudioChannelLabel_RightTopFront)       {bitmap.insert(.bit_RightTopFront)}
         if pos.contains(kAudioChannelLabel_LeftTopMiddle)       {bitmap.insert(.bit_LeftTopMiddle)}
+        if pos.contains(kAudioChannelLabel_CenterTopMiddle)     {bitmap.insert(.bit_CenterTopMiddle)}
         if pos.contains(kAudioChannelLabel_RightTopMiddle)      {bitmap.insert(.bit_RightTopMiddle)}
         if pos.contains(kAudioChannelLabel_LeftTopRear)         {bitmap.insert(.bit_LeftTopRear)}
         if pos.contains(kAudioChannelLabel_CenterTopRear)       {bitmap.insert(.bit_CenterTopRear)}

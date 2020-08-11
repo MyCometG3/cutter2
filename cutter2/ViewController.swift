@@ -44,6 +44,7 @@ protocol ViewControllerDelegate : TimelineUpdateDelegate {
     func doMoveLeft(_ optFlag : Bool, _ shiftFlag : Bool, _ resetStart : Bool, _ resetEnd : Bool)
     func doMoveRight(_ optFlag : Bool, _ shiftFlag : Bool, _ resetStart : Bool, _ resetEnd : Bool)
     //
+    func doSetSlow(_ ratio : Float)
     func doSetRate(_ offset : Int)
     func doTogglePlay()
 }
@@ -66,6 +67,12 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     
     // To mimic legacy QT7PlayerPro selectionMarker move sync w/ current
     public var followSelectionMove : Bool = true
+    
+    //
+    public var keyDownJ : Bool = false
+    public var keyDownK : Bool = false
+    public var keyDownL : Bool = false
+    public var acceptAuto : Bool = false
     
     /// delegate to Document (NSDocument subclass)
     public weak var delegate : ViewControllerDelegate? = nil
@@ -294,22 +301,104 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         guard let document = delegate else { return false }
         
         let code : UInt = UInt(event.keyCode)
+        let autoKey : Bool = event.isARepeat
         let mod : UInt = event.modifierFlags.rawValue
         let noMod = (mod & NSEvent.ModifierFlags.deviceIndependentFlagsMask.rawValue) == 0
         guard noMod else { return false }
         
         switch code {
         case 0x26: // J key
-            // Swift.print("#####", "J : backward play / accelarate")
-            document.doSetRate(-1)
+            keyDownJ = true
+            if keyDownJ && keyDownL {
+                if !autoKey {
+                    // Swift.print("#####", "L=>J : pause")
+                    document.doSetRate(0)
+                }
+            }
+            if !keyDownK {
+                if !autoKey {
+                    // Swift.print("#####", "J : backward play / accelarate")
+                    document.doSetRate(-1)
+                }
+            } else {
+                if !autoKey {
+                    // Swift.print("#####", "K=>J : step backward")
+                    document.doStepByCount(-1, false, false)
+                    acceptAuto = true
+                } else {
+                    if acceptAuto {
+                        // Swift.print("#####", "K=>J+ : backward play / slowmotion")
+                        document.doSetSlow(-0.5)
+                        acceptAuto = false
+                    }
+                }
+            }
             return true
         case 0x28 : // K key
-            // Swift.print("#####", "K : pause")
-            document.doSetRate(0)
+            keyDownK = true
+            if keyDownJ && keyDownL {
+                if !autoKey {
+                    // Swift.print("#####", "J/L=>K : pause")
+                    document.doSetRate(0)
+                }
+            }
+            if keyDownJ {
+                if !autoKey {
+                    // Swift.print("#####", "J=>K : pause")
+                    document.doSetRate(0)
+                    acceptAuto = true
+                } else {
+                    if acceptAuto {
+                        // Swift.print("#####", "K=>J+ : backward play / slowmotion")
+                        document.doSetSlow(-0.5)
+                        acceptAuto = false
+                    }
+                }
+            } else if keyDownL {
+                if !autoKey {
+                    // Swift.print("#####", "L=>K : pause")
+                    document.doSetRate(0)
+                    acceptAuto = true
+                } else {
+                    if acceptAuto {
+                        // Swift.print("#####", "K=>L+ : forward play / slowmotion")
+                        document.doSetSlow(+0.5)
+                        acceptAuto = false
+                    }
+                }
+            } else {
+                if !autoKey {
+                    // Swift.print("#####", "K : pause")
+                    document.doSetRate(0)
+                }
+            }
             return true
         case 0x25 : // L key
-            // Swift.print("#####", "L : forward play / accelarate")
-            document.doSetRate(+1)
+            keyDownL = true
+            if keyDownJ && keyDownL {
+                if !autoKey {
+                    // Swift.print("#####", "J=>L : pause")
+                    document.doSetRate(0)
+                }
+            }
+            if !keyDownK {
+                if !autoKey {
+                    // Swift.print("#####", "L : forward play / accelarate")
+                    document.doSetRate(+1)
+                }
+            } else {
+                if !autoKey {
+                    // Swift.print("#####", "K=>L : step forward")
+                    document.doStepByCount(+1, false, false)
+                    acceptAuto = true
+                } else {
+                    if acceptAuto {
+                        // Swift.print("#####", "K=>L+ : forward play / slowmotion")
+                        document.doSetSlow(+0.5)
+                        acceptAuto = false
+                    }
+                }
+            }
             return true
         case 0x22 : // I key
             // Swift.print("#####", "I : set selection start")
@@ -320,8 +409,47 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             doSetEnd(to: .current)
             return true
         case 0x31 : // space bar
-            // Swift.print("#####", "space : toggle play/pause")
-            document.doTogglePlay()
+            if !autoKey {
+                // Swift.print("#####", "space : toggle play/pause")
+                document.doTogglePlay()
+            }
+            return true
+        default:
+            break
+        }
+        return false
+    }
+    
+    private func keyMimicUp(with event: NSEvent) -> Bool {
+        // Swift.print(#function, #line, #file)
+        guard let document = delegate else { return false }
+        
+        let code : UInt = UInt(event.keyCode)
+        
+        switch code {
+        case 0x26: // J key
+            keyDownJ = false
+            if keyDownK {
+                // Swift.print("#####", "-J=>K : pause")
+                document.doSetRate(0)
+            }
+            return true
+        case 0x28 : // K key
+            keyDownK = false
+            if keyDownJ {
+                // Swift.print("#####", "-K=>J : backward play")
+                document.doSetRate(-1)
+            } else if keyDownL {
+                // Swift.print("#####", "-K=>L : forward play")
+                document.doSetRate(+1)
+            }
+            return true
+        case 0x25 : // L key
+            keyDownL = false
+            if keyDownK {
+                // Swift.print("#####", "-L=>K : pause")
+                document.doSetRate(0)
+            }
             return true
         default:
             break
@@ -460,6 +588,15 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         
         // use interpretKeyEvents: for other key events
         self.interpretKeyEvents([event])
+    }
+    
+    override func keyUp(with event: NSEvent) {
+        if mimicJKLcombination {
+            if keyMimicUp(with: event) {
+                return
+            }
+        }
+        return
     }
     
     /* ============================================ */

@@ -345,6 +345,43 @@ extension Document : ViewControllerDelegate {
         }
     }
     
+    /// Perform slowmotion
+    public func doSetSlow(_ ratio : Float) {
+        // Swift.print(#function, #line, #file)
+        guard let player = self.player else { return }
+        guard let item = self.playerItem else { return }
+        
+        let okForward : Bool = (item.status == .readyToPlay)
+        let okReverse : Bool = item.canPlayReverse
+        let okSlowForward : Bool = item.canPlaySlowForward
+        let okSlowReverse : Bool = item.canPlaySlowReverse
+        
+        let newRate : Float = min(max(ratio, -1.0), 1.0)
+        
+        if newRate == 0.0 {
+            player.pause()
+            return
+        }
+        if newRate > 0.0 && okForward && okSlowForward {
+            if checkTailOfMovie() { // Restart from head of movie
+                self.resumeAfterSeek(to: CMTime.zero, with: newRate)
+            } else { // Start play
+                player.rate = newRate
+            }
+            return
+        }
+        if newRate < 0.0 && okReverse && okSlowReverse {
+            if checkHeadOfMovie() { // Restart from tail of the movie
+                self.resumeAfterSeek(to: item.duration, with: newRate)
+            } else { // Start play
+                player.rate = newRate
+            }
+            return
+        }
+        //
+        NSSound.beep()
+    }
+    
     /// Set playback rate
     public func doSetRate(_ offset : Int) {
         // Swift.print(#function, #line, #file)
@@ -358,6 +395,9 @@ extension Document : ViewControllerDelegate {
         
         // Fine acceleration control on fastforward/fastreverse
         let resolution : Float = 3.0 // 1.0, 1.33, 1.66, 2.00, 2.33, ...
+        if -1.0 < currentRate && currentRate < 1.0 {
+            currentRate = 0.0
+        }
         if currentRate > 0.0 {
             currentRate = (currentRate - 1.0) * resolution + 1.0
         } else if currentRate < 0.0 {

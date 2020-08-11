@@ -176,7 +176,6 @@ extension Document {
     internal func resumeAfterSeek(to time : CMTime, with rate : Float) {
         guard let player = self.player else { return }
         guard let mutator = self.movieMutator else { return }
-        
         do {
             let t = time
             Swift.print("#####", "resumeAfterSeek",

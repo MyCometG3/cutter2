@@ -9,23 +9,25 @@
 import Cocoa
 
 class InspectorViewController: NSViewController {
-    let refreshInterval : TimeInterval = 1.0/10
-    var timer : Timer? = nil
+    // MARK: - Properties
+    
+    public var refreshInterval : TimeInterval = 1.0/10
+    private var timer : Timer? = nil
     
     @IBOutlet var objectController: NSObjectController!
     
-    var visible : Bool {
+    private var visible : Bool {
         if let win = self.window {
             return win.isVisible
         }
         return false
     }
     
-    var window : NSWindow? {
+    private var window : NSWindow? {
         return self.view.window
     }
     
-    // MARK: -
+    // MARK: - NSViewController
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -43,7 +45,7 @@ class InspectorViewController: NSViewController {
         stopTimer()
     }
     
-    // MARK: -
+    // MARK: - Private functions
     
     private func startTimer() {
         timer = Timer.scheduledTimer(timeInterval: refreshInterval,

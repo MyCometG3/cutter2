@@ -54,13 +54,13 @@ class CAPARViewController: NSViewController {
             paspRatioWidthKey:1.0,
             paspRatioHeightKey:1.0,
             validKey:true,
-            ])
+        ])
     }
     
     //
     public func beginSheetModal(for parent: NSWindow, handler : @escaping (NSApplication.ModalResponse) -> Void) {
         // Swift.print(#function, #line, #file)
-
+        
         guard initialContent.count > 0 else { NSSound.beep(); return }
         
         // Prepare sheet
@@ -85,7 +85,7 @@ class CAPARViewController: NSViewController {
         
         NotificationCenter.default.removeObserver(self)
     }
-
+    
     /* ============================================ */
     // MARK: - NSControl related
     /* ============================================ */
@@ -93,7 +93,7 @@ class CAPARViewController: NSViewController {
     // Button handler - OK
     @IBAction func ok(_ sender: Any) {
         // Swift.print(#function, #line, #file)
-
+        
         updateUserDefaults()
         endSheet(.continue)
     }
@@ -101,7 +101,7 @@ class CAPARViewController: NSViewController {
     // Button handler - Cancel
     @IBAction func cancel(_ sender: Any) {
         // Swift.print(#function, #line, #file)
-
+        
         endSheet(.cancel)
     }
     
@@ -115,10 +115,10 @@ class CAPARViewController: NSViewController {
     // update ObjectController.content according to checkBox state
     @IBAction func modifyClapPasp(_ sender: Any) {
         // Swift.print(#function, #line, #file)
-
+        
         let def : UserDefaults = UserDefaults.standard
         var customFlag = def.bool(forKey: modClapPaspKey)
-
+        
         if customFlag {
             if #available(OSX 10.13, *) {
                 // Supported: AVMutableMovieTrack.replaceFormatDescription(_:with:)
@@ -290,7 +290,7 @@ class CAPARViewController: NSViewController {
     /* ============================================ */
     // MARK: - opening
     /* ============================================ */
-
+    
     // Refresh movie source settings - Should be called prior to beginSheet()
     public func applySource(_ dict : [AnyHashable : Any]) -> Bool {
         // Swift.print(#function, #line, #file)
@@ -377,7 +377,7 @@ class CAPARViewController: NSViewController {
             let clapSize = dict[clapSizeKey] as! NSSize
             let paspRatio = dict[paspRatioKey] as! NSSize
             let dimensions = dict[dimensionsKey] as! NSSize
-
+            
             def.set(NSStringFromSize(clapSize), forKey: clapSizeKey)
             def.set(NSStringFromPoint(clapOffset), forKey: clapOffsetKey)
             def.set(NSStringFromSize(paspRatio), forKey: paspRatioKey)

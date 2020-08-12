@@ -92,7 +92,7 @@ class AccessoryViewController: NSViewController {
             fileTypePopUp.selectItem(withTag: tag)
         }
     }
-
+    
     public func updateDataSizeText(_ size : boxSize) throws {
         let headerSize : Int64 = size.headerSize
         let videoSize : Int64 = size.videoSize, videoCount : Int64 = size.videoCount

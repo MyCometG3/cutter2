@@ -11,20 +11,20 @@ import Cocoa
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
     let bookmarksKey : String = "bookmarks"
-
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // Insert code here to initialize your application
         
         clearBookmarks()
         startBookmarkAccess()
     }
-
+    
     func applicationWillTerminate(_ aNotification: Notification) {
         // Insert code here to tear down your application
         
         stopBookmarkAccess()
     }
-
+    
     func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
         return false
     }

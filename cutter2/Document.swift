@@ -119,7 +119,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             kAudioEncodeKey:true,
             kVideoCodecKey:0, // "avc1"
             kAudioCodecKey:0, // "aac "
-            ])
+        ])
     }
     
     override class var autosavesInPlace: Bool {
@@ -198,7 +198,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     @objc func document(_ document : NSDocument, shouldClose flag : Bool, contextInfo: UnsafeMutableRawPointer?) {
         // Swift.print(#function, #line, #file, "shouldClose =", flag)
-
+        
         if flag {
             self.cleanup() // my cleanup method
         }
@@ -293,7 +293,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         Swift.print("NOTE: selfcontainedFlag:", selfcontainedFlag)
         Swift.print("NOTE: overwriteFlag:", overwriteFlag)
         Swift.print("NOTE: useAccessory:", useAccessory)
-
+        
         // Sandbox support - keep source document security scope bookmark
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
             DispatchQueue.main.async {
@@ -321,7 +321,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     override func write(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType,
                         originalContentsURL absoluteOriginalContentsURL: URL?) throws {
         // Swift.print(#function, #line, #file)
-
+        
         do {
             let fileType : AVFileType = AVFileType.init(rawValue: typeName)
             
@@ -366,7 +366,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-
+        
         // Check fileType (mov or other)
         if fileType == .mov {
             // Check savePanel accessoryView to know to save as ReferenceMovie
@@ -578,7 +578,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         guard let mutator = self.movieMutator else { return }
         
         let fileType : AVFileType = AVFileType.init(rawValue: typeName)
-
+        
         // Swift.print("##### EXPORT STARTED #####")
         showBusySheet("Exporting...", "Please hold on minute(s)...")
         mutator.unblockUserInteraction = { self.unblockUserInteraction() }
@@ -727,11 +727,11 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         do {
             if keepTopLeft { // preserve top left corner
                 let newOrigin = NSPoint(x: origin.x,
-                                    y: origin.y - (newWindowSize.height - windowSize.height))
+                                        y: origin.y - (newWindowSize.height - windowSize.height))
                 origin = newOrigin
             } else { // preserve top center point
                 let newOrigin = NSPoint(x: origin.x + (windowSize.width/2) - (newWindowSize.width/2) ,
-                                    y: origin.y - (newWindowSize.height - windowSize.height))
+                                        y: origin.y - (newWindowSize.height - windowSize.height))
                 origin = newOrigin
             }
         }
@@ -746,10 +746,10 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             if errXmin || errXmax || errYmin || errYmax {
                 let hOffset : CGFloat =
                     errXmax ? (scrXmax - (origin.x + newWindowSize.width)) :
-                    (errXmin ? (screenRect.origin.x - origin.x) : 0.0)
+                        (errXmin ? (screenRect.origin.x - origin.x) : 0.0)
                 let vOffset : CGFloat =
                     errYmax ? (scrYmax - (origin.y + newWindowSize.height)) :
-                    (errYmin ? (screenRect.origin.y - origin.y) : 0.0)
+                        (errYmin ? (screenRect.origin.y - origin.y) : 0.0)
                 let newOrigin = NSPoint(x: origin.x + hOffset, y: origin.y + vOffset)
                 origin = newOrigin
             }
@@ -767,7 +767,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-
+        
         let storyboard : NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
         let sid : NSStoryboard.SceneIdentifier = "CAPARSheet Controller"
         let caparWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController

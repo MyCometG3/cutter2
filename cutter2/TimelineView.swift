@@ -197,7 +197,7 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
             return NSColor.darkGray.cgColor
         }
     }
-
+    
     // NSView Instance Property
     override var mouseDownCanMoveWindow: Bool { return false }
     
@@ -217,7 +217,7 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     override func layout() {
         // Swift.print(#function, #line, #file)
         super.layout()
-
+        
         // On initial/resized state, update tracking area
         if needsUpdateTrackingArea {
             needsUpdateTrackingArea = false

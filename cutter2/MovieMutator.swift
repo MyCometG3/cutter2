@@ -338,7 +338,7 @@ class MovieMutator: MovieMutatorBase {
         
         guard let clip = readClipFromPBoard() else { NSSound.beep(); return; }
         guard let data = movieData() else { NSSound.beep(); return; }
-
+        
         // register undo record
         let undoPasteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in
             // register redo record
@@ -375,7 +375,7 @@ class MovieMutator: MovieMutatorBase {
             NSSound.beep(); return;
         }
         guard let data = movieData() else { NSSound.beep(); return; }
-
+        
         // register undo redord
         let undoDeleteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in
             // register redo record
@@ -514,7 +514,7 @@ class MovieMutator: MovieMutatorBase {
                 let dict : NSMutableDictionary = NSMutableDictionary(dictionary: cfDict)
                 dict[kCMFormatDescriptionExtension_VerbatimSampleDescription] = nil
                 dict[kCMFormatDescriptionExtension_VerbatimISOSampleEntry] = nil
-
+                
                 // Replace CleanAperture if available
                 if !validSize(clapSize) || !validPoint(clapOffset) {
                     dict[kCMFormatDescriptionExtension_CleanAperture] = nil
@@ -542,11 +542,11 @@ class MovieMutator: MovieMutatorBase {
                 let codecType = CMFormatDescriptionGetMediaSubType(format) as CMVideoCodecType
                 let dimensions = CMVideoFormatDescriptionGetDimensions(format)
                 let result = CMVideoFormatDescriptionCreate(allocator: kCFAllocatorDefault,
-                                                               codecType: codecType,
-                                                               width: dimensions.width,
-                                                               height: dimensions.height,
-                                                               extensions: dict,
-                                                               formatDescriptionOut: &newFormat)
+                                                            codecType: codecType,
+                                                            width: dimensions.width,
+                                                            height: dimensions.height,
+                                                            extensions: dict,
+                                                            formatDescriptionOut: &newFormat)
                 if result == noErr, let newFormat = newFormat {
                     track.replaceFormatDescription(format, with: newFormat)
                     count += 1
@@ -555,7 +555,7 @@ class MovieMutator: MovieMutatorBase {
                 }
             }
         }
-
+        
         if count > 0 {
             // Replace movie object with undo record
             self.updateFormat(movie, using: undoManager)

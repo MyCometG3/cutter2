@@ -108,7 +108,7 @@ extension Document {
     internal func inspecterDictionary() -> [String:Any] {
         var dict : [String:Any] = [:]
         guard let mutator = self.movieMutator else { return dict }
-
+        
         dict[titleInspectKey] = self.displayName
         
         dict[pathInspectKey] = {
@@ -431,7 +431,7 @@ extension Document {
 /* ============================================ */
 
 extension Document {
-
+    
     /// Move either start/end marker at current marker (nearest marker do sync)
     internal func syncSelection(_ current: CMTime) {
         // Swift.print(#function, #line, #file)

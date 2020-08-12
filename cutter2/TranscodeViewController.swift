@@ -11,7 +11,7 @@ import AVFoundation
 import VideoToolbox
 
 class TranscodeViewController: NSViewController {
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do view setup here.

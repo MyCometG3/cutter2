@@ -104,7 +104,7 @@ class MovieMutatorBase: NSObject {
     
     /// Wrapped AVMutableMovie object
     internal var internalMovie : AVMutableMovie
-
+    
     /// Current Marker
     public var insertionTime : CMTime = CMTime.zero
     
@@ -522,22 +522,22 @@ class MovieMutatorBase: NSObject {
     //
     @inline(__always) private func stringForOne(_ size1 : CGSize) -> String {
         return String(format: "%dx%d",
-                         Int(size1.width), Int(size1.height))
+                      Int(size1.width), Int(size1.height))
     }
     
     //
     @inline(__always) private func stringForTwo(_ size1 : CGSize, _ size2 : CGSize) -> String {
         return String(format: "%d:%d(%d:%d)",
-                         Int(size1.width), Int(size1.height),
-                         Int(size2.width), Int(size2.height))
+                      Int(size1.width), Int(size1.height),
+                      Int(size2.width), Int(size2.height))
     }
     
     //
     @inline(__always) private func stringForThree(_ size1 : CGSize, _ size2 : CGSize, _ size3 : CGSize) -> String {
         return String(format: "%d:%d(%d:%d/%d:%d)",
-                         Int(size1.width), Int(size1.height),
-                         Int(size2.width), Int(size2.height),
-                         Int(size3.width), Int(size3.height))
+                      Int(size1.width), Int(size1.height),
+                      Int(size2.width), Int(size2.height),
+                      Int(size3.width), Int(size3.height))
     }
     
     /// Inspector - VideoFormats Description

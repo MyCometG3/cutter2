@@ -67,7 +67,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     public private(set) var finalSuccess : Bool = true
     public private(set) var finalError : Error? = nil
     public private(set) var cancelled : Bool = false
-
+    
     private var queue : DispatchQueue? = nil
     private var sampleBufferChannels : [SampleBufferChannel] = []
     private var param : [String:Any] = [:]
@@ -296,11 +296,11 @@ extension MovieWriter {
         return result
     }
 }
-    
-    /* ============================================ */
-    // MARK: - exportCustomMovie methods
-    /* ============================================ */
-    
+
+/* ============================================ */
+// MARK: - exportCustomMovie methods
+/* ============================================ */
+
 extension MovieWriter {
     fileprivate func prepareCopyChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter, _ mediaType : AVMediaType) {
         for track in movie.tracks(withMediaType: mediaType) {
@@ -319,8 +319,8 @@ extension MovieWriter {
             
             // channel
             let copySBC : SampleBufferChannel = SampleBufferChannel(readerOutput: arOutput,
-                                                                     writerInput: awInput,
-                                                                     trackID: track.trackID)
+                                                                    writerInput: awInput,
+                                                                    trackID: track.trackID)
             sampleBufferChannels += [copySBC]
         }
     }
@@ -722,7 +722,7 @@ extension MovieWriter {
     
     public func exportCustomMovie(to url : URL, fileType type : AVFileType, settings param : [String:Any]) throws {
         // Swift.print(#function, #line, #file)
-
+        
         guard writerIsBusy == false else {
             var info : [String:Any] = [:]
             info[NSLocalizedDescriptionKey] = "Another exportSession is running."
@@ -752,7 +752,7 @@ extension MovieWriter {
         self.finalSuccess = false
         self.finalError = nil
         self.cancelled = false
-
+        
         //
         let movie : AVMutableMovie = internalMovie
         let startTime : CMTime = movie.range.start
@@ -806,10 +806,10 @@ extension MovieWriter {
             // start writing session
             aw.startSession(atSourceTime: startTime)
         }
-
+        
         // Allow sheet to show
         self.unblockUserInteraction?()
-
+        
         // Register and run each sampleBufferChannel as DispatchGroup
         let dg : DispatchGroup = DispatchGroup()
         for sbc in sampleBufferChannels {
@@ -908,7 +908,7 @@ extension MovieWriter {
 /* ============================================ */
 // MARK: - writeMovie methods
 /* ============================================ */
-    
+
 extension MovieWriter {
     /// Write internalMovie to destination url (as self-contained or reference movie)
     ///
@@ -964,7 +964,7 @@ extension MovieWriter {
             writerIsBusy = false
             Swift.print("#####", "result:", completed ? "completed" : "failed")
         }
-
+        
         var selfContained : Bool = false
         var option : AVMovieWritingOptions = .truncateDestinationToMovieHeaderOnly
         var before : Notification.Name = .movieWillWriteHeaderOnly

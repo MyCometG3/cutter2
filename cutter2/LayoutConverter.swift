@@ -16,7 +16,7 @@ class LayoutConverter {
     private typealias LayoutPtr = UnsafePointer<AudioChannelLayout>
     private typealias MutableLayoutPtr = UnsafeMutablePointer<AudioChannelLayout>
     private typealias MutableDescriptionsPtr = UnsafeMutableBufferPointer<AudioChannelDescription>
-
+    
     /* ============================================ */
     // MARK: - public AudioChannelLayoutData
     /* ============================================ */
@@ -51,7 +51,7 @@ class LayoutConverter {
     /* ============================================ */
     // MARK: - private AudioChannelLayoutData
     /* ============================================ */
-
+    
     private func dataFor(tag : AudioChannelLayoutTag) -> AudioChannelLayoutData {
         assert(tag != 0)
         assert(tag != kAudioChannelLayoutTag_UseChannelDescriptions)
@@ -109,7 +109,7 @@ class LayoutConverter {
     /* ============================================ */
     // MARK: - public Converter
     /* ============================================ */
-
+    
     /// Try to translate AudioChannelLayoutData with kAudioChannelLayoutTag_AAC_*
     ///
     /// - Parameter aclData: AudioChannelLayoutData
@@ -201,7 +201,7 @@ class LayoutConverter {
     /* ============================================ */
     // MARK: - private Converter
     /* ============================================ */
-
+    
     private func channelLabelSet(_ layoutPtr : LayoutPtr) -> Set<AudioChannelLabel> {
         let layout : AudioChannelLayout = layoutPtr.pointee
         // AudioChannelLayoutTag = UInt32
@@ -316,10 +316,10 @@ class LayoutConverter {
             case kAudioChannelLayoutTag_AAC_7_1_C:      pos = [3,1,2,5,6,4,13,15] // vertical
             case kAudioChannelLayoutTag_AAC_Octagonal:  pos = [3,1,2,5,6,33,34,9]
                 
-            //case kAudioChannelLayoutTag_TMH_10_2_std:   pos = [1,2,3,14,10,11,5,6,13,15,35,36,44,9,??,37]
-            //case kAudioChannelLayoutTag_TMH_10_2_full:  pos = [1,2,3,14,10,11,5,6,13,15,35,36,44,9,??,37,7,8,40,??,45]
-            // NOTE: Missing value: LFE1. LFE1 is LFELeft, and LFE2 is LFERight
-            //       Missing value: VI.
+                //case kAudioChannelLayoutTag_TMH_10_2_std:   pos = [1,2,3,14,10,11,5,6,13,15,35,36,44,9,??,37]
+                //case kAudioChannelLayoutTag_TMH_10_2_full:  pos = [1,2,3,14,10,11,5,6,13,15,35,36,44,9,??,37,7,8,40,??,45]
+                // NOTE: Missing value: LFE1. LFE1 is LFELeft, and LFE2 is LFERight
+                //       Missing value: VI.
                 
             case kAudioChannelLayoutTag_AC3_1_0_1:      pos = [3,4]
             case kAudioChannelLayoutTag_AC3_3_0:        pos = [1,3,2]
@@ -364,21 +364,21 @@ class LayoutConverter {
             case kAudioChannelLayoutTag_WAVE_6_1:       pos = [1,2,3,4,9,5,6]
             case kAudioChannelLayoutTag_WAVE_7_1:       pos = [1,2,3,4,33,34,5,6]
                 
-            //case kAudioChannelLayoutTag_HOA_ACN_SN3D:   pos = [??]
-            // needs to be ORed with the actual number of channels (not the HOA order)
-            //case kAudioChannelLayoutTag_HOA_ACN_N3D:    pos = [??]
-            // needs to be ORed with the actual number of channels (not the HOA order)
+                //case kAudioChannelLayoutTag_HOA_ACN_SN3D:   pos = [??]
+                // needs to be ORed with the actual number of channels (not the HOA order)
+                //case kAudioChannelLayoutTag_HOA_ACN_N3D:    pos = [??]
+                // needs to be ORed with the actual number of channels (not the HOA order)
                 
             case kAudioChannelLayoutTag_Atmos_7_1_4:    pos = [1,2,3,4,5,6,33,34,13,15,52,54]
             case kAudioChannelLayoutTag_Atmos_9_1_6:    pos = [1,2,3,4,5,6,33,34,35,36,13,15,49,51,52,54]
             case kAudioChannelLayoutTag_Atmos_5_1_2:    pos = [1,2,3,4,5,6,52,54]
                 
-            //case kAudioChannelLayoutTag_DiscreteInOrder:  pos = [??]
-            // needs to be ORed with the actual number of channels
+                //case kAudioChannelLayoutTag_DiscreteInOrder:  pos = [??]
+                // needs to be ORed with the actual number of channels
                 
-            //case kAudioChannelLayoutTag_Unknown:        pos = [??]
-            // needs to be ORed with the actual number of channels
-
+                //case kAudioChannelLayoutTag_Unknown:        pos = [??]
+                // needs to be ORed with the actual number of channels
+                
             default:
                 // Fallback into numbered discrete channels
                 let discrete:AudioChannelLabel = kAudioChannelLabel_Discrete_0
@@ -434,19 +434,19 @@ class LayoutConverter {
         case [200,201,202,203]:         return kAudioChannelLayoutTag_AAC_7_1_C // vertical
         case [1,2,5,6,3,9,35,36]:       return kAudioChannelLayoutTag_AAC_Octagonal // horizontal
         case [1,2,33,34,13,15,16,18]:   return kAudioChannelLayoutTag_AAC_7_1_C // vertical
-        
+            
         case [1,2,3,4,5,6,38,39]:       return kAudioChannelLayoutTag_AAC_Octagonal // horizontal
-        
+            
         case [1,2,9]:                   return kAudioChannelLayoutTag_AAC_4_0
-        
+            
         case [1,2,4]:                   return kAudioChannelLayoutTag_AAC_5_1
         case [1,2,4,9]:                 return kAudioChannelLayoutTag_AAC_6_1
         case [1,2,4,5,6]:               return kAudioChannelLayoutTag_AAC_5_1
         case [1,2,3,4]:                 return kAudioChannelLayoutTag_AAC_5_1
         case [1,2,3,4,9]:               return kAudioChannelLayoutTag_AAC_6_1
-        
+            
         case [1,2,5,6,3,7,8]:           return kAudioChannelLayoutTag_AAC_Octagonal // horizontal
-        
+            
         default:
             // Incompatible w/ AAC
             let unknown = kAudioChannelLayoutTag_Unknown
@@ -513,11 +513,11 @@ class LayoutConverter {
         case [3,1,2,5,6,4,13,15]:       return kAudioChannelLayoutTag_AAC_7_1_C
         case [3,1,2,5,6,33,34,9]:       return kAudioChannelLayoutTag_AAC_Octagonal
             
-        // kAudioChannelLayoutTag_TMH_10_2_std
-        // kAudioChannelLayoutTag_TMH_10_2_full
-        // NOTE: Missing value: LFE1. LFE1 is LFELeft, and LFE2 is LFERight
-        //       Missing value: VI.
-
+            // kAudioChannelLayoutTag_TMH_10_2_std
+            // kAudioChannelLayoutTag_TMH_10_2_full
+            // NOTE: Missing value: LFE1. LFE1 is LFELeft, and LFE2 is LFERight
+            //       Missing value: VI.
+            
         case [3,4]:                     return kAudioChannelLayoutTag_AC3_1_0_1
         case [1,3,2]:                   return kAudioChannelLayoutTag_AC3_3_0
         case [1,3,2,9]:                 return kAudioChannelLayoutTag_AC3_3_1
@@ -560,21 +560,21 @@ class LayoutConverter {
         case [1,2,3,4,9,5,6]:           return kAudioChannelLayoutTag_WAVE_6_1
         case [1,2,3,4,33,34,5,6]:       return kAudioChannelLayoutTag_WAVE_7_1
             
-        // kAudioChannelLayoutTag_HOA_ACN_SN3D
-        // needs to be ORed with the actual number of channels (not the HOA order)
-        // kAudioChannelLayoutTag_HOA_ACN_N3D
-        // needs to be ORed with the actual number of channels (not the HOA order)
-
+            // kAudioChannelLayoutTag_HOA_ACN_SN3D
+            // needs to be ORed with the actual number of channels (not the HOA order)
+            // kAudioChannelLayoutTag_HOA_ACN_N3D
+            // needs to be ORed with the actual number of channels (not the HOA order)
+            
         case [1,2,3,4,5,6,33,34,13,15,52,54]:   return kAudioChannelLayoutTag_Atmos_7_1_4
         case [1,2,3,4,5,6,33,34,35,36,13,15,49,51,52,54]:   return kAudioChannelLayoutTag_Atmos_9_1_6
         case [1,2,3,4,5,6,52,54]:       return kAudioChannelLayoutTag_Atmos_5_1_2
             
-        //kAudioChannelLayoutTag_DiscreteInOrder
-        // needs to be ORed with the actual number of channels
+            //kAudioChannelLayoutTag_DiscreteInOrder
+            // needs to be ORed with the actual number of channels
             
-        //kAudioChannelLayoutTag_Unknown
-        // needs to be ORed with the actual number of channels
-
+            //kAudioChannelLayoutTag_Unknown
+            // needs to be ORed with the actual number of channels
+            
         default:
             // Fallback into numbered discrete channels
             let discrete = kAudioChannelLayoutTag_DiscreteInOrder

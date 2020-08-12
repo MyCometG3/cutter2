@@ -80,7 +80,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     /// MyPlayerView as AVPlayerView subclass
     @IBOutlet weak var playerView: MyPlayerView!
     @IBOutlet weak var timelineView : TimelineView!
-
+    
     override var representedObject: Any? {
         didSet {
             // Update the view, if already loaded.
@@ -556,24 +556,24 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         let noMod = (mod & NSEvent.ModifierFlags.deviceIndependentFlagsMask.rawValue) == 0
         
         #if false
-            Swift.print("#####", "code:", code,
-                        "/ mod:", mod,
-                        "/ noMod:", (noMod ? "true" : "false"))
+        Swift.print("#####", "code:", code,
+                    "/ mod:", mod,
+                    "/ noMod:", (noMod ? "true" : "false"))
         #endif
         #if false
-            let char = event.charactersIgnoringModifiers
-            let option : Bool = event.modifierFlags.contains(.option)
-            let shift : Bool = event.modifierFlags.contains(.shift)
-            let control : Bool = event.modifierFlags.contains(.control)
-            let command : Bool = event.modifierFlags.contains(.command)
-            let string : String = String(format:"%qu(%@) %@ %@ %@ %@",
-                                         code,
-                                         char ?? "_",
-                                         option ? "opt" : "---",
-                                         shift ? "shi" : "---",
-                                         control ? "ctr" : "---",
-                                         command ? "cmd" : "---")
-            Swift.print("#####", "keyDown =", string)
+        let char = event.charactersIgnoringModifiers
+        let option : Bool = event.modifierFlags.contains(.option)
+        let shift : Bool = event.modifierFlags.contains(.shift)
+        let control : Bool = event.modifierFlags.contains(.control)
+        let command : Bool = event.modifierFlags.contains(.command)
+        let string : String = String(format:"%qu(%@) %@ %@ %@ %@",
+                                     code,
+                                     char ?? "_",
+                                     option ? "opt" : "---",
+                                     shift ? "shi" : "---",
+                                     control ? "ctr" : "---",
+                                     command ? "cmd" : "---")
+        Swift.print("#####", "keyDown =", string)
         #endif
         
         if mimicJKLcombination {
@@ -765,7 +765,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     /* ============================================ */
     // MARK: - TimelineUpdateDelegate
     /* ============================================ */
-
+    
     public func didUpdateCursor(to position : Float64) {
         guard let document = delegate else { return }
         document.didUpdateCursor(to: position)
@@ -830,5 +830,5 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         guard let document = delegate else { return }
         document.doSetEnd(to: goTo)
     }
-
+    
 }

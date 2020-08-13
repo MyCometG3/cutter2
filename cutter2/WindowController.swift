@@ -9,6 +9,11 @@
 import Cocoa
 
 class WindowController: NSWindowController, NSWindowDelegate {
+    
+    /* ============================================ */
+    // MARK: - NSWindowController
+    /* ============================================ */
+    
     override func windowDidLoad() {
         super.windowDidLoad()
         
@@ -16,32 +21,41 @@ class WindowController: NSWindowController, NSWindowDelegate {
     }
     
     override func windowTitle(forDocumentDisplayName displayName: String) -> String {
+        // Update window title with scale ratio
         let doc = self.document as! Document
         let ratio = doc.displayRatio(nil) * 100
         let titleStr = String(format: "%@ (%.0f%%)", displayName, ratio)
         return titleStr
     }
     
-    // NSWindowDelegate
-    func windowDidResize(_ notification: Notification) {
+    /* ============================================ */
+    // MARK: - NSWindowDelegate protocol
+    /* ============================================ */
+    
+    public func windowDidResize(_ notification: Notification) {
+        // Update window title with scale ratio
         synchronizeWindowTitleWithDocumentName()
     }
     
-    func windowWillEnterFullScreen(_ notification: Notification) {
+    public func windowWillEnterFullScreen(_ notification: Notification) {
+        // Hide controllerBox
         let vc = self.contentViewController as! ViewController
         vc.showController(false)
     }
     
-    func windowWillExitFullScreen(_ notification: Notification) {
+    public func windowWillExitFullScreen(_ notification: Notification) {
+        // Reveal controllerBox
         let vc = self.contentViewController as! ViewController
         vc.showController(true)
     }
     
-    func windowDidEnterFullScreen(_ notification: Notification) {
+    public func windowDidEnterFullScreen(_ notification: Notification) {
+        // Reset keyView/makeFirstResponder on Fullscreen mode
         self.window!.selectNextKeyView(self)
     }
     
-    func windowDidExitFullScreen(_ notification: Notification) {
+    public func windowDidExitFullScreen(_ notification: Notification) {
+        // Reset keyView/makeFirstResponder on Non-Fullscreen mode
         self.window!.selectNextKeyView(self)
     }
 }

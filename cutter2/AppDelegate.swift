@@ -10,24 +10,32 @@ import Cocoa
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
-    let bookmarksKey : String = "bookmarks"
+    /* ============================================ */
+    // MARK: - Properties
+    /* ============================================ */
     
-    func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // Insert code here to initialize your application
-        
+    private let bookmarksKey : String = "bookmarks"
+    
+    /* ============================================ */
+    // MARK: - NSApplicationDelegate protocol
+    /* ============================================ */
+    
+    public func applicationDidFinishLaunching(_ aNotification: Notification) {
         clearBookmarks()
         startBookmarkAccess()
     }
     
-    func applicationWillTerminate(_ aNotification: Notification) {
-        // Insert code here to tear down your application
-        
+    public func applicationWillTerminate(_ aNotification: Notification) {
         stopBookmarkAccess()
     }
     
-    func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
+    public func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
         return false
     }
+    
+    /* ============================================ */
+    // MARK: - Documents rotation
+    /* ============================================ */
     
     /// Select next document
     ///
@@ -46,7 +54,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /* ============================================ */
     
     /// Remove all bookmarks on startup
-    public func clearBookmarks() {
+    private func clearBookmarks() {
         // Swift.print(#function, #line, #file)
         
         let needClear : Bool = NSEvent.modifierFlags.contains(.option)
@@ -95,7 +103,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     /// Start access bookmarks in sandbox
-    public func startBookmarkAccess() {
+    private func startBookmarkAccess() {
         // Swift.print(#function, #line, #file)
         
         validateBookmarks({(url) in
@@ -104,7 +112,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     /// Stop access bookmarks in sandbox
-    public func stopBookmarkAccess() {
+    private func stopBookmarkAccess() {
         // Swift.print(#function, #line, #file)
         
         validateBookmarks({(url) in
@@ -115,7 +123,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// Validate bookmarks with block
     ///
     /// - Parameter task: block to process bookmark url
-    public func validateBookmarks(_ task : ((URL) -> Void)) {
+    private func validateBookmarks(_ task : ((URL) -> Void)) {
         // Swift.print(#function, #line, #file)
         var validItems : [Data] = []
         let defaults = UserDefaults.standard

@@ -15,35 +15,18 @@ class MyPlayerView: AVPlayerView {
     // MARK: - Keybaord Event handling
     /* ============================================ */
     
+    // NSResponder
     override var acceptsFirstResponder: Bool {
         return false
     }
     
+    // NSResponder
     override func becomeFirstResponder() -> Bool {
         return false
     }
     
+    // NSView(NSKeyboardUI)
     override var canBecomeKeyView: Bool {
         return false
-    }
-    
-    override func keyDown(with event: NSEvent) {
-        self.interpretKeyEvents([event])
-    }
-    
-    override func insertTab(_ sender: Any?) {
-        if let window = self.window, window.firstResponder == self {
-            window.selectNextKeyView(self)
-        }
-    }
-    
-    override func insertBacktab(_ sender: Any?) {
-        if let window = self.window, window.firstResponder == self {
-            window.selectPreviousKeyView(self)
-        }
-    }
-    
-    override func insertText(_ insertString: Any) {
-        super.insertText(insertString)
     }
 }

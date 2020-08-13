@@ -9,12 +9,19 @@
 import Cocoa
 
 class DocumentController: NSDocumentController {
-    // Add extensionHidden button on OpenPanel
+    
+    /* ============================================ */
+    // MARK: - NSDocumentController
+    /* ============================================ */
+    
     override func beginOpenPanel(_ openPanel: NSOpenPanel, forTypes inTypes: [String]?, completionHandler: @escaping (Int) -> Void) {
         // Swift.print(#function, #line, #file)
         
+        // Add extensionHidden button on OpenPanel
         openPanel.canSelectHiddenExtension = true
         openPanel.isExtensionHidden = false
+        
+        // Show OpenPanel with the button
         super.beginOpenPanel(openPanel, forTypes: inTypes, completionHandler: completionHandler)
     }
 }

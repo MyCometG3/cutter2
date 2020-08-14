@@ -83,6 +83,12 @@ class MovieMutatorBase: NSObject {
     
     init(with movie:AVMovie) {
         internalMovie = movie.mutableCopy() as! AVMutableMovie
+        
+        do {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy/MM/dd HH:mm:ss.SSS" // "yyyy-MM-dd HH:mm:ss.SSSSSSZ"
+            self.timestampFormatter = formatter
+        }
     }
     
     /* ============================================ */
@@ -99,11 +105,7 @@ class MovieMutatorBase: NSObject {
     public var selectedTimeRange : CMTimeRange = CMTimeRange()
     
     /// Timestamp formatter
-    public var timestampFormatter : DateFormatter = {() -> DateFormatter in
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy/MM/dd HH:mm:ss.SSS" // "yyyy-MM-dd HH:mm:ss.SSSSSSZ"
-        return formatter
-    }()
+    public var timestampFormatter : DateFormatter
     
     public var unblockUserInteraction : (() -> Void)? = nil
     public var updateProgress : ((Float) -> Void)? = nil

@@ -42,9 +42,6 @@ public struct boxSize {
     var otherSize : Int64 = 0, otherCount : Int64 = 0
 }
 
-private let clipPBoardTypeRaw : String = "com.mycometg3.cutter.MovieMutator"
-internal let clipPBoardType : NSPasteboard.PasteboardType = NSPasteboard.PasteboardType(rawValue: clipPBoardTypeRaw)
-
 /// type of dimensions - for use in dimensions(of:)
 enum dimensionsType {
     case clean

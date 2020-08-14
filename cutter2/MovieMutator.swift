@@ -10,6 +10,10 @@ import Cocoa
 import AVKit
 import AVFoundation
 
+extension NSPasteboard.PasteboardType {
+    static let movieMutator = NSPasteboard.PasteboardType("com.mycometg3.cutter.MovieMutator")
+}
+
 /// Wrapper of AVMutableMovie as model object of movie editor
 class MovieMutator: MovieMutatorBase {
     /* ============================================ */
@@ -88,7 +92,7 @@ class MovieMutator: MovieMutatorBase {
         let pBoard : NSPasteboard = NSPasteboard.general
         
         // extract movie header data from PBoard
-        let data : Data? = pBoard.data(forType: clipPBoardType)
+        let data : Data? = pBoard.data(forType: .movieMutator)
         
         if let data = data {
             // create movie from movieHeader data
@@ -125,7 +129,7 @@ class MovieMutator: MovieMutatorBase {
                 // register data to PBoard
                 let pBoard : NSPasteboard = NSPasteboard.general
                 pBoard.clearContents()
-                pBoard.setData(data, forType: clipPBoardType)
+                pBoard.setData(data, forType: .movieMutator)
                 
                 return true
             } else {
@@ -159,7 +163,7 @@ class MovieMutator: MovieMutatorBase {
     public func validateClipFromPBoard() -> Bool {
         let pBoard : NSPasteboard = NSPasteboard.general
         
-        if let _ = pBoard.data(forType: clipPBoardType) {
+        if let _ = pBoard.data(forType: .movieMutator) {
             return true
         } else {
             return false

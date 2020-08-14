@@ -15,21 +15,6 @@ class CAPARViewController: NSViewController {
     
     @IBOutlet weak var objectController: NSObjectController!
     
-    let modClapPaspKey : String = "modClapPasp" // Modify Aperture
-    
-    let labelEncodedKey : String = "labelEncoded"
-    let labelCleanKey : String = "labelClean"
-    let labelProductionKey : String = "labelProduction"
-    
-    let clapSizeWidthKey : String = "clapSizeWidth" // CGFloat
-    let clapSizeHeightKey : String = "clapSizeHeight" // CGFloat
-    let clapOffsetXKey : String = "clapOffsetX" // CGFloat
-    let clapOffsetYKey : String = "clapOffsetY" // CGFloat
-    let paspRatioWidthKey : String = "paspRatioWidth" // CGFloat
-    let paspRatioHeightKey : String = "paspRatioHeight" // CGFloat
-    
-    let validKey : String = "valid"
-    
     /* ============================================ */
     // MARK: - Sheet control
     /* ============================================ */

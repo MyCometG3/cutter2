@@ -10,29 +10,6 @@ import Cocoa
 import AVKit
 import AVFoundation
 
-// Document + TranscodeViewController
-let kTranscodePresetKey = "transcodePreset"
-let kTranscodeTypeKey = "transcodeType"
-let kTrancode0Key = "transcode0"
-let kTrancode1Key = "transcode1"
-let kTrancode2Key = "transcode2"
-let kTrancode3Key = "transcode3"
-let kAVFileTypeKey = "avFileType"
-let kHEVCReadyKey = "hevcReady" // Check 10.13 or later
-let kTranscodePresetCustom = "Custom"
-
-// MovieWriter + Document
-let kLPCMDepthKey = "lpcmDepth"
-let kAudioKbpsKey = "audioKbps"
-let kVideoKbpsKey = "videoKbps"
-let kCopyFieldKey = "copyField"
-let kCopyNCLCKey = "copyNCLC"
-let kCopyOtherMediaKey = "copyOtherMedia"
-let kVideoEncodeKey = "videoEncode"
-let kAudioEncodeKey = "audioEncode"
-let kVideoCodecKey = "videoCodec"
-let kAudioCodecKey = "audioCodec"
-
 class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     /// Strong reference to MovieMutator
     public var movieMutator : MovieMutator? = nil
@@ -56,7 +33,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     // Polling timer
     internal var timer : Timer? = nil
-    internal let pollingInterval : TimeInterval = 1.0/15
+    internal var pollingInterval : TimeInterval = 1.0/15
     
     // KVO Context
     internal var kvoContext = 0
@@ -109,6 +86,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             kTrancode3Key:6,
             kAVFileTypeKey:AVFileType.mov,
             kHEVCReadyKey:false,
+            
             kLPCMDepthKey:0, // "aac "
             kAudioKbpsKey:192, // 192Kbps
             kVideoKbpsKey:4096, // 4096Kbps

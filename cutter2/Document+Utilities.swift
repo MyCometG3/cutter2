@@ -92,18 +92,6 @@ extension Document {
 // MARK: - Misc utilities
 /* ============================================ */
 
-let titleInspectKey : String = "title" // String
-let pathInspectKey : String = "path" // String (numTracks)
-let videoFormatInspectKey : String = "videoFormat" // String (numTracks)
-let videoFPSInspectKey : String = "videoFPS" // String (numTracks)
-let audioFormatInspectKey : String = "audioFormat" // String (numTracks)
-let videoDataSizeInspectKey : String = "videoDataSize" // String (numTracks)
-let audioDataSizeInspectKey : String = "audioDataSize" // String (numTracks)
-let currentTimeInspectKey : String = "currentTime" // String
-let movieDurationInspectKey : String = "movieDuration" // String
-let selectionStartInspectKey : String = "selectionStart" // String
-let selectionEndInspectKey : String = "selectionEnd" // String
-let selectionDurationInspectKey : String = "selectionDuration" // String
 extension Document {
     internal func inspecterDictionary() -> [String:Any] {
         var dict : [String:Any] = [:]

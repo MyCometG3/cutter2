@@ -9,15 +9,6 @@
 import Cocoa
 import AVFoundation
 
-// ViewController + Document
-let timeInfoKey : String = "time" // CMTime
-let rangeInfoKey : String = "range" // CMTimeRange
-let curPositionInfoKey : String = "curPosition" // Float64
-let startPositionInfoKey : String = "startPosition" // Float64
-let endPositionInfoKey : String = "endPosition" // Float64
-let stringInfoKey : String = "string" // String
-let durationInfoKey : String = "duration" // CMTime
-
 extension Notification.Name {
     static let timelineUpdateReq = Notification.Name("timelineUpdateReq")
 }

@@ -10,20 +10,9 @@ import Cocoa
 import AVFoundation
 import VideoToolbox
 
-// MovieWriter
-let urlInfoKey : String = "url" // URL
-let startInfoKey : String = "start" // Date
-let endInfoKey : String = "end" // Date
-let completedInfoKey : String = "completed" // Bool
-let intervalInfoKey : String = "interval" // TimeInterval
-
-let progressInfoKey : String = "progress" // Float
-let statusInfoKey : String = "status" // String
-let elapsedInfoKey : String = "elapsed" // TimeInterval
-let estimatedRemainingInfoKey : String = "estimatedRemaining" // TimeInterval
-let estimatedTotalInfoKey : String = "estimatedTotal" // TimeInterval
-
 class MovieWriter: NSObject, SampleBufferChannelDelegate {
+    // MARK: -
+    
     private var internalMovie : AVMutableMovie
     
     /// callback for NSDocument.unblockUserInteraction()

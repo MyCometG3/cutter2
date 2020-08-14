@@ -13,6 +13,7 @@
 		161D7BA2208C278500647FD3 /* CAPARViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161D7BA1208C278500647FD3 /* CAPARViewController.swift */; };
 		162ED4B1207A2F4E00DFAD7E /* MovieWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */; };
 		162ED4B3207A3F2A00DFAD7E /* SampleBufferChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */; };
+		1674686524E64CE400254957 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1674686424E64CE400254957 /* Constants.swift */; };
 		168DAE1F204A3BBC00C1DEFA /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168DAE1E204A3BBC00C1DEFA /* Window.swift */; };
 		16B60C2520A3DFB7003065AC /* LayoutConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B60C2420A3DFB7003065AC /* LayoutConverter.swift */; };
 		16BCA6C3204B715900D4B2A5 /* AccessoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BCA6C2204B715900D4B2A5 /* AccessoryViewController.swift */; };
@@ -37,6 +38,7 @@
 		161D7BA1208C278500647FD3 /* CAPARViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CAPARViewController.swift; sourceTree = "<group>"; };
 		162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieWriter.swift; sourceTree = "<group>"; };
 		162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleBufferChannel.swift; sourceTree = "<group>"; };
+		1674686424E64CE400254957 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		168DAE1E204A3BBC00C1DEFA /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
 		16B60C2420A3DFB7003065AC /* LayoutConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutConverter.swift; sourceTree = "<group>"; };
 		16BCA6C2204B715900D4B2A5 /* AccessoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessoryViewController.swift; sourceTree = "<group>"; };
@@ -87,6 +89,7 @@
 		16EE23ED200AF2C800980467 /* cutter2 */ = {
 			isa = PBXGroup;
 			children = (
+				1674686424E64CE400254957 /* Constants.swift */,
 				16EE23EE200AF2C800980467 /* AppDelegate.swift */,
 				16CD66ED203835080089EB86 /* WindowController.swift */,
 				168DAE1E204A3BBC00C1DEFA /* Window.swift */,
@@ -209,6 +212,7 @@
 				16EE2403200B036800980467 /* MovieMutator.swift in Sources */,
 				16EE2401200AFE3300980467 /* MyPlayerView.swift in Sources */,
 				16E189F92078405600A68696 /* DocumentController.swift in Sources */,
+				1674686524E64CE400254957 /* Constants.swift in Sources */,
 				168DAE1F204A3BBC00C1DEFA /* Window.swift in Sources */,
 				16DBCF19209C643700887A77 /* MovieMutatorBase.swift in Sources */,
 				1605508520AC14910029AE1C /* Document+Delegate.swift in Sources */,

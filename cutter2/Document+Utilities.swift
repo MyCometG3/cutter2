@@ -17,14 +17,28 @@ extension Document {
     
     /// Update progress
     internal func updateProgress(_ progress : Float) {
-        guard let alert = self.alert else { return }
-        guard progress.isNormal else { return }
+        // Thread safety
+        objc_sync_enter(self)
+        defer { objc_sync_exit(self) }
         
+        // Use Low frequency update
+        let unit = NSEC_PER_MSEC * 100 // 100ms
         let t : UInt64 = CVGetCurrentHostTime()
-        guard (t - lastUpdateAt) > 100000000 else { return }
-        lastUpdateAt = t
+        if lastUpdateAt == 0 {
+            lastUpdateAt = t
+        } else {
+            if (t - lastUpdateAt) > unit {
+                lastUpdateAt = lastUpdateAt + unit
+            } else {
+                return
+            }
+        }
         
+        // Update UI in main queue
         DispatchQueue.main.async {
+            guard let alert = self.alert else { return }
+            guard progress.isNormal else { return }
+            
             alert.informativeText = String("Please hold on minute(s)... : \(Int(progress * 100)) %")
         }
     }

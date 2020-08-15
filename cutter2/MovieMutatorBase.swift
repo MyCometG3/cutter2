@@ -33,6 +33,65 @@ extension AVMovie {
         }
         return range
     }
+    
+    /// Get movie Header in mov format. nil returned in case of any error.
+    public var movHeader : Data? {
+        let headerData : Data? = try? self.makeMovieHeader(fileType: .mov)
+        return headerData
+    }
+    
+    /// Analyze movHeader to find referencing URLs for each track sample. nil returned in case of any error.
+    public func findReferenceURLs() -> [URL]? {
+        if let data = self.movHeader {
+            let pattern : [UInt8] =
+                [0x75, 0x72, 0x6C, 0x20, 0x00, 0x00, 0x00, 0x00] // 'url ', 0x00 * 4
+            let start : Int = 4
+            let end : Int = data.count - pattern.count
+            var set : Set<URL> = []
+            data.withUnsafeBytes { (ptr : UnsafeRawBufferPointer) in
+                for n in start..<end {
+                    // search pattern
+                    if ptr[n] != pattern[0] {
+                        continue
+                    }
+                    // validate pattern
+                    var valid : Bool = true
+                    for offset in 0..<(pattern.count) {
+                        if ptr[n+offset] != pattern[offset] {
+                            valid = false
+                            break
+                        }
+                    }
+                    if valid { // found file url
+                        // get atom size
+                        let s4 = Int(ptr[n-4])
+                        let s3 = Int(ptr[n-3])
+                        let s2 = Int(ptr[n-2])
+                        let s1 = Int(ptr[n-1])
+                        let atomSize : Int = s4<<24 + s3<<16 + s2<<8 + s1
+                        // let atomPtr = ptr.advanced(by: n)
+                        
+                        // heading(8):0x75726C20,0x00000000; trailing(5):0x00????????
+                        let urlData : Data = data.subdata(in: (n+8)..<(n+atomSize-5))
+                        let urlPath : String = String(data: urlData, encoding: String.Encoding.ascii)!
+                        let url : URL? = URL(string: urlPath)
+                        
+                        if let url = url {
+                            set.insert(url)
+                        } else {
+                            assert(url != nil)
+                        }
+                    }
+                }
+            }
+            
+            if set.count > 0 {
+                let array :[URL] = Array(set)
+                return array
+            }
+        }
+        return nil
+    }
 }
 
 public struct boxSize {
@@ -111,7 +170,7 @@ class MovieMutatorBase: NSObject {
     public var updateProgress : ((Float) -> Void)? = nil
     
     // Caching inspector properties
-    private var cachedMediaDataURLs : [URL]? = nil
+    private var cachedMediaDataPaths : [String]? = nil
     private var cachedVideoFPSs : [String]? = nil
     private var cachedVideoDataSizes : [String]? = nil
     private var cachedAudioDataSizes : [String]? = nil
@@ -246,7 +305,7 @@ class MovieMutatorBase: NSObject {
     /// Reset inspector properties cache (on movie edit)
     internal func flushCachedValues() {
         // Swift.print(ts(), #function, #line, #file)
-        cachedMediaDataURLs = nil
+        cachedMediaDataPaths = nil
         cachedVideoFPSs = nil
         cachedVideoDataSizes = nil
         cachedAudioDataSizes = nil
@@ -444,6 +503,36 @@ class MovieMutatorBase: NSObject {
         }
         return flag
     }
+    
+    /// Direct query the referencing URLs of internalMovie.
+    /// - Unlike mediaDataPaths() this does not use cached operation.
+    /// - Returns: all referenced file URLs by every track samples
+    public func queryMediaDataURLs() -> [URL]? {
+        let urls : [URL]? = internalMovie.findReferenceURLs()
+        return urls
+    }
+    
+    /* ============================================ */
+    // MARK: - public method - Inspector utilities
+    /* ============================================ */
+    
+    /// Inspector - mediaDataURLs
+    ///
+    /// - Returns: all referenced file URLs by every track samples
+    public func mediaDataPaths() -> [String]? {
+        if let cache = cachedMediaDataPaths {
+            return cache
+        }
+        
+        var urlStrings : [String] = []
+        let urls : [URL]? = internalMovie.findReferenceURLs()
+        if let urls = urls {
+            urlStrings = urls.map({ $0.path })
+        }
+        cachedMediaDataPaths = (urlStrings.count > 0 ? urlStrings : ["-"])
+        return cachedMediaDataPaths
+    }
+    
     
     /// Inspector - VideoFPS Description
     ///
@@ -688,6 +777,10 @@ class MovieMutatorBase: NSObject {
         cachedAudioFormats = (trackStrings.count > 0) ? trackStrings : ["-"]
         return cachedAudioFormats
     }
+    
+    /* ============================================ */
+    // MARK: -
+    /* ============================================ */
     
     /// Make new AVPlayerItem for internalMovie
     ///

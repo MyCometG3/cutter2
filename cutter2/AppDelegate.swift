@@ -42,7 +42,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// - Parameter sender: Any
     @IBAction func nextDocument(_ sender: Any) {
         let docList : [Document]? = NSApp.orderedDocuments as? [Document]
-        if let docList = docList, docList.count > 1 {
+        if let docList = docList, docList.count > 0 {
             if let doc = docList.last, let window = doc.window {
                 window.makeKeyAndOrderFront(self)
             }

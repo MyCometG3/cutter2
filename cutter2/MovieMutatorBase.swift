@@ -1075,57 +1075,6 @@ class MovieMutatorBase: NSObject {
     }
     
     /* ============================================ */
-    // MARK: - public method - clap/pasp
-    /* ============================================ */
-    
-    //
-    public func clappaspDictionary() -> [AnyHashable : Any]? {
-        var dict : [AnyHashable : Any] = [:]
-        
-        let vTracks : [AVMovieTrack] = internalMovie.tracks(withMediaType: .video)
-        guard vTracks.count > 0 else { NSSound.beep(); return nil }
-        
-        let formats : [Any] = (vTracks[0]).formatDescriptions
-        let format : CMVideoFormatDescription? = (formats[0] as! CMVideoFormatDescription)
-        guard let desc = format else { NSSound.beep(); return nil }
-        
-        dict[dimensionsKey] =
-            CMVideoFormatDescriptionGetPresentationDimensions(desc,
-                                                              usePixelAspectRatio: false,
-                                                              useCleanAperture: false)
-        
-        let extCA : CFPropertyList? =
-            CMFormatDescriptionGetExtension(desc,
-                                            extensionKey: kCMFormatDescriptionExtension_CleanAperture)
-        if let extCA = extCA {
-            let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as! NSNumber
-            let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as! NSNumber
-            let wOffset = extCA[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] as! NSNumber
-            let hOffset = extCA[kCMFormatDescriptionKey_CleanApertureVerticalOffset] as! NSNumber
-            
-            dict[clapSizeKey] = NSSize(width: width.intValue, height: height.intValue)
-            dict[clapOffsetKey] = NSPoint(x: wOffset.intValue, y: hOffset.intValue)
-        } else {
-            dict[clapSizeKey] = dict[dimensionsKey]
-            dict[clapOffsetKey] = NSZeroPoint
-        }
-        
-        let extPA : CFPropertyList? =
-            CMFormatDescriptionGetExtension(desc,
-                                            extensionKey: kCMFormatDescriptionExtension_PixelAspectRatio)
-        if let extPA = extPA {
-            let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as! NSNumber
-            let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as! NSNumber
-            
-            dict[paspRatioKey] = NSSize(width: hSpacing.doubleValue, height: vSpacing.doubleValue)
-        } else {
-            dict[paspRatioKey] = NSSize(width: 1.0, height: 1.0)
-        }
-        
-        return dict
-    }
-    
-    /* ============================================ */
     // MARK: - public method - export/write methods
     /* ============================================ */
     

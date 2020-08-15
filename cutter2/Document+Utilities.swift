@@ -56,8 +56,9 @@ extension Document {
             let handler : (NSApplication.ModalResponse) -> Void = {(response) in
                 //if response == .stop {/* hideBusySheet() called */}
             }
-            
             alert.beginSheetModal(for: window, completionHandler: handler)
+            
+            // Keep NSAlert object for later update
             self.alert = alert
         }
     }
@@ -69,6 +70,8 @@ extension Document {
             guard let alert = self.alert else { return }
             
             window.endSheet(alert.window)
+            
+            // Release NSAlert object
             self.alert = nil
         }
     }
@@ -78,24 +81,23 @@ extension Document {
         // Don't use NSDocument default error handling
         DispatchQueue.main.async {
             let alert = NSAlert(error: error)
-            do {
-                let err = error as NSError
-                let userInfo : [String:Any]? = err.userInfo
-                if let info = userInfo {
-                    var showDebugInfo: Bool = false
-                    let keys = info.keys
-                    if keys.contains(NSUnderlyingErrorKey) || keys.contains(NSDebugDescriptionErrorKey) {
-                        showDebugInfo = true
-                    }
-                    if #available(OSX 10.13, *), keys.contains(NSLocalizedFailureErrorKey) {
-                        showDebugInfo = true
-                    }
-                    if showDebugInfo {
-                        alert.informativeText = err.description
-                    } else if keys.contains(NSLocalizedFailureReasonErrorKey) {
-                        alert.informativeText =  info[NSLocalizedFailureReasonErrorKey] as! String
-                    }
+            let err :NSError = error as NSError
+            var text :String? = nil
+            let userInfo : [String:Any] = err.userInfo // Can be empty dictionary
+            if userInfo.count > 0 {
+                let keys = userInfo.keys
+                if keys.contains(NSUnderlyingErrorKey) || keys.contains(NSDebugDescriptionErrorKey) {
+                    text = err.description
+                } else if #available(OSX 10.13, *), keys.contains(NSLocalizedFailureErrorKey) {
+                    text = userInfo[NSLocalizedFailureErrorKey] as? String
+                } else if keys.contains(NSLocalizedDescriptionKey) {
+                    text = userInfo[NSLocalizedDescriptionKey] as? String
+                } else if keys.contains(NSLocalizedFailureReasonErrorKey) {
+                    text = userInfo[NSLocalizedFailureReasonErrorKey] as? String
                 }
+            }
+            if let text = text {
+                alert.informativeText = text
             }
             alert.beginSheetModal(for: self.window!, completionHandler: nil)
         }

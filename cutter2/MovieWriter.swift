@@ -11,7 +11,13 @@ import AVFoundation
 import VideoToolbox
 
 class MovieWriter: NSObject, SampleBufferChannelDelegate {
-    // MARK: -
+    public init(_ movie : AVMovie) {
+        internalMovie = movie.mutableCopy() as! AVMutableMovie
+    }
+    
+    /* ============================================ */
+    // MARK: - common properties
+    /* ============================================ */
     
     private var internalMovie : AVMutableMovie
     
@@ -24,11 +30,9 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     /// Flag if writer is running
     public private(set) var writerIsBusy : Bool = false
     
-    init(_ movie : AVMovie) {
-        internalMovie = movie.mutableCopy() as! AVMutableMovie
-    }
-    
+    /* ============================================ */
     // MARK: - exportSession support
+    /* ============================================ */
     
     /// ExportSession
     private var exportSession : AVAssetExportSession? = nil
@@ -40,7 +44,7 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     private var exportSessionEnd : Date? = nil
     
     /// Progress of last exportSession (update after finished)
-    private var exportSessionProgress : Float = 0.0
+    public private(set) var exportSessionProgress : Float = 0.0
     
     /// Status of last exportSession (update after finished)
     private var exportSessionStatus : AVAssetExportSession.Status = .unknown
@@ -49,9 +53,11 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     private var exportSessionTimer : Timer? = nil
     
     /// Status polling timer interval
-    private let exportSessionTimerRefreshInterval : TimeInterval = 1.0/10
+    public var exportSessionTimerRefreshInterval : TimeInterval = 1.0/10
     
+    /* ============================================ */
     // MARK: - exportCustomMovie support
+    /* ============================================ */
     
     public private(set) var finalSuccess : Bool = true
     public private(set) var finalError : Error? = nil
@@ -62,11 +68,11 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     private var param : [String:Any] = [:]
 }
 
-/* ============================================ */
-// MARK: - exportSession methods
-/* ============================================ */
-
 extension MovieWriter {
+    /* ============================================ */
+    // MARK: - exportSession methods
+    /* ============================================ */
+    
     /// Status update timer
     ///
     /// - Parameter timer: Timer object
@@ -286,12 +292,12 @@ extension MovieWriter {
     }
 }
 
-/* ============================================ */
-// MARK: - exportCustomMovie methods
-/* ============================================ */
-
 extension MovieWriter {
-    fileprivate func prepareCopyChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter, _ mediaType : AVMediaType) {
+    /* ============================================ */
+    // MARK: - exportCustomMovie methods
+    /* ============================================ */
+    
+    private func prepareCopyChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter, _ mediaType : AVMediaType) {
         for track in movie.tracks(withMediaType: mediaType) {
             // source
             let arOutputSetting : [String:Any]? = nil
@@ -314,7 +320,7 @@ extension MovieWriter {
         }
     }
     
-    fileprivate func prepareOtherMediaChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
+    private func prepareOtherMediaChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
         let numCopyOtherMedia = param[kCopyOtherMediaKey] as? NSNumber
         let copyOtherMedia : Bool = numCopyOtherMedia?.boolValue ?? false
         guard copyOtherMedia else { return }
@@ -330,7 +336,7 @@ extension MovieWriter {
         }
     }
     
-    fileprivate func prepareAudioChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
+    private func prepareAudioChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
         let numAudioEncode = param[kAudioEncodeKey] as? NSNumber
         let audioEncode : Bool = numAudioEncode?.boolValue ?? true
         if audioEncode == false {
@@ -481,7 +487,7 @@ extension MovieWriter {
         } // for track in movie.tracks(withMediaType: .audio)
     }
     
-    fileprivate func hasFieldModeSupport(of track : AVMovieTrack) -> Bool {
+    private func hasFieldModeSupport(of track : AVMovieTrack) -> Bool {
         let descArray : [Any] = track.formatDescriptions
         guard descArray.count > 0 else { return false }
         
@@ -521,7 +527,7 @@ extension MovieWriter {
         return false
     }
     
-    fileprivate func addDecompressionProperties(_ track: AVMovieTrack, _ copyField: Bool, _ arOutputSetting: inout [String : Any]) {
+    private func addDecompressionProperties(_ track: AVMovieTrack, _ copyField: Bool, _ arOutputSetting: inout [String : Any]) {
         if #available(OSX 10.13, *), hasFieldModeSupport(of: track) {
             var decompressionProperties : NSDictionary? = nil
             if copyField {
@@ -543,7 +549,7 @@ extension MovieWriter {
         }
     }
     
-    fileprivate func prepareVideoChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
+    private func prepareVideoChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
         let numVideoEncode = param[kVideoEncodeKey] as? NSNumber
         let videoEncode : Bool = numVideoEncode?.boolValue ?? true
         if videoEncode == false {
@@ -862,7 +868,8 @@ extension MovieWriter {
         }
     }
     
-    internal func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer) {
+    // SampleBufferChannelDelegate
+    public func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer) {
         if let updateProgress = updateProgress {
             let progress : Float = Float(calcProgress(of: buffer))
             updateProgress(progress)
@@ -894,11 +901,22 @@ extension MovieWriter {
     }
 }
 
-/* ============================================ */
-// MARK: - writeMovie methods
-/* ============================================ */
-
 extension MovieWriter {
+    /* ============================================ */
+    // MARK: - writeMovie methods
+    /* ============================================ */
+    
+    /// Flatten mode
+    ///
+    /// - writeSelfContaind: Flatten in SelfContained Movie
+    /// - writeReferenceMovie: Flatten in Reference Movie
+    /// - refreshMovieHeader: Refresh Movie Header (keep data box)
+    private enum FlattenMode {
+        case writeSelfContaind
+        case writeReferenceMovie
+        case refreshMovieHeader
+    }
+    
     /// Write internalMovie to destination url (as self-contained or reference movie)
     ///
     /// - Parameters:
@@ -919,17 +937,6 @@ extension MovieWriter {
         } else {
             try exportMovie(to: url, fileType: type, presetName: nil)
         }
-    }
-    
-    /// Flatten mode
-    ///
-    /// - writeSelfContaind: Flatten in SelfContained Movie
-    /// - writeReferenceMovie: Flatten in Reference Movie
-    /// - refreshMovieHeader: Refresh Movie Header (keep data box)
-    private enum FlattenMode {
-        case writeSelfContaind
-        case writeReferenceMovie
-        case refreshMovieHeader
     }
     
     /// Flatten internal movie to destination url

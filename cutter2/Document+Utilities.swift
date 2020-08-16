@@ -35,7 +35,7 @@ extension Document {
         }
         
         // Update UI in main queue
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [unowned self] in // @escaping
             guard let alert = self.alert else { return }
             guard progress.isNormal else { return }
             
@@ -45,7 +45,7 @@ extension Document {
     
     /// Show busy modalSheet
     internal func showBusySheet(_ message : String?, _ info : String?) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [unowned self] in // @escaping
             guard let window = self.window else { return }
             
             let alert : NSAlert = NSAlert()
@@ -53,7 +53,7 @@ extension Document {
             alert.informativeText = info ?? "Hold on seconds...(informative)"
             alert.alertStyle = .informational
             alert.addButton(withTitle: "") // No button on sheet
-            let handler : (NSApplication.ModalResponse) -> Void = {(response) in
+            let handler : (NSApplication.ModalResponse) -> Void = {(response) in // @escaping
                 //if response == .stop {/* hideBusySheet() called */}
             }
             alert.beginSheetModal(for: window, completionHandler: handler)
@@ -65,7 +65,7 @@ extension Document {
     
     /// Hide busy modalSheet
     internal func hideBusySheet() {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [unowned self] in // @escaping
             guard let window = self.window else { return }
             guard let alert = self.alert else { return }
             
@@ -79,7 +79,7 @@ extension Document {
     /// Present ErrorSheet asynchronously
     internal func showErrorSheet(_ error: Error) {
         // Don't use NSDocument default error handling
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [unowned self] in // @escaping
             let alert = NSAlert(error: error)
             let err :NSError = error as NSError
             var text :String? = nil
@@ -182,7 +182,7 @@ extension Document {
         }
         
         player.pause()
-        let handler : (Bool) -> Void = {[unowned player] (finished) in
+        let handler : (Bool) -> Void = {[unowned player] (finished) in // @escaping
             guard let mutator = self.movieMutator else { return }
             player.rate = rate
             self.updateTimeline(time, range: mutator.selectedTimeRange)
@@ -228,7 +228,7 @@ extension Document {
             player.replaceCurrentItem(with: playerItem)
             
             // seek
-            let handler : (Bool) -> Void = {[unowned pv] (finished) in
+            let handler : (Bool) -> Void = {[unowned pv] (finished) in // @escaping
                 pv.needsDisplay = true
             }
             playerItem.seek(to: mutator.insertionTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero,
@@ -381,7 +381,7 @@ extension Document {
     /// Register observer for movie mutation
     internal func addMutationObserver() {
         // Swift.print(#function, #line, #file)
-        let handler : (Notification) -> Void = {[unowned self] (notification) in
+        let handler : (Notification) -> Void = {[unowned self] (notification) in // @escaping
             Swift.print("#####", "======================== Received : .movieWasMutated ========================")
             
             // extract CMTime/CMTimeRange from userInfo

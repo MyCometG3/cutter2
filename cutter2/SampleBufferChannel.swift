@@ -43,7 +43,7 @@ class SampleBufferChannel: NSObject {
         self.delegate = delegate
         self.completionHandler = completionHandler
         
-        awInput.requestMediaDataWhenReady(on: queue, using: {[unowned self] in
+        awInput.requestMediaDataWhenReady(on: queue, using: {[unowned self] in // @escaping
             if self.finished { return }
             
             let delegate : SampleBufferChannelDelegate = self.delegate!
@@ -71,7 +71,7 @@ class SampleBufferChannel: NSObject {
     
     public func cancel() {
         guard let queue = self.queue else { return }
-        queue.async {
+        queue.async { [unowned self] in
             self.callCompletionHandlerIfNecessary()
         }
     }

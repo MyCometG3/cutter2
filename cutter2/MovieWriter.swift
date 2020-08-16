@@ -207,7 +207,7 @@ extension MovieWriter {
         
         // Start ExportSession
         let semaphore : DispatchSemaphore = DispatchSemaphore(value: 0)
-        let handler : () -> Void = {[unowned self] in
+        let handler : () -> Void = {[unowned self] in // @escaping
             guard let exportSession = self.exportSession else { return }
             
             // Check results
@@ -859,13 +859,13 @@ extension MovieWriter {
         let dg : DispatchGroup = DispatchGroup()
         for sbc in customSampleBufferChannels {
             dg.enter()
-            let handler : () -> Void = { dg.leave() }
+            let handler : () -> Void = { dg.leave() } // @escaping
             sbc.start(with: self, completionHandler: handler)
         }
         
         // Wait the completion of DispatchGroup
         let semaphore  = DispatchSemaphore(value: 0)
-        dg.notify(queue: dgQueue, execute: {[unowned self, ar, aw] in
+        dg.notify(queue: dgQueue, execute: {[unowned self, ar, aw] in // @escaping
             var success : Bool = false
             let cancel : Bool = self.writeCancelled
             var error : Error? = nil
@@ -879,7 +879,7 @@ extension MovieWriter {
             // Finish writing session - blocking
             let sem = DispatchSemaphore(value: 0)
             aw.endSession(atSourceTime: endTime)
-            aw.finishWriting(completionHandler: {
+            aw.finishWriting(completionHandler: { // @escaping
                 sem.signal()
             })
             sem.wait() // await completion
@@ -948,7 +948,7 @@ extension MovieWriter {
     }
     
     public func cancelCustomMovie(_ sender : Any) {
-        customQueue?.async {
+        customQueue?.async { [unowned self] in // @escaping
             for sbc in self.customSampleBufferChannels {
                 sbc.cancel()
             }
@@ -972,7 +972,7 @@ extension MovieWriter {
         //    }
         //}
         //
-        //DispatchQueue.main.async {
+        //DispatchQueue.main.async { [unowned self] in // @escaping
         //    // Any GUI related processing - update GUI etc. here
         //}
     }

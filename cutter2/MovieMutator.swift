@@ -310,9 +310,9 @@ class MovieMutator: MovieMutatorBase {
         guard let data = movieData() else { NSSound.beep(); return; }
         
         // register undo record
-        let undoCutHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in
+        let undoCutHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
             // register redo record
-            let redoCutHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in
+            let redoCutHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
                 me2.cutSelection(using: undoManager)
             }
             undoManager.registerUndo(withTarget: me1, handler: redoCutHandler)
@@ -344,9 +344,9 @@ class MovieMutator: MovieMutatorBase {
         guard let data = movieData() else { NSSound.beep(); return; }
         
         // register undo record
-        let undoPasteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in
+        let undoPasteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
             // register redo record
-            let redoPasteHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in
+            let redoPasteHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
                 me2.pasteAtInsertionTime(using: undoManager)
             }
             undoManager.registerUndo(withTarget: me1, handler: redoPasteHandler)
@@ -381,9 +381,9 @@ class MovieMutator: MovieMutatorBase {
         guard let data = movieData() else { NSSound.beep(); return; }
         
         // register undo redord
-        let undoDeleteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in
+        let undoDeleteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
             // register redo record
-            let redoDeleteHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in
+            let redoDeleteHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
                 me2.deleteSelection(using: undoManager)
             }
             undoManager.registerUndo(withTarget: me1, handler: redoDeleteHandler)
@@ -441,9 +441,9 @@ class MovieMutator: MovieMutatorBase {
         guard let data = movieData() else { NSSound.beep(); return; }
         
         // register undo record
-        let undoPasteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in
+        let undoPasteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
             // register redo replace
-            let redoPasteHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in
+            let redoPasteHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
                 me2.updateFormat(movie, using: undoManager)
             }
             undoManager.registerUndo(withTarget: me1, handler: redoPasteHandler)

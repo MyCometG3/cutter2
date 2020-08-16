@@ -163,7 +163,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         typealias signature = @convention(c) (AnyObject, Selector, AnyObject, Bool, UnsafeMutableRawPointer?) -> Void
         let function = unsafeBitCast(method, to: signature.self)
         
-        self.closingBlock = {[unowned obj, shouldCloseSelector, contextInfo] (flag) -> Void in
+        self.closingBlock = {[unowned obj, shouldCloseSelector, contextInfo] (flag) -> Void in // @escaping
             // Swift.print(#function, #line, #file, "shouldClose =", flag)
             function(obj, shouldCloseSelector!, self, flag, contextInfo)
         }
@@ -274,7 +274,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         // Sandbox support - keep source document security scope bookmark
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [unowned self] in // @escaping
                 let fileType : AVFileType = AVFileType.init(rawValue: typeName)
                 guard fileType == .mov else { return }
                 
@@ -378,7 +378,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     private func refreshMovie() {
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
-        DispatchQueue.main.async {[unowned self] in
+        DispatchQueue.main.async {[unowned self] in // @escaping
             guard let url : URL = self.fileURL else { return }
             let newMovie : AVMovie? = AVMovie(url: url, options: nil)
             if let newMovie = newMovie {
@@ -539,11 +539,11 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         guard let transcodeVC = contVC as? TranscodeViewController else { return }
         
-        transcodeVC.beginSheetModal(for: self.window!, handler: {(response) in
+        transcodeVC.beginSheetModal(for: self.window!, handler: {(response) in // @escaping
             // Swift.print(#function, #line, #file)
             guard response == NSApplication.ModalResponse.continue else { return }
             
-            DispatchQueue.main.async {[unowned self] in
+            DispatchQueue.main.async {[unowned self] in // @escaping
                 self.transcoding = true
                 self.saveTo(self)
                 self.transcoding = false
@@ -758,7 +758,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         guard let dict : [AnyHashable:Any] = mutator.clappaspDictionary() else { return }
         guard caparVC.applySource(dict) else { return }
         
-        caparVC.beginSheetModal(for: self.window!, handler: {(response) in
+        caparVC.beginSheetModal(for: self.window!, handler: {(response) in // @escaping
             // Swift.print(#function, #line, #file)
             guard response == .continue else { return }
             

@@ -56,7 +56,7 @@ class CAPARViewController: NSViewController {
         parent.beginSheet(sheet, completionHandler: handler)
         
         NotificationCenter.default.addObserver(forName: NSControl.textDidChangeNotification,
-                                               object: nil, queue: nil) { (notification) in
+                                               object: nil, queue: nil) { (notification) in // @escaping
                                                 self.controlTextDidChange(notification)
         }
     }
@@ -124,7 +124,7 @@ class CAPARViewController: NSViewController {
     func controlTextDidChange(_ obj: Notification) {
         // Swift.print(#function, #line, #file)
         
-        DispatchQueue.main.async{
+        DispatchQueue.main.async { [unowned self] in // @escaping
             self.updateStruct()
             self.updateLabels(self)
         }

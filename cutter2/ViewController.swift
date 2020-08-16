@@ -165,7 +165,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     private func addWindowResizeObserver() {
         guard let window = view.window else { return }
         let center = NotificationCenter.default
-        let handler : (Notification) -> Void = {[unowned self] (notification) in
+        let handler : (Notification) -> Void = {[unowned self] (notification) in // @escaping
             let object = notification.object as AnyObject
             if object !== window {
                 return
@@ -191,7 +191,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     
     private func addUpdateReqObserver() {
         let center = NotificationCenter.default
-        let handler : (Notification) -> Void = {[unowned self] (notification) in
+        let handler : (Notification) -> Void = {[unowned self] (notification) in // @escaping
             let object = notification.object as AnyObject
             if object !== self.delegate {
                 return

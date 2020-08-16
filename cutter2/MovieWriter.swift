@@ -28,23 +28,35 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     public var updateProgress : ((Float) -> Void)? = nil
     
     /// Flag if writer is running
-    public private(set) var writerIsBusy : Bool = false
+    public private(set) var writeInProgress : Bool = false
+    
+    /// Flag if writer finished successfully
+    public private(set) var writeSuccess : Bool = false
+    
+    /// Flag if cancelled while writing
+    public private(set) var writeCancelled : Bool = false
+    
+    /// Error result while writing
+    public private(set) var writeError : Error? = nil
+    
+    /// Date when save/export operation start
+    public private(set) var writeStart : Date? = nil
+    
+    /// Date when save/export operation finish
+    public private(set) var writeEnd : Date? = nil
+    
+    /// Progress ratio of save/export operation
+    public private(set) var writeProgress : Float = 0.0
     
     /* ============================================ */
     // MARK: - exportSession support
     /* ============================================ */
     
+    /// Status polling timer interval
+    private let exportSessionTimerRefreshInterval : TimeInterval = 1.0/10
+    
     /// ExportSession
     private var exportSession : AVAssetExportSession? = nil
-    
-    /// Date when last exportSession had started
-    private var exportSessionStart : Date? = nil
-    
-    /// Date when last exportSession had finished
-    private var exportSessionEnd : Date? = nil
-    
-    /// Progress of last exportSession (update after finished)
-    public private(set) var exportSessionProgress : Float = 0.0
     
     /// Status of last exportSession (update after finished)
     private var exportSessionStatus : AVAssetExportSession.Status = .unknown
@@ -52,20 +64,18 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     /// Status polling timer
     private var exportSessionTimer : Timer? = nil
     
-    /// Status polling timer interval
-    public var exportSessionTimerRefreshInterval : TimeInterval = 1.0/10
-    
     /* ============================================ */
     // MARK: - exportCustomMovie support
     /* ============================================ */
     
-    public private(set) var finalSuccess : Bool = true
-    public private(set) var finalError : Error? = nil
-    public private(set) var cancelled : Bool = false
+    /// DispatchGroupQueue for SampleBufferChannels
+    private var customQueue : DispatchQueue? = nil
     
-    private var queue : DispatchQueue? = nil
-    private var sampleBufferChannels : [SampleBufferChannel] = []
-    private var param : [String:Any] = [:]
+    /// SampleBufferChannels array
+    private var customSampleBufferChannels : [SampleBufferChannel] = []
+    
+    /// Parameter dictionary for custom exporting
+    private var customParam : [String:Any] = [:]
 }
 
 extension MovieWriter {
@@ -126,27 +136,55 @@ extension MovieWriter {
     public func exportMovie(to url : URL, fileType type : AVFileType, presetName preset : String?) throws {
         // Swift.print(#function, #line, #file)
         
-        guard writerIsBusy == false else {
+        guard writeInProgress == false else {
             var info : [String:Any] = [:]
             info[NSLocalizedDescriptionKey] = "Another exportSession is running."
             info[NSLocalizedFailureReasonErrorKey] = "Try after export session is completed."
             throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
         }
-        
-        writerIsBusy = true
         defer {
-            writerIsBusy = false
+            writeInProgress = false
         }
+        
+        /* ============================================ */
+        
+        // Update Properties
+        self.writeInProgress = true
+        self.writeSuccess = false
+        self.writeError = nil
+        self.writeCancelled = false
+        
+        let dateStart : Date = Date()
+        self.writeStart = dateStart
+        self.writeEnd = nil
+        self.writeProgress = 0.0
+        
+        self.exportSession = nil
+        self.exportSessionStatus = .unknown
+        
+        //
+        self.unblockUserInteraction?()
+        
+        // Issue start notification
+        let userInfoStart : [AnyHashable:Any] = [urlInfoKey:url,
+                                                 startInfoKey:dateStart]
+        let notificationStart = Notification(name: .movieWillExportSession,
+                                             object: self, userInfo: userInfoStart)
+        NotificationCenter.default.post(notificationStart)
+        
+        /* ============================================ */
         
         // Prepare exportSession
         let preset : String = (preset ?? AVAssetExportPresetPassthrough)
-        let srcMovie : AVMovie = internalMovie.copy() as! AVMovie
+        let movie : AVMutableMovie = internalMovie
         let valid : Bool = validateExportSession(fileType: type, presetName: preset)
-        guard valid, let exportSession = AVAssetExportSession(asset: srcMovie, presetName: preset) else {
+        guard valid, let exportSession = AVAssetExportSession(asset: movie, presetName: preset) else {
             var info : [String:Any] = [:]
             info[NSLocalizedDescriptionKey] = "Incompatible b/w UTI/preset is detected."
             info[NSLocalizedFailureReasonErrorKey] = "(type:" + type.rawValue + ", preset:" + preset + ") is incompatible."
-            throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+            self.writeError = NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+            self.writeSuccess = false
+            throw self.writeError ?? NSError()
         }
         
         // Configure exportSession
@@ -154,19 +192,10 @@ extension MovieWriter {
         exportSession.outputURL = url
         exportSession.shouldOptimizeForNetworkUse = true
         exportSession.canPerformMultiplePassesOverSourceMediaData = true
-        exportSession.timeRange = srcMovie.range
+        exportSession.timeRange = movie.range
         
         //
-        self.unblockUserInteraction?()
-        
-        // Issue start notification
-        let dateStart : Date = Date()
-        let userInfoStart : [AnyHashable:Any] = [urlInfoKey:url,
-                                                 startInfoKey:dateStart]
-        let notificationStart = Notification(name: .movieWillExportSession,
-                                             object: self, userInfo: userInfoStart)
-        NotificationCenter.default.post(notificationStart)
-        
+        self.exportSession = exportSession
         
         // Start progress timer
         exportSessionStartTimer()
@@ -174,51 +203,58 @@ extension MovieWriter {
             exportSessionStopTimer()
         }
         
+        /* ============================================ */
+        
         // Start ExportSession
-        self.exportSession = exportSession
-        self.exportSessionStart = dateStart
-        self.exportSessionEnd = nil
-        self.exportSessionProgress = 0.0
-        self.exportSessionStatus = .unknown
         let semaphore : DispatchSemaphore = DispatchSemaphore(value: 0)
         let handler : () -> Void = {[unowned self] in
             guard let exportSession = self.exportSession else { return }
             
             // Check results
-            var completed : Bool = false
-            let result : AVAssetExportSession.Status = exportSession.status
             let progress : Float = exportSession.progress
             let dateEnd : Date = Date()
             let interval : TimeInterval = dateEnd.timeIntervalSince(dateStart)
-            if result == .completed {
-                completed = true
-                Swift.print("#####", "result:", "completed", "progress:", progress, "elapsed:", interval)
-            } else {
-                let error : Error? = exportSession.error
-                Swift.print("#####", "result:", result, "progress:", progress, "elapsed:", interval, "error", (error ?? "n/a"))
-            }
+            let result : AVAssetExportSession.Status = exportSession.status
             
-            // Issue end notification
-            let userInfoEnd : [AnyHashable:Any] = [completedInfoKey:completed,
-                                                   urlInfoKey:url,
-                                                   endInfoKey:dateEnd,
-                                                   intervalInfoKey:interval]
-            let notificationEnd = Notification(name: .movieDidExportSession,
-                                               object: self, userInfo: userInfoEnd)
-            NotificationCenter.default.post(notificationEnd)
-            
-            // cleanup
+            // Update Properties
+            self.writeSuccess = (result == .completed)
+            self.writeError = exportSession.error
+            self.writeCancelled = (result == .cancelled)
+            self.writeStart = dateStart
+            self.writeEnd = dateEnd
+            self.writeProgress = progress
             self.exportSession = nil
-            self.exportSessionStart = dateStart
-            self.exportSessionEnd = dateEnd
-            self.exportSessionProgress = progress
             self.exportSessionStatus = result
+            
+            //
+            let statusStr = self.statusString(of: result)
+            let progressStr = String(format:"%.2f",progress * 100)
+            let intervalStr = String(format:"%.2f",interval)
+            if let error = self.writeError {
+                Swift.print("#####", "result:", statusStr, "progress:", progressStr, "elapsed:", intervalStr, "error", error)
+            } else {
+                Swift.print("#####", "result:", statusStr, "progress:", progressStr, "elapsed:", intervalStr)
+            }
             
             //
             semaphore.signal()
         }
         exportSession.exportAsynchronously(completionHandler: handler)
         semaphore.wait()
+        
+        /* ============================================ */
+        
+        // Issue end notification
+        var userInfoEnd : [AnyHashable:Any] = [urlInfoKey:url,
+                                               startInfoKey:dateStart,
+                                               completedInfoKey:self.writeSuccess]
+        if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
+            userInfoEnd[endInfoKey] = dateEnd
+            userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)
+        }
+        let notificationEnd = Notification(name: .movieDidExportSession,
+                                           object: self, userInfo: userInfoEnd)
+        NotificationCenter.default.post(notificationEnd)
     }
     
     /// Check compatibility b/w exportSession and presetName
@@ -229,16 +265,16 @@ extension MovieWriter {
     /// - Returns: True if compatible
     public func validateExportSession(fileType type : AVFileType, presetName preset : String?) -> Bool {
         let preset : String = (preset ?? AVAssetExportPresetPassthrough)
-        let srcMovie : AVAsset = internalMovie.copy() as! AVAsset
+        let movie : AVAsset = internalMovie
         
-        var compatiblePresets : [String] = AVAssetExportSession.exportPresets(compatibleWith: srcMovie)
+        var compatiblePresets : [String] = AVAssetExportSession.exportPresets(compatibleWith: movie)
         compatiblePresets = compatiblePresets + [AVAssetExportPresetPassthrough]
         guard compatiblePresets.contains(preset) else {
             Swift.print("ERROR: Incompatible presetName detected.")
             return false
         }
         
-        guard let exportSession : AVAssetExportSession = AVAssetExportSession(asset: srcMovie, presetName: preset) else {
+        guard let exportSession : AVAssetExportSession = AVAssetExportSession(asset: movie, presetName: preset) else {
             Swift.print("ERROR: Failed to create AVAssetExportSession.")
             return false
         }
@@ -258,7 +294,7 @@ extension MovieWriter {
     public func exportSessionProgressInfo() -> [String: Any] {
         var result : [String:Any] = [:]
         
-        if let dateStart = self.exportSessionStart {
+        if let dateStart = self.writeStart {
             if let session = self.exportSession {
                 // exportSession is running
                 let progress : Float = session.progress
@@ -276,12 +312,12 @@ extension MovieWriter {
                 result[estimatedTotalInfoKey] = estimatedTotal // seconds : Double
             } else {
                 // exportSession is not running
-                let progress : Float = self.exportSessionProgress
+                let progress : Float = self.writeProgress
                 let status : AVAssetExportSession.Status = self.exportSessionStatus
                 result[progressInfoKey] = progress // 0.0 - 1.0 : Float
                 result[statusInfoKey] = statusString(of: status)
                 
-                if let dateEnd = self.exportSessionEnd {
+                if let dateEnd = self.writeEnd {
                     let interval : TimeInterval = dateEnd.timeIntervalSince(dateStart)
                     result[elapsedInfoKey] = interval // seconds : Double
                 }
@@ -316,12 +352,12 @@ extension MovieWriter {
             let copySBC : SampleBufferChannel = SampleBufferChannel(readerOutput: arOutput,
                                                                     writerInput: awInput,
                                                                     trackID: track.trackID)
-            sampleBufferChannels += [copySBC]
+            customSampleBufferChannels += [copySBC]
         }
     }
     
     private func prepareOtherMediaChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
-        let numCopyOtherMedia = param[kCopyOtherMediaKey] as? NSNumber
+        let numCopyOtherMedia = customParam[kCopyOtherMediaKey] as? NSNumber
         let copyOtherMedia : Bool = numCopyOtherMedia?.boolValue ?? false
         guard copyOtherMedia else { return }
         
@@ -337,20 +373,20 @@ extension MovieWriter {
     }
     
     private func prepareAudioChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
-        let numAudioEncode = param[kAudioEncodeKey] as? NSNumber
+        let numAudioEncode = customParam[kAudioEncodeKey] as? NSNumber
         let audioEncode : Bool = numAudioEncode?.boolValue ?? true
         if audioEncode == false {
             prepareCopyChannels(movie, ar, aw, .audio)
             return
         }
         
-        let fourcc = param[kAudioCodecKey] as! NSString
+        let fourcc = customParam[kAudioCodecKey] as! NSString
         
-        let numAudioKbps = param[kAudioKbpsKey] as? NSNumber
+        let numAudioKbps = customParam[kAudioKbpsKey] as? NSNumber
         let targetKbps : Float = numAudioKbps?.floatValue ?? 128
         let targetBitRate : Int = Int(targetKbps * 1000)
         
-        let numLPCMDepth = param[kLPCMDepthKey] as? NSNumber
+        let numLPCMDepth = customParam[kLPCMDepthKey] as? NSNumber
         let lpcmDepth : Int = numLPCMDepth?.intValue ?? 16
         
         for track in movie.tracks(withMediaType: .audio) {
@@ -483,7 +519,7 @@ extension MovieWriter {
             let audioSBC : SampleBufferChannel = SampleBufferChannel(readerOutput: arOutput,
                                                                      writerInput: awInput,
                                                                      trackID: track.trackID)
-            sampleBufferChannels += [audioSBC]
+            customSampleBufferChannels += [audioSBC]
         } // for track in movie.tracks(withMediaType: .audio)
     }
     
@@ -550,23 +586,23 @@ extension MovieWriter {
     }
     
     private func prepareVideoChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
-        let numVideoEncode = param[kVideoEncodeKey] as? NSNumber
+        let numVideoEncode = customParam[kVideoEncodeKey] as? NSNumber
         let videoEncode : Bool = numVideoEncode?.boolValue ?? true
         if videoEncode == false {
             prepareCopyChannels(movie, ar, aw, .video)
             return
         }
         
-        let fourcc = param[kVideoCodecKey] as! NSString
+        let fourcc = customParam[kVideoCodecKey] as! NSString
         
-        let numVideoKbps = param[kVideoKbpsKey] as? NSNumber
+        let numVideoKbps = customParam[kVideoKbpsKey] as? NSNumber
         let targetKbps : Float = numVideoKbps?.floatValue ?? 2500
         let targetBitRate : Int = Int(targetKbps*1000)
         
-        let numCopyField = param[kCopyFieldKey] as? NSNumber
+        let numCopyField = customParam[kCopyFieldKey] as? NSNumber
         let copyField : Bool = numCopyField?.boolValue ?? false
         
-        let numCopyNCLC = param[kCopyNCLCKey] as? NSNumber
+        let numCopyNCLC = customParam[kCopyNCLCKey] as? NSNumber
         let copyNCLC : Bool = numCopyNCLC?.boolValue ?? false
         
         for track in movie.tracks(withMediaType: .video) {
@@ -711,44 +747,45 @@ extension MovieWriter {
             let videoSBC : SampleBufferChannel = SampleBufferChannel(readerOutput: arOutput,
                                                                      writerInput: awInput,
                                                                      trackID: track.trackID)
-            sampleBufferChannels += [videoSBC]
+            customSampleBufferChannels += [videoSBC]
         } // for track in movie.tracks(withMediaType: .video)
     }
     
     public func exportCustomMovie(to url : URL, fileType type : AVFileType, settings param : [String:Any]) throws {
         // Swift.print(#function, #line, #file)
         
-        guard writerIsBusy == false else {
+        guard writeInProgress == false else {
             var info : [String:Any] = [:]
             info[NSLocalizedDescriptionKey] = "Another exportSession is running."
             info[NSLocalizedFailureReasonErrorKey] = "Try after export session is completed."
             throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
         }
-        
-        writerIsBusy = true
         defer {
-            writerIsBusy = false
-            
-            if self.finalSuccess {
-                Swift.print("#####", "result:", "completed")
-            } else if self.cancelled {
-                Swift.print("#####", "result:", "canceled")
-            } else {
-                let error = self.finalError
-                Swift.print("#####", "result:", "failed", "error:", (error ?? "n/a"))
-            }
+            writeInProgress = false
         }
         
-        //
-        let queue : DispatchQueue = DispatchQueue(label: "exportCustomMovie")
-        self.param = param
-        self.queue = queue
-        self.sampleBufferChannels = []
-        self.finalSuccess = false
-        self.finalError = nil
-        self.cancelled = false
+        /* ============================================ */
+        
+        // Update Properties
+        self.writeInProgress = true
+        self.writeSuccess = false
+        self.writeError = nil
+        self.writeCancelled = false
+        
+        let dateStart : Date = Date()
+        self.writeStart = dateStart
+        self.writeEnd = nil
+        self.writeProgress = 0.0
+        
+        let dgQueue : DispatchQueue = DispatchQueue(label: "exportCustomMovie")
+        self.customParam = param
+        self.customQueue = dgQueue
+        self.customSampleBufferChannels = []
         
         //
+        self.unblockUserInteraction?()
+        
+        // Prepare assetReader/assetWriter
         let movie : AVMutableMovie = internalMovie
         let startTime : CMTime = movie.range.start
         let endTime : CMTime = movie.range.end
@@ -764,16 +801,17 @@ extension MovieWriter {
                 var info : [String:Any] = [:]
                 info[NSLocalizedDescriptionKey] = "Internal error"
                 info[NSLocalizedFailureReasonErrorKey] = "Either AVAssetReader or AVAssetWriter is not available."
-                self.finalError = NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
-                self.finalSuccess = false
-                return
+                self.writeError = NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+                self.writeSuccess = false
+                throw self.writeError ?? NSError()
             }
         } catch {
-            self.finalSuccess = false
-            self.finalError = error
-            return
+            self.writeError = error
+            self.writeSuccess = false
+            throw self.writeError ?? NSError()
         }
         
+        // Configure assetReader/assetWriter
         do {
             // setup aw parameters here
             aw.movieTimeScale = movie.timescale
@@ -785,86 +823,108 @@ extension MovieWriter {
             prepareVideoChannels(movie, ar, aw)
             prepareOtherMediaChannels(movie, ar, aw)
             
-            // start assetReader/assetWriter
+            // setup assetReader/assetWriter
             let readyReader : Bool = ar.startReading()
             let readyWriter : Bool = aw.startWriting()
             guard readyReader && readyWriter else {
                 let error = (readyReader == false) ? ar.error : aw.error
                 ar.cancelReading()
                 aw.cancelWriting()
-                self.rwDidFinish(result: false, error: error)
-                self.finalSuccess = false
-                self.finalError = error
-                return
+                self.writeError = error
+                self.writeSuccess = false
+                throw error ?? NSError()
             }
-            
-            // start writing session
-            aw.startSession(atSourceTime: startTime)
         }
         
-        // Allow sheet to show
-        self.unblockUserInteraction?()
+        /* ============================================ */
         
-        // Register and run each sampleBufferChannel as DispatchGroup
+        // Start actual writing session
+        aw.startSession(atSourceTime: startTime)
+        
+        // Start sampleBufferChannel as DispatchGroup
         let dg : DispatchGroup = DispatchGroup()
-        for sbc in sampleBufferChannels {
+        for sbc in customSampleBufferChannels {
             dg.enter()
             let handler : () -> Void = { dg.leave() }
             sbc.start(with: self, completionHandler: handler)
         }
         
-        // Wait till finish
-        let waitSem  = DispatchSemaphore(value: 0)
-        dg.notify(queue: queue, execute: {[unowned self, ar, aw] in
-            if self.cancelled == false { // either completed or failed
-                let arFailed = (ar.status == .failed)
-                if arFailed {
-                    self.finalSuccess = false
-                    self.finalError = ar.error
+        // Wait the completion of DispatchGroup
+        let semaphore  = DispatchSemaphore(value: 0)
+        dg.notify(queue: dgQueue, execute: {[unowned self, ar, aw] in
+            var success : Bool = false
+            let cancel : Bool = self.writeCancelled
+            var error : Error? = nil
+            
+            // Cancel assetReader/Writer if required
+            if cancel {
+                ar.cancelReading()
+                aw.cancelWriting()
+            }
+            
+            // Finish writing session - blocking
+            let sem = DispatchSemaphore(value: 0)
+            aw.endSession(atSourceTime: endTime)
+            aw.finishWriting(completionHandler: {
+                sem.signal()
+            })
+            sem.wait() // await completion
+            
+            // Verify status from assetReader/Writer
+            if (ar.status == .completed && aw.status == .completed) {
+                success = true
+            } else {
+                if (ar.status == .failed) {
+                    success = false
+                    error = ar.error
+                } else if (aw.status == .failed) {
+                    success = false
+                    error = aw.error
                 } else {
-                    // Finish writing session
-                    aw.endSession(atSourceTime: endTime)
-                    
-                    let sem = DispatchSemaphore(value: 0)
-                    aw.finishWriting(completionHandler: {
-                        let awFailed = (aw.status == .failed)
-                        if awFailed {
-                            self.finalSuccess = false
-                            self.finalError = aw.error
-                        } else {
-                            self.finalSuccess = true
-                        }
-                        sem.signal()
-                    })
-                    sem.wait() // await completion
+                    success = false
                 }
             }
             
-            ar.cancelReading()
-            aw.cancelWriting()
-            self.rwDidFinish(result: self.finalSuccess, error: self.finalError)
-            waitSem.signal()
+            //
+            let progress : Float = 1.0
+            let dateEnd : Date = Date()
+            let interval : TimeInterval = dateEnd.timeIntervalSince(dateStart)
+            
+            // Update Properties
+            self.writeSuccess = success
+            self.writeError = error
+            self.writeCancelled = cancel
+            self.writeStart = dateStart
+            self.writeEnd = dateEnd
+            self.writeProgress = progress
+            
+            //
+            let status = (success ? "completed" : (cancel ? "cancelled" : "failed"))
+            let progressStr = String(format:"%.2f",progress * 100)
+            let intervalStr = String(format:"%.2f",interval)
+            if let error = self.writeError {
+                Swift.print("#####", "result:", status, "progress:", progressStr, "elapsed:", intervalStr, "error", error)
+            } else {
+                Swift.print("#####", "result:", status, "progress:", progressStr, "elapsed:", intervalStr)
+            }
+            
+            //
+            semaphore.signal()
         })
-        waitSem.wait()
+        semaphore.wait()
         
-        if finalSuccess == false, let error = finalError {
+        //
+        if writeSuccess == false, let error = writeError {
             throw error
         }
     }
     
     public func cancelCustomMovie(_ sender : Any) {
-        queue?.async {
-            for sbc in self.sampleBufferChannels {
+        customQueue?.async {
+            for sbc in self.customSampleBufferChannels {
                 sbc.cancel()
             }
-            self.cancelled = true
-        }
-    }
-    
-    private func rwDidFinish(result success : Bool, error : Error?) {
-        // run some ui related tasks in main queue
-        DispatchQueue.main.async {
-            // do something for gui
+            self.writeCancelled = true
         }
     }
     
@@ -947,20 +1007,33 @@ extension MovieWriter {
     private func flattenMovie(to url : URL, with mode : FlattenMode) throws {
         // Swift.print(#function, #line, #file)
         
-        guard writerIsBusy == false else {
+        guard writeInProgress == false else {
             var info : [String:Any] = [:]
             info[NSLocalizedDescriptionKey] = "Another exportSession is running."
             info[NSLocalizedFailureReasonErrorKey] = "Try after export session is completed."
             throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
         }
-        
-        var completed : Bool = false
-        writerIsBusy = true
         defer {
-            writerIsBusy = false
-            Swift.print("#####", "result:", completed ? "completed" : "failed")
+            writeInProgress = false
         }
         
+        /* ============================================ */
+        
+        // Update Properties
+        self.writeInProgress = true
+        self.writeSuccess = false
+        self.writeError = nil
+        self.writeCancelled = false
+        
+        let dateStart : Date = Date()
+        self.writeStart = dateStart
+        self.writeEnd = nil
+        self.writeProgress = 0.0
+        
+        //
+        self.unblockUserInteraction?()
+        
+        // Prepare
         var selfContained : Bool = false
         var option : AVMovieWritingOptions = .truncateDestinationToMovieHeaderOnly
         var before : Notification.Name = .movieWillWriteHeaderOnly
@@ -984,48 +1057,84 @@ extension MovieWriter {
             after = .movieDidRefreshHeader
         }
         
+        // Issue start notification
+        let userInfoStart : [AnyHashable:Any] = [urlInfoKey:url]
+        let notificationStart = Notification(name: before, object: self, userInfo: userInfoStart)
+        NotificationCenter.default.post(notificationStart)
+        
+        /* ============================================ */
+        
+        // Prepare empty movie to save
+        let movie : AVMutableMovie = internalMovie
+        let range : CMTimeRange = movie.range
+        guard let newMovie : AVMutableMovie = try? AVMutableMovie(settingsFrom: movie, options: nil) else {
+            Swift.print("ERROR: Failed to create proxy object.")
+            assert(false, #function);
+            return
+        }
+        newMovie.timescale = movie.timescale // workaround
+        newMovie.defaultMediaDataStorage = selfContained ? AVMediaDataStorage(url: url, options: nil) : nil
+        
+        /* ============================================ */
+        
+        // Start flatten movie
         do {
-            //
-            let srcMovie : AVMutableMovie = internalMovie
-            let range : CMTimeRange = srcMovie.range
-            let tmp : AVMutableMovie? = try AVMutableMovie(settingsFrom: srcMovie, options: nil)
-            guard let newMovie : AVMutableMovie = tmp else {
-                Swift.print("ERROR: Failed to create proxy object.")
-                assert(false, #function);
-                return
-            }
-            newMovie.timescale = srcMovie.timescale
-            newMovie.defaultMediaDataStorage = selfContained ? AVMediaDataStorage(url: url, options: nil) : nil
+            var success : Bool = false
+            let cancel : Bool = self.writeCancelled
+            var error : Error? = nil
             
-            //
-            self.unblockUserInteraction?()
-            
-            //
-            let dateStart : Date = Date()
-            let userInfoStart : [AnyHashable:Any] = [urlInfoKey:url]
-            let notificationStart = Notification(name: before, object: self, userInfo: userInfoStart)
-            NotificationCenter.default.post(notificationStart)
-            
-            //
-            // Swift.print("#####", "working url =", url)
-            // Swift.print("#####", "start insertTimeRange()", (selfContained ? "selfContained" : "referenceOnly"))
+            // Insert sampleData to destination first
             try newMovie.insertTimeRange(range,
-                                         of: srcMovie,
+                                         of: movie,
                                          at: CMTime.zero,
                                          copySampleData: selfContained)
             
-            // Swift.print("#####", "start writeHeader()")
+            // Write movieHeader to destination
             try newMovie.writeHeader(to: url, fileType: AVFileType.mov, options: option)
             
-            // Swift.print("#####", "end writeHeader()")
-            completed = true
+            //
+            success = true
+            error = nil
             
             //
+            let progress : Float = 1.0
             let dateEnd : Date = Date()
             let interval : TimeInterval = dateEnd.timeIntervalSince(dateStart)
-            let userInfoEnd : [AnyHashable:Any] = [completedInfoKey:completed, urlInfoKey:url, intervalInfoKey:interval]
-            let notificationEnd = Notification(name: after, object: self, userInfo: userInfoEnd)
-            NotificationCenter.default.post(notificationEnd)
+            
+            // Update Properties
+            self.writeSuccess = success
+            self.writeError = error
+            self.writeCancelled = cancel
+            self.writeStart = dateStart
+            self.writeEnd = dateEnd
+            self.writeProgress = 1.0
+            
+            //
+            let status = "completed" // (success ? "completed" : (cancel ? "cancelled" : "failed"))
+            let progressStr = String(format:"%.2f",progress * 100)
+            let intervalStr = String(format:"%.2f",interval)
+            if let error = self.writeError {
+                Swift.print("#####", "result:", status, "progress:", progressStr, "elapsed:", intervalStr, "error", error)
+            } else {
+                Swift.print("#####", "result:", status, "progress:", progressStr, "elapsed:", intervalStr)
+            }
+        } catch {
+            self.writeError = error
+            self.writeSuccess = false
+            throw self.writeError ?? NSError()
         }
+        
+        /* ============================================ */
+        
+        // Issue end notification
+        var userInfoEnd : [AnyHashable:Any] = [urlInfoKey:url,
+                                               startInfoKey:dateStart,
+                                               completedInfoKey:self.writeSuccess]
+        if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
+            userInfoEnd[endInfoKey] = dateEnd
+            userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)
+        }
+        let notificationEnd = Notification(name: after, object: self, userInfo: userInfoEnd)
+        NotificationCenter.default.post(notificationEnd)
     }
 }

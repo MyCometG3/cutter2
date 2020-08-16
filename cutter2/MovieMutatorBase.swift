@@ -14,6 +14,8 @@ extension Notification.Name {
     static let movieWasMutated = Notification.Name("movieWasMutated")
     static let movieWillExportSession = Notification.Name("movieWillExportSession")
     static let movieDidExportSession = Notification.Name("movieDidExportSession")
+    static let movieWillExportCustom = Notification.Name("movieWillExportCustom")
+    static let movieDidExportCustom = Notification.Name("movieDidExportCustom")
     static let movieWillWriteHeaderOnly = Notification.Name("movieWillWriteHeaderOnly")
     static let movieDidWriteHeaderOnly = Notification.Name("movieDidWriteHeaderOnly")
     static let movieWillWriteWithData = Notification.Name("movieWillWriteWithData")

@@ -242,6 +242,11 @@ extension MovieWriter {
         exportSession.exportAsynchronously(completionHandler: handler)
         semaphore.wait()
         
+        //
+        if writeSuccess == false, let error = writeError {
+            throw error
+        }
+        
         /* ============================================ */
         
         // Issue end notification
@@ -785,6 +790,15 @@ extension MovieWriter {
         //
         self.unblockUserInteraction?()
         
+        // Issue start notification
+        let userInfoStart : [AnyHashable:Any] = [urlInfoKey:url,
+                                                 startInfoKey:dateStart]
+        let notificationStart = Notification(name: .movieWillExportCustom,
+                                             object: self, userInfo: userInfoStart)
+        NotificationCenter.default.post(notificationStart)
+        
+        /* ============================================ */
+        
         // Prepare assetReader/assetWriter
         let movie : AVMutableMovie = internalMovie
         let startTime : CMTime = movie.range.start
@@ -917,6 +931,20 @@ extension MovieWriter {
         if writeSuccess == false, let error = writeError {
             throw error
         }
+        
+        /* ============================================ */
+        
+        // Issue end notification
+        var userInfoEnd : [AnyHashable:Any] = [urlInfoKey:url,
+                                               startInfoKey:dateStart,
+                                               completedInfoKey:self.writeSuccess]
+        if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
+            userInfoEnd[endInfoKey] = dateEnd
+            userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)
+        }
+        let notificationEnd = Notification(name: .movieDidExportCustom,
+                                           object: self, userInfo: userInfoEnd)
+        NotificationCenter.default.post(notificationEnd)
     }
     
     public func cancelCustomMovie(_ sender : Any) {
@@ -1058,7 +1086,8 @@ extension MovieWriter {
         }
         
         // Issue start notification
-        let userInfoStart : [AnyHashable:Any] = [urlInfoKey:url]
+        let userInfoStart : [AnyHashable:Any] = [urlInfoKey:url,
+                                                 startInfoKey:dateStart]
         let notificationStart = Notification(name: before, object: self, userInfo: userInfoStart)
         NotificationCenter.default.post(notificationStart)
         

@@ -120,27 +120,17 @@ class MovieMutator: MovieMutatorBase {
         assert( validateClip(clip), #function ) //
         
         // create movieHeader data from movie
-        do {
-            // Swift.print(ts(), #function, #line, #file)
-            let data : Data? = try clip.makeMovieHeader(fileType: AVFileType.mov)
-            // Swift.print(ts(), #function, #line, #file)
+        if let data = clip.movHeader {
+            // register data to PBoard
+            let pBoard : NSPasteboard = NSPasteboard.general
+            pBoard.clearContents()
+            pBoard.setData(data, forType: .movieMutator)
             
-            if let data = data {
-                // register data to PBoard
-                let pBoard : NSPasteboard = NSPasteboard.general
-                pBoard.clearContents()
-                pBoard.setData(data, forType: .movieMutator)
-                
-                return true
-            } else {
-                assert(false, #function) //
-                return false
-            }
-        } catch {
-            Swift.print("ERROR:", error)
-            assert(false, #function)
+            return true
+        } else {
+            assert(false, #function) //
+            return false
         }
-        return false
     }
     
     /// Write movie clip data to PasteBoard
@@ -307,7 +297,7 @@ class MovieMutator: MovieMutatorBase {
         if !validateRange(range, true) { NSSound.beep(); return; }
         
         guard let clip = writeRangeToPBoard(range) else { NSSound.beep(); return; }
-        guard let data = movieData() else { NSSound.beep(); return; }
+        guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record
         let undoCutHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
@@ -341,7 +331,7 @@ class MovieMutator: MovieMutatorBase {
         if !validateRange(range, false) { NSSound.beep(); return; }
         
         guard let clip = readClipFromPBoard() else { NSSound.beep(); return; }
-        guard let data = movieData() else { NSSound.beep(); return; }
+        guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record
         let undoPasteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
@@ -378,7 +368,7 @@ class MovieMutator: MovieMutatorBase {
             assert(false, #function) //
             NSSound.beep(); return;
         }
-        guard let data = movieData() else { NSSound.beep(); return; }
+        guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo redord
         let undoDeleteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
@@ -438,7 +428,7 @@ class MovieMutator: MovieMutatorBase {
         
         if !validateRange(range, false) { NSSound.beep(); return; }
         
-        guard let data = movieData() else { NSSound.beep(); return; }
+        guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record
         let undoPasteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping

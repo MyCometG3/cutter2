@@ -397,7 +397,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             let newMovie : AVMovie? = AVMovie(url: url, options: nil)
             if let newMovie = newMovie {
                 guard let mutator = self.movieMutator else { return }
-                guard let data = try? newMovie.makeMovieHeader(fileType: .mov) else { return }
+                guard let data = newMovie.movHeader else { return }
                 
                 let time : CMTime = mutator.insertionTime
                 let range : CMTimeRange = mutator.selectedTimeRange

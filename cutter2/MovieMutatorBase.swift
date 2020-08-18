@@ -223,15 +223,6 @@ class MovieMutatorBase: NSObject {
         return true
     }
     
-    /// Get Data representation of Internal movie
-    ///
-    /// - Returns: Data
-    public func movieData() -> Data? {
-        let movie : AVMovie = internalMovie.mutableCopy() as! AVMutableMovie
-        let data = try? movie.makeMovieHeader(fileType: AVFileType.mov)
-        return data
-    }
-    
     /// Refresh Internal movie using Data
     ///
     /// - Parameter data: MovieHeader data
@@ -269,7 +260,7 @@ class MovieMutatorBase: NSObject {
     /// Debugging purpose - refresh internal movie object
     public func refreshMovie() {
         // AVMovie.duration seems to be broken after edit operation
-        guard let data : Data = self.movieData() else {
+        guard let data : Data = internalMovie.movHeader else {
             Swift.print(ts(), "ERROR: Failed to create Data from AVMovie")
             assert(false, #function); return
         }
@@ -392,7 +383,7 @@ class MovieMutatorBase: NSObject {
         let tracks = movie.tracks
         var size : boxSize = boxSize()
         
-        if let data = self.movieData() {
+        if let data = internalMovie.movHeader {
             let headerSize : Int64 = Int64(data.count)
             var videoSize : Int64 = 0, videoCount : Int64 = 0
             var audioSize : Int64 = 0, audioCount : Int64 = 0

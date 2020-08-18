@@ -10,6 +10,7 @@ import Cocoa
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
+    
     /* ============================================ */
     // MARK: - Properties
     /* ============================================ */
@@ -41,6 +42,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     ///
     /// - Parameter sender: Any
     @IBAction func nextDocument(_ sender: Any) {
+        // Swift.print(#function, #line, #file)
+        
         let docList : [Document]? = NSApp.orderedDocuments as? [Document]
         if let docList = docList, docList.count > 0 {
             if let doc = docList.last, let window = doc.window {
@@ -74,7 +77,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Check duplicate
         var found : Bool = false
-        validateBookmarks({(url) in
+        validateBookmarks(using: {(url) in
             if url.path == newURL.path {
                 found = true
             }
@@ -106,7 +109,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func startBookmarkAccess() {
         // Swift.print(#function, #line, #file)
         
-        validateBookmarks({(url) in
+        validateBookmarks(using: {(url) in
             _ = url.startAccessingSecurityScopedResource()
         })
     }
@@ -115,7 +118,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func stopBookmarkAccess() {
         // Swift.print(#function, #line, #file)
         
-        validateBookmarks({(url) in
+        validateBookmarks(using: {(url) in
             url.stopAccessingSecurityScopedResource()
         })
     }
@@ -123,8 +126,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// Validate bookmarks with block
     ///
     /// - Parameter task: block to process bookmark url
-    private func validateBookmarks(_ task : ((URL) -> Void)) {
+    private func validateBookmarks(using task : ((URL) -> Void)) {
         // Swift.print(#function, #line, #file)
+        
         var validItems : [Data] = []
         let defaults = UserDefaults.standard
         if let bookmarks = defaults.array(forKey: bookmarksKey) {

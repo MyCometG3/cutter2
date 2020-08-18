@@ -11,6 +11,11 @@ import AVKit
 import AVFoundation
 
 class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
+    
+    /* ============================================ */
+    // MARK: - properties
+    /* ============================================ */
+    
     /// Strong reference to MovieMutator
     public var movieMutator : MovieMutator? = nil
     
@@ -32,14 +37,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     }
     
     // Polling timer
-    internal var timer : Timer? = nil
-    internal var pollingInterval : TimeInterval = 1.0/15
+    public var timer : Timer? = nil
+    public var pollingInterval : TimeInterval = 1.0/15
     
     // KVO Context
-    internal var kvoContext = 0
+    public var kvoContext = 0
     
     // SavePanel with Accessory View support
-    internal weak var savePanel : NSSavePanel? = nil
+    public weak var savePanel : NSSavePanel? = nil
     private var accessoryVC : AccessoryViewController? = nil
     
     // Support #selector(NSDocument._something:didSomething:soContinue:)
@@ -52,20 +57,20 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     private var dimensionsType : dimensionsType = .clean
     
     //
-    internal var alert : NSAlert? = nil
+    public var alert : NSAlert? = nil
     
     //
-    internal var lastUpdateAt : UInt64 = 0
+    public var lastUpdateAt : UInt64 = 0
     
     //
-    internal var cachedTime = CMTime.invalid
-    internal var cachedWithinLastSampleRange : Bool = false
-    internal var cachedLastSampleRange : CMTimeRange? = nil
+    public var cachedTime = CMTime.invalid
+    public var cachedWithinLastSampleRange : Bool = false
+    public var cachedLastSampleRange : CMTimeRange? = nil
     
     //
-    internal var selfcontainedFlag : Bool = false
-    internal var overwriteFlag : Bool = false
-    internal var useAccessory : Bool = false
+    public var selfcontainedFlag : Bool = false
+    public var overwriteFlag : Bool = false
+    public var useAccessory : Bool = false
     
     /* ============================================ */
     // MARK: - NSDocument methods/properties
@@ -165,6 +170,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         self.closingBlock = {[unowned obj, shouldCloseSelector, contextInfo] (flag) -> Void in // @escaping
             // Swift.print(#function, #line, #file, "shouldClose =", flag)
+            
             function(obj, shouldCloseSelector!, self, flag, contextInfo)
         }
         
@@ -189,6 +195,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     override func close() {
         // Swift.print(#function, #line, #file)
+        
         super.close()
     }
     
@@ -275,6 +282,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Sandbox support - keep source document security scope bookmark
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
             DispatchQueue.main.async { [unowned self] in // @escaping
+                // Swift.print(#function, #line, #file)
+                
                 let fileType : AVFileType = AVFileType.init(rawValue: typeName)
                 guard fileType == .mov else { return }
                 
@@ -333,6 +342,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     override func write(to url: URL, ofType typeName: String) throws {
         // Swift.print(#function, #line, #file)
+        
         guard let mutator = self.movieMutator else { return }
         
         let fileType : AVFileType = AVFileType.init(rawValue: typeName)
@@ -377,8 +387,12 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     }
     
     private func refreshMovie() {
+        // Swift.print(#function, #line, #file)
+        
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
         DispatchQueue.main.async {[unowned self] in // @escaping
+            // Swift.print(#function, #line, #file)
+            
             guard let url : URL = self.fileURL else { return }
             let newMovie : AVMovie? = AVMovie(url: url, options: nil)
             if let newMovie = newMovie {
@@ -408,6 +422,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     override func prepareSavePanel(_ savePanel: NSSavePanel) -> Bool {
         // Swift.print(#function, #line, #file)
+        
         guard let mutator = self.movieMutator else { return false }
         
         // prepare accessory view controller
@@ -507,12 +522,16 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     // AccessoryViewDelegate protocol
     public func didUpdateFileType(_ fileType: AVFileType, selfContained: Bool) {
+        // Swift.print(#function, #line, #file)
+        
         guard let savePanel = self.savePanel else { return }
         savePanel.allowedFileTypes = [fileType.rawValue]
     }
     
     /// Get AVFileType from specified URL
     private func fileTypeForURL(_ url : URL) -> AVFileType? {
+        // Swift.print(#function, #line, #file)
+        
         let pathExt : String = url.pathExtension.lowercased()
         let dict : [String:AVFileType] = [
             "mov" : AVFileType.mov,
@@ -532,17 +551,21 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     @IBAction func transcode(_ sender: Any?) {
         // Swift.print(#function, #line, #file)
+        
+        // Prepare Transcode SheetController
         let storyboard : NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
         let sid : NSStoryboard.SceneIdentifier = "TranscodeSheet Controller"
         let transcodeWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController
         // transcodeWC.loadWindow()
         
+        // Prepare Transcode ViewController
         guard let contVC = transcodeWC.contentViewController else { return }
-        
         guard let transcodeVC = contVC as? TranscodeViewController else { return }
         
+        // Show Transcode Sheet
         transcodeVC.beginSheetModal(for: self.window!, handler: {(response) in // @escaping
             // Swift.print(#function, #line, #file)
+            
             guard response == NSApplication.ModalResponse.continue else { return }
             
             DispatchQueue.main.async {[unowned self] in // @escaping
@@ -555,6 +578,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     private func export(to url: URL, ofType typeName: String, preset: String) throws {
         // Swift.print(#function, #line, #file)
+        
         guard let mutator = self.movieMutator else { return }
         
         let fileType : AVFileType = AVFileType.init(rawValue: typeName)
@@ -581,6 +605,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     private func exportCustom(to url: URL, ofType typeName: String) throws {
         // Swift.print(#function, #line, #file)
+        
         guard let mutator = self.movieMutator else { return }
         
         let fileType : AVFileType = AVFileType.init(rawValue: typeName)
@@ -637,7 +662,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     // MARK: - Resize window
     /* ============================================ */
     
-    internal func displayRatio(_ baseSize : CGSize?) -> CGFloat {
+    public func displayRatio(_ baseSize : CGSize?) -> CGFloat {
+        // Swift.print(#function, #line, #file)
+        
         guard let mutator = self.movieMutator else { return 1.0 }
         
         let size = baseSize ?? mutator.dimensions(of: self.dimensionsType)
@@ -689,6 +716,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 keepTopLeft = true
             }
         }
+        
         // Calc new window size
         var newWindowSize = NSSize(width: extraSize.width + size.width,
                                    height: extraSize.height + size.height)
@@ -702,6 +730,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             newWindowSize = NSSize(width: extraSize.width + size.width,
                                    height: extraSize.height + size.height)
         }
+        
         // Transpose to anchor point
         var origin = window!.frame.origin
         do {
@@ -715,6 +744,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 origin = newOrigin
             }
         }
+        
         // Transpose into screenRect
         do {
             let scrXmax : CGFloat = screenRect.origin.x + screenRect.size.width
@@ -734,6 +764,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 origin = newOrigin
             }
         }
+        
         // Apply new Rect to window
         let newWindowRect = NSRect(origin: origin, size: newWindowSize)
         window!.setFrame(newWindowRect, display: true, animate: false)
@@ -748,22 +779,25 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         guard let mutator = self.movieMutator else { return }
         
+        // Prepare CAPAR SheetController
         let storyboard : NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
         let sid : NSStoryboard.SceneIdentifier = "CAPARSheet Controller"
         let caparWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController
         // caparWC.loadWindow()
         
+        // Prepare CAPAR ViewController
         guard let contVC = caparWC.contentViewController else { return }
-        
         guard let caparVC = contVC as? CAPARViewController else { return }
-        
         guard let dict : [AnyHashable:Any] = mutator.clappaspDictionary() else { return }
         guard caparVC.applySource(dict) else { return }
         
+        // Show CAPAR Sheet
         caparVC.beginSheetModal(for: self.window!, handler: {(response) in // @escaping
             // Swift.print(#function, #line, #file)
+            
             guard response == .continue else { return }
             
+            // Update Clap/Pasp settings
             let result : [AnyHashable:Any] = caparVC.resultContent
             let done : Bool = mutator.applyClapPasp(result, using: self.undoManager!)
             if !done {
@@ -776,5 +810,4 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             }
         })
     }
-    
 }

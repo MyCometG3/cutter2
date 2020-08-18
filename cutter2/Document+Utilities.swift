@@ -16,7 +16,9 @@ import AVFoundation
 extension Document {
     
     /// Update progress
-    internal func updateProgress(_ progress : Float) {
+    public func updateProgress(_ progress : Float) {
+        // Swift.print(#function, #line, #file)
+        
         // Thread safety
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
@@ -36,6 +38,8 @@ extension Document {
         
         // Update UI in main queue
         DispatchQueue.main.async { [unowned self] in // @escaping
+            // Swift.print(#function, #line, #file)
+            
             guard let alert = self.alert else { return }
             guard progress.isNormal else { return }
             
@@ -44,8 +48,12 @@ extension Document {
     }
     
     /// Show busy modalSheet
-    internal func showBusySheet(_ message : String?, _ info : String?) {
+    public func showBusySheet(_ message : String?, _ info : String?) {
+        // Swift.print(#function, #line, #file)
+        
         DispatchQueue.main.async { [unowned self] in // @escaping
+            // Swift.print(#function, #line, #file)
+            
             guard let window = self.window else { return }
             
             let alert : NSAlert = NSAlert()
@@ -64,8 +72,12 @@ extension Document {
     }
     
     /// Hide busy modalSheet
-    internal func hideBusySheet() {
+    public func hideBusySheet() {
+        // Swift.print(#function, #line, #file)
+        
         DispatchQueue.main.async { [unowned self] in // @escaping
+            // Swift.print(#function, #line, #file)
+            
             guard let window = self.window else { return }
             guard let alert = self.alert else { return }
             
@@ -77,9 +89,13 @@ extension Document {
     }
     
     /// Present ErrorSheet asynchronously
-    internal func showErrorSheet(_ error: Error) {
+    public func showErrorSheet(_ error: Error) {
+        // Swift.print(#function, #line, #file)
+        
         // Don't use NSDocument default error handling
         DispatchQueue.main.async { [unowned self] in // @escaping
+            // Swift.print(#function, #line, #file)
+            
             let alert = NSAlert(error: error)
             let err :NSError = error as NSError
             var text :String? = nil
@@ -109,7 +125,9 @@ extension Document {
 /* ============================================ */
 
 extension Document {
-    internal func inspecterDictionary() -> [String:Any] {
+    public func inspecterDictionary() -> [String:Any] {
+        // Swift.print(#function, #line, #file)
+        
         var dict : [String:Any] = [:]
         guard let mutator = self.movieMutator else { return dict }
         
@@ -132,14 +150,18 @@ extension Document {
     }
     
     /// used in debugInfo()
-    internal func modifier(_ mask : NSEvent.ModifierFlags) -> Bool {
+    public func modifier(_ mask : NSEvent.ModifierFlags) -> Bool {
+        // Swift.print(#function, #line, #file)
+        
         guard let current = NSApp.currentEvent?.modifierFlags else { return false }
         
         return current.contains(mask)
     }
     
     /// Cleanup for close document
-    internal func cleanup() {
+    public func cleanup() {
+        // Swift.print(#function, #line, #file)
+        
         //
         self.removeMutationObserver()
         self.useUpdateTimer(false)
@@ -157,7 +179,7 @@ extension Document {
     }
     
     /// Update Timeline view, seek, and refresh AVPlayerItem if required
-    internal func updateGUI(_ time : CMTime, _ timeRange : CMTimeRange, _ reload : Bool) {
+    public func updateGUI(_ time : CMTime, _ timeRange : CMTimeRange, _ reload : Bool) {
         // Swift.print(#function, #line, #file)
         
         // update GUI
@@ -171,7 +193,9 @@ extension Document {
     }
     
     /// Seek and Play
-    internal func resumeAfterSeek(to time : CMTime, with rate : Float) {
+    public func resumeAfterSeek(to time : CMTime, with rate : Float) {
+        // Swift.print(#function, #line, #file)
+        
         guard let player = self.player else { return }
         guard let mutator = self.movieMutator else { return }
         do {
@@ -191,8 +215,9 @@ extension Document {
     }
     
     /// Update marker position in Timeline view
-    internal func updateTimeline(_ time : CMTime, range : CMTimeRange) {
+    public func updateTimeline(_ time : CMTime, range : CMTimeRange) {
         // Swift.print(#function, #line, #file)
+        
         guard let mutator = self.movieMutator else { return }
         
         // Update marker position
@@ -220,6 +245,7 @@ extension Document {
     /// Refresh AVPlayerItem and seek as is
     private func updatePlayer() {
         // Swift.print(#function, #line, #file)
+        
         guard let mutator = movieMutator, let pv = playerView else { return }
         
         if let player = pv.player {
@@ -270,6 +296,7 @@ extension Document {
     /// Poll AVPlayer/AVPlayerItem status and refresh Timeline
     @objc func queryPosition() {
         // Swift.print(#function, #line, #file)
+        
         guard let mutator = self.movieMutator else { return }
         guard let player = self.player else { return }
         guard let playerItem = self.playerItem else { return }
@@ -301,6 +328,7 @@ extension Document {
     /// Add AVPlayer properties observer
     private func addPlayerObserver() {
         // Swift.print(#function, #line, #file)
+        
         guard let player = self.player else { return }
         
         player.addObserver(self,
@@ -316,6 +344,7 @@ extension Document {
     /// Remove AVPlayer properties observer
     private func removePlayerObserver() {
         // Swift.print(#function, #line, #file)
+        
         guard let player = self.player else { return }
         
         player.removeObserver(self,
@@ -330,6 +359,7 @@ extension Document {
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?,
                                context: UnsafeMutableRawPointer?) {
         // Swift.print(#function, #line, #file)
+        
         guard context == &(self.kvoContext) else { return }
         guard let object = object as? AVPlayer else { return }
         guard let keyPath = keyPath, let change = change else { return }
@@ -379,9 +409,12 @@ extension Document {
     }
     
     /// Register observer for movie mutation
-    internal func addMutationObserver() {
+    public func addMutationObserver() {
         // Swift.print(#function, #line, #file)
+        
         let handler : (Notification) -> Void = {[unowned self] (notification) in // @escaping
+            // Swift.print(#function, #line, #file)
+            
             Swift.print("#####", "======================== Received : .movieWasMutated ========================")
             
             // extract CMTime/CMTimeRange from userInfo
@@ -394,6 +427,8 @@ extension Document {
             self.updateGUI(time, timeRange, true)
         }
         let addBlock : () -> Void = {
+            // Swift.print(#function, #line, #file)
+            
             let center = NotificationCenter.default
             center.addObserver(forName: .movieWasMutated,
                                object: self.movieMutator,
@@ -408,8 +443,9 @@ extension Document {
     }
     
     /// Unregister observer for movie mutation
-    internal func removeMutationObserver() {
+    public func removeMutationObserver() {
         // Swift.print(#function, #line, #file)
+        
         let removeBlock = {
             let center = NotificationCenter.default
             center.removeObserver(self,
@@ -431,8 +467,9 @@ extension Document {
 extension Document {
     
     /// Move either start/end marker at current marker (nearest marker do sync)
-    internal func syncSelection(_ current: CMTime) {
+    public func syncSelection(_ current: CMTime) {
         // Swift.print(#function, #line, #file)
+        
         guard let mutator = self.movieMutator else { return }
         let selection : CMTimeRange = mutator.selectedTimeRange
         let start : CMTime = selection.start
@@ -447,8 +484,9 @@ extension Document {
     }
     
     /// Move either Or both start/end marker to current marker
-    internal func resetSelection(_ newTime : CMTime, _ resetStart : Bool, _ resetEnd : Bool) {
+    public func resetSelection(_ newTime : CMTime, _ resetStart : Bool, _ resetEnd : Bool) {
         // Swift.print(#function, #line, #file)
+        
         guard let mutator = self.movieMutator else { return }
         let selection : CMTimeRange = mutator.selectedTimeRange
         let start : CMTime = selection.start
@@ -465,8 +503,9 @@ extension Document {
     }
     
     /// Check if it is head of movie
-    internal func checkHeadOfMovie() -> Bool {
+    public func checkHeadOfMovie() -> Bool {
         // Swift.print(#function, #line, #file)
+        
         guard let player = self.player else { return false }
         
         // NOTE: Return false if player is not paused.
@@ -480,8 +519,9 @@ extension Document {
     }
     
     /// Check if it is tail of movie
-    internal func checkTailOfMovie() -> Bool {
+    public func checkTailOfMovie() -> Bool {
         // Swift.print(#function, #line, #file)
+        
         guard let mutator = self.movieMutator else { return false }
         guard let player = self.player else { return false }
         
@@ -514,8 +554,9 @@ extension Document {
     }
     
     /// Snap to grid - Adjust Timeline resolution
-    internal func quantize(_ position : Float64) -> CMTime {
+    public func quantize(_ position : Float64) -> CMTime {
         // Swift.print(#function, #line, #file)
+        
         guard let mutator = self.movieMutator else { return CMTime.zero }
         let position : Float64 = min(max(position, 0.0), 1.0)
         if let info = mutator.presentationInfoAtPosition(position) {
@@ -525,7 +566,6 @@ extension Document {
             return CMTimeMultiplyByFloat64(mutator.movieDuration(), multiplier: position)
         }
     }
-    
 }
 
 /* ============================================ */
@@ -533,7 +573,10 @@ extension Document {
 /* ============================================ */
 
 extension Document {
-    internal func validateIfSelfContained(for url : URL) -> Bool {
+    
+    public func validateIfSelfContained(for url : URL) -> Bool {
+        // Swift.print(#function, #line, #file)
+        
         /*
          If a movie refers to one file path only and it is same as the movie's filePath,
          - the URL is the only one source of the movie

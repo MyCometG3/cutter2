@@ -394,7 +394,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 newTime = CMTIME_IS_VALID(newTime) ? newTime : CMTime.zero
                 
                 self.removeMutationObserver()
-                _ = mutator.reloadAndNotify(from: data, range: newRange, time: newTime)
+                let newMutator = MovieMutator(with: newMovie)
+                _ = newMutator.reloadAndNotify(from: data, range: newRange, time: newTime)
+                self.movieMutator = newMutator
                 self.addMutationObserver()
             }
         }

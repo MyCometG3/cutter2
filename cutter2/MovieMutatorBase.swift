@@ -157,7 +157,7 @@ class MovieMutatorBase: NSObject {
     /* ============================================ */
     
     /// Wrapped AVMutableMovie object
-    internal var internalMovie : AVMutableMovie
+    public var internalMovie : AVMutableMovie
     
     /// Current Marker
     public var insertionTime : CMTime = CMTime.zero
@@ -180,45 +180,45 @@ class MovieMutatorBase: NSObject {
     private var cachedAudioFormats : [String]? = nil
     
     /* ============================================ */
-    // MARK: - private method - utilities
+    // MARK: - public method - utilities
     /* ============================================ */
     
-    @inline(__always) internal func validateClip(_ clip : AVMovie) -> Bool {
+    @inline(__always) public func validateClip(_ clip : AVMovie) -> Bool {
         return clip.range.duration > CMTime.zero
     }
     
-    @inline(__always) internal func validateTime (_ time : CMTime) -> Bool {
+    @inline(__always) public func validateTime (_ time : CMTime) -> Bool {
         let movieRange : CMTimeRange = self.movieRange()
         return (movieRange.start <= time && time <= movieRange.end)
     }
     
-    @inline(__always) internal func validateRange(_ range : CMTimeRange, _ needsDuration : Bool) -> Bool {
+    @inline(__always) public func validateRange(_ range : CMTimeRange, _ needsDuration : Bool) -> Bool {
         let movieRange : CMTimeRange = self.movieRange()
         return (range.duration > CMTime.zero)
             ? CMTimeRangeContainsTimeRange(movieRange, otherRange: range)
             : (needsDuration ? false : validateTime(range.start))
     }
     
-    @inline(__always) internal func clampRange(_ range : CMTimeRange) -> CMTimeRange {
+    @inline(__always) public func clampRange(_ range : CMTimeRange) -> CMTimeRange {
         let movieRange : CMTimeRange = self.movieRange()
         return CMTimeRangeGetIntersection(range, otherRange: movieRange)
     }
     
-    @inline(__always) internal func validatePosition(_ position : Float64) -> Bool {
+    @inline(__always) public func validatePosition(_ position : Float64) -> Bool {
         return (position >= 0.0 && position <= 1.0) ? true : false
     }
     
-    @inline(__always) internal func clampPosition(_ position : Float64) -> Float64 {
+    @inline(__always) public func clampPosition(_ position : Float64) -> Float64 {
         return min(max(position, 0.0), 1.0)
     }
     
-    @inline(__always) internal func validSize(_ size : NSSize) -> Bool {
+    @inline(__always) public func validSize(_ size : NSSize) -> Bool {
         if size.width.isNaN || size.height.isNaN { return false }
         if size.width <= 0 || size.height <= 0 { return false }
         return true
     }
     
-    @inline(__always) internal func validPoint(_ point : NSPoint) -> Bool {
+    @inline(__always) public func validPoint(_ point : NSPoint) -> Bool {
         if point.x.isNaN || point.y.isNaN { return false }
         return true
     }
@@ -226,7 +226,7 @@ class MovieMutatorBase: NSObject {
     /// Get Data representation of Internal movie
     ///
     /// - Returns: Data
-    internal func movieData() -> Data? {
+    public func movieData() -> Data? {
         let movie : AVMovie = internalMovie.mutableCopy() as! AVMutableMovie
         let data = try? movie.makeMovieHeader(fileType: AVFileType.mov)
         return data
@@ -236,7 +236,7 @@ class MovieMutatorBase: NSObject {
     ///
     /// - Parameter data: MovieHeader data
     /// - Returns: true if success
-    internal func reloadMovie(from data : Data?) -> Bool {
+    public func reloadMovie(from data : Data?) -> Bool {
         if let data = data {
             let newMovie : AVMutableMovie? = AVMutableMovie(data: data, options: nil)
             if let newMovie = newMovie {
@@ -255,7 +255,7 @@ class MovieMutatorBase: NSObject {
     ///   - range: new selection range
     ///   - time: new insertion time
     /// - Returns: true if success
-    internal func reloadAndNotify(from data : Data?, range : CMTimeRange, time : CMTime) -> Bool {
+    public func reloadAndNotify(from data : Data?, range : CMTimeRange, time : CMTime) -> Bool {
         if reloadMovie(from: data) {
             // Update Marker
             insertionTime = time
@@ -267,7 +267,7 @@ class MovieMutatorBase: NSObject {
     }
     
     /// Debugging purpose - refresh internal movie object
-    internal func refreshMovie() {
+    public func refreshMovie() {
         // AVMovie.duration seems to be broken after edit operation
         guard let data : Data = self.movieData() else {
             Swift.print(ts(), "ERROR: Failed to create Data from AVMovie")
@@ -294,7 +294,7 @@ class MovieMutatorBase: NSObject {
     /// - Parameters:
     ///   - time: Preferred cursor position in CMTime
     ///   - range: Preferred selection range in CMTimeRange
-    internal func internalMovieDidChange(_ time : CMTime, _ range : CMTimeRange) {
+    public func internalMovieDidChange(_ time : CMTime, _ range : CMTimeRange) {
         let timeValue : NSValue = NSValue(time: time)
         let timeRangeValue : NSValue = NSValue(timeRange: range)
         let userInfo : [AnyHashable:Any] = [timeValueInfoKey:timeValue,
@@ -305,7 +305,7 @@ class MovieMutatorBase: NSObject {
     }
     
     /// Reset inspector properties cache (on movie edit)
-    internal func flushCachedValues() {
+    public func flushCachedValues() {
         // Swift.print(ts(), #function, #line, #file)
         cachedMediaDataPaths = nil
         cachedVideoFPSs = nil

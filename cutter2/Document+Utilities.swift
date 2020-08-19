@@ -164,6 +164,7 @@ extension Document {
         
         //
         self.removeMutationObserver()
+        self.removeAllUndoRecords()
         self.useUpdateTimer(false)
         self.removePlayerObserver()
         
@@ -456,6 +457,15 @@ extension Document {
             removeBlock()
         } else {
             DispatchQueue.main.sync(execute: removeBlock)
+        }
+    }
+    
+    /// Unregister all undo record for current MovieMutator object
+    public func removeAllUndoRecords() {
+        // Swift.print(#function, #line, #file)
+        
+        if let mutator = self.movieMutator, let undoManager = self.undoManager {
+            undoManager.removeAllActions(withTarget: mutator)
         }
     }
 }

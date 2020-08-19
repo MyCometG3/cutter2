@@ -292,10 +292,9 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         guard let document = delegate else { return false }
         
         let code : UInt = UInt(event.keyCode)
+        let option : Bool = event.modifierFlags.contains(.option)
+        let shift : Bool = event.modifierFlags.contains(.shift)
         let autoKey : Bool = event.isARepeat
-        let mod : UInt = event.modifierFlags.rawValue
-        let noMod = (mod & NSEvent.ModifierFlags.deviceIndependentFlagsMask.rawValue) == 0
-        guard noMod else { return false }
         
         switch code {
         case 0x26: // J key
@@ -305,23 +304,33 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                     // Swift.print("#####", "L=>J : pause")
                     document.doSetRate(0)
                 }
+                return true
             }
-            if !keyDownK {
+            if keyDownJ && !keyDownK {
                 if !autoKey {
                     // Swift.print("#####", "J : backward play / accelarate")
                     document.doSetRate(-1)
                 }
-            } else {
-                if !autoKey {
-                    // Swift.print("#####", "K=>J : step backward")
-                    document.doStepByCount(-1, false, false)
-                    acceptAuto = true
+            }
+            if keyDownJ && keyDownK {
+                if option && shift {
+                    document.doStepBySecond(-offsetM, false, false)
+                } else if shift {
+                    document.doStepBySecond(-offsetL, false, false)
+                } else if option {
+                    document.doStepBySecond(-offsetS, false, false)
                 } else {
-                    if acceptAuto {
+                    if !autoKey {
+                        // Swift.print("#####", "K=>J : step backward")
+                        document.doStepByCount(-1, false, false)
+                        acceptAuto = true
+                    }
+                    if autoKey && acceptAuto {
                         // Swift.print("#####", "K=>J+ : backward play / slowmotion")
                         document.doSetSlow(-0.5)
                         acceptAuto = false
                     }
+                    
                 }
             }
             return true
@@ -371,19 +380,28 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                     // Swift.print("#####", "J=>L : pause")
                     document.doSetRate(0)
                 }
+                return true
             }
-            if !keyDownK {
+            if !keyDownK && keyDownL {
                 if !autoKey {
                     // Swift.print("#####", "L : forward play / accelarate")
                     document.doSetRate(+1)
                 }
-            } else {
-                if !autoKey {
-                    // Swift.print("#####", "K=>L : step forward")
-                    document.doStepByCount(+1, false, false)
-                    acceptAuto = true
+            }
+            if keyDownK && keyDownL {
+                if option && shift {
+                    document.doStepBySecond(+offsetM, false, false)
+                } else if shift {
+                    document.doStepBySecond(+offsetL, false, false)
+                } else if option {
+                    document.doStepBySecond(+offsetS, false, false)
                 } else {
-                    if acceptAuto {
+                    if !autoKey {
+                        // Swift.print("#####", "K=>L : step forward")
+                        document.doStepByCount(+1, false, false)
+                        acceptAuto = true
+                    }
+                    if autoKey && acceptAuto {
                         // Swift.print("#####", "K=>L+ : forward play / slowmotion")
                         document.doSetSlow(+0.5)
                         acceptAuto = false
@@ -393,11 +411,27 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             return true
         case 0x22 : // I key
             // Swift.print("#####", "I : set selection start")
-            doSetStart(to: .current)
+            if option && shift {
+                break
+            } else if shift {
+                break
+            } else if option {
+                doSetStart(to: .headOrCurrent)
+            } else {
+                doSetStart(to: .current)
+            }
             return true
         case 0x1f : // O key
             // Swift.print("#####", "O : set selection end")
-            doSetEnd(to: .current)
+            if option && shift {
+                break
+            } else if shift {
+                break
+            } else if option {
+                doSetEnd(to: .tailOrCurrent)
+            } else {
+                doSetEnd(to: .current)
+            }
             return true
         case 0x31 : // space bar
             if !autoKey {

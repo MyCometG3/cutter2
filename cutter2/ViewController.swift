@@ -299,20 +299,19 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         switch code {
         case 0x26: // J key
             keyDownJ = true
-            if keyDownJ && keyDownL {
+            if  keyDownJ              &&  keyDownL { // J_L, JKL
                 if !autoKey {
                     // Swift.print("#####", "L=>J : pause")
                     document.doSetRate(0)
                 }
-                return true
             }
-            if keyDownJ && !keyDownK {
+            if  keyDownJ && !keyDownK && !keyDownL { // J__
                 if !autoKey {
                     // Swift.print("#####", "J : backward play / accelarate")
                     document.doSetRate(-1)
                 }
             }
-            if keyDownJ && keyDownK {
+            if  keyDownJ &&  keyDownK && !keyDownL { // JK_
                 if option && shift {
                     document.doStepBySecond(-offsetM, false, false)
                 } else if shift {
@@ -330,43 +329,58 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                         document.doSetSlow(-0.5)
                         acceptAuto = false
                     }
-                    
                 }
             }
             return true
         case 0x28 : // K key
             keyDownK = true
-            if keyDownJ && keyDownL {
+            if  keyDownJ &&  keyDownK &&  keyDownL { // JKL
                 if !autoKey {
                     // Swift.print("#####", "J/L=>K : pause")
                     document.doSetRate(0)
                 }
             }
-            if keyDownJ {
-                if !autoKey {
-                    // Swift.print("#####", "J=>K : pause")
-                    document.doSetRate(0)
-                    acceptAuto = true
+            if  keyDownJ &&  keyDownK && !keyDownL { // JK_
+                if option && shift {
+                    document.doStepBySecond(-offsetM, false, false)
+                } else if shift {
+                    document.doStepBySecond(-offsetL, false, false)
+                } else if option {
+                    document.doStepBySecond(-offsetS, false, false)
                 } else {
-                    if acceptAuto {
-                        // Swift.print("#####", "K=>J+ : backward play / slowmotion")
+                    if !autoKey {
+                        // Swift.print("#####", "J=>K : pause")
+                        document.doSetRate(0)
+                        acceptAuto = true
+                    }
+                    if autoKey && acceptAuto {
+                        // Swift.print("#####", "J=>K+ : backward play / slowmotion")
                         document.doSetSlow(-0.5)
                         acceptAuto = false
                     }
                 }
-            } else if keyDownL {
-                if !autoKey {
-                    // Swift.print("#####", "L=>K : pause")
-                    document.doSetRate(0)
-                    acceptAuto = true
+            }
+            if !keyDownJ &&  keyDownK &&  keyDownL { // _KL
+                if option && shift {
+                    document.doStepBySecond(+offsetM, false, false)
+                } else if shift {
+                    document.doStepBySecond(+offsetL, false, false)
+                } else if option {
+                    document.doStepBySecond(+offsetS, false, false)
                 } else {
-                    if acceptAuto {
-                        // Swift.print("#####", "K=>L+ : forward play / slowmotion")
+                    if !autoKey {
+                        // Swift.print("#####", "L=>K : pause")
+                        document.doSetRate(0)
+                        acceptAuto = true
+                    }
+                    if autoKey && acceptAuto {
+                        // Swift.print("#####", "L=>K+ : forward play / slowmotion")
                         document.doSetSlow(+0.5)
                         acceptAuto = false
                     }
                 }
-            } else {
+            }
+            if !keyDownJ &&  keyDownK && !keyDownL { // _K_
                 if !autoKey {
                     // Swift.print("#####", "K : pause")
                     document.doSetRate(0)
@@ -375,20 +389,19 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             return true
         case 0x25 : // L key
             keyDownL = true
-            if keyDownJ && keyDownL {
+            if  keyDownJ              &&  keyDownL { // J_L, JKL
                 if !autoKey {
                     // Swift.print("#####", "J=>L : pause")
                     document.doSetRate(0)
                 }
-                return true
             }
-            if !keyDownK && keyDownL {
+            if !keyDownJ && !keyDownK &&  keyDownL { // __L
                 if !autoKey {
                     // Swift.print("#####", "L : forward play / accelarate")
                     document.doSetRate(+1)
                 }
             }
-            if keyDownK && keyDownL {
+            if !keyDownJ &&  keyDownK &&  keyDownL { // _KL
                 if option && shift {
                     document.doStepBySecond(+offsetM, false, false)
                 } else if shift {
@@ -454,26 +467,50 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         switch code {
         case 0x26: // J key
             keyDownJ = false
-            if keyDownK {
+            acceptAuto = false
+            if !keyDownJ &&  keyDownK &&  keyDownL { // _KL
+                // Swift.print("#####", "-J=>K/L : forward play / slowmotion")
+                document.doSetSlow(+0.5)
+            }
+            if !keyDownJ &&  keyDownK && !keyDownL { // _K_
                 // Swift.print("#####", "-J=>K : pause")
                 document.doSetRate(0)
+            }
+            if !keyDownJ && !keyDownK &&  keyDownL { // __L
+                // Swift.print("#####", "-J=>L : forward play")
+                document.doSetRate(+1)
             }
             return true
         case 0x28 : // K key
             keyDownK = false
-            if keyDownJ {
+            acceptAuto = false
+            if  keyDownJ && !keyDownK &&  keyDownL { // J_L
+                // Swift.print("#####", "-K=>J/L : pause")
+                document.doSetRate(0)
+            }
+            if  keyDownJ && !keyDownK && !keyDownL { // J__
                 // Swift.print("#####", "-K=>J : backward play")
                 document.doSetRate(-1)
-            } else if keyDownL {
+            }
+            if !keyDownJ && !keyDownK &&  keyDownL { // __L
                 // Swift.print("#####", "-K=>L : forward play")
                 document.doSetRate(+1)
             }
             return true
         case 0x25 : // L key
             keyDownL = false
-            if keyDownK {
+            acceptAuto = false
+            if  keyDownJ &&  keyDownK && !keyDownL { // JK_
+                // Swift.print("#####", "-L=>J/K : backward play / slowmotion")
+                document.doSetSlow(-0.5)
+            }
+            if !keyDownJ &&  keyDownK && !keyDownL { // _K_
                 // Swift.print("#####", "-L=>K : pause")
                 document.doSetRate(0)
+            }
+            if  keyDownJ && !keyDownK && !keyDownL { // J__
+                // Swift.print("#####", "-L=>J : backward play")
+                document.doSetRate(-1)
             }
             return true
         default:

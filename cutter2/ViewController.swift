@@ -41,20 +41,24 @@ protocol ViewControllerDelegate : TimelineUpdateDelegate {
 }
 
 class ViewController: NSViewController, TimelineUpdateDelegate {
+    
     /* ============================================ */
-    // MARK: - public var/func for ViewController
+    // MARK: - properties
     /* ============================================ */
     
-    // Step Mode : step offset resolution in sec
+    // Observer key
+    private let keyPathStepMode : String = "useStepMode" // "values.useStepMode" is NG
+    
+    // Step offset resolution in sec
     public var offsetS : Float64 = 1.0
     public var offsetM : Float64 = 5.0
     public var offsetL : Float64 = 15.0
     
-    // To mimic legacy QT7PlayerPro left/right combination set this true
-    public var ignoreOptionWhenShift : Bool = false
-    
     // To mimic legacy QT7PlayerPro JKL combinationset this true
     @objc public var mimicJKLcombination : Bool = true
+    
+    // To mimic legacy QT7PlayerPro left/right combination set this true
+    public var ignoreOptionWhenShift : Bool = false
     
     // To mimic legacy QT7PlayerPro selectionMarker move sync w/ current
     public var followSelectionMove : Bool = true
@@ -71,6 +75,11 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     /// MyPlayerView as AVPlayerView subclass
     @IBOutlet weak var playerView: MyPlayerView!
     @IBOutlet weak var timelineView : TimelineView!
+    @IBOutlet weak var controllerBox: NSBox!
+    
+    /* ============================================ */
+    // MARK: - public var/func for ViewController
+    /* ============================================ */
     
     override var representedObject: Any? {
         didSet {
@@ -121,8 +130,6 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         }
     }
     
-    @IBOutlet weak var controllerBox: NSBox!
-    
     public func showController(_ flag : Bool) {
         controllerBox.isHidden = !flag
     }
@@ -130,8 +137,6 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     /* ============================================ */
     // MARK: - Observer utilities
     /* ============================================ */
-    
-    private let keyPathStepMode : String = "useStepMode" // "values.useStepMode" is NG
     
     private func addUserDefaultObserver() {
         let defaults = UserDefaults.standard
@@ -232,7 +237,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     // MARK: - Validate menu
     /* ============================================ */
     
-    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+    public func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         guard let document = delegate else { return false }
         if menuItem.action == #selector(ViewController.cut(_:)) {
             return document.hasSelection()
@@ -613,30 +618,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     override func keyDown(with event: NSEvent) {
         // Swift.print(#function, #line, #file)
         
-        let code : UInt = UInt(event.keyCode)
-        let mod : UInt = event.modifierFlags.rawValue
-        let noMod = (mod & NSEvent.ModifierFlags.deviceIndependentFlagsMask.rawValue) == 0
-        
-        #if false
-        Swift.print("#####", "code:", code,
-                    "/ mod:", mod,
-                    "/ noMod:", (noMod ? "true" : "false"))
-        #endif
-        #if false
-        let char = event.charactersIgnoringModifiers
-        let option : Bool = event.modifierFlags.contains(.option)
-        let shift : Bool = event.modifierFlags.contains(.shift)
-        let control : Bool = event.modifierFlags.contains(.control)
-        let command : Bool = event.modifierFlags.contains(.command)
-        let string : String = String(format:"%qu(%@) %@ %@ %@ %@",
-                                     code,
-                                     char ?? "_",
-                                     option ? "opt" : "---",
-                                     shift ? "shi" : "---",
-                                     control ? "ctr" : "---",
-                                     command ? "cmd" : "---")
-        Swift.print("#####", "keyDown =", string)
-        #endif
+        //keyDump(with: event)
         
         if mimicJKLcombination {
             if keyMimic(with: event) {
@@ -658,7 +640,25 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 return
             }
         }
-        return
+    }
+    
+    private func keyDump(with event: NSEvent) {
+        let code : UInt = UInt(event.keyCode)
+        let char = event.charactersIgnoringModifiers
+        let option : Bool = event.modifierFlags.contains(.option)
+        let shift : Bool = event.modifierFlags.contains(.shift)
+        let control : Bool = event.modifierFlags.contains(.control)
+        let command : Bool = event.modifierFlags.contains(.command)
+        let mod : UInt = event.modifierFlags.rawValue
+        let string : String = String(format:"%qu(%@) %@ %@ %@ %@ %8lx",
+                                     code,
+                                     char ?? "_",
+                                     option ? "opt" : "---",
+                                     shift ? "shi" : "---",
+                                     control ? "ctr" : "---",
+                                     command ? "cmd" : "---",
+                                     mod)
+        Swift.print("#####", "keyDown =", string)
     }
     
     /* ============================================ */
@@ -892,5 +892,4 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         guard let document = delegate else { return }
         document.doSetEnd(to: goTo)
     }
-    
 }

@@ -67,10 +67,12 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     public var cachedWithinLastSampleRange : Bool = false
     public var cachedLastSampleRange : CMTimeRange? = nil
     
-    //
-    public var selfcontainedFlag : Bool = false
-    public var overwriteFlag : Bool = false
-    public var useAccessory : Bool = false
+    // SavePanel support
+    private var selfcontainedFlag : Bool = false
+    private var overwriteFlag : Bool = false
+    private var useAccessory : Bool = false
+    private var copyData : Bool = false
+    private var accessoryVCselfContained : Bool = false
     
     /* ============================================ */
     // MARK: - NSDocument methods/properties
@@ -266,20 +268,58 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     override func writeSafely(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
         // Swift.print(#function, #line, #file)
         
-        selfcontainedFlag = validateIfSelfContained(for: url)
-        if let original = self.fileURL, original == url {
-            overwriteFlag = true
-        } else {
-            overwriteFlag = false
+        do {
+            // Check if current AVMovie reference URL = write target URL
+            selfcontainedFlag = validateIfSelfContained(for: url)
+            
+            // Check if current document URL = write target URL
+            if let original = self.fileURL, original == url {
+                overwriteFlag = true
+            } else {
+                overwriteFlag = false
+            }
+            
+            // Check if accessory view is presented in SavePanel
+            if saveOperation == .saveAsOperation || saveOperation == .saveToOperation {
+                useAccessory = true
+            } else {
+                useAccessory = false
+            }
+            
+            // Check if user requested to save as ReferenceMovie
+            if useAccessory {
+                copyData = accessoryVCselfContained
+            } else {
+                copyData = selfcontainedFlag
+            }
+            
+            Swift.print("NOTE: selfcontainedFlag:", selfcontainedFlag)
+            Swift.print("NOTE: overwriteFlag:", overwriteFlag)
+            Swift.print("NOTE: useAccessory:", useAccessory)
+            Swift.print("NOTE: copyData:", copyData)
         }
-        if saveOperation == .saveAsOperation || saveOperation == .saveToOperation {
-            useAccessory = true
-        } else {
-            useAccessory = false
+        
+        // Verify if user is attemping to overwrite sourceMovieFile with ReferenceMovieFile
+        let fileType : AVFileType = AVFileType.init(rawValue: typeName)
+        if fileType == .mov {
+            if overwriteFlag && selfcontainedFlag && copyData == false {
+                // Reset cached accessoryVCselfContained to avoid unexpected behavior
+                self.accessoryVCselfContained = true
+                
+                var info : [String:Any] = [:]
+                info[NSLocalizedDescriptionKey] = "Please choose different file name."
+                info[NSLocalizedFailureReasonErrorKey] = "You cannot overwrite self-contained movie with reference movie."
+                throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+            }
         }
-        Swift.print("NOTE: selfcontainedFlag:", selfcontainedFlag)
-        Swift.print("NOTE: overwriteFlag:", overwriteFlag)
-        Swift.print("NOTE: useAccessory:", useAccessory)
+        
+        // Verify UTI compatibility with AVFileType
+        if AVMovie.movieTypes().contains(fileType) == false {
+            var info : [String:Any] = [:]
+            info[NSLocalizedDescriptionKey] = "Incompatible file type detected."
+            info[NSLocalizedFailureReasonErrorKey] = "(UTI:" + typeName + ")"
+            throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
+        }
         
         // Sandbox support - keep source document security scope bookmark
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
@@ -299,6 +339,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             }
         }
         
+        // Trigger actual write operation (saveTo, save/saveAs)
         try super.writeSafely(to: url, ofType: typeName, for: saveOperation)
         
         // Refresh internal movie (to sync selfcontained <> referece movie change)
@@ -312,29 +353,25 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print(#function, #line, #file)
         
         do {
-            let fileType : AVFileType = AVFileType.init(rawValue: typeName)
-            
-            // Check UTI for AVFileType
-            if AVMovie.movieTypes().contains(fileType) == false {
-                var info : [String:Any] = [:]
-                info[NSLocalizedDescriptionKey] = "Incompatible file type detected."
-                info[NSLocalizedFailureReasonErrorKey] = "(UTI:" + typeName + ")"
-                throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
-            }
-            
-            if saveOperation == .saveToOperation {
+            switch saveOperation {
+            case .saveToOperation:
                 // Export...
                 let transcodePreset : String? = UserDefaults.standard.string(forKey: kTranscodePresetKey)
-                guard let preset = transcodePreset else { return }
+                let preset = transcodePreset ?? kTranscodePresetCustom
                 if preset == kTranscodePresetCustom {
                     try exportCustom(to: url, ofType: typeName)
                 } else {
                     try export(to: url, ofType: typeName, preset: preset)
                 }
-            } else {
+            case .saveOperation, .saveAsOperation:
                 // Save.../Save as...
                 try super.write(to: url, ofType: typeName, for: saveOperation,
                                 originalContentsURL: absoluteOriginalContentsURL)
+            default:
+                var info : [String:Any] = [:]
+                info[NSLocalizedDescriptionKey] = "Unsupported SaveOperationType detected."
+                info[NSLocalizedFailureReasonErrorKey] = "No autoSave feature is implemented yet."
+                throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: info)
             }
         } catch {
             showErrorSheet(error)
@@ -345,11 +382,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     override func write(to url: URL, ofType typeName: String) throws {
         // Swift.print(#function, #line, #file)
         
-        guard let mutator = self.movieMutator else { return }
-        
-        let fileType : AVFileType = AVFileType.init(rawValue: typeName)
-        
-        // Swift.print("##### WRITE STARTED #####")
+        // Show busy sheet
+        let mutator :MovieMutator = self.movieMutator!
         showBusySheet("Writing...", "Please hold on second(s)...")
         mutator.unblockUserInteraction = { self.unblockUserInteraction() }
         defer {
@@ -357,24 +391,13 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             hideBusySheet()
         }
         
+        // Swift.print("##### WRITE STARTED #####")
+        
         // Check fileType (mov or other)
+        let fileType : AVFileType = AVFileType.init(rawValue: typeName)
         if fileType == .mov {
-            // Check savePanel accessoryView to know to save as ReferenceMovie
-            var copyData : Bool = selfcontainedFlag
-            if useAccessory, let accessoryVC = self.accessoryVC {
-                copyData = accessoryVC.selfContained
-            }
-            
-            // Avoid referenced data lost
-            if overwriteFlag && selfcontainedFlag && copyData == false {
-                var info : [String:Any] = [:]
-                info[NSLocalizedDescriptionKey] = "Please choose different file name."
-                info[NSLocalizedFailureReasonErrorKey] = "You cannot overwrite self-contained movie with reference movie."
-                throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
-            }
-            
             // Write mov file as either self-contained movie or reference movie
-            try mutator.writeMovie(to: url, fileType: fileType, copySampleData: copyData)
+            try mutator.writeMovie(to: url, fileType: fileType, copySampleData: self.copyData)
         } else {
             // Export as specified file type with AVAssetExportPresetPassthrough
             try mutator.exportMovie(to: url, fileType: fileType, presetName: nil)
@@ -492,6 +515,10 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         }
     }
     
+    /* ============================================ */
+    // MARK: - NSOpenSavePanelDelegate
+    /* ============================================ */
+    
     // NSOpenSavePanelDelegate protocol
     public func panel(_ sender: Any, validate url: URL) throws {
         // Swift.print(#function, #line, #file)
@@ -514,6 +541,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 "URL(" + fileType.rawValue + ") vs Popup(" + accessoryVC.fileType.rawValue + ")"
             throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: info)
         }
+        
+        // Cache last selection state in MainThread here
+        self.accessoryVCselfContained = accessoryVC.selfContained
     }
     
     // NSOpenSavePanelDelegate protocol
@@ -582,11 +612,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     private func export(to url: URL, ofType typeName: String, preset: String) throws {
         // Swift.print(#function, #line, #file)
         
-        guard let mutator = self.movieMutator else { return }
-        
-        let fileType : AVFileType = AVFileType.init(rawValue: typeName)
-        
-        // Swift.print("##### EXPORT STARTED #####")
+        // Show busy sheet
+        let mutator :MovieMutator = self.movieMutator!
         showBusySheet("Exporting...", "Please hold on minute(s)...")
         mutator.unblockUserInteraction = { self.unblockUserInteraction() }
         defer {
@@ -598,6 +625,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             mutator.updateProgress = nil
         }
         
+        // Swift.print("##### EXPORT STARTED #####")
+        
+        let fileType : AVFileType = AVFileType.init(rawValue: typeName)
         do {
             // Export as specified file type with AVAssetExportPresetPassthrough
             try mutator.exportMovie(to: url, fileType: fileType, presetName: preset)
@@ -609,11 +639,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     private func exportCustom(to url: URL, ofType typeName: String) throws {
         // Swift.print(#function, #line, #file)
         
-        guard let mutator = self.movieMutator else { return }
-        
-        let fileType : AVFileType = AVFileType.init(rawValue: typeName)
-        
-        // Swift.print("##### EXPORT STARTED #####")
+        // Show busy sheet
+        let mutator :MovieMutator = self.movieMutator!
         showBusySheet("Exporting...", "Please hold on minute(s)...")
         mutator.unblockUserInteraction = { self.unblockUserInteraction() }
         defer {
@@ -625,6 +652,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             mutator.updateProgress = nil
         }
         
+        // Swift.print("##### EXPORT STARTED #####")
+        
+        let fileType : AVFileType = AVFileType.init(rawValue: typeName)
         do {
             let videoID : [String] = ["avc1","hvc1","apcn","apcs","apco"]
             let audioID : [String] = ["aac ","lpcm","lpcm","lpcm"]

@@ -618,7 +618,9 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     override func keyDown(with event: NSEvent) {
         // Swift.print(#function, #line, #file)
         
-        //keyDump(with: event)
+        #if false
+        keyDump(with: event)
+        #endif
         
         if mimicJKLcombination {
             if keyMimic(with: event) {
@@ -635,6 +637,8 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     }
     
     override func keyUp(with event: NSEvent) {
+        // Swift.print(#function, #line, #file)
+        
         if mimicJKLcombination {
             if keyMimicUp(with: event) {
                 return
@@ -643,6 +647,8 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     }
     
     private func keyDump(with event: NSEvent) {
+        // Swift.print(#function, #line, #file)
+        
         let code : UInt = UInt(event.keyCode)
         let char = event.charactersIgnoringModifiers
         let option : Bool = event.modifierFlags.contains(.option)
@@ -816,10 +822,9 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     }
     
     override func insertText(_ insertString: Any) {
+        // Any character input
         // Swift.print(#function, #line, #file)
-        // Swift.print("#####", "insertText: ", insertString as! String)
-        //NSSound.beep()
-        
+
         guard let document = delegate else { return }
         document.debugInfo()
     }

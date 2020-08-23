@@ -646,7 +646,6 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         // Swift.print("#####", point, position(from: event))
         
         if let layer = self.layer, let target = layer.hitTest(point) {
-            //print (target)
             if let shapeLayer = target as? CAShapeLayer {
                 // Update selected marker
                 if selectNewMarker(shapeLayer) == false {

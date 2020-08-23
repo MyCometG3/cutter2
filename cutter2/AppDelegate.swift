@@ -91,7 +91,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                                                     includingResourceValuesForKeys: nil,
                                                     relativeTo: nil)
         if let data = data {
-            // Swift.print("NOTE: Registered", newURL.path)
+            Swift.print("NOTE: Registered", newURL.path)
             
             let defaults = UserDefaults.standard
             var bookmarks : [Data] = []
@@ -101,7 +101,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             bookmarks.append(data)
             defaults.set(bookmarks, forKey: bookmarksKey)
         } else {
-            // Swift.print("NOTE: Invalid url", newURL.path)
+            Swift.print("NOTE: Invalid url", newURL.path)
         }
     }
     
@@ -143,15 +143,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                                              relativeTo: nil,
                                              bookmarkDataIsStale: &stale)
                     if let url = url {
-                        // Swift.print("NOTE: Valid bookmark -", url.path, (stale ? "staled" : ""))
+                        Swift.print("NOTE: Valid bookmark -", url.path, (stale ? "staled" : ""))
                         
                         validItems.append(item)
                         task(url)
                     } else {
-                        // Swift.print("NOTE: Invalid bookmark")
+                        Swift.print("NOTE: Invalid bookmark")
                     }
                 } catch {
-                    // Swift.print("NOTE: Invalid bookmark :", error.localizedDescription)
+                    Swift.print("NOTE: Invalid bookmark :", error.localizedDescription)
                 }
             }
         }

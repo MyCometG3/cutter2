@@ -113,7 +113,6 @@ class TranscodeViewController: NSViewController {
         default:
             break
         }
-        // Swift.print("#####", "preset name:", preset)
         
         UserDefaults.standard.set(preset, forKey:kTranscodePresetKey)
         UserDefaults.standard.set(fileType.rawValue, forKey:kAVFileTypeKey)

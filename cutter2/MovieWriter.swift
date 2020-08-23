@@ -512,7 +512,7 @@ extension MovieWriter {
                         prev = item
                     }
                     awInputSetting[AVEncoderBitRateKey] = prev
-                    Swift.print("#####", "Bitrate adjustment to", prev, "from", targetBitRate)
+                    // Swift.print("#####", "Bitrate adjustment to", prev, "from", targetBitRate)
                 }
             }
             
@@ -573,13 +573,13 @@ extension MovieWriter {
             var decompressionProperties : NSDictionary? = nil
             if copyField {
                 // Keep both fields
-                // Swift.print("Decoder : FieldMode_BothFields")
+                // Swift.print("#####", "Decoder : FieldMode_BothFields")
                 let dict : NSMutableDictionary = NSMutableDictionary()
                 dict[kVTDecompressionPropertyKey_FieldMode] = kVTDecompressionProperty_FieldMode_BothFields
                 decompressionProperties = (dict.copy() as! NSDictionary)
             } else {
                 // Allow deinterlace - only DV decoder works...?
-                // Swift.print("Decoder : FieldMode_DeinterlaceFields")
+                // Swift.print("#####", "Decoder : FieldMode_DeinterlaceFields")
                 let dict : NSMutableDictionary = NSMutableDictionary()
                 dict[kVTDecompressionPropertyKey_FieldMode] = kVTDecompressionProperty_FieldMode_DeinterlaceFields
                 dict[kVTDecompressionPropertyKey_DeinterlaceMode] = kVTDecompressionProperty_DeinterlaceMode_VerticalFilter

@@ -45,9 +45,9 @@ class MovieMutator: MovieMutatorBase {
             // convert all into different timescale
             do {
                 let movieRange : CMTimeRange = self.movieRange()
-                Swift.print(ts(), #function, #line, #file)
+                // Swift.print(ts(), #function, #line, #file)
                 try clip.insertTimeRange(movieRange, of: internalMovie, at: CMTime.zero, copySampleData: false)
-                Swift.print(ts(), #function, #line, #file)
+                // Swift.print(ts(), #function, #line, #file)
             } catch {
                 Swift.print(ts(), error)
                 assert(false, #function)
@@ -225,12 +225,12 @@ class MovieMutator: MovieMutatorBase {
             }
             let beforeDuration = self.movieDuration()
             
-            Swift.print(ts(), #function, #line, #file)
+            // Swift.print(ts(), #function, #line, #file)
             try internalMovie.insertTimeRange(clipRange,
                                               of: clip,
                                               at: time,
                                               copySampleData: false)
-            Swift.print(ts(), #function, #line, #file)
+            // Swift.print(ts(), #function, #line, #file)
             
             // Update Marker
             let afterDuration = self.movieDuration()

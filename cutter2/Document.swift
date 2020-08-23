@@ -252,7 +252,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
         }
         
-        // Swift.print("##### RELOADED #####")
+        // Swift.print("##### READ FINISHED #####")
         
         // NOTE: following initialization is performed at makeWindowControllers()
     }
@@ -293,10 +293,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 copyData = selfcontainedFlag
             }
             
+            #if true
+            Swift.print("NOTE: source file:", self.displayName ?? "n/a")
+            Swift.print("NOTE: target file:", url.lastPathComponent)
             Swift.print("NOTE: selfcontainedFlag:", selfcontainedFlag)
             Swift.print("NOTE: overwriteFlag:", overwriteFlag)
             Swift.print("NOTE: useAccessory:", useAccessory)
             Swift.print("NOTE: copyData:", copyData)
+            #endif
         }
         
         // Verify if user is attemping to overwrite sourceMovieFile with ReferenceMovieFile

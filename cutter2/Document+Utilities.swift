@@ -197,14 +197,14 @@ extension Document {
     public func resumeAfterSeek(to time : CMTime, with rate : Float) {
         // Swift.print(#function, #line, #file)
         
-        guard let player = self.player else { return }
+        #if false
         guard let mutator = self.movieMutator else { return }
-        do {
-            let t = time
-            Swift.print("#####", "resumeAfterSeek",
-                        mutator.shortTimeString(t, withDecimals: true),
-                        mutator.rawTimeString(t))
-        }
+        Swift.print("#####", "resumeAfterSeek",
+                    mutator.shortTimeString(time, withDecimals: true),
+                    mutator.rawTimeString(time))
+        #endif
+        
+        guard let player = self.player else { return }
         
         player.pause()
         let handler : (Bool) -> Void = {[unowned player] (finished) in // @escaping
@@ -418,7 +418,10 @@ extension Document {
         let handler : (Notification) -> Void = {[unowned self] (notification) in // @escaping
             // Swift.print(#function, #line, #file)
             
-            Swift.print("#####", "======================== Received : .movieWasMutated ========================")
+            #if false
+            Swift.print("#####", "========================",
+                        "Received : .movieWasMutated :", self.displayName!)
+            #endif
             
             // extract CMTime/CMTimeRange from userInfo
             guard let userInfo = notification.userInfo else { return }

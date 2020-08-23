@@ -413,6 +413,8 @@ extension Document {
     public func addMutationObserver() {
         // Swift.print(#function, #line, #file)
         
+        guard self.movieMutator != nil else { return }
+        
         let handler : (Notification) -> Void = {[unowned self] (notification) in // @escaping
             // Swift.print(#function, #line, #file)
             
@@ -446,6 +448,8 @@ extension Document {
     /// Unregister observer for movie mutation
     public func removeMutationObserver() {
         // Swift.print(#function, #line, #file)
+        
+        guard self.movieMutator != nil else { return }
         
         let removeBlock = {
             let center = NotificationCenter.default

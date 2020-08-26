@@ -12,6 +12,16 @@ import VideoToolbox
 
 class TranscodeViewController: NSViewController {
     
+    /* ============================================ */
+    // MARK: - Properties
+    /* ============================================ */
+    
+    public var parentWindow: NSWindow? = nil
+    
+    /* ============================================ */
+    // MARK: - NSViewController
+    /* ============================================ */
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do view setup here.
@@ -19,16 +29,18 @@ class TranscodeViewController: NSViewController {
         UserDefaults.standard.set(checkHEVCEncoder(), forKey:kHEVCReadyKey)
     }
     
-    public var parentWindow : NSWindow? = nil
+    /* ============================================ */
+    // MARK: - Public functions
+    /* ============================================ */
     
-    public func beginSheetModal(for parentWindow: NSWindow, handler : @escaping (NSApplication.ModalResponse) -> Void) {
+    public func beginSheetModal(for parentWindow: NSWindow, handler: @escaping (NSApplication.ModalResponse) -> Void) {
         self.parentWindow = parentWindow
         guard let sheet = self.view.window else { return }
         
         parentWindow.beginSheet(sheet, completionHandler: handler)
     }
     
-    public func endSheet(_ response : NSApplication.ModalResponse) {
+    public func endSheet(_ response: NSApplication.ModalResponse) {
         guard let parent = self.parentWindow else { return }
         guard let sheet = self.view.window else { return }
         
@@ -48,6 +60,10 @@ class TranscodeViewController: NSViewController {
         endSheet(.cancel)
     }
     
+    /* ============================================ */
+    // MARK: - Private functions
+    /* ============================================ */
+    
     private func checkHEVCEncoder() -> Bool {
         if #available(OSX 10.13, *) {
             let encoderSpecification: [CFString: Any] = [ kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder: true ]
@@ -65,17 +81,17 @@ class TranscodeViewController: NSViewController {
     private func updateUserDefaults() {
         // Swift.print(#function, #line, #file)
         
-        let type : Int = UserDefaults.standard.integer(forKey: kTranscodeTypeKey)
-        var preset : String = AVAssetExportPresetPassthrough
-        var fileType : AVFileType = AVFileType.mov
+        let type: Int = UserDefaults.standard.integer(forKey: kTranscodeTypeKey)
+        var preset: String = AVAssetExportPresetPassthrough
+        var fileType: AVFileType = AVFileType.mov
         switch type {
         case 0:
-            let preset0 : Int = UserDefaults.standard.integer(forKey: kTrancode0Key)
-            var name : [String] = [AVAssetExportPreset640x480,
-                                   AVAssetExportPreset960x540,
-                                   AVAssetExportPreset1280x720,
-                                   AVAssetExportPreset1920x1080,
-                                   AVAssetExportPreset3840x2160]
+            let preset0: Int = UserDefaults.standard.integer(forKey: kTrancode0Key)
+            var name: [String] = [AVAssetExportPreset640x480,
+                                  AVAssetExportPreset960x540,
+                                  AVAssetExportPreset1280x720,
+                                  AVAssetExportPreset1920x1080,
+                                  AVAssetExportPreset3840x2160]
             if #available(OSX 10.13, *) {
                 name = name + [AVAssetExportPresetHEVC1920x1080,
                                AVAssetExportPresetHEVC3840x2160]
@@ -83,28 +99,28 @@ class TranscodeViewController: NSViewController {
             preset = name[preset0]
             fileType = .mov
         case 1:
-            let preset1 : Int = UserDefaults.standard.integer(forKey: kTrancode1Key)
-            var name : [String] = [AVAssetExportPresetLowQuality,
-                                   AVAssetExportPresetMediumQuality,
-                                   AVAssetExportPresetHighestQuality]
+            let preset1: Int = UserDefaults.standard.integer(forKey: kTrancode1Key)
+            var name: [String] = [AVAssetExportPresetLowQuality,
+                                  AVAssetExportPresetMediumQuality,
+                                  AVAssetExportPresetHighestQuality]
             if #available(OSX 10.13, *) {
                 name = name + [AVAssetExportPresetHEVCHighestQuality]
             }
             preset = name[preset1]
             fileType = .mov
         case 2:
-            //let preset2 : Int = UserDefaults.standard.integer(forKey: kTrancode2Key)
+            //let preset2: Int = UserDefaults.standard.integer(forKey: kTrancode2Key)
             preset = AVAssetExportPresetAppleProRes422LPCM
             fileType = .mov
         case 3:
-            let preset3 : Int = UserDefaults.standard.integer(forKey: kTrancode3Key)
-            let name : [String] = [AVAssetExportPresetAppleM4VCellular,
-                                   AVAssetExportPresetAppleM4ViPod,
-                                   AVAssetExportPresetAppleM4V480pSD,
-                                   AVAssetExportPresetAppleM4VAppleTV,
-                                   AVAssetExportPresetAppleM4VWiFi,
-                                   AVAssetExportPresetAppleM4V720pHD,
-                                   AVAssetExportPresetAppleM4V1080pHD]
+            let preset3: Int = UserDefaults.standard.integer(forKey: kTrancode3Key)
+            let name: [String] = [AVAssetExportPresetAppleM4VCellular,
+                                  AVAssetExportPresetAppleM4ViPod,
+                                  AVAssetExportPresetAppleM4V480pSD,
+                                  AVAssetExportPresetAppleM4VAppleTV,
+                                  AVAssetExportPresetAppleM4VWiFi,
+                                  AVAssetExportPresetAppleM4V720pHD,
+                                  AVAssetExportPresetAppleM4V1080pHD]
             preset = name[preset3]
             fileType = .m4v
         case 4:

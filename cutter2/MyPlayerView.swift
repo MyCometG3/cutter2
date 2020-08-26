@@ -7,12 +7,13 @@
 //
 
 import Cocoa
+import AVFoundation
 import AVKit
 
 class MyPlayerView: AVPlayerView {
     
     /* ============================================ */
-    // MARK: - Keybaord Event handling
+    // MARK: - Keyboard Event handling
     /* ============================================ */
     
     // NSResponder

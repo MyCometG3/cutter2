@@ -13,14 +13,14 @@ extension Notification.Name {
     static let timelineUpdateReq = Notification.Name("timelineUpdateReq")
 }
 
-protocol ViewControllerDelegate : TimelineUpdateDelegate {
+protocol ViewControllerDelegate: TimelineUpdateDelegate {
     func hasSelection() -> Bool
     func hasDuration() -> Bool
     func hasClipOnPBoard() -> Bool
     //
     func debugInfo()
-    func timeOfPosition(_ percentage : Float64) -> CMTime
-    func positionOfTime(_ time : CMTime) -> Float64
+    func timeOfPosition(_ percentage: Float64) -> CMTime
+    func positionOfTime(_ time: CMTime) -> Float64
     //
     func doCut() throws
     func doCopy() throws
@@ -28,53 +28,57 @@ protocol ViewControllerDelegate : TimelineUpdateDelegate {
     func doDelete() throws
     func selectAll()
     //
-    func doStepByCount(_ count : Int64, _ resetStart : Bool, _ resetEnd : Bool)
-    func doStepBySecond(_ offset : Float64, _ resetStart : Bool, _ resetEnd : Bool)
-    func doVolumeOffset(_ percent : Int)
+    func doStepByCount(_ count: Int64, _ resetStart: Bool, _ resetEnd: Bool)
+    func doStepBySecond(_ offset: Float64, _ resetStart: Bool, _ resetEnd: Bool)
+    func doVolumeOffset(_ percent: Int)
     //
-    func doMoveLeft(_ optFlag : Bool, _ shiftFlag : Bool, _ resetStart : Bool, _ resetEnd : Bool)
-    func doMoveRight(_ optFlag : Bool, _ shiftFlag : Bool, _ resetStart : Bool, _ resetEnd : Bool)
+    func doMoveLeft(_ optFlag: Bool, _ shiftFlag: Bool, _ resetStart: Bool, _ resetEnd: Bool)
+    func doMoveRight(_ optFlag: Bool, _ shiftFlag: Bool, _ resetStart: Bool, _ resetEnd: Bool)
     //
-    func doSetSlow(_ ratio : Float)
-    func doSetRate(_ offset : Int)
+    func doSetSlow(_ ratio: Float)
+    func doSetRate(_ offset: Int)
     func doTogglePlay()
 }
 
 class ViewController: NSViewController, TimelineUpdateDelegate {
     
     /* ============================================ */
-    // MARK: - properties
+    // MARK: - private properties/constants
     /* ============================================ */
     
     // Observer key
-    private let keyPathStepMode : String = "useStepMode" // "values.useStepMode" is NG
+    private let keyPathStepMode: String = "useStepMode" // "values.useStepMode" is NG
+    
+    // To mimic legacy QT7PlayerPro JKL key tracking
+    private var keyDownJ: Bool = false
+    private var keyDownK: Bool = false
+    private var keyDownL: Bool = false
+    private var acceptAuto: Bool = false
+    
+    /* ============================================ */
+    // MARK: - public properties
+    /* ============================================ */
     
     // Step offset resolution in sec
-    public var offsetS : Float64 = 1.0
-    public var offsetM : Float64 = 5.0
-    public var offsetL : Float64 = 15.0
+    public var offsetS: Float64 = 1.0
+    public var offsetM: Float64 = 5.0
+    public var offsetL: Float64 = 15.0
     
     // To mimic legacy QT7PlayerPro JKL combinationset this true
-    @objc public var mimicJKLcombination : Bool = true
+    @objc public var mimicJKLcombination: Bool = true
     
     // To mimic legacy QT7PlayerPro left/right combination set this true
-    public var ignoreOptionWhenShift : Bool = false
+    public var ignoreOptionWhenShift: Bool = false
     
     // To mimic legacy QT7PlayerPro selectionMarker move sync w/ current
-    public var followSelectionMove : Bool = true
-    
-    //
-    public var keyDownJ : Bool = false
-    public var keyDownK : Bool = false
-    public var keyDownL : Bool = false
-    public var acceptAuto : Bool = false
+    public var followSelectionMove: Bool = true
     
     /// delegate to Document (NSDocument subclass)
-    public weak var delegate : ViewControllerDelegate? = nil
+    public weak var delegate: ViewControllerDelegate? = nil
     
     /// MyPlayerView as AVPlayerView subclass
     @IBOutlet weak var playerView: MyPlayerView!
-    @IBOutlet weak var timelineView : TimelineView!
+    @IBOutlet weak var timelineView: TimelineView!
     @IBOutlet weak var controllerBox: NSBox!
     
     /* ============================================ */
@@ -114,11 +118,11 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         removeUserDefaultsObserver()
     }
     
-    public func updateTimeline(current curPosition : Float64,
-                               from startPosition : Float64,
-                               to endPosition : Float64,
-                               label string : String,
-                               isValid valid : Bool) {
+    public func updateTimeline(current curPosition: Float64,
+                               from startPosition: Float64,
+                               to endPosition: Float64,
+                               label string: String,
+                               isValid valid: Bool) {
         //
         let result = self.timelineView.updateTimeline(current: curPosition,
                                                       from: startPosition,
@@ -130,7 +134,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         }
     }
     
-    public func showController(_ flag : Bool) {
+    public func showController(_ flag: Bool) {
         controllerBox.isHidden = !flag
     }
     
@@ -152,13 +156,13 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                                 forKeyPath: keyPathStepMode)
     }
     
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey:Any]?, context: UnsafeMutableRawPointer?) {
         guard let keyPath = keyPath else { return }
-        guard let change : [NSKeyValueChangeKey : Any] = change else { return }
+        guard let change: [NSKeyValueChangeKey:Any] = change else { return }
         guard let newAny = change[.newKey] else { return }
         
         if keyPath == keyPathStepMode, let newNumber = newAny as? NSNumber {
-            let new : Bool = !newNumber.boolValue
+            let new: Bool = !newNumber.boolValue
             if mimicJKLcombination != new {
                 mimicJKLcombination = new
                 
@@ -170,7 +174,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     private func addWindowResizeObserver() {
         guard let window = view.window else { return }
         let center = NotificationCenter.default
-        let handler : (Notification) -> Void = {[unowned self] (notification) in // @escaping
+        let handler: (Notification) -> Void = {[unowned self] (notification) in // @escaping
             let object = notification.object as AnyObject
             if object !== window {
                 return
@@ -196,7 +200,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     
     private func addUpdateReqObserver() {
         let center = NotificationCenter.default
-        let handler : (Notification) -> Void = {[unowned self] (notification) in // @escaping
+        let handler: (Notification) -> Void = {[unowned self] (notification) in // @escaping
             let object = notification.object as AnyObject
             if object !== self.delegate {
                 return
@@ -261,7 +265,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     // MARK: - Key Event utilities
     /* ============================================ */
     
-    private func doMoveLeft(_ optFlag : Bool, _ shiftFlag : Bool) {
+    private func doMoveLeft(_ optFlag: Bool, _ shiftFlag: Bool) {
         guard let document = delegate else { return }
         
         switch timelineView.marker() {
@@ -273,7 +277,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             document.doMoveLeft(optFlag, shiftFlag, false, false)
         }
     }
-    private func doMoveRight(_ optFlag : Bool, _ shiftFlag : Bool) {
+    private func doMoveRight(_ optFlag: Bool, _ shiftFlag: Bool) {
         guard let document = delegate else { return }
         
         switch timelineView.marker() {
@@ -286,7 +290,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         }
     }
     
-    private func modifier(_ mask : NSEvent.ModifierFlags) -> Bool {
+    private func modifier(_ mask: NSEvent.ModifierFlags) -> Bool {
         guard let current = NSApp.currentEvent?.modifierFlags else { return false }
         
         return current.contains(mask)
@@ -296,10 +300,10 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         // Swift.print(#function, #line, #file)
         guard let document = delegate else { return false }
         
-        let code : UInt = UInt(event.keyCode)
-        let option : Bool = event.modifierFlags.contains(.option)
-        let shift : Bool = event.modifierFlags.contains(.shift)
-        let autoKey : Bool = event.isARepeat
+        let code: UInt = UInt(event.keyCode)
+        let option: Bool = event.modifierFlags.contains(.option)
+        let shift: Bool = event.modifierFlags.contains(.shift)
+        let autoKey: Bool = event.isARepeat
         
         switch code {
         case 0x26: // J key
@@ -337,7 +341,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 }
             }
             return true
-        case 0x28 : // K key
+        case 0x28: // K key
             keyDownK = true
             if  keyDownJ &&  keyDownK &&  keyDownL { // JKL
                 if !autoKey {
@@ -392,7 +396,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 }
             }
             return true
-        case 0x25 : // L key
+        case 0x25: // L key
             keyDownL = true
             if  keyDownJ              &&  keyDownL { // J_L, JKL
                 if !autoKey {
@@ -427,7 +431,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 }
             }
             return true
-        case 0x22 : // I key
+        case 0x22: // I key
             // Swift.print("#####", "I : set selection start")
             if option && shift {
                 break
@@ -439,7 +443,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 doSetStart(to: .current)
             }
             return true
-        case 0x1f : // O key
+        case 0x1f: // O key
             // Swift.print("#####", "O : set selection end")
             if option && shift {
                 break
@@ -451,7 +455,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 doSetEnd(to: .current)
             }
             return true
-        case 0x31 : // space bar
+        case 0x31: // space bar
             if !autoKey {
                 // Swift.print("#####", "space : toggle play/pause")
                 document.doTogglePlay()
@@ -467,7 +471,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         // Swift.print(#function, #line, #file)
         guard let document = delegate else { return false }
         
-        let code : UInt = UInt(event.keyCode)
+        let code: UInt = UInt(event.keyCode)
         
         switch code {
         case 0x26: // J key
@@ -486,7 +490,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 document.doSetRate(+1)
             }
             return true
-        case 0x28 : // K key
+        case 0x28: // K key
             keyDownK = false
             acceptAuto = false
             if  keyDownJ && !keyDownK &&  keyDownL { // J_L
@@ -502,7 +506,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 document.doSetRate(+1)
             }
             return true
-        case 0x25 : // L key
+        case 0x25: // L key
             keyDownL = false
             acceptAuto = false
             if  keyDownJ &&  keyDownK && !keyDownL { // JK_
@@ -528,12 +532,12 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         // Swift.print(#function, #line, #file)
         guard let document = delegate else { return false }
         
-        let code : UInt = UInt(event.keyCode)
-        let option : Bool = event.modifierFlags.contains(.option)
-        let shift : Bool = event.modifierFlags.contains(.shift)
+        let code: UInt = UInt(event.keyCode)
+        let option: Bool = event.modifierFlags.contains(.option)
+        let shift: Bool = event.modifierFlags.contains(.shift)
         
         switch code {
-        case 0x26 : // J key
+        case 0x26: // J key
             // Swift.print("#####", "J : toggle marker-backward")
             if option && shift {
                 break
@@ -545,7 +549,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 document.doStepBySecond(-offsetL, false, false)
             }
             return true
-        case 0x28 : // K key
+        case 0x28: // K key
             // Swift.print("#####", "K : step backward")
             if option && shift {
                 break
@@ -557,7 +561,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 document.doStepBySecond(-offsetS, false, false)
             }
             return true
-        case 0x25 : // L key
+        case 0x25: // L key
             // Swift.print("#####", "L : step forward")
             if option && shift {
                 break
@@ -569,7 +573,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 document.doStepBySecond(+offsetS, false, false)
             }
             return true
-        case 0x29 : // ; key (depends on keymapping)
+        case 0x29: // ; key (depends on keymapping)
             // Swift.print("#####", "; : toggle marker-forward")
             if option && shift {
                 break
@@ -581,7 +585,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 document.doStepBySecond(+offsetL, false, false)
             }
             return true
-        case 0x22 : // I key
+        case 0x22: // I key
             // Swift.print("#####", "I : set selection start")
             if option && shift {
                 break
@@ -593,7 +597,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 doSetStart(to: .current)
             }
             return true
-        case 0x1f : // O key
+        case 0x1f: // O key
             // Swift.print("#####", "O : set selection end")
             if option && shift {
                 break
@@ -605,7 +609,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                 doSetEnd(to: .current)
             }
             return true
-        case 0x31 : // space bar
+        case 0x31: // space bar
             // Swift.print("#####", "space : toggle play/pause")
             document.doTogglePlay()
             return true
@@ -649,21 +653,21 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     private func keyDump(with event: NSEvent) {
         // Swift.print(#function, #line, #file)
         
-        let code : UInt = UInt(event.keyCode)
+        let code: UInt = UInt(event.keyCode)
         let char = event.charactersIgnoringModifiers
-        let option : Bool = event.modifierFlags.contains(.option)
-        let shift : Bool = event.modifierFlags.contains(.shift)
-        let control : Bool = event.modifierFlags.contains(.control)
-        let command : Bool = event.modifierFlags.contains(.command)
-        let mod : UInt = event.modifierFlags.rawValue
-        let string : String = String(format:"%qu(%@) %@ %@ %@ %@ %8lx",
-                                     code,
-                                     char ?? "_",
-                                     option ? "opt" : "---",
-                                     shift ? "shi" : "---",
-                                     control ? "ctr" : "---",
-                                     command ? "cmd" : "---",
-                                     mod)
+        let option: Bool = event.modifierFlags.contains(.option)
+        let shift: Bool = event.modifierFlags.contains(.shift)
+        let control: Bool = event.modifierFlags.contains(.control)
+        let command: Bool = event.modifierFlags.contains(.command)
+        let mod: UInt = event.modifierFlags.rawValue
+        let string: String = String(format:"%qu(%@) %@ %@ %@ %@ %8lx",
+                                    code,
+                                    char ?? "_",
+                                    option ? "opt" : "---",
+                                    shift ? "shi" : "---",
+                                    control ? "ctr" : "---",
+                                    command ? "cmd" : "---",
+                                    mod)
         Swift.print("#####", "keyDown =", string)
     }
     
@@ -671,7 +675,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     // MARK: - cut/copy/paste/delete IBAction
     /* ============================================ */
     
-    @IBAction func cut(_ sender : Any) {
+    @IBAction func cut(_ sender: Any) {
         guard let document = delegate else { return }
         do {
             try document.doCut()
@@ -679,7 +683,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             NSSound.beep()
         }
     }
-    @IBAction func copy(_ sender : Any) {
+    @IBAction func copy(_ sender: Any) {
         guard let document = delegate else { return }
         do {
             try document.doCopy()
@@ -687,7 +691,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             NSSound.beep()
         }
     }
-    @IBAction func paste(_ sender : Any) {
+    @IBAction func paste(_ sender: Any) {
         guard let document = delegate else { return }
         do {
             try document.doPaste()
@@ -743,7 +747,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         // up arrow
         // Swift.print(#function, #line, #file)
         guard let document = delegate else { return }
-        let offset : Int = modifier(.option) ? 100 : 10
+        let offset: Int = modifier(.option) ? 100 : 10
         document.doVolumeOffset(offset)
     }
     
@@ -751,7 +755,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         // down arrow
         // Swift.print(#function, #line, #file)
         guard let document = delegate else { return }
-        let offset : Int = modifier(.option) ? -100 : -10
+        let offset: Int = modifier(.option) ? -100 : -10
         document.doVolumeOffset(offset)
     }
     
@@ -794,16 +798,16 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     override func moveWordLeftAndModifySelection(_ sender: Any?) {
         // Shift + Option + left
         // Swift.print(#function, #line, #file)
-        let option : Bool = ignoreOptionWhenShift ? false : true
-        let shift : Bool = true
+        let option: Bool = ignoreOptionWhenShift ? false : true
+        let shift: Bool = true
         doMoveLeft(option, shift)
     }
     
     override func moveWordRightAndModifySelection(_ sender: Any?) {
         // Shift + Option + right
         // Swift.print(#function, #line, #file)
-        let option : Bool = ignoreOptionWhenShift ? false : true
-        let shift : Bool = true
+        let option: Bool = ignoreOptionWhenShift ? false : true
+        let shift: Bool = true
         doMoveRight(option, shift)
     }
     
@@ -824,7 +828,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     override func insertText(_ insertString: Any) {
         // Any character input
         // Swift.print(#function, #line, #file)
-
+        
         guard let document = delegate else { return }
         document.debugInfo()
     }
@@ -833,12 +837,12 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     // MARK: - TimelineUpdateDelegate
     /* ============================================ */
     
-    public func didUpdateCursor(to position : Float64) {
+    public func didUpdateCursor(to position: Float64) {
         guard let document = delegate else { return }
         document.didUpdateCursor(to: position)
     }
     
-    public func didUpdateStart(to position : Float64) {
+    public func didUpdateStart(to position: Float64) {
         guard let document = delegate else { return }
         if followSelectionMove {
             document.didUpdateCursor(to: position)
@@ -848,7 +852,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         }
     }
     
-    public func didUpdateEnd(to position : Float64) {
+    public func didUpdateEnd(to position: Float64) {
         guard let document = delegate else { return }
         if followSelectionMove {
             document.didUpdateCursor(to: position)
@@ -858,7 +862,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         }
     }
     
-    public func didUpdateSelection(from fromPos : Float64, to toPos : Float64) {
+    public func didUpdateSelection(from fromPos: Float64, to toPos: Float64) {
         guard let document = delegate else { return }
         if fromPos == toPos && followSelectionMove {
             document.didUpdateCursor(to: fromPos)
@@ -883,17 +887,17 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         return document.nextInfo(of: range)
     }
     
-    public func doSetCurrent(to goTo : anchor) {
+    public func doSetCurrent(to goTo: anchor) {
         guard let document = delegate else { return }
         document.doSetCurrent(to: goTo)
     }
     
-    public func doSetStart(to goTo : anchor) {
+    public func doSetStart(to goTo: anchor) {
         guard let document = delegate else { return }
         document.doSetStart(to: goTo)
     }
     
-    public func doSetEnd(to goTo : anchor) {
+    public func doSetEnd(to goTo: anchor) {
         guard let document = delegate else { return }
         document.doSetEnd(to: goTo)
     }

@@ -16,7 +16,7 @@ import AVFoundation
 extension Document {
     
     /// Update progress
-    public func updateProgress(_ progress : Float) {
+    public func updateProgress(_ progress: Float) {
         // Swift.print(#function, #line, #file)
         
         // Thread safety
@@ -25,7 +25,7 @@ extension Document {
         
         // Use Low frequency update
         let unit = NSEC_PER_MSEC * 100 // 100ms
-        let t : UInt64 = CVGetCurrentHostTime()
+        let t: UInt64 = CVGetCurrentHostTime()
         if lastUpdateAt == 0 {
             lastUpdateAt = t
         } else {
@@ -43,12 +43,12 @@ extension Document {
             guard let alert = self.alert else { return }
             guard progress.isNormal else { return }
             
-            alert.informativeText = String("Please hold on minute(s)... : \(Int(progress * 100)) %")
+            alert.informativeText = String("Please hold on minute(s)...: \(Int(progress * 100)) %")
         }
     }
     
     /// Show busy modalSheet
-    public func showBusySheet(_ message : String?, _ info : String?) {
+    public func showBusySheet(_ message: String?, _ info: String?) {
         // Swift.print(#function, #line, #file)
         
         DispatchQueue.main.async { [unowned self] in // @escaping
@@ -56,12 +56,12 @@ extension Document {
             
             guard let window = self.window else { return }
             
-            let alert : NSAlert = NSAlert()
+            let alert: NSAlert = NSAlert()
             alert.messageText = message ?? "Processing...(message)"
             alert.informativeText = info ?? "Hold on seconds...(informative)"
             alert.alertStyle = .informational
             alert.addButton(withTitle: "") // No button on sheet
-            let handler : (NSApplication.ModalResponse) -> Void = {(response) in // @escaping
+            let handler: (NSApplication.ModalResponse) -> Void = {(response) in // @escaping
                 //if response == .stop {/* hideBusySheet() called */}
             }
             alert.beginSheetModal(for: window, completionHandler: handler)
@@ -99,7 +99,7 @@ extension Document {
             let alert = NSAlert(error: error)
             let err :NSError = error as NSError
             var text :String? = nil
-            let userInfo : [String:Any] = err.userInfo // Can be empty dictionary
+            let userInfo: [String:Any] = err.userInfo // Can be empty dictionary
             if userInfo.count > 0 {
                 let keys = userInfo.keys
                 if keys.contains(NSUnderlyingErrorKey) || keys.contains(NSDebugDescriptionErrorKey) {
@@ -128,7 +128,7 @@ extension Document {
     public func inspecterDictionary() -> [String:Any] {
         // Swift.print(#function, #line, #file)
         
-        var dict : [String:Any] = [:]
+        var dict: [String:Any] = [:]
         guard let mutator = self.movieMutator else { return dict }
         
         dict[titleInspectKey] = self.displayName
@@ -141,7 +141,7 @@ extension Document {
         dict[currentTimeInspectKey] = mutator.shortTimeString(mutator.insertionTime, withDecimals: true)
         dict[movieDurationInspectKey] = mutator.shortTimeString(mutator.movieDuration(), withDecimals: true)
         
-        let range : CMTimeRange = mutator.selectedTimeRange
+        let range: CMTimeRange = mutator.selectedTimeRange
         dict[selectionStartInspectKey] = mutator.shortTimeString(range.start, withDecimals: true)
         dict[selectionEndInspectKey] = mutator.shortTimeString(range.end, withDecimals: true)
         dict[selectionDurationInspectKey] = mutator.shortTimeString(range.duration, withDecimals: true)
@@ -150,7 +150,7 @@ extension Document {
     }
     
     /// used in debugInfo()
-    public func modifier(_ mask : NSEvent.ModifierFlags) -> Bool {
+    public func modifier(_ mask: NSEvent.ModifierFlags) -> Bool {
         // Swift.print(#function, #line, #file)
         
         guard let current = NSApp.currentEvent?.modifierFlags else { return false }
@@ -180,7 +180,7 @@ extension Document {
     }
     
     /// Update Timeline view, seek, and refresh AVPlayerItem if required
-    public func updateGUI(_ time : CMTime, _ timeRange : CMTimeRange, _ reload : Bool) {
+    public func updateGUI(_ time: CMTime, _ timeRange: CMTimeRange, _ reload: Bool) {
         // Swift.print(#function, #line, #file)
         
         // update GUI
@@ -194,7 +194,7 @@ extension Document {
     }
     
     /// Seek and Play
-    public func resumeAfterSeek(to time : CMTime, with rate : Float) {
+    public func resumeAfterSeek(to time: CMTime, with rate: Float) {
         // Swift.print(#function, #line, #file)
         
         #if false
@@ -207,7 +207,7 @@ extension Document {
         guard let player = self.player else { return }
         
         player.pause()
-        let handler : (Bool) -> Void = {[unowned player] (finished) in // @escaping
+        let handler: (Bool) -> Void = {[unowned player] (finished) in // @escaping
             guard let mutator = self.movieMutator else { return }
             player.rate = rate
             self.updateTimeline(time, range: mutator.selectedTimeRange)
@@ -216,7 +216,7 @@ extension Document {
     }
     
     /// Update marker position in Timeline view
-    public func updateTimeline(_ time : CMTime, range : CMTimeRange) {
+    public func updateTimeline(_ time: CMTime, range: CMTimeRange) {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
@@ -226,7 +226,7 @@ extension Document {
         mutator.selectedTimeRange = range
         
         // Prepare userInfo
-        var userInfo : [AnyHashable:Any] = [:]
+        var userInfo: [AnyHashable:Any] = [:]
         userInfo[timeInfoKey] = NSValue(time: time)
         userInfo[rangeInfoKey] = NSValue(timeRange: range)
         userInfo[curPositionInfoKey] = NSNumber(value: positionOfTime(time))
@@ -255,7 +255,7 @@ extension Document {
             player.replaceCurrentItem(with: playerItem)
             
             // seek
-            let handler : (Bool) -> Void = {[unowned pv] (finished) in // @escaping
+            let handler: (Bool) -> Void = {[unowned pv] (finished) in // @escaping
                 pv.needsDisplay = true
             }
             playerItem.seek(to: mutator.insertionTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero,
@@ -263,7 +263,7 @@ extension Document {
         } else {
             // Initial setup
             let playerItem = mutator.makePlayerItem()
-            let player : AVPlayer = AVPlayer(playerItem: playerItem)
+            let player: AVPlayer = AVPlayer(playerItem: playerItem)
             pv.player = player
             
             // AddObserver to AVPlayer
@@ -275,7 +275,7 @@ extension Document {
     }
     
     /// Setup polling timer - queryPosition()
-    private func useUpdateTimer(_ enable : Bool) {
+    private func useUpdateTimer(_ enable: Bool) {
         // Swift.print(#function, #line, #file)
         
         if enable {
@@ -302,8 +302,8 @@ extension Document {
         guard let player = self.player else { return }
         guard let playerItem = self.playerItem else { return }
         
-        let notReady : Bool = (player.status != .readyToPlay)
-        let empty : Bool = playerItem.isPlaybackBufferEmpty
+        let notReady: Bool = (player.status != .readyToPlay)
+        let empty: Bool = playerItem.isPlaybackBufferEmpty
         if notReady || empty { return }
         
         let current = player.currentTime()
@@ -357,7 +357,7 @@ extension Document {
     }
     
     // NSKeyValueObserving protocol - observeValue(forKeyPath:of:change:context:)
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?,
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey:Any]?,
                                context: UnsafeMutableRawPointer?) {
         // Swift.print(#function, #line, #file)
         
@@ -385,7 +385,7 @@ extension Document {
         } else if object == player && keyPath == #keyPath(AVPlayer.rate) {
             // Swift.print("#####", "#keyPath(AVPlayer.rate)")
             
-            // Check special case : movie play reached at end of movie
+            // Check special case: movie play reached at end of movie
             let oldRate = change[.oldKey] as! NSNumber
             let newRate = change[.newKey] as! NSNumber
             if oldRate.floatValue > 0.0 && newRate.floatValue == 0.0 {
@@ -415,12 +415,12 @@ extension Document {
         
         guard self.movieMutator != nil else { return }
         
-        let handler : (Notification) -> Void = {[unowned self] (notification) in // @escaping
+        let handler: (Notification) -> Void = {[unowned self] (notification) in // @escaping
             // Swift.print(#function, #line, #file)
             
             #if false
             Swift.print("#####", "========================",
-                        "Received : .movieWasMutated :", self.displayName!)
+                        "Received: .movieWasMutated :", self.displayName!)
             #endif
             
             // extract CMTime/CMTimeRange from userInfo
@@ -428,11 +428,11 @@ extension Document {
             guard let timeValue = userInfo[timeValueInfoKey] as? NSValue else { return }
             guard let timeRangeValue = userInfo[timeRangeValueInfoKey] as? NSValue else { return }
             
-            let time : CMTime = timeValue.timeValue
-            let timeRange : CMTimeRange = timeRangeValue.timeRangeValue
+            let time: CMTime = timeValue.timeValue
+            let timeRange: CMTimeRange = timeRangeValue.timeRangeValue
             self.updateGUI(time, timeRange, true)
         }
-        let addBlock : () -> Void = {
+        let addBlock: () -> Void = {
             // Swift.print(#function, #line, #file)
             
             let center = NotificationCenter.default
@@ -488,33 +488,33 @@ extension Document {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        let selection : CMTimeRange = mutator.selectedTimeRange
-        let start : CMTime = selection.start
-        let end : CMTime = selection.end
+        let selection: CMTimeRange = mutator.selectedTimeRange
+        let start: CMTime = selection.start
+        let end: CMTime = selection.end
         
-        let halfDuration : CMTime = CMTimeMultiplyByRatio(selection.duration, multiplier: 1, divisor: 2)
-        let centerOfRange : CMTime = start + halfDuration
-        let t1 : CMTime = (current < centerOfRange) ? current : start
-        let t2 : CMTime = (current > centerOfRange) ? current : end
-        let newSelection : CMTimeRange = CMTimeRangeFromTimeToTime(start: t1, end: t2)
+        let halfDuration: CMTime = CMTimeMultiplyByRatio(selection.duration, multiplier: 1, divisor: 2)
+        let centerOfRange: CMTime = start + halfDuration
+        let t1: CMTime = (current < centerOfRange) ? current : start
+        let t2: CMTime = (current > centerOfRange) ? current : end
+        let newSelection: CMTimeRange = CMTimeRangeFromTimeToTime(start: t1, end: t2)
         mutator.selectedTimeRange = newSelection
     }
     
     /// Move either Or both start/end marker to current marker
-    public func resetSelection(_ newTime : CMTime, _ resetStart : Bool, _ resetEnd : Bool) {
+    public func resetSelection(_ newTime: CMTime, _ resetStart: Bool, _ resetEnd: Bool) {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        let selection : CMTimeRange = mutator.selectedTimeRange
-        let start : CMTime = selection.start
-        let end : CMTime = selection.end
+        let selection: CMTimeRange = mutator.selectedTimeRange
+        let start: CMTime = selection.start
+        let end: CMTime = selection.end
         
-        let sFlag : Bool = (resetEnd && newTime < start) ? true : resetStart
-        let eFlag : Bool = (resetStart && newTime > end) ? true : resetEnd
+        let sFlag: Bool = (resetEnd && newTime < start) ? true : resetStart
+        let eFlag: Bool = (resetStart && newTime > end) ? true : resetEnd
         if sFlag || eFlag {
-            let t1 : CMTime = sFlag ? newTime : start
-            let t2 : CMTime = eFlag ? newTime : end
-            let newSelection : CMTimeRange = CMTimeRangeFromTimeToTime(start: t1, end: t2)
+            let t1: CMTime = sFlag ? newTime : start
+            let t2: CMTime = eFlag ? newTime : end
+            let newSelection: CMTimeRange = CMTimeRangeFromTimeToTime(start: t1, end: t2)
             mutator.selectedTimeRange = newSelection
         }
     }
@@ -546,7 +546,7 @@ extension Document {
         if player.rate != 0.0 { return false }
         
         let current = player.currentTime()
-        let duration : CMTime = mutator.movieDuration()
+        let duration: CMTime = mutator.movieDuration()
         
         // validate cached range value
         if cachedTime == current {
@@ -559,7 +559,7 @@ extension Document {
             cachedLastSampleRange = CMTimeRange.invalid
             
             if let info = mutator.presentationInfoAtTime(current) {
-                let endOfRange : Bool = info.timeRange.end == duration
+                let endOfRange: Bool = info.timeRange.end == duration
                 if endOfRange {
                     cachedTime = current
                     cachedWithinLastSampleRange = true
@@ -571,13 +571,13 @@ extension Document {
     }
     
     /// Snap to grid - Adjust Timeline resolution
-    public func quantize(_ position : Float64) -> CMTime {
+    public func quantize(_ position: Float64) -> CMTime {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return CMTime.zero }
-        let position : Float64 = min(max(position, 0.0), 1.0)
+        let position: Float64 = min(max(position, 0.0), 1.0)
         if let info = mutator.presentationInfoAtPosition(position) {
-            let ratio : Float64 = (position - info.startPosition) / (info.endPosition - info.startPosition)
+            let ratio: Float64 = (position - info.startPosition) / (info.endPosition - info.startPosition)
             return (ratio < 0.5) ? info.timeRange.start : info.timeRange.end
         } else {
             return CMTimeMultiplyByFloat64(mutator.movieDuration(), multiplier: position)
@@ -591,7 +591,7 @@ extension Document {
 
 extension Document {
     
-    public func validateIfSelfContained(for url : URL) -> Bool {
+    public func validateIfSelfContained(for url: URL) -> Bool {
         // Swift.print(#function, #line, #file)
         
         /*
@@ -602,7 +602,7 @@ extension Document {
          In case of in-memory movie (no-file-backed) it should be a reference movie.
          In case of multiple url found it should be a reference movie.
          */
-        let refURLs : [URL] = self.movieMutator?.queryMediaDataURLs() ?? []
+        let refURLs: [URL] = self.movieMutator?.queryMediaDataURLs() ?? []
         if refURLs.count == 1 && refURLs[0] == url {
             return true
         }

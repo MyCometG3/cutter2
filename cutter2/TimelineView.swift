@@ -34,20 +34,20 @@ public extension NSBezierPath {
 }
 
 /// View to ViewController - Mouse Event related protocol (No CMTime)
-protocol TimelineUpdateDelegate : class {
+protocol TimelineUpdateDelegate: class {
     // called on mouse down/drag event
-    func didUpdateCursor(to position : Float64)
-    func didUpdateStart(to position : Float64)
-    func didUpdateEnd(to position : Float64)
-    func didUpdateSelection(from fromPos : Float64, to toPos : Float64)
+    func didUpdateCursor(to position: Float64)
+    func didUpdateStart(to position: Float64)
+    func didUpdateEnd(to position: Float64)
+    func didUpdateSelection(from fromPos: Float64, to toPos: Float64)
     //
-    func presentationInfo(at position : Float64) -> PresentationInfo?
+    func presentationInfo(at position: Float64) -> PresentationInfo?
     func previousInfo(of range: CMTimeRange) -> PresentationInfo?
     func nextInfo(of range: CMTimeRange) -> PresentationInfo?
     //
-    func doSetCurrent(to goTo : anchor)
-    func doSetStart(to goTo : anchor)
-    func doSetEnd(to goTo : anchor)
+    func doSetCurrent(to goTo: anchor)
+    func doSetStart(to goTo: anchor)
+    func doSetEnd(to goTo: anchor)
 }
 
 /// Anchor Position definition
@@ -91,58 +91,22 @@ enum marker {
 }
 
 class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
+    
+    /* ============================================ */
+    // MARK: - Properties
+    /* ============================================ */
+    
     /// Delegate object which conforms TimelineUpdateDelegate protocol
-    public weak var delegate : TimelineUpdateDelegate? = nil
+    public weak var delegate: TimelineUpdateDelegate? = nil
     
     /// Recalculate Mouse Tracking Area on Window resize event
-    public var needsUpdateTrackingArea : Bool = false
+    public var needsUpdateTrackingArea: Bool = false
     
-    /// Update 3 marker positions
-    public func updateTimeline(current curPosition : Float64,
-                               from startPosition : Float64,
-                               to endPosition : Float64,
-                               isValid valid : Bool) -> Bool {
-        // Check if update is not required
-        if (self.currentPosition == curPosition &&
-            self.startPosition == startPosition &&
-            self.endPosition == endPosition &&
-            self.isValid == valid) {
-            return false
-        }
-        
-        //
-        if !valid && marker() != .none {
-            _ = unselectMarker()
-        }
-        
-        // Check if either value is NaN
-        if curPosition.isNaN || startPosition.isNaN || endPosition.isNaN {
-            self.isValid = false
-            self.currentPosition = 0.0
-            self.startPosition = 0.0
-            self.endPosition = 0.0
-            return true
-        }
-        
-        // select current marker if none is selected
-        if valid && marker() == .none {
-            if let cur = self.currentMarker {
-                _ = selectNewMarker(cur)
-            }
-        }
-        
-        // update as is
-        self.isValid = valid
-        self.currentPosition = curPosition
-        self.startPosition = startPosition
-        self.endPosition = endPosition
-        return true
-    }
-    
-    /// Update Time label string
-    public func updateTimeLabel(to newLabel : String) {
-        if let timeLabel = timeLabel {
-            timeLabel.string = newLabel
+    /// Choose visual appearance
+    public var jklMode: Bool = false {
+        didSet {
+            selectedMarker?.fillColor = fillColorActive
+            selection?.fillColor = fillColorActive
         }
     }
     
@@ -151,55 +115,46 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     /* ============================================ */
     
     // data model
-    private var currentPosition : Float64 = 0.0
-    private var startPosition : Float64 = 0.0
-    private var endPosition : Float64 = 0.0
-    public var jklMode : Bool = false {
-        didSet {
-            selectedMarker?.fillColor = fillColorActive
-            selection?.fillColor = fillColorActive
-        }
-    }
+    private var currentPosition: Float64 = 0.0
+    private var startPosition: Float64 = 0.0
+    private var endPosition: Float64 = 0.0
     
     // CATextLayer
-    private var timeLabel : CATextLayer? = nil
+    private var timeLabel: CATextLayer? = nil
     
     // CAShapeLayer
-    private var isValid : Bool = false
-    private var currentMarker : CAShapeLayer? = nil
-    private var startMarker : CAShapeLayer? = nil
-    private var endMarker : CAShapeLayer? = nil
-    private var selection : CAShapeLayer? = nil
-    private var timeline : CAShapeLayer? = nil
-    private weak var selectedMarker : CAShapeLayer? = nil
+    private var isValid: Bool = false
+    private var currentMarker: CAShapeLayer? = nil
+    private var startMarker: CAShapeLayer? = nil
+    private var endMarker: CAShapeLayer? = nil
+    private var selection: CAShapeLayer? = nil
+    private var timeline: CAShapeLayer? = nil
+    private weak var selectedMarker: CAShapeLayer? = nil
     
     // visual constants
-    private let leftMargin : CGFloat = 75.0
-    private let rightMargin : CGFloat = 12.0
-    private let labelWidth : CGFloat = 72.0
-    private let labelHeight : CGFloat = 14.0
-    private let wUnit : CGFloat = 8.0
-    private let hUnit : CGFloat = 8.0
-    private let strokeColorActive : CGColor = NSColor.black.cgColor
-    private var fillColorActive : CGColor {
+    private let leftMargin: CGFloat = 75.0
+    private let rightMargin: CGFloat = 12.0
+    private let labelWidth: CGFloat = 72.0
+    private let labelHeight: CGFloat = 14.0
+    private let wUnit: CGFloat = 8.0
+    private let hUnit: CGFloat = 8.0
+    private let strokeColorActive: CGColor = NSColor.black.cgColor
+    private var fillColorActive: CGColor {
         if jklMode {
             return NSColor.blue.cgColor
         } else {
             return NSColor.red.cgColor
         }
     }
-    private let strokeColorInactive : CGColor = NSColor.gray.cgColor
-    private let fillColorInactive : CGColor = NSColor.lightGray.cgColor
-    private var labelColor : CGColor {
+    private let strokeColorInactive: CGColor = NSColor.gray.cgColor
+    private let fillColorInactive: CGColor = NSColor.lightGray.cgColor
+    private var labelColor: CGColor {
         if #available(OSX 10.14, *) {
             return NSColor.unemphasizedSelectedTextColor.cgColor
         } else {
             return NSColor.darkGray.cgColor
         }
     }
-    
-    // NSView Instance Property
-    override var mouseDownCanMoveWindow: Bool { return false }
     
     /* ============================================ */
     // MARK: - NSView methods
@@ -235,61 +190,61 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         }
         
         // layout markers/timeline as is
-        let currentPoint : CGPoint = point(of: currentPosition)
-        let startPoint : CGPoint = point(of: startPosition)
-        let endPoint : CGPoint = point(of: endPosition)
-        let leftPoint : CGPoint = point(of: 0.0)
-        let rightPoint : CGPoint = point(of: 1.0)
+        let currentPoint: CGPoint = point(of: currentPosition)
+        let startPoint: CGPoint = point(of: startPosition)
+        let endPoint: CGPoint = point(of: endPosition)
+        let leftPoint: CGPoint = point(of: 0.0)
+        let rightPoint: CGPoint = point(of: 1.0)
         
         // Arrange each Markers
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         if let cMark = currentMarker {
-            let curRect : CGRect = cMark.frame
-            let newRect : CGRect  = CGRect(x: currentPoint.x - (curRect.width / 2.0),
-                                           y: currentPoint.y - (hUnit * 0.5),
-                                           width: curRect.width,
-                                           height: curRect.height)
+            let curRect: CGRect = cMark.frame
+            let newRect: CGRect  = CGRect(x: currentPoint.x - (curRect.width / 2.0),
+                                          y: currentPoint.y - (hUnit * 0.5),
+                                          width: curRect.width,
+                                          height: curRect.height)
             cMark.frame = newRect
         }
         if let sMark = startMarker {
-            let curRect : CGRect  = sMark.frame
-            let newRect : CGRect  = CGRect(x: startPoint.x - curRect.width,
-                                           y: startPoint.y - (hUnit * 0.5 + curRect.height),
-                                           width: curRect.width,
-                                           height: curRect.height)
+            let curRect: CGRect  = sMark.frame
+            let newRect: CGRect  = CGRect(x: startPoint.x - curRect.width,
+                                          y: startPoint.y - (hUnit * 0.5 + curRect.height),
+                                          width: curRect.width,
+                                          height: curRect.height)
             sMark.frame = newRect
         }
         if let eMark = endMarker {
-            let curRect : CGRect  = eMark.frame
-            let newRect : CGRect  = CGRect(x: endPoint.x,
-                                           y: endPoint.y - (hUnit * 0.5 + curRect.height),
-                                           width: curRect.width,
-                                           height: curRect.height)
+            let curRect: CGRect  = eMark.frame
+            let newRect: CGRect  = CGRect(x: endPoint.x,
+                                          y: endPoint.y - (hUnit * 0.5 + curRect.height),
+                                          width: curRect.width,
+                                          height: curRect.height)
             eMark.frame = newRect
         }
         if let sLine = selection {
-            let curRect : CGRect = sLine.frame
-            let newRect : CGRect  = CGRect(x: startPoint.x,
-                                           y: startPoint.y - (hUnit * 0.5),
-                                           width: endPoint.x - startPoint.x,
-                                           height: curRect.height)
+            let curRect: CGRect = sLine.frame
+            let newRect: CGRect  = CGRect(x: startPoint.x,
+                                          y: startPoint.y - (hUnit * 0.5),
+                                          width: endPoint.x - startPoint.x,
+                                          height: curRect.height)
             sLine.path = NSBezierPath(rect: newRect).cgPath
             sLine.bounds = sLine.path!.boundingBox
             sLine.frame = newRect
         }
         if let tLine = timeline {
-            let curRect : CGRect = tLine.frame
-            let newRect : CGRect = CGRect(x: leftPoint.x,
-                                          y: leftPoint.y - (hUnit * 0.5),
-                                          width: rightPoint.x - leftPoint.x,
-                                          height: curRect.height)
+            let curRect: CGRect = tLine.frame
+            let newRect: CGRect = CGRect(x: leftPoint.x,
+                                         y: leftPoint.y - (hUnit * 0.5),
+                                         width: rightPoint.x - leftPoint.x,
+                                         height: curRect.height)
             tLine.path = NSBezierPath(rect: newRect).cgPath
             tLine.bounds = tLine.path!.boundingBox
             tLine.frame = newRect
         }
         if let label = timeLabel {
-            let curRect : CGRect = label.frame
+            let curRect: CGRect = label.frame
             let width = curRect.width
             let height = curRect.height
             label.bounds = label.contentsRect
@@ -314,14 +269,14 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     }
     
     /* ============================================ */
-    // MARK: - Sublayer setup
+    // MARK: - Sublayer setup Private
     /* ============================================ */
     
     /// Prepare CATextLayer
     private func setupLabel() {
         do {
             let label = CATextLayer()
-            let fontName : CFString = "Helvetica" as CFString
+            let fontName: CFString = "Helvetica" as CFString
             label.font = fontName
             label.fontSize = 11.5
             label.alignmentMode = CATextLayerAlignmentMode.center
@@ -396,10 +351,10 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         
         // Create timeline
         do {
-            let width : CGFloat = self.bounds.width - (leftMargin + rightMargin)
-            let height : CGFloat = hUnit
-            let xOrigin : CGFloat = leftMargin
-            let yOrigin : CGFloat = (self.bounds.height/2.0) - (height/2.0)
+            let width: CGFloat = self.bounds.width - (leftMargin + rightMargin)
+            let height: CGFloat = hUnit
+            let xOrigin: CGFloat = leftMargin
+            let yOrigin: CGFloat = (self.bounds.height/2.0) - (height/2.0)
             let rect = NSRect(x: xOrigin, y: yOrigin,
                               width: width, height: height)
             let path = NSBezierPath(rect: rect)
@@ -414,11 +369,11 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         
         // Create selection marker (rectangle)
         do {
-            let leftMargin : CGFloat = 60.0
-            let width : CGFloat = 0.0
-            let height : CGFloat = hUnit
-            let xOrigin : CGFloat = leftMargin
-            let yOrigin : CGFloat = (self.bounds.height/2.0) - (height/2.0)
+            let leftMargin: CGFloat = 60.0
+            let width: CGFloat = 0.0
+            let height: CGFloat = hUnit
+            let xOrigin: CGFloat = leftMargin
+            let yOrigin: CGFloat = (self.bounds.height/2.0) - (height/2.0)
             let rect = NSRect(x: xOrigin, y: yOrigin,
                               width: width, height: height)
             let path = NSBezierPath(rect: rect)
@@ -463,8 +418,57 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         }
     }
     
+    /// Update 3 marker positions
+    public func updateTimeline(current curPosition: Float64,
+                               from startPosition: Float64,
+                               to endPosition: Float64,
+                               isValid valid: Bool) -> Bool {
+        // Check if update is not required
+        if (self.currentPosition == curPosition &&
+            self.startPosition == startPosition &&
+            self.endPosition == endPosition &&
+            self.isValid == valid) {
+            return false
+        }
+        
+        //
+        if !valid && marker() != .none {
+            _ = unselectMarker()
+        }
+        
+        // Check if either value is NaN
+        if curPosition.isNaN || startPosition.isNaN || endPosition.isNaN {
+            self.isValid = false
+            self.currentPosition = 0.0
+            self.startPosition = 0.0
+            self.endPosition = 0.0
+            return true
+        }
+        
+        // select current marker if none is selected
+        if valid && marker() == .none {
+            if let cur = self.currentMarker {
+                _ = selectNewMarker(cur)
+            }
+        }
+        
+        // update as is
+        self.isValid = valid
+        self.currentPosition = curPosition
+        self.startPosition = startPosition
+        self.endPosition = endPosition
+        return true
+    }
+    
+    /// Update Time label string
+    public func updateTimeLabel(to newLabel: String) {
+        if let timeLabel = timeLabel {
+            timeLabel.string = newLabel
+        }
+    }
+    
     /* ============================================ */
-    // MARK: - Utilities
+    // MARK: - Utilities Private
     /* ============================================ */
     
     /// Quantize position to the sample timerange boundary
@@ -474,7 +478,7 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     private func quantize(_ input :Float64) -> Float64 {
         guard let vc = delegate, let info = vc.presentationInfo(at: input) else { return input }
         
-        let ratio : Float64 = (input - info.startPosition) / (info.endPosition - info.startPosition)
+        let ratio: Float64 = (input - info.startPosition) / (info.endPosition - info.startPosition)
         return (ratio < 0.5) ? info.startPosition : info.endPosition
     }
     
@@ -484,10 +488,10 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     ///   - event: mouse event
     ///   - toGrid: set true to quantize
     /// - Returns: position in Float64
-    private func position(from event : NSEvent, snap toGrid : Bool) -> Float64 {
+    private func position(from event: NSEvent, snap toGrid: Bool) -> Float64 {
         let point = self.convert(event.locationInWindow, from: nil)
-        let width : CGFloat = self.bounds.width - (leftMargin + rightMargin)
-        var pos : Float64 = Float64((point.x - leftMargin) / width)
+        let width: CGFloat = self.bounds.width - (leftMargin + rightMargin)
+        var pos: Float64 = Float64((point.x - leftMargin) / width)
         pos = min(max(pos, 0.0), 1.0) // clamp(x, a, b)
         return (toGrid ? quantize(pos) : pos)
     }
@@ -496,23 +500,26 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     ///
     /// - Parameter position: position in timeLine
     /// - Returns: CGPoint on timeLine relative to position value
-    private func point(of position : Float64) -> CGPoint {
-        let width : CGFloat = self.bounds.width - (leftMargin + rightMargin)
-        let x : CGFloat = leftMargin + width * CGFloat(position)
-        let y : CGFloat = self.bounds.height / 2
+    private func point(of position: Float64) -> CGPoint {
+        let width: CGFloat = self.bounds.width - (leftMargin + rightMargin)
+        let x: CGFloat = leftMargin + width * CGFloat(position)
+        let y: CGFloat = self.bounds.height / 2
         let point = CGPoint(x: x, y: y)
         return point
     }
     
     /* ============================================ */
-    // MARK: - Mouse Event support
+    // MARK: - Mouse Event Private
     /* ============================================ */
+    
+    // NSView Instance Property
+    override var mouseDownCanMoveWindow: Bool { return false }
     
     /// Activate(Select) specified marker on mouse click
     ///
     /// - Parameter marker: marker to be selected
     /// - Returns: true if marker selection is updated. false if already selected.
-    private func selectNewMarker(_ marker : CAShapeLayer) -> Bool {
+    private func selectNewMarker(_ marker: CAShapeLayer) -> Bool {
         // called on mouse down event
         guard let cMark = currentMarker else { return false }
         guard let sMark = startMarker, let eMark = endMarker else { return false }
@@ -582,7 +589,7 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     /// - Parameters:
     ///   - marker: target marker to move
     ///   - event: NSEvent of mouse click/drag
-    private func updateMarkerPosition(_ marker : CAShapeLayer, with event : NSEvent) {
+    private func updateMarkerPosition(_ marker: CAShapeLayer, with event: NSEvent) {
         // called on mouse down/drag event
         guard let vc = delegate else { NSSound.beep(); return }
         guard let cMark = currentMarker else { return }
@@ -627,7 +634,7 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     /// Sync insertion marker to selection marker start/end
     ///
     /// - Parameter anchor: target marker
-    private func resetCurrent(to anchor : anchor) {
+    private func resetCurrent(to anchor: anchor) {
         guard let vc = delegate else { NSSound.beep(); return }
         vc.doSetCurrent(to: anchor)
     }
@@ -636,11 +643,13 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     // MARK: - Mouse Event handling
     /* ============================================ */
     
+    // NSResponder
     override func mouseMoved(with event: NSEvent) {
         //let point = self.convert(event.locationInWindow, from: nil)
         // Swift.print("#####", point, position(from: event))
     }
     
+    // NSResponder
     override func mouseDown(with event: NSEvent) {
         let point = self.convert(event.locationInWindow, from: nil)
         // Swift.print("#####", point, position(from: event))
@@ -665,6 +674,7 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         }
     }
     
+    // NSResponder
     override func mouseDragged(with event: NSEvent) {
         // let point = self.convert(event.locationInWindow, to: self)
         // Swift.print("#####", point, position(from: event))
@@ -678,14 +688,17 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     // MARK: - Keyboard Event handling
     /* ============================================ */
     
+    // NSResponder
     override var acceptsFirstResponder: Bool {
         return true
     }
     
+    // NSResponder
     override func becomeFirstResponder() -> Bool {
         return true
     }
     
+    // NSView(NSKeyboardUI)
     override var canBecomeKeyView: Bool {
         return true
     }

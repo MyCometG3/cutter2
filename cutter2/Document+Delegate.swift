@@ -9,11 +9,11 @@
 import Cocoa
 import AVFoundation
 
-extension Document : ViewControllerDelegate {
-    
-    /* ============================================ */
-    // MARK: - ViewControllerDelegate Protocol
-    /* ============================================ */
+/* ============================================ */
+// MARK: - ViewControllerDelegate Protocol
+/* ============================================ */
+
+extension Document: ViewControllerDelegate {
     
     public func hasSelection() -> Bool {
         // Swift.print(#function, #line, #file)
@@ -132,14 +132,14 @@ extension Document : ViewControllerDelegate {
         #endif
     }
     
-    public func timeOfPosition(_ position : Float64) -> CMTime {
+    public func timeOfPosition(_ position: Float64) -> CMTime {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return CMTime.zero }
         return mutator.timeOfPosition(position)
     }
     
-    public func positionOfTime(_ time : CMTime) -> Float64 {
+    public func positionOfTime(_ time: CMTime) -> Float64 {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return 0.0 }
@@ -181,20 +181,20 @@ extension Document : ViewControllerDelegate {
         
         guard let mutator = self.movieMutator else { return }
         let time = mutator.insertionTime
-        let range : CMTimeRange = mutator.movieRange()
+        let range: CMTimeRange = mutator.movieRange()
         self.updateGUI(time, range, false)
     }
     
     /// offset current marker by specified step
-    public func doStepByCount(_ count : Int64, _ resetStart : Bool, _ resetEnd : Bool) {
+    public func doStepByCount(_ count: Int64, _ resetStart: Bool, _ resetEnd: Bool) {
         // Swift.print(#function, #line, #file)
         
-        var target : CMTime? = nil
+        var target: CMTime? = nil
         doStepByCount(count, resetStart, resetEnd, &target)
     }
     
     /// offset current marker by specified step (private)
-    private func doStepByCount(_ count : Int64, _ resetStart : Bool, _ resetEnd : Bool, _ target : inout CMTime?) {
+    private func doStepByCount(_ count: Int64, _ resetStart: Bool, _ resetEnd: Bool, _ target: inout CMTime?) {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
@@ -248,27 +248,27 @@ extension Document : ViewControllerDelegate {
     }
     
     /// offset current marker by specified seconds
-    public func doStepBySecond(_ offset : Float64, _ resetStart : Bool, _ resetEnd : Bool) {
+    public func doStepBySecond(_ offset: Float64, _ resetStart: Bool, _ resetEnd: Bool) {
         // Swift.print(#function, #line, #file)
         
-        var target : CMTime? = nil
+        var target: CMTime? = nil
         doStepBySecond(offset, resetStart, resetEnd, &target)
     }
     
     /// offset current marker by specified seconds (private)
-    private func doStepBySecond(_ offset: Float64, _ resetStart : Bool, _ resetEnd : Bool, _ target : inout CMTime?) {
+    private func doStepBySecond(_ offset: Float64, _ resetStart: Bool, _ resetEnd: Bool, _ target: inout CMTime?) {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         guard let player = self.player else { return }
-        let movieRange : CMTimeRange = mutator.movieRange()
+        let movieRange: CMTimeRange = mutator.movieRange()
         
         // pause first
         var rate = player.rate
         player.rate = 0.0
         
         // calc target time
-        var adjust : Bool = true
+        var adjust: Bool = true
         let nowTime = mutator.insertionTime
         let offsetTime = CMTimeMakeWithSeconds(offset, preferredTimescale: nowTime.timescale)
         var newTime = nowTime + offsetTime
@@ -280,7 +280,7 @@ extension Document : ViewControllerDelegate {
         
         // adjust time (snap to grid)
         if adjust, let info = mutator.presentationInfoAtTime(newTime) {
-            let beforeCenter : Bool = (info.timeRange.end - newTime) > (newTime - info.timeRange.start)
+            let beforeCenter: Bool = (info.timeRange.end - newTime) > (newTime - info.timeRange.start)
             newTime = beforeCenter ? info.timeRange.start : info.timeRange.end
         }
         
@@ -306,7 +306,7 @@ extension Document : ViewControllerDelegate {
         
         // Update AVPlayer.volume
         if percent >= -100 && percent <= +100 {
-            var volume : Float = player.volume
+            var volume: Float = player.volume
             volume += Float(percent) / 100.0
             volume = min(max(volume, 0.0), 1.0)
             player.volume = volume
@@ -314,17 +314,17 @@ extension Document : ViewControllerDelegate {
     }
     
     /// move left current marker by key combination
-    public func doMoveLeft(_ optionKey : Bool, _ shiftKey : Bool, _ resetStart : Bool, _ resetEnd : Bool) {
+    public func doMoveLeft(_ optionKey: Bool, _ shiftKey: Bool, _ resetStart: Bool, _ resetEnd: Bool) {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        var target : CMTime? = nil
+        var target: CMTime? = nil
         if optionKey {
-            var current : CMTime = mutator.insertionTime
-            let selection : CMTimeRange = mutator.selectedTimeRange
-            let start : CMTime = selection.start
-            let end : CMTime = selection.end
-            let limit : CMTime = CMTime.zero
+            var current: CMTime = mutator.insertionTime
+            let selection: CMTimeRange = mutator.selectedTimeRange
+            let start: CMTime = selection.start
+            let end: CMTime = selection.end
+            let limit: CMTime = CMTime.zero
             current = (
                 (end < current) ? end :
                     (start < current) ? start : limit
@@ -341,17 +341,17 @@ extension Document : ViewControllerDelegate {
     }
     
     /// move right current marker by key combination
-    public func doMoveRight(_ optionKey : Bool, _ shiftKey : Bool, _ resetStart : Bool, _ resetEnd : Bool) {
+    public func doMoveRight(_ optionKey: Bool, _ shiftKey: Bool, _ resetStart: Bool, _ resetEnd: Bool) {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        var target : CMTime? = nil
+        var target: CMTime? = nil
         if optionKey {
-            var current : CMTime = mutator.insertionTime
-            let selection : CMTimeRange = mutator.selectedTimeRange
-            let start : CMTime = selection.start
-            let end : CMTime = selection.end
-            let limit : CMTime = mutator.movieDuration()
+            var current: CMTime = mutator.insertionTime
+            let selection: CMTimeRange = mutator.selectedTimeRange
+            let start: CMTime = selection.start
+            let end: CMTime = selection.end
+            let limit: CMTime = mutator.movieDuration()
             current = (
                 (current < start) ? start :
                     (current < end) ? end : limit
@@ -368,18 +368,18 @@ extension Document : ViewControllerDelegate {
     }
     
     /// Perform slowmotion
-    public func doSetSlow(_ ratio : Float) {
+    public func doSetSlow(_ ratio: Float) {
         // Swift.print(#function, #line, #file)
         
         guard let player = self.player else { return }
         guard let item = self.playerItem else { return }
         
-        let okForward : Bool = (item.status == .readyToPlay)
-        let okReverse : Bool = item.canPlayReverse
-        let okSlowForward : Bool = item.canPlaySlowForward
-        let okSlowReverse : Bool = item.canPlaySlowReverse
+        let okForward: Bool = (item.status == .readyToPlay)
+        let okReverse: Bool = item.canPlayReverse
+        let okSlowForward: Bool = item.canPlaySlowForward
+        let okSlowReverse: Bool = item.canPlaySlowReverse
         
-        let newRate : Float = min(max(ratio, -1.0), 1.0)
+        let newRate: Float = min(max(ratio, -1.0), 1.0)
         
         if newRate == 0.0 {
             player.pause()
@@ -406,19 +406,19 @@ extension Document : ViewControllerDelegate {
     }
     
     /// Set playback rate
-    public func doSetRate(_ offset : Int) {
+    public func doSetRate(_ offset: Int) {
         // Swift.print(#function, #line, #file)
         
         guard let player = self.player else { return }
         guard let item = self.playerItem else { return }
-        var currentRate : Float = player.rate
-        let okForward : Bool = (item.status == .readyToPlay)
-        let okReverse : Bool = item.canPlayReverse
-        let okFastForward : Bool = item.canPlayFastForward
-        let okFastReverse : Bool = item.canPlayFastReverse
+        var currentRate: Float = player.rate
+        let okForward: Bool = (item.status == .readyToPlay)
+        let okReverse: Bool = item.canPlayReverse
+        let okFastForward: Bool = item.canPlayFastForward
+        let okFastReverse: Bool = item.canPlayFastReverse
         
         // Fine acceleration control on fastforward/fastreverse
-        let resolution : Float = 3.0 // 1.0, 1.33, 1.66, 2.00, 2.33, ...
+        let resolution: Float = 3.0 // 1.0, 1.33, 1.66, 2.00, 2.33, ...
         if -1.0 < currentRate && currentRate < 1.0 {
             currentRate = 0.0
         }
@@ -427,7 +427,7 @@ extension Document : ViewControllerDelegate {
         } else if currentRate < 0.0 {
             currentRate = (currentRate + 1.0) * resolution - 1.0
         }
-        var newRate : Float = (offset == 0) ? 0.0 : (currentRate + Float(offset))
+        var newRate: Float = (offset == 0) ? 0.0 : (currentRate + Float(offset))
         if newRate > 0.0 {
             newRate = (newRate - 1.0) / resolution + 1.0
         } else if newRate < 0.0 {
@@ -468,7 +468,7 @@ extension Document : ViewControllerDelegate {
         // Swift.print(#function, #line, #file)
         
         guard let player = self.player else { return }
-        let currentRate : Float = player.rate
+        let currentRate: Float = player.rate
         if currentRate != 0.0 { // play => pause
             doSetRate(0)
         } else { // pause => play
@@ -479,49 +479,52 @@ extension Document : ViewControllerDelegate {
             }
         }
     }
-    
-    /* ============================================ */
-    // MARK: - TimelineUpdateDelegate Protocol
-    /* ============================================ */
+}
+
+/* ============================================ */
+// MARK: - TimelineUpdateDelegate Protocol
+/* ============================================ */
+
+extension Document: TimelineUpdateDelegate {
     
     /// called on mouse down/drag event
-    public func didUpdateCursor(to position : Float64) {
+    public func didUpdateCursor(to position: Float64) {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        let time : CMTime = quantize(position)
+        let time: CMTime = quantize(position)
         updateGUI(time, mutator.selectedTimeRange, false)
     }
     
     /// called on mouse down/drag event
-    public func didUpdateStart(to position : Float64) {
+    public func didUpdateStart(to position: Float64) {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        let fromTime : CMTime = quantize(position)
-        let toTime : CMTime = mutator.selectedTimeRange.end
+        let fromTime: CMTime = quantize(position)
+        let toTime: CMTime = mutator.selectedTimeRange.end
         let newRange = CMTimeRangeFromTimeToTime(start: fromTime, end: toTime)
         updateGUI(mutator.insertionTime, newRange, false)
     }
     
     /// called on mouse down/drag event
-    public func didUpdateEnd(to position : Float64) {
+    public func didUpdateEnd(to position: Float64) {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        let fromTime : CMTime = mutator.selectedTimeRange.start
-        let toTime : CMTime = quantize(position)
+        let fromTime: CMTime = mutator.selectedTimeRange.start
+        let toTime: CMTime = quantize(position)
         let newRange = CMTimeRangeFromTimeToTime(start: fromTime, end: toTime)
         updateGUI(mutator.insertionTime, newRange, false)
     }
     
     /// called on mouse down/drag event
-    public func didUpdateSelection(from fromPos : Float64, to toPos : Float64) {
+    public func didUpdateSelection(from fromPos: Float64, to toPos: Float64) {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        let fromTime : CMTime = quantize(fromPos)
-        let toTime : CMTime = quantize(toPos)
+        let fromTime: CMTime = quantize(fromPos)
+        let toTime: CMTime = quantize(toPos)
         let newRange = CMTimeRangeFromTimeToTime(start: fromTime, end: toTime)
         updateGUI(mutator.insertionTime, newRange, false)
     }
@@ -551,14 +554,14 @@ extension Document : ViewControllerDelegate {
     }
     
     /// Move current marker to specified anchor point
-    public func doSetCurrent(to anchor : anchor) {
+    public func doSetCurrent(to anchor: anchor) {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        let current : CMTime = mutator.insertionTime
-        let start : CMTime = mutator.selectedTimeRange.start
-        let end : CMTime = mutator.selectedTimeRange.end
-        let duration : CMTime = mutator.movieDuration()
+        let current: CMTime = mutator.insertionTime
+        let start: CMTime = mutator.selectedTimeRange.start
+        let end: CMTime = mutator.selectedTimeRange.end
+        let duration: CMTime = mutator.movieDuration()
         
         switch anchor {
         case .head :
@@ -602,21 +605,21 @@ extension Document : ViewControllerDelegate {
             return
         }
         
-        let newCurrent : CMTime = mutator.insertionTime
-        let newRange : CMTimeRange = mutator.selectedTimeRange
+        let newCurrent: CMTime = mutator.insertionTime
+        let newRange: CMTimeRange = mutator.selectedTimeRange
         self.updateGUI(newCurrent, newRange, false)
     }
     
     /// Move selection start marker to specified anchor point
-    public func doSetStart(to anchor : anchor) {
+    public func doSetStart(to anchor: anchor) {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        let current : CMTime = mutator.insertionTime
-        let start : CMTime = mutator.selectedTimeRange.start
-        let end : CMTime = mutator.selectedTimeRange.end
-        let duration : CMTime = mutator.movieDuration()
-        var newRange : CMTimeRange = mutator.selectedTimeRange
+        let current: CMTime = mutator.insertionTime
+        let start: CMTime = mutator.selectedTimeRange.start
+        let end: CMTime = mutator.selectedTimeRange.end
+        let duration: CMTime = mutator.movieDuration()
+        var newRange: CMTimeRange = mutator.selectedTimeRange
         
         switch anchor {
         case .headOrCurrent :
@@ -646,15 +649,15 @@ extension Document : ViewControllerDelegate {
     }
     
     /// Move selection end marker to specified anchor point
-    public func doSetEnd(to anchor : anchor) {
+    public func doSetEnd(to anchor: anchor) {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        let current : CMTime = mutator.insertionTime
-        let start : CMTime = mutator.selectedTimeRange.start
-        let end : CMTime = mutator.selectedTimeRange.end
-        let duration : CMTime = mutator.movieDuration()
-        var newRange : CMTimeRange = mutator.selectedTimeRange
+        let current: CMTime = mutator.insertionTime
+        let start: CMTime = mutator.selectedTimeRange.start
+        let end: CMTime = mutator.selectedTimeRange.end
+        let duration: CMTime = mutator.movieDuration()
+        var newRange: CMTimeRange = mutator.selectedTimeRange
         
         switch anchor {
         case .tailOrCurrent :

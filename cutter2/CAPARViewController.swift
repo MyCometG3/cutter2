@@ -10,16 +10,27 @@ import Cocoa
 import AVFoundation
 
 class CAPARViewController: NSViewController {
-    var initialContent : [AnyHashable : Any] = [:] // 4 Keys for source video
-    var resultContent : [AnyHashable : Any] = [:] // 4 Keys for target video
+    
+    /* ============================================ */
+    // MARK: - Public properties
+    /* ============================================ */
+    
+    public var initialContent: [AnyHashable:Any] = [:] // 4 Keys for source video
+    public var resultContent: [AnyHashable:Any] = [:] // 4 Keys for target video
     
     @IBOutlet weak var objectController: NSObjectController!
+    
+    @IBOutlet weak var encodedPixelLabel: NSTextField!
+    
+    /* ============================================ */
+    // MARK: - Private properties
+    /* ============================================ */
+    
+    private var parentWindow: NSWindow? = nil
     
     /* ============================================ */
     // MARK: - Sheet control
     /* ============================================ */
-    
-    private var parentWindow : NSWindow? = nil
     
     //
     override func viewDidLoad() {
@@ -43,7 +54,7 @@ class CAPARViewController: NSViewController {
     }
     
     //
-    public func beginSheetModal(for parent: NSWindow, handler : @escaping (NSApplication.ModalResponse) -> Void) {
+    public func beginSheetModal(for parent: NSWindow, handler: @escaping (NSApplication.ModalResponse) -> Void) {
         // Swift.print(#function, #line, #file)
         
         guard initialContent.count > 0 else { NSSound.beep(); return }
@@ -62,7 +73,7 @@ class CAPARViewController: NSViewController {
     }
     
     //
-    public func endSheet(_ response : NSApplication.ModalResponse) {
+    public func endSheet(_ response: NSApplication.ModalResponse) {
         // Swift.print(#function, #line, #file)
         guard let parent = self.parentWindow else { return }
         guard let sheet = self.view.window else { return }
@@ -101,7 +112,7 @@ class CAPARViewController: NSViewController {
     @IBAction func modifyClapPasp(_ sender: Any) {
         // Swift.print(#function, #line, #file)
         
-        let def : UserDefaults = UserDefaults.standard
+        let def: UserDefaults = UserDefaults.standard
         var customFlag = def.bool(forKey: modClapPaspKey)
         
         if customFlag {
@@ -134,9 +145,8 @@ class CAPARViewController: NSViewController {
     // MARK: - synchronize
     /* ============================================ */
     
-    @IBOutlet weak var encodedPixelLabel: NSTextField!
     private func updateTextColor(for valid:Bool) {
-        let color : NSColor = (valid ? NSColor.labelColor : NSColor.systemRed)
+        let color: NSColor = (valid ? NSColor.labelColor : NSColor.systemRed)
         encodedPixelLabel.textColor = color
     }
     
@@ -144,17 +154,17 @@ class CAPARViewController: NSViewController {
     private func validate() -> Bool {
         // Swift.print(#function, #line, #file)
         
-        let content : NSMutableDictionary = objectController.content as! NSMutableDictionary
-        var valid : Bool = true
-        let encSize : NSSize = content[dimensionsKey] as! NSSize
-        let clapSize : NSSize = content[clapSizeKey] as! NSSize
-        let clapOffset : NSPoint = content[clapOffsetKey] as! NSPoint
+        let content: NSMutableDictionary = objectController.content as! NSMutableDictionary
+        var valid: Bool = true
+        let encSize: NSSize = content[dimensionsKey] as! NSSize
+        let clapSize: NSSize = content[clapSizeKey] as! NSSize
+        let clapOffset: NSPoint = content[clapOffsetKey] as! NSPoint
         let pasp = content[paspRatioKey] as! NSSize
         
         do {
             // Verify dimension is not changed
-            let encSizeSrc : NSSize = initialContent[dimensionsKey] as! NSSize
-            let encSizeNew : NSSize = encSize
+            let encSizeSrc: NSSize = initialContent[dimensionsKey] as! NSSize
+            let encSizeNew: NSSize = encSize
             
             valid = encSizeSrc.equalTo(encSizeNew)
             updateTextColor(for: valid)
@@ -173,12 +183,12 @@ class CAPARViewController: NSViewController {
             let clapSizeValid:Bool = (checkWidth && checkHeight)
             
             // Check clapOffset
-            let checkX : Bool = abs(clapOffset.x) <= (encSize.width - clapSize.width) / 2.0
-            let checkY : Bool = abs(clapOffset.y) <= (encSize.height - clapSize.height) / 2.0
-            let clapOffsetValid:Bool = (checkX && checkY)
+            let checkX: Bool = abs(clapOffset.x) <= (encSize.width - clapSize.width) / 2.0
+            let checkY: Bool = abs(clapOffset.y) <= (encSize.height - clapSize.height) / 2.0
+            let clapOffsetValid: Bool = (checkX && checkY)
             
             // Check paspRatio
-            let ratio : CGFloat = (pasp.width / pasp.height)
+            let ratio: CGFloat = (pasp.width / pasp.height)
             let paspValid:Bool =  0.25 < ratio && ratio < 4.0
             
             valid = clapSizeValid && clapOffsetValid && paspValid
@@ -193,7 +203,7 @@ class CAPARViewController: NSViewController {
     private func updateFloat() {
         // Swift.print(#function, #line, #file)
         
-        let content : NSMutableDictionary = objectController.content as! NSMutableDictionary
+        let content: NSMutableDictionary = objectController.content as! NSMutableDictionary
         
         // NSSize/NSPoint -> CGFloat values
         do {
@@ -218,24 +228,24 @@ class CAPARViewController: NSViewController {
         // Swift.print(#function, #line, #file)
         
         // NSSize/NSPoint -> label string
-        let content : NSMutableDictionary = objectController.content as! NSMutableDictionary
+        let content: NSMutableDictionary = objectController.content as! NSMutableDictionary
         
-        let valid : Bool = validate()
+        let valid: Bool = validate()
         let par = content[paspRatioKey] as! NSSize
-        let ratio : CGFloat = (par.width / par.height)
+        let ratio: CGFloat = (par.width / par.height)
         do {
-            let size : NSSize = content[dimensionsKey] as! NSSize
+            let size: NSSize = content[dimensionsKey] as! NSSize
             let str = String(format: "%.2f x %.2f", size.width, size.height)
             content[labelEncodedKey] = str
         }
         if valid {
             do {
-                let size : NSSize = content[clapSizeKey] as! NSSize
+                let size: NSSize = content[clapSizeKey] as! NSSize
                 let str = String(format: "%.2f x %.2f", size.width * ratio, size.height)
                 content[labelCleanKey] = str
             }
             do {
-                let size : NSSize = content[dimensionsKey] as! NSSize
+                let size: NSSize = content[dimensionsKey] as! NSSize
                 let str = String(format: "%.2f x %.2f", size.width * ratio, size.height)
                 content[labelProductionKey] = str
             }
@@ -250,7 +260,7 @@ class CAPARViewController: NSViewController {
         // Swift.print(#function, #line, #file)
         
         // CGFloat values -> NSSize/NSPoint
-        let content : NSMutableDictionary = objectController.content as! NSMutableDictionary
+        let content: NSMutableDictionary = objectController.content as! NSMutableDictionary
         
         do {
             let width = content[clapSizeWidthKey] as? CGFloat ?? CGFloat.nan
@@ -277,7 +287,7 @@ class CAPARViewController: NSViewController {
     /* ============================================ */
     
     // Refresh movie source settings - Should be called prior to beginSheet()
-    public func applySource(_ dict : [AnyHashable : Any]) -> Bool {
+    public func applySource(_ dict: [AnyHashable:Any]) -> Bool {
         // Swift.print(#function, #line, #file)
         
         guard checkDict(dict) else { NSSound.beep(); return false}
@@ -291,7 +301,7 @@ class CAPARViewController: NSViewController {
         return true
     }
     
-    private func checkDict(_ dict : [AnyHashable : Any]) -> Bool {
+    private func checkDict(_ dict: [AnyHashable:Any]) -> Bool {
         guard dict[dimensionsKey] != nil else { return false }
         guard dict[clapSizeKey] != nil else { return false }
         guard dict[clapOffsetKey] != nil else { return false }
@@ -323,7 +333,7 @@ class CAPARViewController: NSViewController {
         // Swift.print(#function, #line, #file)
         
         //
-        let def : UserDefaults = UserDefaults.standard
+        let def: UserDefaults = UserDefaults.standard
         guard let clapOffsetStr = def.string(forKey: clapOffsetKey) else { return }
         guard let clapSizeStr = def.string(forKey: clapSizeKey) else { return }
         guard let paspRatioStr = def.string(forKey: paspRatioKey) else { return }
@@ -348,7 +358,7 @@ class CAPARViewController: NSViewController {
     private func updateUserDefaults() {
         // Swift.print(#function, #line, #file)
         
-        let def : UserDefaults = UserDefaults.standard
+        let def: UserDefaults = UserDefaults.standard
         let customFlag = def.bool(forKey: modClapPaspKey)
         guard customFlag else { return }
         
@@ -356,7 +366,7 @@ class CAPARViewController: NSViewController {
         self.updateStruct()
         
         //
-        let dict = objectController.content as? [AnyHashable : Any]
+        let dict = objectController.content as? [AnyHashable:Any]
         if let dict = dict, checkDict(dict) {
             let clapOffset = dict[clapOffsetKey] as! NSPoint
             let clapSize = dict[clapSizeKey] as! NSSize

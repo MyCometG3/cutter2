@@ -7,15 +7,23 @@
 //
 
 import Cocoa
-import AVKit
 import AVFoundation
+
+/* ============================================ */
+// MARK: -
+/* ============================================ */
 
 extension NSPasteboard.PasteboardType {
     static let movieMutator = NSPasteboard.PasteboardType("com.mycometg3.cutter.MovieMutator")
 }
 
+/* ============================================ */
+// MARK: -
+/* ============================================ */
+
 /// Wrapper of AVMutableMovie as model object of movie editor
 class MovieMutator: MovieMutatorBase {
+    
     /* ============================================ */
     // MARK: - private method - get movie clip
     /* ============================================ */
@@ -24,14 +32,14 @@ class MovieMutator: MovieMutatorBase {
     ///
     /// - Parameter range: clip range
     /// - Returns: clip as AVMutableMovie
-    private func movieClip(_ range : CMTimeRange) -> AVMutableMovie? {
+    private func movieClip(_ range: CMTimeRange) -> AVMutableMovie? {
         guard validateRange(range, true) else {
             assert(false, #function) //
             return nil
         }
         
         // Prepare clip
-        var clip : AVMutableMovie = internalMovie.mutableCopy() as! AVMutableMovie
+        var clip: AVMutableMovie = internalMovie.mutableCopy() as! AVMutableMovie
         if clip.timescale != range.duration.timescale {
             // Create new Movie with exact timescale; it should match before operation
             clip = AVMutableMovie()
@@ -44,7 +52,7 @@ class MovieMutator: MovieMutatorBase {
             clip.isModified = false
             // convert all into different timescale
             do {
-                let movieRange : CMTimeRange = self.movieRange()
+                let movieRange: CMTimeRange = self.movieRange()
                 // Swift.print(ts(), #function, #line, #file)
                 try clip.insertTimeRange(movieRange, of: internalMovie, at: CMTime.zero, copySampleData: false)
                 // Swift.print(ts(), #function, #line, #file)
@@ -55,11 +63,11 @@ class MovieMutator: MovieMutatorBase {
         }
         
         // Trim clip
-        let rangeAfter : CMTimeRange = CMTimeRangeMake(start: range.end, duration: clip.range.duration - range.end)
+        let rangeAfter: CMTimeRange = CMTimeRangeMake(start: range.end, duration: clip.range.duration - range.end)
         if rangeAfter.duration > CMTime.zero {
             clip.removeTimeRange(rangeAfter)
         }
-        let rangeBefore : CMTimeRange = CMTimeRangeMake(start: CMTime.zero, duration: range.start)
+        let rangeBefore: CMTimeRange = CMTimeRangeMake(start: CMTime.zero, duration: range.start)
         if rangeBefore.duration > CMTime.zero {
             clip.removeTimeRange(rangeBefore)
         }
@@ -89,15 +97,15 @@ class MovieMutator: MovieMutatorBase {
     ///
     /// - Returns: AVMutableMovie
     private func readClipFromPBoard() -> AVMutableMovie? {
-        let pBoard : NSPasteboard = NSPasteboard.general
+        let pBoard: NSPasteboard = NSPasteboard.general
         
         // extract movie header data from PBoard
-        let data : Data? = pBoard.data(forType: .movieMutator)
+        let data: Data? = pBoard.data(forType: .movieMutator)
         
         if let data = data {
             // create movie from movieHeader data
             // Swift.print(ts(), #function, #line, #file)
-            let clip : AVMutableMovie? = AVMutableMovie(data: data, options: nil)
+            let clip: AVMutableMovie? = AVMutableMovie(data: data, options: nil)
             // Swift.print(ts(), #function, #line, #file)
             
             if let clip = clip, validateClip(clip) {
@@ -116,13 +124,13 @@ class MovieMutator: MovieMutatorBase {
     ///
     /// - Parameter clip: AVMutableMovie
     /// - Returns: true if success
-    private func writeClipToPBoard(_ clip : AVMutableMovie) -> Bool {
+    private func writeClipToPBoard(_ clip: AVMutableMovie) -> Bool {
         assert( validateClip(clip), #function ) //
         
         // create movieHeader data from movie
         if let data = clip.movHeader {
             // register data to PBoard
-            let pBoard : NSPasteboard = NSPasteboard.general
+            let pBoard: NSPasteboard = NSPasteboard.general
             pBoard.clearContents()
             pBoard.setData(data, forType: .movieMutator)
             
@@ -137,7 +145,7 @@ class MovieMutator: MovieMutatorBase {
     ///
     /// - Parameter range: CMTimeRange of clip
     /// - Returns: AVMutableMovie of clip
-    private func writeRangeToPBoard(_ range : CMTimeRange) -> AVMutableMovie? {
+    private func writeRangeToPBoard(_ range: CMTimeRange) -> AVMutableMovie? {
         guard let clip = self.movieClip(range) else { return nil }
         guard self.writeClipToPBoard(clip) else { return nil }
         return clip
@@ -151,7 +159,7 @@ class MovieMutator: MovieMutatorBase {
     ///
     /// - Returns: true if available
     public func validateClipFromPBoard() -> Bool {
-        let pBoard : NSPasteboard = NSPasteboard.general
+        let pBoard: NSPasteboard = NSPasteboard.general
         
         if let _ = pBoard.data(forType: .movieMutator) {
             return true
@@ -193,7 +201,7 @@ class MovieMutator: MovieMutatorBase {
     ///   - range: original selection
     ///   - time: original intertionTime
     ///   - clip: removed clip - unused
-    private func undoRemove(_ data: Data, _ range: CMTimeRange, _ time: CMTime, _ clip : AVMutableMovie) {
+    private func undoRemove(_ data: Data, _ range: CMTimeRange, _ time: CMTime, _ clip: AVMutableMovie) {
         assert( validateClip(clip), #function )
         
         guard reloadAndNotify(from: data, range: range, time: time) else {
@@ -213,13 +221,13 @@ class MovieMutator: MovieMutatorBase {
         
         // perform insert clip at marker
         do {
-            var clipRange : CMTimeRange = CMTimeRange(start: CMTime.zero,
-                                                      duration: clip.range.duration)
+            var clipRange: CMTimeRange = CMTimeRange(start: CMTime.zero,
+                                                     duration: clip.range.duration)
             if clip.timescale != internalMovie.timescale {
                 // Shorten if fraction is not zero
-                let duration : CMTime = CMTimeConvertScale(clip.range.duration,
-                                                           timescale: internalMovie.timescale,
-                                                           method: .roundTowardZero)
+                let duration: CMTime = CMTimeConvertScale(clip.range.duration,
+                                                          timescale: internalMovie.timescale,
+                                                          method: .roundTowardZero)
                 clipRange = CMTimeRange(start: CMTime.zero,
                                         duration: duration)
             }
@@ -252,7 +260,7 @@ class MovieMutator: MovieMutatorBase {
     ///   - range: original selection
     ///   - time: original insertionTime
     ///   - clip: inserted clip
-    private func undoInsert(_ data: Data, _ range: CMTimeRange, _ time: CMTime, _ clip : AVMutableMovie) {
+    private func undoInsert(_ data: Data, _ range: CMTimeRange, _ time: CMTime, _ clip: AVMutableMovie) {
         assert( validateClip(clip), #function )
         
         // populate PBoard with original clip
@@ -288,7 +296,7 @@ class MovieMutator: MovieMutatorBase {
     /// Cut selection of internalMovie
     ///
     /// - Parameter undoManager: UndoManager for this operation
-    public func cutSelection(using undoManager : UndoManager) {
+    public func cutSelection(using undoManager: UndoManager) {
         // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
@@ -300,9 +308,9 @@ class MovieMutator: MovieMutatorBase {
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record
-        let undoCutHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
+        let undoCutHandler: (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
             // register redo record
-            let redoCutHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
+            let redoCutHandler: (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
                 me2.cutSelection(using: undoManager)
             }
             undoManager.registerUndo(withTarget: me1, handler: redoCutHandler)
@@ -322,7 +330,7 @@ class MovieMutator: MovieMutatorBase {
     /// Paste clip into internalMovie
     ///
     /// - Parameter undoManager: UndoManager for this operation
-    public func pasteAtInsertionTime(using undoManager : UndoManager) {
+    public func pasteAtInsertionTime(using undoManager: UndoManager) {
         // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
@@ -334,9 +342,9 @@ class MovieMutator: MovieMutatorBase {
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record
-        let undoPasteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
+        let undoPasteHandler: (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
             // register redo record
-            let redoPasteHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
+            let redoPasteHandler: (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
                 me2.pasteAtInsertionTime(using: undoManager)
             }
             undoManager.registerUndo(withTarget: me1, handler: redoPasteHandler)
@@ -356,7 +364,7 @@ class MovieMutator: MovieMutatorBase {
     /// Delete selection of internalMovie
     ///
     /// - Parameter undoManager: UndoManager for this operation
-    public func deleteSelection(using undoManager : UndoManager) {
+    public func deleteSelection(using undoManager: UndoManager) {
         // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
@@ -371,9 +379,9 @@ class MovieMutator: MovieMutatorBase {
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo redord
-        let undoDeleteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
+        let undoDeleteHandler: (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
             // register redo record
-            let redoDeleteHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
+            let redoDeleteHandler: (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
                 me2.deleteSelection(using: undoManager)
             }
             undoManager.registerUndo(withTarget: me1, handler: redoDeleteHandler)
@@ -420,7 +428,7 @@ class MovieMutator: MovieMutatorBase {
     }
     
     //
-    private func updateFormat(_ movie: AVMutableMovie, using undoManager : UndoManager) {
+    private func updateFormat(_ movie: AVMutableMovie, using undoManager: UndoManager) {
         // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
@@ -431,9 +439,9 @@ class MovieMutator: MovieMutatorBase {
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record
-        let undoPasteHandler : (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
+        let undoPasteHandler: (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
             // register redo replace
-            let redoPasteHandler : (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
+            let redoPasteHandler: (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
                 me2.updateFormat(movie, using: undoManager)
             }
             undoManager.registerUndo(withTarget: me1, handler: redoPasteHandler)
@@ -455,14 +463,14 @@ class MovieMutator: MovieMutatorBase {
     /* ============================================ */
     
     //
-    public func clappaspDictionary() -> [AnyHashable : Any]? {
-        var dict : [AnyHashable : Any] = [:]
+    public func clappaspDictionary() -> [AnyHashable: Any]? {
+        var dict: [AnyHashable:Any] = [:]
         
-        let vTracks : [AVMovieTrack] = internalMovie.tracks(withMediaType: .video)
+        let vTracks: [AVMovieTrack] = internalMovie.tracks(withMediaType: .video)
         guard vTracks.count > 0 else { NSSound.beep(); return nil }
         
-        let formats : [Any] = (vTracks[0]).formatDescriptions
-        let format : CMVideoFormatDescription? = (formats[0] as! CMVideoFormatDescription)
+        let formats: [Any] = (vTracks[0]).formatDescriptions
+        let format: CMVideoFormatDescription? = (formats[0] as! CMVideoFormatDescription)
         guard let desc = format else { NSSound.beep(); return nil }
         
         dict[dimensionsKey] =
@@ -470,7 +478,7 @@ class MovieMutator: MovieMutatorBase {
                                                               usePixelAspectRatio: false,
                                                               useCleanAperture: false)
         
-        let extCA : CFPropertyList? =
+        let extCA: CFPropertyList? =
             CMFormatDescriptionGetExtension(desc,
                                             extensionKey: kCMFormatDescriptionExtension_CleanAperture)
         if let extCA = extCA {
@@ -486,7 +494,7 @@ class MovieMutator: MovieMutatorBase {
             dict[clapOffsetKey] = NSZeroPoint
         }
         
-        let extPA : CFPropertyList? =
+        let extPA: CFPropertyList? =
             CMFormatDescriptionGetExtension(desc,
                                             extensionKey: kCMFormatDescriptionExtension_PixelAspectRatio)
         if let extPA = extPA {
@@ -502,7 +510,7 @@ class MovieMutator: MovieMutatorBase {
     }
     
     //
-    public func applyClapPasp(_ dict : [AnyHashable:Any], using undoManager : UndoManager) -> Bool {
+    public func applyClapPasp(_ dict: [AnyHashable:Any], using undoManager: UndoManager) -> Bool {
         guard #available(OSX 10.13, *) else { return false }
         
         guard let clapSize = dict[clapSizeKey] as? NSSize else { return false }
@@ -510,18 +518,18 @@ class MovieMutator: MovieMutatorBase {
         guard let paspRatio = dict[paspRatioKey] as? NSSize else { return false }
         guard let dimensions = dict[dimensionsKey] as? NSSize else { return false }
         
-        var count : Int = 0
+        var count: Int = 0
         
-        let movie : AVMutableMovie = internalMovie.mutableCopy() as! AVMutableMovie
+        let movie: AVMutableMovie = internalMovie.mutableCopy() as! AVMutableMovie
         
-        let vTracks : [AVMutableMovieTrack] = movie.tracks(withMediaType: .video)
+        let vTracks: [AVMutableMovieTrack] = movie.tracks(withMediaType: .video)
         for track in vTracks {
             let formats = track.formatDescriptions as! [CMFormatDescription]
             
             // Verify if track.encodedDimension is equal to target dimensions
-            var valid : Bool = false
+            var valid: Bool = false
             for format in formats {
-                let rawSize : CGSize =
+                let rawSize: CGSize =
                     CMVideoFormatDescriptionGetPresentationDimensions(format,
                                                                       usePixelAspectRatio: false,
                                                                       useCleanAperture: false)
@@ -552,7 +560,7 @@ class MovieMutator: MovieMutatorBase {
             for format in formats {
                 // Prepare new extensionDictionary
                 guard let cfDict = CMFormatDescriptionGetExtensions(format) else { continue }
-                let dict : NSMutableDictionary = NSMutableDictionary(dictionary: cfDict)
+                let dict: NSMutableDictionary = NSMutableDictionary(dictionary: cfDict)
                 dict[kCMFormatDescriptionExtension_VerbatimSampleDescription] = nil
                 dict[kCMFormatDescriptionExtension_VerbatimISOSampleEntry] = nil
                 
@@ -560,7 +568,7 @@ class MovieMutator: MovieMutatorBase {
                 if !validSize(clapSize) || !validPoint(clapOffset) {
                     dict[kCMFormatDescriptionExtension_CleanAperture] = nil
                 } else {
-                    let clap : NSMutableDictionary = [:]
+                    let clap: NSMutableDictionary = [:]
                     clap[kCMFormatDescriptionKey_CleanApertureWidth] = clapSize.width
                     clap[kCMFormatDescriptionKey_CleanApertureHeight] = clapSize.height
                     clap[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] = clapOffset.x
@@ -572,14 +580,14 @@ class MovieMutator: MovieMutatorBase {
                 if !validSize(paspRatio) {
                     dict[kCMFormatDescriptionExtension_PixelAspectRatio] = nil
                 } else {
-                    let pasp : NSMutableDictionary = [:]
+                    let pasp: NSMutableDictionary = [:]
                     pasp[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] = paspRatio.width
                     pasp[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] = paspRatio.height
                     dict[kCMFormatDescriptionExtension_PixelAspectRatio] = pasp
                 }
                 
                 // Create New formatDescription as replacement
-                var newFormat : CMVideoFormatDescription? = nil
+                var newFormat: CMVideoFormatDescription? = nil
                 let codecType = CMFormatDescriptionGetMediaSubType(format) as CMVideoCodecType
                 let dimensions = CMVideoFormatDescriptionGetDimensions(format)
                 let result = CMVideoFormatDescriptionCreate(allocator: kCFAllocatorDefault,
@@ -607,5 +615,4 @@ class MovieMutator: MovieMutatorBase {
             return false
         }
     }
-    
 }

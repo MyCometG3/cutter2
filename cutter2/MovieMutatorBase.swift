@@ -218,7 +218,7 @@ class MovieMutatorBase: NSObject {
     @inline(__always) public func validateRange(_ range: CMTimeRange, _ needsDuration: Bool) -> Bool {
         let movieRange: CMTimeRange = self.movieRange()
         return (range.duration > CMTime.zero)
-            ? CMTimeRangeContainsTimeRange(movieRange, otherRange: range)
+            ? (movieRange.start <= range.start && range.end <= movieRange.end)
             : (needsDuration ? false : validateTime(range.start))
     }
     
@@ -272,9 +272,7 @@ class MovieMutatorBase: NSObject {
     public func reloadAndNotify(from data: Data?, range: CMTimeRange, time: CMTime) -> Bool {
         if reloadMovie(from: data) {
             // Update Marker
-            insertionTime = time
-            selectedTimeRange = range
-            internalMovieDidChange(insertionTime, selectedTimeRange)
+            resetMarker(time, range, true)
             return true
         }
         return false
@@ -299,6 +297,25 @@ class MovieMutatorBase: NSObject {
                 Swift.print(ts(), " prop: ",Int(prop.value),"/",Int(prop.timescale))
                 Swift.print(ts(), " calc: ",Int(calc.value),"/",Int(calc.timescale))
             }
+        }
+    }
+    
+    /// Refresh selection marker position
+    ///
+    /// - Parameters:
+    ///   - time: original insertionTime
+    ///   - range: original selection
+    ///   - notify: trigger notification for GUI update
+    public func resetMarker(_ time: CMTime, _ range: CMTimeRange, _ notify: Bool) {
+        // Swift.print(ts(), #function, #line, #file)
+        
+        assert( validateRange(range, false), #function )
+        assert( validateTime(time), #function )
+        
+        insertionTime = time
+        selectedTimeRange = range
+        if notify {
+            internalMovieDidChange(insertionTime, selectedTimeRange)
         }
     }
     

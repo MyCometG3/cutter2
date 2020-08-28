@@ -187,10 +187,11 @@ class MovieMutator: MovieMutatorBase {
             // Swift.print(ts(), #function, #line, #file)
             
             // Update Marker
-            insertionTime = (time < range.start ? time
-                : (CMTimeRangeContainsTime(range, time: time) ? range.start : time - range.duration))
-            selectedTimeRange = CMTimeRangeMake(start: range.start, duration: CMTime.zero)
-            internalMovieDidChange(insertionTime, selectedTimeRange)
+            let newTime: CMTime = (time <= range.start ? time
+                : (range.start < time && time <= range.end) ? range.start
+                : time - range.duration)
+            let newRange: CMTimeRange = CMTimeRangeMake(start: range.start, duration: CMTime.zero)
+            resetMarker(newTime, newRange, true)
         }
     }
     
@@ -243,10 +244,9 @@ class MovieMutator: MovieMutatorBase {
             // Update Marker
             let afterDuration = self.movieDuration()
             let actualDelta = afterDuration - beforeDuration
-            insertionTime = time + actualDelta
-            selectedTimeRange = CMTimeRangeMake(start: time, duration: actualDelta)
-            
-            internalMovieDidChange(insertionTime, selectedTimeRange)
+            let newTime: CMTime = time + actualDelta
+            let newRange: CMTimeRange = CMTimeRangeMake(start: time, duration: actualDelta)
+            resetMarker(newTime, newRange, true)
         } catch {
             Swift.print("ERROR:", error)
             assert(false, #function) //
@@ -311,6 +311,7 @@ class MovieMutator: MovieMutatorBase {
         let undoCutHandler: (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
             // register redo record
             let redoCutHandler: (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
+                me2.resetMarker(time, range, false)
                 me2.cutSelection(using: undoManager)
             }
             undoManager.registerUndo(withTarget: me1, handler: redoCutHandler)
@@ -382,6 +383,7 @@ class MovieMutator: MovieMutatorBase {
         let undoDeleteHandler: (MovieMutator) -> Void = {[range = range, time = time, unowned undoManager] (me1) in // @escaping
             // register redo record
             let redoDeleteHandler: (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
+                me2.resetMarker(time, range, false)
                 me2.deleteSelection(using: undoManager)
             }
             undoManager.registerUndo(withTarget: me1, handler: redoDeleteHandler)
@@ -413,9 +415,9 @@ class MovieMutator: MovieMutatorBase {
             // Swift.print(ts(), #function, #line, #file)
             
             // Update Marker
-            insertionTime = (time < movie.range.end) ? time : movie.range.end
-            selectedTimeRange = CMTimeRangeGetIntersection(range, otherRange: movie.range)
-            internalMovieDidChange(insertionTime, selectedTimeRange)
+            let newTime: CMTime = (time < movie.range.end) ? time : movie.range.end
+            let newRange: CMTimeRange = CMTimeRangeGetIntersection(range, otherRange: movie.range)
+            resetMarker(newTime, newRange, true)
         }
     }
     

@@ -358,14 +358,8 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                     document.doStepBySecond(-offsetS, false, false)
                 } else {
                     if !autoKey {
-                        // Swift.print("#####", "J=>K : pause")
-                        document.doSetRate(0)
-                        acceptAuto = true
-                    }
-                    if autoKey && acceptAuto {
                         // Swift.print("#####", "J=>K+ : backward play / slowmotion")
                         document.doSetSlow(-0.5)
-                        acceptAuto = false
                     }
                 }
             }
@@ -378,14 +372,8 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                     document.doStepBySecond(+offsetS, false, false)
                 } else {
                     if !autoKey {
-                        // Swift.print("#####", "L=>K : pause")
-                        document.doSetRate(0)
-                        acceptAuto = true
-                    }
-                    if autoKey && acceptAuto {
                         // Swift.print("#####", "L=>K+ : forward play / slowmotion")
                         document.doSetSlow(+0.5)
-                        acceptAuto = false
                     }
                 }
             }

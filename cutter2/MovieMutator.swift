@@ -33,10 +33,7 @@ class MovieMutator: MovieMutatorBase {
     /// - Parameter range: clip range
     /// - Returns: clip as AVMutableMovie
     private func movieClip(_ range: CMTimeRange) -> AVMutableMovie? {
-        guard validateRange(range, true) else {
-            assert(false, #function) //
-            return nil
-        }
+        assert(validateRange(range, true), #function)
         
         // Prepare clip
         var clip: AVMutableMovie = internalMovie.mutableCopy() as! AVMutableMovie
@@ -81,12 +78,8 @@ class MovieMutator: MovieMutatorBase {
             return nil
         }
         
-        if validateClip(clip) {
-            return clip
-        } else {
-            assert(false, #function) //
-            return nil
-        }
+        assert(validateClip(clip), #function)
+        return clip
     }
     
     /* ============================================ */
@@ -111,11 +104,9 @@ class MovieMutator: MovieMutatorBase {
             if let clip = clip, validateClip(clip) {
                 return clip
             } else {
-                assert(false, #function) //
                 return nil
             }
         } else {
-            // assert(false, #function) //
             return nil
         }
     }
@@ -125,7 +116,7 @@ class MovieMutator: MovieMutatorBase {
     /// - Parameter clip: AVMutableMovie
     /// - Returns: true if success
     private func writeClipToPBoard(_ clip: AVMutableMovie) -> Bool {
-        assert( validateClip(clip), #function ) //
+        assert(validateClip(clip), #function) //
         
         // create movieHeader data from movie
         if let data = clip.movHeader {
@@ -136,7 +127,6 @@ class MovieMutator: MovieMutatorBase {
             
             return true
         } else {
-            assert(false, #function) //
             return false
         }
     }
@@ -178,7 +168,7 @@ class MovieMutator: MovieMutatorBase {
     ///   - range: Range to remove
     ///   - time: insertionTime
     private func doRemove(_ range: CMTimeRange, _ time: CMTime) {
-        assert( validateRange(range, true), #function )
+        assert(validateRange(range, true), #function)
         
         // perform delete selection
         do {
@@ -203,12 +193,10 @@ class MovieMutator: MovieMutatorBase {
     ///   - time: original intertionTime
     ///   - clip: removed clip - unused
     private func undoRemove(_ data: Data, _ range: CMTimeRange, _ time: CMTime, _ clip: AVMutableMovie) {
-        assert( validateClip(clip), #function )
+        assert(validateClip(clip), #function)
         
-        guard reloadAndNotify(from: data, range: range, time: time) else {
-            assert(false, #function) //
-            NSSound.beep(); return
-        }
+        let reloadDone: Bool = reloadAndNotify(from: data, range: range, time: time)
+        assert(reloadDone, #function)
     }
     
     /// Insert clip at insertionTime. Adjust insertionTime/selection.
@@ -217,8 +205,8 @@ class MovieMutator: MovieMutatorBase {
     ///   - clip: insertionTime
     ///   - time: selection
     private func doInsert(_ clip: AVMutableMovie, _ time: CMTime) {
-        assert( validateClip(clip), #function )
-        assert( validateTime(time), #function )
+        assert(validateClip(clip), #function)
+        assert(validateTime(time), #function)
         
         // perform insert clip at marker
         do {
@@ -261,18 +249,14 @@ class MovieMutator: MovieMutatorBase {
     ///   - time: original insertionTime
     ///   - clip: inserted clip
     private func undoInsert(_ data: Data, _ range: CMTimeRange, _ time: CMTime, _ clip: AVMutableMovie) {
-        assert( validateClip(clip), #function )
+        assert(validateClip(clip), #function)
         
         // populate PBoard with original clip
-        guard writeClipToPBoard(clip) else {
-            assert(false, #function) //
-            NSSound.beep(); return
-        }
+        let pbDone: Bool = writeClipToPBoard(clip)
+        assert(pbDone, #function)
         
-        guard reloadAndNotify(from: data, range: range, time: time) else {
-            assert(false, #function) //
-            NSSound.beep(); return
-        }
+        let reloadDone: Bool = reloadAndNotify(from: data, range: range, time: time)
+        assert(reloadDone, #function)
     }
     
     /* ============================================ */
@@ -285,12 +269,10 @@ class MovieMutator: MovieMutatorBase {
         
         // perform copy selection
         let range = self.selectedTimeRange
-        if !validateRange(range, true) { NSSound.beep(); return; }
+        guard validateRange(range, true) else { NSSound.beep(); return; }
         
-        guard let _ = writeRangeToPBoard(range) else {
-            assert(false, #function) //
-            NSSound.beep(); return;
-        }
+        let pbDone = (writeRangeToPBoard(range) != nil)
+        assert(pbDone, #function)
     }
     
     /// Cut selection of internalMovie
@@ -302,8 +284,7 @@ class MovieMutator: MovieMutatorBase {
         let time = self.insertionTime
         let range = self.selectedTimeRange
         
-        if !validateRange(range, true) { NSSound.beep(); return; }
-        
+        guard validateRange(range, true) else { NSSound.beep(); return; }
         guard let clip = writeRangeToPBoard(range) else { NSSound.beep(); return; }
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
@@ -337,8 +318,7 @@ class MovieMutator: MovieMutatorBase {
         let time = self.insertionTime
         let range = self.selectedTimeRange
         
-        if !validateRange(range, false) { NSSound.beep(); return; }
-        
+        guard validateRange(range, false) else { NSSound.beep(); return; }
         guard let clip = readClipFromPBoard() else { NSSound.beep(); return; }
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
@@ -371,12 +351,8 @@ class MovieMutator: MovieMutatorBase {
         let time = self.insertionTime
         let range = self.selectedTimeRange
         
-        if !validateRange(range, true) { NSSound.beep(); return; }
-        
-        guard let clip = movieClip(range) else {
-            assert(false, #function) //
-            NSSound.beep(); return;
-        }
+        guard validateRange(range, true) else { NSSound.beep(); return; }
+        guard let clip = movieClip(range) else { NSSound.beep(); return; }
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo redord
@@ -406,7 +382,7 @@ class MovieMutator: MovieMutatorBase {
     
     //
     private func doReplace(_ movie: AVMutableMovie, _ range: CMTimeRange, _ time: CMTime) {
-        assert( validateRange(range, false), #function )
+        assert(validateRange(range, false), #function)
         
         // perform replacement
         do {
@@ -423,10 +399,8 @@ class MovieMutator: MovieMutatorBase {
     
     //
     private func undoReplace(_ data: Data, _ range: CMTimeRange, _ time: CMTime) {
-        guard reloadAndNotify(from: data, range: range, time: time) else {
-            assert(false, #function) //
-            NSSound.beep(); return
-        }
+        let reloadDone: Bool = reloadAndNotify(from: data, range: range, time: time)
+        assert(reloadDone, #function)
     }
     
     //
@@ -436,8 +410,7 @@ class MovieMutator: MovieMutatorBase {
         let time = self.insertionTime
         let range = self.selectedTimeRange
         
-        if !validateRange(range, false) { NSSound.beep(); return; }
-        
+        guard validateRange(range, false) else { NSSound.beep(); return; }
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record

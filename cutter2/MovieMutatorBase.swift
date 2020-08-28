@@ -88,7 +88,7 @@ extension AVMovie {
                         if let url = url {
                             set.insert(url)
                         } else {
-                            assert(url != nil)
+                            assert(false, #function)
                         }
                     }
                 }
@@ -309,8 +309,8 @@ class MovieMutatorBase: NSObject {
     public func resetMarker(_ time: CMTime, _ range: CMTimeRange, _ notify: Bool) {
         // Swift.print(ts(), #function, #line, #file)
         
-        assert( validateRange(range, false), #function )
-        assert( validateTime(time), #function )
+        assert(validateRange(range, false), #function)
+        assert(validateTime(time), #function)
         
         insertionTime = time
         selectedTimeRange = range
@@ -401,9 +401,8 @@ class MovieMutatorBase: NSObject {
                 size = mediaDimensions(of: type, in: track)
                 assert(size != NSZeroSize, "ERROR: Failed to get presentation dimensions.")
             }
-            
-            let rect: NSRect = NSRect(origin: NSPoint(x: -size.width/2, y: -size.height/2),
-                                      size: size)
+            let point: NSPoint = NSPoint(x: -size.width/2, y: -size.height/2)
+            let rect: NSRect = NSRect(origin: point, size: size)
             let resultedRect: NSRect = rect.applying(trackTransform)
             
             targetRect = NSUnionRect(targetRect, resultedRect)
@@ -748,7 +747,7 @@ class MovieMutatorBase: NSObject {
                         AudioFormatGetProperty(kAudioFormatProperty_FormatName,
                                                asbdSize, asbdPtr, &formatSize,
                                                &format)
-                    assert(err == noErr && formatSize > 0)
+                    assert(err == noErr && formatSize > 0, #function)
                     formatString = String(format as NSString)
                 }
                 var layoutString: String = ""

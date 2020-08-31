@@ -180,7 +180,11 @@ class MovieMutatorBase: NSObject {
     /* ============================================ */
     
     /// Wrapped AVMutableMovie object
-    public var internalMovie: AVMutableMovie
+    public var internalMovie: AVMutableMovie {
+        didSet {
+            flushCachedValues() // Reset inspector properties cache
+        }
+    }
     
     /// Current Marker
     public var insertionTime: CMTime = CMTime.zero
@@ -251,11 +255,12 @@ class MovieMutatorBase: NSObject {
     /// - Parameter data: MovieHeader data
     /// - Returns: true if success
     public func reloadMovie(from data: Data?) -> Bool {
+        // Swift.print(ts(), #function, #line, #file)
+        
         if let data = data {
             let newMovie: AVMutableMovie? = AVMutableMovie(data: data, options: nil)
             if let newMovie = newMovie {
                 internalMovie = newMovie
-                flushCachedValues() // Reset inspector properties cache
                 return true
             }
         }
@@ -270,6 +275,8 @@ class MovieMutatorBase: NSObject {
     ///   - time: new insertion time
     /// - Returns: true if success
     public func reloadAndNotify(from data: Data?, range: CMTimeRange, time: CMTime) -> Bool {
+        // Swift.print(ts(), #function, #line, #file)
+        
         if reloadMovie(from: data) {
             // Update Marker
             resetMarker(time, range, true)
@@ -280,6 +287,8 @@ class MovieMutatorBase: NSObject {
     
     /// Debugging purpose - refresh internal movie object
     public func refreshMovie() {
+        // Swift.print(ts(), #function, #line, #file)
+        
         // AVMovie.duration seems to be broken after edit operation
         guard let data: Data = internalMovie.movHeader else {
             Swift.print(ts(), "ERROR: Failed to create Data from AVMovie")
@@ -326,6 +335,8 @@ class MovieMutatorBase: NSObject {
     ///   - time: Preferred cursor position in CMTime
     ///   - range: Preferred selection range in CMTimeRange
     public func internalMovieDidChange(_ time: CMTime, _ range: CMTimeRange) {
+        // Swift.print(ts(), #function, #line, #file)
+        
         let timeValue: NSValue = NSValue(time: time)
         let timeRangeValue: NSValue = NSValue(timeRange: range)
         let userInfo: [AnyHashable:Any] = [timeValueInfoKey:timeValue,
@@ -338,6 +349,7 @@ class MovieMutatorBase: NSObject {
     /// Reset inspector properties cache (on movie edit)
     public func flushCachedValues() {
         // Swift.print(ts(), #function, #line, #file)
+        
         cachedMediaDataPaths = nil
         cachedVideoFPSs = nil
         cachedVideoDataSizes = nil

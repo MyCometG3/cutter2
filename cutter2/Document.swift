@@ -354,7 +354,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         // Refresh internal movie (to sync selfcontained <> referece movie change)
         if saveOperation == .saveAsOperation {
-            self.refreshMovie()
+            self.refreshMutator()
         }
     }
     
@@ -421,7 +421,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         return true
     }
     
-    private func refreshMovie() {
+    private func refreshMutator() {
         // Swift.print(#function, #line, #file)
         
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
@@ -432,21 +432,18 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             let newMovie: AVMovie? = AVMovie(url: url, options: nil)
             if let newMovie = newMovie {
                 guard let mutator = self.movieMutator else { return }
-                guard let data = newMovie.movHeader else { return }
-                
                 let time: CMTime = mutator.insertionTime
                 let range: CMTimeRange = mutator.selectedTimeRange
+                
                 let newMovieRange: CMTimeRange = newMovie.range
                 var newTime: CMTime = CMTimeClampToRange(time, range: newMovieRange)
                 let newRange: CMTimeRange = CMTimeRangeGetIntersection(range, otherRange: newMovieRange)
-                
                 newTime = CMTIME_IS_VALID(newTime) ? newTime : CMTime.zero
                 
                 self.removeMutationObserver()
                 self.removeAllUndoRecords()
-                let newMutator = MovieMutator(with: newMovie)
-                _ = newMutator.reloadAndNotify(from: data, range: newRange, time: newTime)
-                self.movieMutator = newMutator
+                self.movieMutator = MovieMutator(with: newMovie)
+                self.movieMutator?.resetMarker(newTime, newRange, true)
                 self.addMutationObserver()
             }
         }

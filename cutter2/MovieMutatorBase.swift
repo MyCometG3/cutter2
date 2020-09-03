@@ -176,7 +176,7 @@ class MovieMutatorBase: NSObject {
     }
     
     /* ============================================ */
-    // MARK: - properties
+    // MARK: - public properties
     /* ============================================ */
     
     /// Wrapped AVMutableMovie object
@@ -198,6 +198,13 @@ class MovieMutatorBase: NSObject {
     public var unblockUserInteraction: (() -> Void)? = nil
     public var updateProgress: ((Float) -> Void)? = nil
     
+    /// Respect tapt atom on clean aperture detection
+    public var acceptTapt: Bool = true
+    
+    /* ============================================ */
+    // MARK: - private properties
+    /* ============================================ */
+    
     // Caching inspector properties
     private var cachedMediaDataPaths: [String]? = nil
     private var cachedVideoFPSs: [String]? = nil
@@ -207,7 +214,7 @@ class MovieMutatorBase: NSObject {
     private var cachedAudioFormats: [String]? = nil
     
     /* ============================================ */
-    // MARK: - public method - utilities
+    // MARK: - public method - validation and clamp
     /* ============================================ */
     
     @inline(__always) public func validateClip(_ clip: AVMovie) -> Bool {
@@ -250,22 +257,9 @@ class MovieMutatorBase: NSObject {
         return true
     }
     
-    /// Refresh Internal movie using Data
-    ///
-    /// - Parameter data: MovieHeader data
-    /// - Returns: true if success
-    public func reloadMovie(from data: Data?) -> Bool {
-        // Swift.print(ts(), #function, #line, #file)
-        
-        if let data = data {
-            let newMovie: AVMutableMovie? = AVMutableMovie(data: data, options: nil)
-            if let newMovie = newMovie {
-                internalMovie = newMovie
-                return true
-            }
-        }
-        return false
-    }
+    /* ============================================ */
+    // MARK: - public method - movie management
+    /* ============================================ */
     
     /// Refresh Internal movie/insertion/selection, then Notify modification
     ///
@@ -328,13 +322,34 @@ class MovieMutatorBase: NSObject {
         }
     }
     
+    /* ============================================ */
+    // MARK: - private method - movie management
+    /* ============================================ */
+    
+    /// Refresh Internal movie using Data
+    ///
+    /// - Parameter data: MovieHeader data
+    /// - Returns: true if success
+    private func reloadMovie(from data: Data?) -> Bool {
+        // Swift.print(ts(), #function, #line, #file)
+        
+        if let data = data {
+            let newMovie: AVMutableMovie? = AVMutableMovie(data: data, options: nil)
+            if let newMovie = newMovie {
+                internalMovie = newMovie
+                return true
+            }
+        }
+        return false
+    }
+    
     /// Trigger notification to update GUI when the internal movie is edited.
     /// userInfo will contain timeValueKey and timeRangeValueKey.
     ///
     /// - Parameters:
     ///   - time: Preferred cursor position in CMTime
     ///   - range: Preferred selection range in CMTimeRange
-    public func internalMovieDidChange(_ time: CMTime, _ range: CMTimeRange) {
+    private func internalMovieDidChange(_ time: CMTime, _ range: CMTimeRange) {
         // Swift.print(ts(), #function, #line, #file)
         
         let timeValue: NSValue = NSValue(time: time)
@@ -347,7 +362,7 @@ class MovieMutatorBase: NSObject {
     }
     
     /// Reset inspector properties cache (on movie edit)
-    public func flushCachedValues() {
+    private func flushCachedValues() {
         // Swift.print(ts(), #function, #line, #file)
         
         cachedMediaDataPaths = nil
@@ -359,13 +374,18 @@ class MovieMutatorBase: NSObject {
     }
     
     /* ============================================ */
-    // MARK: - public method - utilities
+    // MARK: - private method - properties
     /* ============================================ */
     
-    /// visual size of media in a track
-    public func mediaDimensions(of type: dimensionsType, in track: AVMutableMovieTrack) -> NSSize {
-        var size = NSZeroSize
+    /// visual size of media in a track using CMVideoFormatDescription
+    /// - Parameters:
+    ///   - type: dimensionsType
+    ///   - track: AVMutableMovieTrack
+    /// - Returns: visual size of media in a track
+    private func mediaDimensionsFD(of type: dimensionsType, in track: AVMutableMovieTrack) -> NSSize {
+        guard(track.hasMediaCharacteristic(.visual)) else { return NSSize.zero }
         
+        var size = NSZeroSize
         let formats = track.formatDescriptions as! [CMFormatDescription]
         for format in formats {
             switch type {
@@ -386,11 +406,52 @@ class MovieMutatorBase: NSObject {
                 break
             }
         }
+        return size
+    }
+    
+    /// visual size of media in a track using tapt atom (track aperture mode dimentions)
+    /// - Parameters:
+    ///   - type: dimensionsType
+    ///   - track: AVMutableMovieTrack
+    /// - Returns: visual size of media in a track
+    private func mediaDimensionsTapt(of type: dimensionsType, in track: AVMutableMovieTrack) -> NSSize {
+        guard(track.hasMediaCharacteristic(.visual)) else { return NSSize.zero }
         
+        var size: NSSize
+        switch type {
+        case .clean:      size = track.cleanApertureDimensions
+        case .production: size = track.productionApertureDimensions
+        case .encoded:    size = track.encodedPixelsDimensions
+        }
+        return size
+    }
+    
+    /* ============================================ */
+    // MARK: - public method - properties
+    /* ============================================ */
+    
+    /// visual size of media in a track using either FormatDescription or tapt atom
+    /// - Parameters:
+    ///   - type: dimensionsType
+    ///   - track: AVMutableMovieTrack
+    ///   - useTapt: Bool
+    /// - Returns: visual size of media in a track
+    public func mediaDimensions(of type: dimensionsType, in track: AVMutableMovieTrack, useTapt: Bool) -> NSSize {
+        var size: NSSize
+        if useTapt {
+            size = mediaDimensionsTapt(of: type, in: track)
+            if size == NSSize.zero {
+                size = mediaDimensionsFD(of: type, in: track)
+            }
+        } else {
+            size = mediaDimensionsFD(of: type, in: track)
+        }
         return size
     }
     
     /// visual size of movie
+    /// - Parameter type: dimensionsType
+    /// - Returns: visual size of the movie
     public func dimensions(of type: dimensionsType) -> NSSize {
         let movie = internalMovie
         let tracks = movie.tracks(withMediaCharacteristic: .visual)
@@ -402,17 +463,8 @@ class MovieMutatorBase: NSObject {
         var targetRect: NSRect = NSZeroRect
         for track in tracks {
             let trackTransform: CGAffineTransform = track.preferredTransform
-            var size: NSSize
-            switch type {
-            case .clean:      size = track.cleanApertureDimensions
-            case .production: size = track.productionApertureDimensions
-            case .encoded:    size = track.encodedPixelsDimensions
-            }
-            
-            if size == NSZeroSize {
-                size = mediaDimensions(of: type, in: track)
-                assert(size != NSZeroSize, "ERROR: Failed to get presentation dimensions.")
-            }
+            let size: NSSize = mediaDimensions(of: type, in: track, useTapt: acceptTapt)
+            assert(size != NSZeroSize, "ERROR: Failed to get presentation dimensions.")
             let point: NSPoint = NSPoint(x: -size.width/2, y: -size.height/2)
             let rect: NSRect = NSRect(origin: point, size: size)
             let resultedRect: NSRect = rect.applying(trackTransform)
@@ -422,7 +474,6 @@ class MovieMutatorBase: NSObject {
         
         let movieTransform: CGAffineTransform = movie.preferredTransform
         targetRect = targetRect.applying(movieTransform)
-        //targetRect = NSOffsetRect(targetRect, -targetRect.minX, -targetRect.minY)
         
         let targetSize = NSSize(width: targetRect.width, height: targetRect.height)
         return targetSize
@@ -430,11 +481,11 @@ class MovieMutatorBase: NSObject {
     
     /// Calculate movie header size information
     public func headerSize() -> boxSize {
-        let movie: AVMovie = internalMovie.copy() as! AVMovie
+        let movie = internalMovie
         let tracks = movie.tracks
         var size: boxSize = boxSize()
         
-        if let data = internalMovie.movHeader {
+        if let data = movie.movHeader {
             let headerSize: Int64 = Int64(data.count)
             var videoSize: Int64 = 0, videoCount: Int64 = 0
             var audioSize: Int64 = 0, audioCount: Int64 = 0
@@ -491,6 +542,33 @@ class MovieMutatorBase: NSObject {
         return resolution
     }
     
+    /// Validate all tracks and return Reference or Self-Contained state.
+    ///
+    /// - Returns: OptionSet with .hasSelfContTrack and .hasReferenceTrack
+    public func evalRefOrSelfCont() -> RefOrSelfCont {
+        var flag: RefOrSelfCont = []
+        for track in internalMovie.tracks {
+            if track.isSelfContained {
+                flag = flag.union(.hasSelfContTrack)
+            } else {
+                flag = flag.union(.hasReferenceTrack)
+            }
+        }
+        return flag
+    }
+    
+    /// Direct query the referencing URLs of internalMovie.
+    /// - Unlike mediaDataPaths() this does not use cached operation.
+    /// - Returns: all referenced file URLs by every track samples
+    public func queryMediaDataURLs() -> [URL]? {
+        let urls: [URL]? = internalMovie.findReferenceURLs()
+        return urls
+    }
+    
+    /* ============================================ */
+    // MARK: - public method - string representation
+    /* ============================================ */
+    
     /// Timestamp generator for debug
     ///
     /// - Returns: timestamp string of local timezone
@@ -533,27 +611,36 @@ class MovieMutatorBase: NSObject {
         return rawTimeString
     }
     
-    /// Validate all tracks and return Reference or Self-Contained state.
-    ///
-    /// - Returns: OptionSet with .hasSelfContTrack and .hasReferenceTrack
-    public func evalRefOrSelfCont() -> RefOrSelfCont {
-        var flag: RefOrSelfCont = []
-        for track in internalMovie.tracks {
-            if track.isSelfContained {
-                flag = flag.union(.hasSelfContTrack)
-            } else {
-                flag = flag.union(.hasReferenceTrack)
-            }
-        }
-        return flag
+    /// Inspector support - String representation for single CGSize
+    /// - Parameter size1: CGSize
+    /// - Returns: w1xh1
+    @inline(__always) private func stringForOne(_ size1: CGSize) -> String {
+        return String(format: "%dx%d",
+                      Int(size1.width), Int(size1.height))
     }
     
-    /// Direct query the referencing URLs of internalMovie.
-    /// - Unlike mediaDataPaths() this does not use cached operation.
-    /// - Returns: all referenced file URLs by every track samples
-    public func queryMediaDataURLs() -> [URL]? {
-        let urls: [URL]? = internalMovie.findReferenceURLs()
-        return urls
+    /// Inspector support - String representation for two CGSize
+    /// - Parameters:
+    ///   - size1: CGSize
+    ///   - size2: CGSize
+    /// - Returns: w1:h1(w2:h2)
+    @inline(__always) private func stringForTwo(_ size1: CGSize, _ size2: CGSize) -> String {
+        return String(format: "%d:%d(%d:%d)",
+                      Int(size1.width), Int(size1.height),
+                      Int(size2.width), Int(size2.height))
+    }
+    
+    /// Inspector support - String representation for three CGSize
+    /// - Parameters:
+    ///   - size1: CGSize
+    ///   - size2: CGSize
+    ///   - size3: CGSize
+    /// - Returns: w1:h1(w2:h2/w3:h3)
+    @inline(__always) private func stringForThree(_ size1: CGSize, _ size2: CGSize, _ size3: CGSize) -> String {
+        return String(format: "%d:%d(%d:%d/%d:%d)",
+                      Int(size1.width), Int(size1.height),
+                      Int(size2.width), Int(size2.height),
+                      Int(size3.width), Int(size3.height))
     }
     
     /* ============================================ */
@@ -639,27 +726,6 @@ class MovieMutatorBase: NSObject {
         }
         cachedAudioDataSizes = (trackStrings.count > 0) ? trackStrings : ["-"]
         return cachedAudioDataSizes
-    }
-    
-    //
-    @inline(__always) private func stringForOne(_ size1: CGSize) -> String {
-        return String(format: "%dx%d",
-                      Int(size1.width), Int(size1.height))
-    }
-    
-    //
-    @inline(__always) private func stringForTwo(_ size1: CGSize, _ size2: CGSize) -> String {
-        return String(format: "%d:%d(%d:%d)",
-                      Int(size1.width), Int(size1.height),
-                      Int(size2.width), Int(size2.height))
-    }
-    
-    //
-    @inline(__always) private func stringForThree(_ size1: CGSize, _ size2: CGSize, _ size3: CGSize) -> String {
-        return String(format: "%d:%d(%d:%d/%d:%d)",
-                      Int(size1.width), Int(size1.height),
-                      Int(size2.width), Int(size2.height),
-                      Int(size3.width), Int(size3.height))
     }
     
     /// Inspector - VideoFormats Description
@@ -823,7 +889,7 @@ class MovieMutatorBase: NSObject {
     }
     
     /* ============================================ */
-    // MARK: -
+    // MARK: - public method - AVPlayer support
     /* ============================================ */
     
     /// Make new AVPlayerItem for internalMovie
@@ -838,48 +904,20 @@ class MovieMutatorBase: NSObject {
         return playerItem
     }
     
+    /* ============================================ */
+    // MARK: - private method - AVPlayer support
+    /* ============================================ */
+    
     /// Make new AVVideoComposition for internalMovie
     ///
     /// - Returns: AVVideoComposition
-    public func makeVideoComposition() -> AVVideoComposition? {
+    private func makeVideoComposition() -> AVVideoComposition? {
         let vCount = internalMovie.tracks(withMediaType: AVMediaType.video).count
         if vCount > 1 {
             let comp: AVVideoComposition = AVVideoComposition(propertiesOf: internalMovie)
             return comp
         }
         return nil
-    }
-    
-    /// Convert Float64 to CMTime value of internalMovie.
-    ///
-    /// - Parameter position: Float64 as relative position of internalMovie (0.0 - 1.0)
-    /// - Returns: CMTime at the position of internalMovie
-    public func timeOfPosition(_ position: Float64) -> CMTime {
-        let position: Float64 = clampPosition(position)
-        let duration: CMTime = self.movieDuration()
-        let target: CMTime = CMTimeMultiplyByFloat64(duration, multiplier: position)
-        return target
-    }
-    
-    /// Convert CMTime to Float64 value of internalMovie.
-    ///
-    /// - Parameter target: CMTime value
-    /// - Returns: Float64 as relative position of internalMovie (0.0 - 1.0)
-    public func positionOfTime(_ target: CMTime) -> Float64 {
-        var position: Float64 = 0.0
-        let duration: CMTime = self.movieDuration()
-        if duration.timescale == target.timescale {
-            // use movie/track timescale resolution
-            position = Float64(target.value) / Float64(duration.value)
-        } else {
-            let timescale: CMTimeScale = internalMovie.timescale
-            let target2: CMTime =
-                CMTimeConvertScale(target, timescale: timescale, method: .roundAwayFromZero)
-            let duration2: CMTime =
-                CMTimeConvertScale(duration, timescale: timescale, method: .roundAwayFromZero)
-            position = Float64(target2.value) / Float64(duration2.value)
-        }
-        return clampPosition(position)
     }
     
     /* ============================================ */
@@ -946,7 +984,6 @@ class MovieMutatorBase: NSObject {
         
         var time: CMTime =
             CMTimeMapTimeFromRangeToRange(trackTime, fromRange: trackSegment, toRange: mediaSegment)
-        //time = CMTimeConvertScale(time, mapping.source.duration.timescale, .roundTowardZero)
         time = CMTimeClampToRange(time, range: mediaSegment)
         return time
     }
@@ -954,6 +991,38 @@ class MovieMutatorBase: NSObject {
     /* ============================================ */
     // MARK: - public method - presentationInfo
     /* ============================================ */
+    
+    /// Convert Float64 to CMTime value of internalMovie.
+    ///
+    /// - Parameter position: Float64 as relative position of internalMovie (0.0 - 1.0)
+    /// - Returns: CMTime at the position of internalMovie
+    public func timeOfPosition(_ position: Float64) -> CMTime {
+        let position: Float64 = clampPosition(position)
+        let duration: CMTime = self.movieDuration()
+        let target: CMTime = CMTimeMultiplyByFloat64(duration, multiplier: position)
+        return target
+    }
+    
+    /// Convert CMTime to Float64 value of internalMovie.
+    ///
+    /// - Parameter target: CMTime value
+    /// - Returns: Float64 as relative position of internalMovie (0.0 - 1.0)
+    public func positionOfTime(_ target: CMTime) -> Float64 {
+        var position: Float64 = 0.0
+        let duration: CMTime = self.movieDuration()
+        if duration.timescale == target.timescale {
+            // use movie/track timescale resolution
+            position = Float64(target.value) / Float64(duration.value)
+        } else {
+            let timescale: CMTimeScale = internalMovie.timescale
+            let target2: CMTime =
+                CMTimeConvertScale(target, timescale: timescale, method: .roundAwayFromZero)
+            let duration2: CMTime =
+                CMTimeConvertScale(duration, timescale: timescale, method: .roundAwayFromZero)
+            position = Float64(target2.value) / Float64(duration2.value)
+        }
+        return clampPosition(position)
+    }
     
     /// Get PresentationInfo struct of position
     ///

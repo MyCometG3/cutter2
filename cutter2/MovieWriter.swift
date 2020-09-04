@@ -10,6 +10,27 @@ import Cocoa
 import AVFoundation
 import VideoToolbox
 
+/* ============================================ */
+// MARK: -
+/* ============================================ */
+
+extension Notification.Name {
+    static let movieWillExportSession = Notification.Name("movieWillExportSession")
+    static let movieDidExportSession = Notification.Name("movieDidExportSession")
+    static let movieWillExportCustom = Notification.Name("movieWillExportCustom")
+    static let movieDidExportCustom = Notification.Name("movieDidExportCustom")
+    static let movieWillWriteHeaderOnly = Notification.Name("movieWillWriteHeaderOnly")
+    static let movieDidWriteHeaderOnly = Notification.Name("movieDidWriteHeaderOnly")
+    static let movieWillWriteWithData = Notification.Name("movieWillWriteWithData")
+    static let movieDidWriteWithData = Notification.Name("movieDidWriteWithData")
+    static let movieWillRefreshHeader = Notification.Name("movieWillRefreshHeader")
+    static let movieDidRefreshHeader = Notification.Name("movieDidRefreshHeader")
+}
+
+/* ============================================ */
+// MARK: -
+/* ============================================ */
+
 class MovieWriter: NSObject, SampleBufferChannelDelegate {
     
     public init(_ movie: AVMovie) {

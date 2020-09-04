@@ -591,3 +591,313 @@ class MovieMutator: MovieMutatorBase {
         }
     }
 }
+
+/* ============================================ */
+// MARK: - Inspector utilities
+/* ============================================ */
+
+extension MovieMutatorBase {
+    
+    /// Inspector - mediaDataURLs
+    ///
+    /// - Returns: all referenced file URLs by every track samples
+    public func mediaDataPaths() -> [String]? {
+        if let cache = cachedMediaDataPaths {
+            return cache
+        }
+        
+        var urlStrings: [String] = []
+        let urls: [URL]? = internalMovie.findReferenceURLs()
+        if let urls = urls {
+            urlStrings = urls.map { $0.path }
+        }
+        cachedMediaDataPaths = (urlStrings.count > 0 ? urlStrings : ["-"])
+        return cachedMediaDataPaths
+    }
+    
+    
+    /// Inspector - VideoFPS Description
+    ///
+    /// - Returns: human readable description
+    public func videoFPSs() -> [String]? {
+        if let cache = cachedVideoFPSs {
+            return cache
+        }
+        
+        var trackStrings: [String] = []
+        for track in internalMovie.tracks(withMediaType: .video) {
+            let trackID: Int = Int(track.trackID)
+            let fps: Float = track.nominalFrameRate
+            let trackString: String = String(format:"%d: %.2f fps", trackID, fps)
+            trackStrings.append(trackString)
+        }
+        cachedVideoFPSs = (trackStrings.count > 0) ? trackStrings : ["-"]
+        return cachedVideoFPSs
+    }
+    
+    /// Inspector - VideoDataSize/Rate Description
+    ///
+    /// - Returns: human readable description
+    public func videoDataSizes() -> [String]? {
+        if let cache = cachedVideoDataSizes {
+            return cache
+        }
+        
+        var trackStrings: [String] = []
+        for track in internalMovie.tracks(withMediaType: .video) {
+            let trackID: Int = Int(track.trackID)
+            let size: Int64 = track.totalSampleDataLength
+            let rate: Float = track.estimatedDataRate
+            let trackString: String = String(format:"%d: %.2f MB, %.3f Mbps", trackID,
+                                             Float(size)/1000000.0,
+                                             rate/1000000.0)
+            trackStrings.append(trackString)
+        }
+        cachedVideoDataSizes = (trackStrings.count > 0) ? trackStrings : ["-"]
+        return cachedVideoDataSizes
+    }
+    
+    /// Inspector - AudioDataSize/Rate Description
+    ///
+    /// - Returns: human readable description
+    public func audioDataSizes() -> [String]? {
+        if let cache = cachedAudioDataSizes {
+            return cache
+        }
+        
+        var trackStrings: [String] = []
+        for track in internalMovie.tracks(withMediaType: .audio) {
+            let trackID: Int = Int(track.trackID)
+            let size: Int64 = track.totalSampleDataLength
+            let rate: Float = track.estimatedDataRate
+            let trackString: String = String(format:"%d: %.2f MB, %.3f Mbps", trackID,
+                                             Float(size)/1000000.0,
+                                             rate/1000000.0)
+            trackStrings.append(trackString)
+        }
+        cachedAudioDataSizes = (trackStrings.count > 0) ? trackStrings : ["-"]
+        return cachedAudioDataSizes
+    }
+    
+    /// Inspector - VideoFormats Description
+    ///
+    /// - Returns: human readable description
+    public func videoFormats() -> [String]? {
+        if let cache = cachedVideoFormats {
+            return cache
+        }
+        
+        var trackStrings: [String] = []
+        for track in internalMovie.tracks(withMediaType: .video) {
+            var trackString: [String] = []
+            let trackID: Int = Int(track.trackID)
+            let reference: Bool = !(track.isSelfContained)
+            for desc in track.formatDescriptions as! [CMVideoFormatDescription] {
+                var name: String = ""
+                do {
+                    let ext: CFPropertyList? =
+                        CMFormatDescriptionGetExtension(desc,
+                                                        extensionKey: kCMFormatDescriptionExtension_FormatName)
+                    if let ext = ext {
+                        let nameStr = ext as! NSString
+                        name = String(nameStr)
+                    } else {
+                        let fcc: FourCharCode = CMFormatDescriptionGetMediaSubType(desc)
+                        let fccString: NSString = UTCreateStringForOSType(fcc).takeUnretainedValue()
+                        name = "FourCC(\(fccString))"
+                    }
+                }
+                var dimension: String = ""
+                do {
+                    let encoded: CGSize =
+                        CMVideoFormatDescriptionGetPresentationDimensions(desc,
+                                                                          usePixelAspectRatio: false,
+                                                                          useCleanAperture: false)
+                    let prod: CGSize =
+                        CMVideoFormatDescriptionGetPresentationDimensions(desc,
+                                                                          usePixelAspectRatio: true,
+                                                                          useCleanAperture: false)
+                    let clean: CGSize =
+                        CMVideoFormatDescriptionGetPresentationDimensions(desc,
+                                                                          usePixelAspectRatio: true,
+                                                                          useCleanAperture: true)
+                    if encoded != prod || encoded != clean {
+                        dimension = (prod == clean) ?
+                            stringForTwo(encoded, prod) :
+                            stringForThree(encoded, prod, clean)
+                    } else {
+                        dimension = stringForOne(encoded)
+                    }
+                }
+                if reference {
+                    trackString.append("\(trackID): \(name), \(dimension), Reference")
+                } else {
+                    trackString.append("\(trackID): \(name), \(dimension)")
+                }
+            }
+            trackStrings.append(contentsOf: trackString)
+        }
+        cachedVideoFormats = (trackStrings.count > 0) ? trackStrings : ["-"]
+        return cachedVideoFormats
+    }
+    
+    /// Inspector - AudioFormats Description
+    ///
+    /// - Returns: human readable description
+    public func audioFormats() -> [String]? {
+        if let cache = cachedAudioFormats {
+            return cache
+        }
+        
+        var trackStrings: [String] = []
+        for track in internalMovie.tracks(withMediaType: .audio) {
+            var trackString: [String] = []
+            let trackID: Int = Int(track.trackID)
+            let reference: Bool = !(track.isSelfContained)
+            for desc in track.formatDescriptions as! [CMAudioFormatDescription] {
+                var rateString: String = ""
+                do {
+                    let basic = CMAudioFormatDescriptionGetStreamBasicDescription(desc)
+                    if let ptr = basic {
+                        let rate: Float64 = ptr.pointee.mSampleRate
+                        rateString = String(format:"%.3f kHz", rate/1000.0)
+                    }
+                }
+                var formatString: String = ""
+                do {
+                    // get AudioStreamBasicDescription ptr
+                    let asbdSize: UInt32 = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
+                    let asbdPtr: UnsafePointer<AudioStreamBasicDescription>? =
+                        CMAudioFormatDescriptionGetStreamBasicDescription(desc)
+                    
+                    var formatSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
+                    var format: CFString!
+                    let err: OSStatus =
+                        AudioFormatGetProperty(kAudioFormatProperty_FormatName,
+                                               asbdSize, asbdPtr, &formatSize,
+                                               &format)
+                    assert(err == noErr && formatSize > 0, #function)
+                    formatString = String(format as NSString)
+                }
+                var layoutString: String = ""
+                do {
+                    var nameSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
+                    var name: CFString = "Unknown" as CFString
+                    let tagSize: UInt32 = UInt32(MemoryLayout<AudioChannelLayoutTag>.size)
+                    var tag: AudioChannelLayoutTag = kAudioChannelLayoutTag_Unknown
+                    var dataSize: UInt32 = 0
+                    var data: Data? = nil
+                    var err: OSStatus = noErr;
+                    let item: UnsafePointer<AudioFormatListItem>? =
+                        CMAudioFormatDescriptionGetMostCompatibleFormat(desc)
+                    if let item = item {
+                        tag = item.pointee.mChannelLayoutTag // kAudioChannelLayoutTag_Stereo //
+                        err = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag,
+                                                         tagSize, &tag, &dataSize)
+                        if err == noErr && dataSize > 0 {
+                            data = Data(count: Int(dataSize))
+                        }
+                    }
+                    data?.withUnsafeMutableBytes { (dataPtr) -> Void in
+                        var aclSize: UInt32 = dataSize
+                        let aclPtr: UnsafeMutableRawPointer? = dataPtr.baseAddress
+                        err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForTag,
+                                                     tagSize, &tag, &aclSize, aclPtr)
+                        if err == noErr {
+                            err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
+                                                         aclSize, aclPtr, &nameSize, &name)
+                            if err == noErr {
+                                layoutString = name as String
+                            }
+                        }
+                    }
+                }
+                do {
+                    var err: OSStatus = noErr;
+                    var nameSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
+                    var name: CFString? = nil
+                    var aclSize: Int = 0
+                    let aclPtr: UnsafePointer<AudioChannelLayout>? =
+                        CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &aclSize)
+                    if aclSize > 0, let aclPtr = aclPtr {
+                        err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
+                                                     UInt32(aclSize), aclPtr, &nameSize, &name)
+                        if err == noErr, let name = name {
+                            layoutString = String(name as String)
+                        }
+                    }
+                }
+                if reference {
+                    trackString.append("\(trackID): \(formatString), \(layoutString), \(rateString), Reference")
+                } else {
+                    trackString.append("\(trackID): \(formatString), \(layoutString), \(rateString)")
+                }
+            }
+            trackStrings.append(contentsOf: trackString)
+        }
+        cachedAudioFormats = (trackStrings.count > 0) ? trackStrings : ["-"]
+        return cachedAudioFormats
+    }
+}
+
+/* ============================================ */
+// MARK: - AVPlayer support
+/* ============================================ */
+
+extension MovieMutator {
+    
+    /// Make new AVPlayerItem for internalMovie
+    ///
+    /// - Returns: AVPlayerItem
+    public func makePlayerItem() -> AVPlayerItem {
+        let asset: AVAsset = internalMovie.copy() as! AVAsset
+        let playerItem: AVPlayerItem = AVPlayerItem(asset: asset)
+        if let comp = makeVideoComposition() {
+            playerItem.videoComposition = comp
+        }
+        return playerItem
+    }
+    
+    /* ============================================ */
+    // MARK: private method
+    /* ============================================ */
+    
+    /// Make new AVVideoComposition for internalMovie
+    ///
+    /// - Returns: AVVideoComposition
+    private func makeVideoComposition() -> AVVideoComposition? {
+        let vCount = internalMovie.tracks(withMediaType: AVMediaType.video).count
+        if vCount > 1 {
+            let comp: AVVideoComposition = AVVideoComposition(propertiesOf: internalMovie)
+            return comp
+        }
+        return nil
+    }
+}
+
+/* ============================================ */
+// MARK: - export/write support
+/* ============================================ */
+
+extension MovieMutator {
+    
+    public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) throws {
+        let movieWriter = MovieWriter(internalMovie)
+        movieWriter.unblockUserInteraction = self.unblockUserInteraction
+        movieWriter.updateProgress = self.updateProgress
+        try movieWriter.exportMovie(to: url, fileType: type, presetName: preset)
+    }
+    
+    public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String:Any]) throws {
+        let movieWriter = MovieWriter(internalMovie)
+        movieWriter.unblockUserInteraction = self.unblockUserInteraction
+        movieWriter.updateProgress = self.updateProgress
+        try movieWriter.exportCustomMovie(to: url, fileType: type, settings: param)
+    }
+    
+    public func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) throws {
+        let movieWriter = MovieWriter(internalMovie)
+        movieWriter.unblockUserInteraction = self.unblockUserInteraction
+        try movieWriter.writeMovie(to: url, fileType: type, copySampleData: selfContained)
+    }
+}

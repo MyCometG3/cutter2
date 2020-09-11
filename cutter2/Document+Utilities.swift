@@ -413,10 +413,12 @@ extension Document {
     public func addMutationObserver() {
         // Swift.print(#function, #line, #file)
         
-        guard self.movieMutator != nil else { return }
-        
         let handler: (Notification) -> Void = {[unowned self] (notification) in // @escaping
             // Swift.print(#function, #line, #file)
+            
+            guard let mutator = self.movieMutator else { return }
+            guard let object = notification.object as? MovieMutator else { return }
+            guard mutator == object else { return }
             
             #if false
             Swift.print("#####", "========================",
@@ -433,13 +435,14 @@ extension Document {
             self.updateGUI(time, timeRange, true)
         }
         let addBlock: () -> Void = {
-            // Swift.print(#function, #line, #file)
-            
+            guard let mutator = self.movieMutator else { return }
             let center = NotificationCenter.default
-            center.addObserver(forName: .movieWasMutated,
-                               object: self.movieMutator,
-                               queue: OperationQueue.main,
-                               using: handler)
+            var observer: NSObjectProtocol? = nil
+            observer = center.addObserver(forName: .movieWasMutated,
+                                          object: mutator,
+                                          queue: OperationQueue.main,
+                                          using: handler)
+            self.mutationObserver = observer
         }
         if (Thread.isMainThread) {
             addBlock()
@@ -452,13 +455,14 @@ extension Document {
     public func removeMutationObserver() {
         // Swift.print(#function, #line, #file)
         
-        guard self.movieMutator != nil else { return }
-        
         let removeBlock = {
+            guard let mutator = self.movieMutator else { return }
+            guard let observer = self.mutationObserver else { return }
             let center = NotificationCenter.default
-            center.removeObserver(self,
+            center.removeObserver(observer,
                                   name: .movieWasMutated,
-                                  object: self.movieMutator)
+                                  object: mutator)
+            self.mutationObserver = nil
         }
         if (Thread.isMainThread) {
             removeBlock()

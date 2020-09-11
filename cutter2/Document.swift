@@ -80,6 +80,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     private var copyData: Bool = false
     private var accessoryVCselfContained: Bool = false
     
+    //
+    internal var mutationObserver: NSObjectProtocol? = nil
+    
     /* ============================================ */
     // MARK: - NSDocument methods/properties
     /* ============================================ */
@@ -836,7 +839,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         guard caparVC.applySource(dict) else { return }
         
         // Show CAPAR Sheet
-        caparVC.beginSheetModal(for: self.window!) {(response) in // @escaping
+        caparVC.beginSheetModal(for: self.window!) {[unowned self,caparVC,mutator] (response) in // @escaping
             // Swift.print(#function, #line, #file)
             
             guard response == .continue else { return }

@@ -55,6 +55,10 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     private var keyDownL: Bool = false
     private var acceptAuto: Bool = false
     
+    // Notification Observer
+    private var resizeObserver: NSObjectProtocol? = nil
+    private var updateObserver: NSObjectProtocol? = nil
+    
     /* ============================================ */
     // MARK: - public properties
     /* ============================================ */
@@ -172,39 +176,58 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     }
     
     private func addWindowResizeObserver() {
-        guard let window = view.window else { return }
-        let center = NotificationCenter.default
         let handler: (Notification) -> Void = {[unowned self] (notification) in // @escaping
-            let object = notification.object as AnyObject
-            if object !== window {
-                return
-            }
+            // Swift.print(#function, #line, #file)
+            
+            guard let window = self.view.window else { return }
+            guard let object = notification.object as? NSWindow else { return }
+            guard object == window  else { return }
             
             // After Live resize we needs tracking area update
             self.timelineView.needsUpdateTrackingArea = true
             self.timelineView.needsLayout = true
         }
-        center.addObserver(forName: NSWindow.didEndLiveResizeNotification,
-                           object: window,
-                           queue: OperationQueue.main,
-                           using: handler)
+        let addBlock: () -> Void = {
+            guard let window = self.view.window else { return }
+            let center = NotificationCenter.default
+            var observer: NSObjectProtocol? = nil
+            observer = center.addObserver(forName: NSWindow.didEndLiveResizeNotification,
+                                          object: window,
+                                          queue: OperationQueue.main,
+                                          using: handler)
+            self.resizeObserver = observer
+        }
+        if (Thread.isMainThread) {
+            addBlock()
+        } else {
+            DispatchQueue.main.sync(execute: addBlock)
+        }
     }
     
     private func removeWindowResieObserver() {
-        guard let window = view.window else { return }
-        let center = NotificationCenter.default
-        center.removeObserver(self,
-                              name: NSWindow.didEndLiveResizeNotification,
-                              object: window)
+        let removeBlock: () -> Void = {
+            guard let observer = self.resizeObserver else { return }
+            guard let window = self.view.window else { return }
+            let center = NotificationCenter.default
+            center.removeObserver(observer,
+                                  name: NSWindow.didEndLiveResizeNotification,
+                                  object: window)
+            self.resizeObserver = nil
+        }
+        if (Thread.isMainThread) {
+            removeBlock()
+        } else {
+            DispatchQueue.main.sync(execute: removeBlock)
+        }
     }
     
     private func addUpdateReqObserver() {
-        let center = NotificationCenter.default
         let handler: (Notification) -> Void = {[unowned self] (notification) in // @escaping
-            let object = notification.object as AnyObject
-            if object !== self.delegate {
-                return
-            }
+            // Swift.print(#function, #line, #file)
+            
+            guard let delegate = self.delegate else { return }
+            guard let object = notification.object as? ViewControllerDelegate else { return }
+            guard object === delegate else { return } // ViewControllerDelegate is not Equatable
             
             if let userInfo = notification.userInfo {
                 let curPosition = Float64((userInfo[curPositionInfoKey] as! NSNumber).doubleValue)
@@ -219,17 +242,38 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                                     isValid: valid)
             }
         }
-        center.addObserver(forName: .timelineUpdateReq,
-                           object: delegate,
-                           queue: OperationQueue.main,
-                           using: handler)
+        let addBlock: () -> Void = {
+            guard let delegate = self.delegate else { return }
+            let center = NotificationCenter.default
+            var observer: NSObjectProtocol? = nil
+            observer = center.addObserver(forName: .timelineUpdateReq,
+                                          object: delegate,
+                                          queue: OperationQueue.main,
+                                          using: handler)
+            self.updateObserver = observer
+        }
+        if (Thread.isMainThread) {
+            addBlock()
+        } else {
+            DispatchQueue.main.sync(execute: addBlock)
+        }
     }
     
     private func removeUpdateReqObserver() {
-        let center = NotificationCenter.default
-        center.removeObserver(self,
-                              name: .timelineUpdateReq,
-                              object: delegate)
+        let removeBlock: () -> Void = {
+            guard let observer = self.updateObserver else { return }
+            guard let delegate = self.delegate else { return }
+            let center = NotificationCenter.default
+            center.removeObserver(observer,
+                                  name: .timelineUpdateReq,
+                                  object: delegate)
+            self.updateObserver = nil
+        }
+        if (Thread.isMainThread) {
+            removeBlock()
+        } else {
+            DispatchQueue.main.sync(execute: removeBlock)
+        }
     }
     
     private func applyMode() {

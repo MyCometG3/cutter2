@@ -27,6 +27,7 @@ class CAPARViewController: NSViewController {
     /* ============================================ */
     
     private var parentWindow: NSWindow? = nil
+    private var textObserver: NSObjectProtocol? = nil
     
     /* ============================================ */
     // MARK: - Sheet control
@@ -66,20 +67,53 @@ class CAPARViewController: NSViewController {
         guard let sheet = self.view.window else { return }
         parent.beginSheet(sheet, completionHandler: handler)
         
-        NotificationCenter.default.addObserver(forName: NSControl.textDidChangeNotification,
-                                               object: nil, queue: nil) { (notification) in // @escaping
-                                                self.controlTextDidChange(notification)
+        let textHandler: (Notification) -> Void = {[unowned self] (notification) in //@escaping
+            // Swift.print(#function, #line, #file)
+            
+            guard let sheet = self.view.window else { return }
+            guard let object = notification.object as? NSControl else { return }
+            guard sheet == object.window else { return }
+            
+            self.updateStruct()
+            self.updateLabels(self)
+        }
+        let addBlock: () -> Void = {
+            let center = NotificationCenter.default
+            var observer: NSObjectProtocol? = nil
+            observer = center.addObserver(forName: NSControl.textDidChangeNotification,
+                                          object: nil,
+                                          queue: OperationQueue.main,
+                                          using: textHandler)
+            self.textObserver = observer
+        }
+        if (Thread.isMainThread) {
+            addBlock()
+        } else {
+            DispatchQueue.main.sync(execute: addBlock)
         }
     }
     
     //
     public func endSheet(_ response: NSApplication.ModalResponse) {
         // Swift.print(#function, #line, #file)
+        
         guard let parent = self.parentWindow else { return }
         guard let sheet = self.view.window else { return }
         parent.endSheet(sheet, returnCode: response)
         
-        NotificationCenter.default.removeObserver(self)
+        let removeBlock: () -> Void = {
+            guard let observer = self.textObserver else { return }
+            let center = NotificationCenter.default
+            center.removeObserver(observer,
+                                  name: NSControl.textDidChangeNotification,
+                                  object: nil)
+            self.textObserver = nil
+        }
+        if (Thread.isMainThread) {
+            removeBlock()
+        } else {
+            DispatchQueue.main.sync(execute: removeBlock)
+        }
     }
     
     /* ============================================ */
@@ -128,16 +162,6 @@ class CAPARViewController: NSViewController {
             loadLastSettings()
         } else {
             loadSourceSettings()
-        }
-    }
-    
-    // NSControl - Control Editing Notification
-    func controlTextDidChange(_ obj: Notification) {
-        // Swift.print(#function, #line, #file)
-        
-        DispatchQueue.main.async { [unowned self] in // @escaping
-            self.updateStruct()
-            self.updateLabels(self)
         }
     }
     

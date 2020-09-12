@@ -230,7 +230,7 @@ extension MovieWriter {
         
         // Start ExportSession
         let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
-        let handler: () -> Void = {[unowned self] in // @escaping
+        let handler: () -> Void = {[semaphore, unowned self] in // @escaping
             guard let exportSession = self.exportSession else { return }
             
             // Check results
@@ -883,13 +883,13 @@ extension MovieWriter {
         let dg: DispatchGroup = DispatchGroup()
         for sbc in customSampleBufferChannels {
             dg.enter()
-            let handler: () -> Void = { dg.leave() } // @escaping
+            let handler: () -> Void = { [dg] in dg.leave() } // @escaping
             sbc.start(with: self, completionHandler: handler)
         }
         
         // Wait the completion of DispatchGroup
         let semaphore  = DispatchSemaphore(value: 0)
-        dg.notify(queue: dgQueue) {[unowned self, ar, aw] in // @escaping
+        dg.notify(queue: dgQueue) {[semaphore, ar, aw, unowned self] in // @escaping
             var success: Bool = false
             let cancel: Bool = self.writeCancelled
             var error: Error? = nil
@@ -903,7 +903,7 @@ extension MovieWriter {
             // Finish writing session - blocking
             let sem = DispatchSemaphore(value: 0)
             aw.endSession(atSourceTime: endTime)
-            aw.finishWriting { // @escaping
+            aw.finishWriting { [sem] in // @escaping
                 sem.signal()
             }
             sem.wait() // await completion

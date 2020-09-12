@@ -180,7 +180,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         typealias signature = @convention(c) (AnyObject, Selector, AnyObject, Bool, UnsafeMutableRawPointer?) -> Void
         let function = unsafeBitCast(method, to: signature.self)
         
-        self.closingBlock = {[unowned obj, shouldCloseSelector, contextInfo] (flag) -> Void in // @escaping
+        self.closingBlock = {[obj, shouldCloseSelector, contextInfo, unowned self] (flag) -> Void in // @escaping
             // Swift.print(#function, #line, #file, "shouldClose =", flag)
             
             function(obj, shouldCloseSelector!, self, flag, contextInfo)
@@ -336,7 +336,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         // Sandbox support - keep source document security scope bookmark
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
-            DispatchQueue.main.async { [unowned self] in // @escaping
+            DispatchQueue.main.async { [typeName, srcURL, unowned self] in // @escaping
                 // Swift.print(#function, #line, #file)
                 
                 let fileType: AVFileType = AVFileType.init(rawValue: typeName)
@@ -610,7 +610,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         guard let transcodeVC = contVC as? TranscodeViewController else { return }
         
         // Show Transcode Sheet
-        transcodeVC.beginSheetModal(for: self.window!) {(response) in // @escaping
+        transcodeVC.beginSheetModal(for: self.window!) {[unowned self] (response) in // @escaping
             // Swift.print(#function, #line, #file)
             
             guard response == NSApplication.ModalResponse.continue else { return }
@@ -839,7 +839,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         guard caparVC.applySource(dict) else { return }
         
         // Show CAPAR Sheet
-        caparVC.beginSheetModal(for: self.window!) {[unowned self,caparVC,mutator] (response) in // @escaping
+        caparVC.beginSheetModal(for: self.window!) {[caparVC, mutator, unowned self] (response) in // @escaping
             // Swift.print(#function, #line, #file)
             
             guard response == .continue else { return }

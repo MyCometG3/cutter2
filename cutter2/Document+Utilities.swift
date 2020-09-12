@@ -37,7 +37,7 @@ extension Document {
         }
         
         // Update UI in main queue
-        DispatchQueue.main.async { [unowned self] in // @escaping
+        DispatchQueue.main.async { [progress, unowned self] in // @escaping
             // Swift.print(#function, #line, #file)
             
             guard let alert = self.alert else { return }
@@ -51,7 +51,7 @@ extension Document {
     public func showBusySheet(_ message: String?, _ info: String?) {
         // Swift.print(#function, #line, #file)
         
-        DispatchQueue.main.async { [unowned self] in // @escaping
+        DispatchQueue.main.async { [message, info, unowned self] in // @escaping
             // Swift.print(#function, #line, #file)
             
             guard let window = self.window else { return }
@@ -93,7 +93,7 @@ extension Document {
         // Swift.print(#function, #line, #file)
         
         // Don't use NSDocument default error handling
-        DispatchQueue.main.async { [unowned self] in // @escaping
+        DispatchQueue.main.async { [error, unowned self] in // @escaping
             // Swift.print(#function, #line, #file)
             
             let alert = NSAlert(error: error)
@@ -207,7 +207,7 @@ extension Document {
         guard let player = self.player else { return }
         
         player.pause()
-        let handler: (Bool) -> Void = {[unowned player] (finished) in // @escaping
+        let handler: (Bool) -> Void = {[player, unowned self] (finished) in // @escaping
             guard let mutator = self.movieMutator else { return }
             player.rate = rate
             self.updateTimeline(time, range: mutator.selectedTimeRange)
@@ -255,7 +255,7 @@ extension Document {
             player.replaceCurrentItem(with: playerItem)
             
             // seek
-            let handler: (Bool) -> Void = {[unowned pv] (finished) in // @escaping
+            let handler: (Bool) -> Void = {[pv] (finished) in // @escaping
                 pv.needsDisplay = true
             }
             playerItem.seek(to: mutator.insertionTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero,

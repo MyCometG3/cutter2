@@ -19,7 +19,7 @@ let kTrancode1Key = "transcode1"
 let kTrancode2Key = "transcode2"
 let kTrancode3Key = "transcode3"
 let kAVFileTypeKey = "avFileType"
-let kHEVCReadyKey = "hevcReady" // Check 10.13 or later
+let kHEVCReadyKey = "hevcReady"
 
 let kTranscodePresetCustom = "Custom"
 

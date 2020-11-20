@@ -147,16 +147,7 @@ class CAPARViewController: NSViewController {
         // Swift.print(#function, #line, #file)
         
         let def: UserDefaults = UserDefaults.standard
-        var customFlag = def.bool(forKey: modClapPaspKey)
-        
-        if customFlag {
-            if #available(OSX 10.13, *) {
-                // Supported: AVMutableMovieTrack.replaceFormatDescription(_:with:)
-            } else {
-                customFlag = false
-                def.set(customFlag, forKey: modClapPaspKey)
-            }
-        }
+        let customFlag = def.bool(forKey: modClapPaspKey)
         
         if customFlag {
             loadLastSettings()

@@ -65,17 +65,14 @@ class TranscodeViewController: NSViewController {
     /* ============================================ */
     
     private func checkHEVCEncoder() -> Bool {
-        if #available(OSX 10.13, *) {
-            let encoderSpecification: [CFString: Any] = [ kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder: true ]
-            let error =
-                VTCopySupportedPropertyDictionaryForEncoder(width: 3840, height: 2160,
-                                                            codecType: kCMVideoCodecType_HEVC,
-                                                            encoderSpecification: encoderSpecification as CFDictionary,
-                                                            encoderIDOut: nil,
-                                                            supportedPropertiesOut: nil)
-            return error == kVTCouldNotFindVideoEncoderErr ? false : true
-        }
-        return false
+        let encoderSpecification: [CFString: Any] = [ kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder: true ]
+        let error =
+            VTCopySupportedPropertyDictionaryForEncoder(width: 3840, height: 2160,
+                                                        codecType: kCMVideoCodecType_HEVC,
+                                                        encoderSpecification: encoderSpecification as CFDictionary,
+                                                        encoderIDOut: nil,
+                                                        supportedPropertiesOut: nil)
+        return error == kVTCouldNotFindVideoEncoderErr ? false : true
     }
     
     private func updateUserDefaults() {
@@ -87,25 +84,21 @@ class TranscodeViewController: NSViewController {
         switch type {
         case 0:
             let preset0: Int = UserDefaults.standard.integer(forKey: kTrancode0Key)
-            var name: [String] = [AVAssetExportPreset640x480,
+            let name: [String] = [AVAssetExportPreset640x480,
                                   AVAssetExportPreset960x540,
                                   AVAssetExportPreset1280x720,
                                   AVAssetExportPreset1920x1080,
-                                  AVAssetExportPreset3840x2160]
-            if #available(OSX 10.13, *) {
-                name = name + [AVAssetExportPresetHEVC1920x1080,
-                               AVAssetExportPresetHEVC3840x2160]
-            }
+                                  AVAssetExportPreset3840x2160,
+                                  AVAssetExportPresetHEVC1920x1080,
+                                  AVAssetExportPresetHEVC3840x2160]
             preset = name[preset0]
             fileType = .mov
         case 1:
             let preset1: Int = UserDefaults.standard.integer(forKey: kTrancode1Key)
-            var name: [String] = [AVAssetExportPresetLowQuality,
+            let name: [String] = [AVAssetExportPresetLowQuality,
                                   AVAssetExportPresetMediumQuality,
-                                  AVAssetExportPresetHighestQuality]
-            if #available(OSX 10.13, *) {
-                name = name + [AVAssetExportPresetHEVCHighestQuality]
-            }
+                                  AVAssetExportPresetHighestQuality,
+                                  AVAssetExportPresetHEVCHighestQuality]
             preset = name[preset1]
             fileType = .mov
         case 2:

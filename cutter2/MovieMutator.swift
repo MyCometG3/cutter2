@@ -486,8 +486,6 @@ class MovieMutator: MovieMutatorBase {
     
     //
     public func applyClapPasp(_ dict: [AnyHashable:Any], using undoManager: UndoManager) -> Bool {
-        guard #available(OSX 10.13, *) else { return false }
-        
         guard let clapSize = dict[clapSizeKey] as? NSSize else { return false }
         guard let clapOffset = dict[clapOffsetKey] as? NSPoint else { return false }
         guard let paspRatio = dict[paspRatioKey] as? NSSize else { return false }

@@ -396,9 +396,7 @@ extension MovieWriter {
         prepareCopyChannels(movie, ar, aw, .subtitle)
         prepareCopyChannels(movie, ar, aw, .timecode)
         prepareCopyChannels(movie, ar, aw, .metadata)
-        if #available(OSX 10.13, *) {
-            prepareCopyChannels(movie, ar, aw, .depthData)
-        }
+        prepareCopyChannels(movie, ar, aw, .depthData)
     }
     
     private func prepareAudioChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
@@ -593,7 +591,7 @@ extension MovieWriter {
     }
     
     private func addDecompressionProperties(_ track: AVMovieTrack, _ copyField: Bool, _ arOutputSetting: inout [String:Any]) {
-        if #available(OSX 10.13, *), hasFieldModeSupport(of: track) {
+        if hasFieldModeSupport(of: track) {
             var decompressionProperties: NSDictionary? = nil
             if copyField {
                 // Keep both fields

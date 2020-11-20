@@ -104,7 +104,7 @@ extension Document {
                 let keys = userInfo.keys
                 if keys.contains(NSUnderlyingErrorKey) || keys.contains(NSDebugDescriptionErrorKey) {
                     text = err.description
-                } else if #available(OSX 10.13, *), keys.contains(NSLocalizedFailureErrorKey) {
+                } else if keys.contains(NSLocalizedFailureErrorKey) {
                     text = userInfo[NSLocalizedFailureErrorKey] as? String
                 } else if keys.contains(NSLocalizedDescriptionKey) {
                     text = userInfo[NSLocalizedDescriptionKey] as? String

@@ -124,7 +124,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         //
         removeUpdateReqObserver()
         //
-        removeWindowResieObserver()
+        removeWindowResizeObserver()
         //
         removeUserDefaultsObserver()
     }
@@ -211,7 +211,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         }
     }
     
-    private func removeWindowResieObserver() {
+    private func removeWindowResizeObserver() {
         let removeBlock: () -> Void = {
             guard let observer = self.resizeObserver else { return }
             guard let window = self.view.window else { return }

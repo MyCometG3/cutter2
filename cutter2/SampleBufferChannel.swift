@@ -9,7 +9,7 @@
 import Cocoa
 import AVFoundation
 
-protocol SampleBufferChannelDelegate: class {
+protocol SampleBufferChannelDelegate: AnyObject {
     func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer)
 }
 

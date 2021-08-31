@@ -9,7 +9,7 @@
 import Cocoa
 import AVFoundation
 
-protocol AccessoryViewDelegate: class {
+protocol AccessoryViewDelegate: AnyObject {
     func didUpdateFileType(_ fileType: AVFileType, selfContained: Bool)
 }
 

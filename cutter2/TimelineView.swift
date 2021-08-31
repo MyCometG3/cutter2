@@ -34,7 +34,7 @@ public extension NSBezierPath {
 }
 
 /// View to ViewController - Mouse Event related protocol (No CMTime)
-protocol TimelineUpdateDelegate: class {
+protocol TimelineUpdateDelegate: AnyObject {
     // called on mouse down/drag event
     func didUpdateCursor(to position: Float64)
     func didUpdateStart(to position: Float64)

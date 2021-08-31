@@ -3,7 +3,7 @@
 //  cutter2
 //
 //  Created by Takashi Mochizuki on 2018/01/21.
-//  Copyright © 2018-2020年 MyCometG3. All rights reserved.
+//  Copyright © 2018-2021年 MyCometG3. All rights reserved.
 //
 
 import Cocoa

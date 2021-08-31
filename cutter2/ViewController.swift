@@ -102,6 +102,13 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         applyMode()
     }
     
+    override func viewWillAppear() {
+        guard let window = self.view.window else { return }
+        if window.makeFirstResponder(timelineView) != true {
+            Swift.print("ERROR: Failed to update initial first responder.")
+        }
+    }
+    
     public func setup() {
         self.timelineView.delegate = self
         

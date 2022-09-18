@@ -148,13 +148,7 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     }
     private let strokeColorInactive: CGColor = NSColor.gray.cgColor
     private let fillColorInactive: CGColor = NSColor.lightGray.cgColor
-    private var labelColor: CGColor {
-        if #available(OSX 10.14, *) {
-            return NSColor.unemphasizedSelectedTextColor.cgColor
-        } else {
-            return NSColor.darkGray.cgColor
-        }
-    }
+    private var labelColor: CGColor = NSColor.unemphasizedSelectedTextColor.cgColor
     
     /* ============================================ */
     // MARK: - NSView methods

@@ -767,20 +767,22 @@ extension MovieMutatorBase {
                     let asbdSize: UInt32 = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
                     let asbdPtr: UnsafePointer<AudioStreamBasicDescription>? =
                         CMAudioFormatDescriptionGetStreamBasicDescription(desc)
-                    
-                    var formatSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
-                    var format: CFString!
-                    let err: OSStatus =
-                        AudioFormatGetProperty(kAudioFormatProperty_FormatName,
-                                               asbdSize, asbdPtr, &formatSize,
-                                               &format)
-                    assert(err == noErr && formatSize > 0, #function)
-                    formatString = String(format as NSString)
+                    if asbdPtr != nil {
+                        var formatSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
+                        var format: CFString = String() as CFString
+                        withUnsafeMutablePointer(to: &format) { formatPtr -> Void in
+                            let err: OSStatus = AudioFormatGetProperty(kAudioFormatProperty_FormatName,
+                                                                       asbdSize, asbdPtr, &formatSize, formatPtr)
+                            if err == noErr {
+                                formatString = formatPtr.pointee as String
+                            }
+                        }
+                    }
                 }
                 var layoutString: String = ""
                 do {
                     var nameSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
-                    var name: CFString = "Unknown" as CFString
+                    var name: CFString = String() as CFString
                     let tagSize: UInt32 = UInt32(MemoryLayout<AudioChannelLayoutTag>.size)
                     var tag: AudioChannelLayoutTag = kAudioChannelLayoutTag_Unknown
                     var dataSize: UInt32 = 0
@@ -802,10 +804,12 @@ extension MovieMutatorBase {
                         err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForTag,
                                                      tagSize, &tag, &aclSize, aclPtr)
                         if err == noErr {
-                            err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
-                                                         aclSize, aclPtr, &nameSize, &name)
-                            if err == noErr {
-                                layoutString = name as String
+                            withUnsafeMutablePointer(to: &name) { namePtr -> Void in
+                                err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
+                                                             aclSize, aclPtr, &nameSize, namePtr)
+                                if err == noErr {
+                                    layoutString = namePtr.pointee as String
+                                }
                             }
                         }
                     }
@@ -813,15 +817,17 @@ extension MovieMutatorBase {
                 do {
                     var err: OSStatus = noErr;
                     var nameSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
-                    var name: CFString? = nil
+                    var name: CFString = String() as CFString
                     var aclSize: Int = 0
                     let aclPtr: UnsafePointer<AudioChannelLayout>? =
                         CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &aclSize)
                     if aclSize > 0, let aclPtr = aclPtr {
-                        err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
-                                                     UInt32(aclSize), aclPtr, &nameSize, &name)
-                        if err == noErr, let name = name {
-                            layoutString = String(name as String)
+                        withUnsafeMutablePointer(to: &name) { namePtr -> Void in
+                            err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
+                                                         UInt32(aclSize), aclPtr, &nameSize, namePtr)
+                            if err == noErr {
+                                layoutString = namePtr.pointee as String
+                            }
                         }
                     }
                 }

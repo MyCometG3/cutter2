@@ -781,8 +781,6 @@ extension MovieMutatorBase {
                 }
                 var layoutString: String = ""
                 do {
-                    var nameSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
-                    var name: CFString = String() as CFString
                     let tagSize: UInt32 = UInt32(MemoryLayout<AudioChannelLayoutTag>.size)
                     var tag: AudioChannelLayoutTag = kAudioChannelLayoutTag_Unknown
                     var dataSize: UInt32 = 0
@@ -804,6 +802,8 @@ extension MovieMutatorBase {
                         err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForTag,
                                                      tagSize, &tag, &aclSize, aclPtr)
                         if err == noErr {
+                            var nameSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
+                            var name: CFString = String() as CFString
                             withUnsafeMutablePointer(to: &name) { namePtr -> Void in
                                 err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
                                                              aclSize, aclPtr, &nameSize, namePtr)
@@ -816,12 +816,12 @@ extension MovieMutatorBase {
                 }
                 do {
                     var err: OSStatus = noErr;
-                    var nameSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
-                    var name: CFString = String() as CFString
                     var aclSize: Int = 0
                     let aclPtr: UnsafePointer<AudioChannelLayout>? =
                         CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &aclSize)
                     if aclSize > 0, let aclPtr = aclPtr {
+                        var nameSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
+                        var name: CFString = String() as CFString
                         withUnsafeMutablePointer(to: &name) { namePtr -> Void in
                             err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
                                                          UInt32(aclSize), aclPtr, &nameSize, namePtr)

@@ -692,6 +692,11 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         return true
     }
     
+    // NSResponder
+    override func resignFirstResponder() -> Bool {
+        return false
+    }
+    
     // NSView(NSKeyboardUI)
     override var canBecomeKeyView: Bool {
         return true

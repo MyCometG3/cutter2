@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="16097" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="22154" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.AVKitIBPlugin" version="16097"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="16097"/>
+        <plugIn identifier="com.apple.AVKitIBPlugin" version="22154"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="22154"/>
         <capability name="System colors introduced in macOS 10.13" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -250,6 +250,11 @@ DQ
                                                 <action selector="modifyClapPasp:" target="Ady-hI-5gd" id="lHr-yr-nS9"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Dump ResponderChain" hidden="YES" keyEquivalent="@" id="3O0-Nr-h6F">
+                                            <connections>
+                                                <action selector="dumpResponderChain:" target="Ady-hI-5gd" id="n7s-kN-iTY"/>
+                                            </connections>
+                                        </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>
@@ -344,8 +349,8 @@ DQ
                         <rect key="frame" x="0.0" y="0.0" width="480" height="334"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" preferredMaxLayoutWidth="246" translatesAutoresizingMaskIntoConstraints="NO" id="TyV-c9-G0C">
-                                <rect key="frame" x="116" y="157" width="248" height="21"/>
+                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" preferredMaxLayoutWidth="246" translatesAutoresizingMaskIntoConstraints="NO" id="TyV-c9-G0C">
+                                <rect key="frame" x="117" y="157" width="246" height="21"/>
                                 <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="center" title="Your document contents here" id="Cc7-nU-5Mv">
                                     <font key="font" metaFont="system" size="18"/>
                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -438,10 +443,10 @@ DQ
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="dvf-GJ-U99">
-                                <rect key="frame" x="18" y="19" width="175" height="25"/>
+                                <rect key="frame" x="17" y="19" width="176" height="25"/>
                                 <popUpButtonCell key="cell" type="push" title="mov (reference movie)" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="-1" imageScaling="proportionallyDown" inset="2" selectedItem="grx-7Q-6dE" id="fdc-gv-YVW">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
+                                    <font key="font" metaFont="menu"/>
                                     <menu key="menu" id="qOW-K1-Png">
                                         <items>
                                             <menuItem title="mov (reference movie)" state="on" tag="-1" keyEquivalent="1" id="grx-7Q-6dE">
@@ -468,8 +473,8 @@ DQ
                                     <action selector="selectFileType:" target="OzP-JU-yzb" id="9it-F2-UOz"/>
                                 </connections>
                             </popUpButton>
-                            <textField horizontalHuggingPriority="249" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="zgU-uH-d0R">
-                                <rect key="frame" x="198" y="8" width="180" height="49"/>
+                            <textField focusRingType="none" horizontalHuggingPriority="249" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="zgU-uH-d0R">
+                                <rect key="frame" x="197" y="8" width="181" height="49"/>
                                 <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="left" drawsBackground="YES" id="T0Z-i9-qh5">
                                     <font key="font" size="10" name="Menlo-Regular"/>
                                     <string key="title">Header size = 0 KiB
@@ -576,7 +581,7 @@ Audio size = 0 KiB
                                     <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Sds-lF-hFT">
                                         <rect key="frame" x="74" y="246" width="238" height="14"/>
                                         <subviews>
-                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="mY8-cK-fFe">
+                                            <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="mY8-cK-fFe">
                                                 <rect key="frame" x="-2" y="0.0" width="31" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Title:" id="zqj-Q8-myX">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -584,7 +589,7 @@ Audio size = 0 KiB
                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
                                             </textField>
-                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="0Lh-Fu-Rw3">
+                                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="0Lh-Fu-Rw3">
                                                 <rect key="frame" x="33" y="0.0" width="207" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="O3C-uZ-7gU">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -612,7 +617,7 @@ Audio size = 0 KiB
                                     <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5wB-jJ-AZs">
                                         <rect key="frame" x="34" y="223" width="278" height="15"/>
                                         <subviews>
-                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="8nc-Wp-WN4">
+                                            <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="8nc-Wp-WN4">
                                                 <rect key="frame" x="-2" y="1" width="71" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Source Path:" id="Cc0-tk-8hN">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -620,7 +625,7 @@ Audio size = 0 KiB
                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
                                             </textField>
-                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="sV4-8y-QJs">
+                                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="sV4-8y-QJs">
                                                 <rect key="frame" x="73" y="1" width="207" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="HLw-0S-fq6">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -644,7 +649,7 @@ Audio size = 0 KiB
                                     <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MbH-18-IUj">
                                         <rect key="frame" x="27" y="201" width="285" height="14"/>
                                         <subviews>
-                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="KVL-1Y-QYq">
+                                            <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="KVL-1Y-QYq">
                                                 <rect key="frame" x="-2" y="0.0" width="78" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Video Format:" id="uh3-5K-A44">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -652,7 +657,7 @@ Audio size = 0 KiB
                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
                                             </textField>
-                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="ttc-tt-VJK">
+                                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="ttc-tt-VJK">
                                                 <rect key="frame" x="80" y="0.0" width="207" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="80X-Wv-NOT">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -676,7 +681,7 @@ Audio size = 0 KiB
                                     <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vay-Xr-6oT">
                                         <rect key="frame" x="14" y="179" width="298" height="14"/>
                                         <subviews>
-                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="3Rs-dF-4MW">
+                                            <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="3Rs-dF-4MW">
                                                 <rect key="frame" x="-2" y="0.0" width="91" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Video Data Size:" id="znj-2Z-8eN">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -684,7 +689,7 @@ Audio size = 0 KiB
                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
                                             </textField>
-                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="AHQ-vG-h1y">
+                                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="AHQ-vG-h1y">
                                                 <rect key="frame" x="93" y="0.0" width="207" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="ksv-Ef-eON">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -708,7 +713,7 @@ Audio size = 0 KiB
                                     <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Zi8-Bc-sWH">
                                         <rect key="frame" x="44" y="156" width="268" height="15"/>
                                         <subviews>
-                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="BFj-YO-IBh">
+                                            <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="BFj-YO-IBh">
                                                 <rect key="frame" x="-2" y="1" width="61" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Video FPS:" id="wPg-Af-nXo">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -716,7 +721,7 @@ Audio size = 0 KiB
                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
                                             </textField>
-                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="H6b-I7-Ma9">
+                                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="H6b-I7-Ma9">
                                                 <rect key="frame" x="63" y="1" width="207" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="qrf-ue-ioi">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -740,7 +745,7 @@ Audio size = 0 KiB
                                     <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="DHc-PJ-Oc1">
                                         <rect key="frame" x="27" y="134" width="285" height="14"/>
                                         <subviews>
-                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="9DC-25-WV3">
+                                            <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="9DC-25-WV3">
                                                 <rect key="frame" x="-2" y="0.0" width="78" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Audio Format:" id="bId-YB-0bn">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -748,7 +753,7 @@ Audio size = 0 KiB
                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
                                             </textField>
-                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="fTp-Zl-f6p">
+                                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="fTp-Zl-f6p">
                                                 <rect key="frame" x="80" y="0.0" width="207" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="umr-w3-9sM">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -772,7 +777,7 @@ Audio size = 0 KiB
                                     <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="uCc-Ms-cq0">
                                         <rect key="frame" x="15" y="112" width="297" height="14"/>
                                         <subviews>
-                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="MVR-Lh-7Hn">
+                                            <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="MVR-Lh-7Hn">
                                                 <rect key="frame" x="-2" y="0.0" width="90" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Audio Data Size:" id="Teb-37-coU">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -780,7 +785,7 @@ Audio size = 0 KiB
                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
                                             </textField>
-                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="axf-2j-V2M">
+                                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="axf-2j-V2M">
                                                 <rect key="frame" x="92" y="0.0" width="207" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="H3m-8v-5zh">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -802,18 +807,18 @@ Audio size = 0 KiB
                                         </customSpacing>
                                     </stackView>
                                     <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5Wp-z3-L4W">
-                                        <rect key="frame" x="28" y="89" width="284" height="15"/>
+                                        <rect key="frame" x="29" y="89" width="283" height="15"/>
                                         <subviews>
-                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="RPh-X4-Pvk">
-                                                <rect key="frame" x="-2" y="1" width="77" height="14"/>
+                                            <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="RPh-X4-Pvk">
+                                                <rect key="frame" x="-2" y="1" width="76" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Current Time:" id="C67-do-oIy">
                                                     <font key="font" metaFont="message" size="11"/>
                                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
                                             </textField>
-                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="y76-Cu-IQL">
-                                                <rect key="frame" x="79" y="1" width="207" height="14"/>
+                                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="y76-Cu-IQL">
+                                                <rect key="frame" x="78" y="1" width="207" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="LqW-ph-fnu">
                                                     <font key="font" metaFont="message" size="11"/>
                                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -836,7 +841,7 @@ Audio size = 0 KiB
                                     <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9eS-Jt-g0f">
                                         <rect key="frame" x="18" y="67" width="294" height="14"/>
                                         <subviews>
-                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="mW6-Ld-6mF">
+                                            <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="mW6-Ld-6mF">
                                                 <rect key="frame" x="-2" y="0.0" width="87" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Movie Duration:" id="SE5-lD-diG">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -844,7 +849,7 @@ Audio size = 0 KiB
                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
                                             </textField>
-                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="WiK-tf-lw8">
+                                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="WiK-tf-lw8">
                                                 <rect key="frame" x="89" y="0.0" width="207" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="YPj-LV-hFT">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -868,7 +873,7 @@ Audio size = 0 KiB
                                     <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tKT-hF-CiM">
                                         <rect key="frame" x="19" y="45" width="293" height="14"/>
                                         <subviews>
-                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="w8d-kd-NC4">
+                                            <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="w8d-kd-NC4">
                                                 <rect key="frame" x="-2" y="0.0" width="86" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Selection Start:" id="km5-me-mvr">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -876,7 +881,7 @@ Audio size = 0 KiB
                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
                                             </textField>
-                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="4rc-YD-HLG">
+                                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="4rc-YD-HLG">
                                                 <rect key="frame" x="88" y="0.0" width="207" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="CzV-uY-P0Q">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -900,7 +905,7 @@ Audio size = 0 KiB
                                     <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Aav-ox-GP2">
                                         <rect key="frame" x="25" y="22" width="287" height="15"/>
                                         <subviews>
-                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="pVW-RV-Rbr">
+                                            <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="pVW-RV-Rbr">
                                                 <rect key="frame" x="-2" y="1" width="80" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Selection End:" id="ocJ-FK-cWo">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -908,7 +913,7 @@ Audio size = 0 KiB
                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
                                             </textField>
-                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="1I4-ho-ati">
+                                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="1I4-ho-ati">
                                                 <rect key="frame" x="82" y="1" width="207" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="uiP-JA-3zq">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -932,7 +937,7 @@ Audio size = 0 KiB
                                     <stackView distribution="fill" orientation="horizontal" alignment="top" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="PZ2-fl-h3q">
                                         <rect key="frame" x="0.0" y="0.0" width="312" height="14"/>
                                         <subviews>
-                                            <textField horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="83i-R5-c0O">
+                                            <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="83i-R5-c0O">
                                                 <rect key="frame" x="-2" y="0.0" width="105" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Selection Duration:" id="bfp-6a-teV">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -940,7 +945,7 @@ Audio size = 0 KiB
                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                 </textFieldCell>
                                             </textField>
-                                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="8hd-JS-Caq">
+                                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="8hd-JS-Caq">
                                                 <rect key="frame" x="107" y="0.0" width="207" height="14"/>
                                                 <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Multiline Label" id="XhI-6H-6kD">
                                                     <font key="font" metaFont="message" size="11"/>
@@ -1071,11 +1076,11 @@ Audio size = 0 KiB
                                 <rect key="frame" x="190" y="148" width="273" height="102"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <view key="contentView" id="BUH-IY-cdD">
-                                    <rect key="frame" x="3" y="3" width="267" height="84"/>
+                                    <rect key="frame" x="4" y="5" width="265" height="82"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="oaB-kl-S0p">
-                                            <rect key="frame" x="86" y="45" width="50" height="19"/>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="oaB-kl-S0p">
+                                            <rect key="frame" x="86" y="43" width="50" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="QcX-lc-tHw">
                                                 <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" id="uIP-9s-NHB"/>
@@ -1094,8 +1099,8 @@ Audio size = 0 KiB
                                                 <outlet property="delegate" destination="UYa-fX-YNM" id="Kbj-pr-cxo"/>
                                             </connections>
                                         </textField>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="FSD-u3-O7m">
-                                            <rect key="frame" x="142" y="21" width="53" height="14"/>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="FSD-u3-O7m">
+                                            <rect key="frame" x="142" y="19" width="53" height="14"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="V-Offset:" id="5Me-5J-Nbr">
                                                 <font key="font" metaFont="message" size="11"/>
@@ -1103,8 +1108,8 @@ Audio size = 0 KiB
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ror-6Z-zhB">
-                                            <rect key="frame" x="18" y="48" width="62" height="14"/>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ror-6Z-zhB">
+                                            <rect key="frame" x="18" y="46" width="62" height="14"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Horizontal:" id="CMz-7q-CWb">
                                                 <font key="font" metaFont="message" size="11"/>
@@ -1112,8 +1117,8 @@ Audio size = 0 KiB
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="yfM-vQ-dXm">
-                                            <rect key="frame" x="26" y="21" width="54" height="14"/>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="yfM-vQ-dXm">
+                                            <rect key="frame" x="26" y="19" width="54" height="14"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="H-Offset:" id="7mW-3j-2oX">
                                                 <font key="font" metaFont="message" size="11"/>
@@ -1121,8 +1126,8 @@ Audio size = 0 KiB
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mgh-Ok-vuU">
-                                            <rect key="frame" x="201" y="45" width="50" height="19"/>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mgh-Ok-vuU">
+                                            <rect key="frame" x="201" y="43" width="50" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="70P-rc-OfY">
                                                 <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" id="ySu-y8-Cev"/>
@@ -1141,8 +1146,8 @@ Audio size = 0 KiB
                                                 <outlet property="delegate" destination="UYa-fX-YNM" id="OON-0m-9rt"/>
                                             </connections>
                                         </textField>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ucn-Zw-yHl">
-                                            <rect key="frame" x="147" y="48" width="48" height="14"/>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ucn-Zw-yHl">
+                                            <rect key="frame" x="147" y="46" width="48" height="14"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Vertical:" id="0Da-2S-LK4">
                                                 <font key="font" metaFont="message" size="11"/>
@@ -1150,8 +1155,8 @@ Audio size = 0 KiB
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="HwL-gR-f5O">
-                                            <rect key="frame" x="86" y="18" width="40" height="19"/>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="HwL-gR-f5O">
+                                            <rect key="frame" x="86" y="16" width="40" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="JxE-5d-DBr">
                                                 <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" id="wTA-YS-M0S"/>
@@ -1170,8 +1175,8 @@ Audio size = 0 KiB
                                                 <outlet property="delegate" destination="UYa-fX-YNM" id="co8-2m-Hf1"/>
                                             </connections>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6aQ-OT-Rzp">
-                                            <rect key="frame" x="201" y="18" width="40" height="19"/>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6aQ-OT-Rzp">
+                                            <rect key="frame" x="201" y="16" width="40" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="yfz-2o-az1">
                                                 <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" id="niP-oE-9a4"/>
@@ -1258,11 +1263,11 @@ Gw
                                 <rect key="frame" x="17" y="70" width="151" height="180"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <view key="contentView" id="FK5-6C-fG7">
-                                    <rect key="frame" x="3" y="3" width="145" height="162"/>
+                                    <rect key="frame" x="4" y="5" width="143" height="160"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sdK-48-i1D">
-                                            <rect key="frame" x="18" y="40" width="74" height="14"/>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sdK-48-i1D">
+                                            <rect key="frame" x="18" y="38" width="74" height="14"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Production:" id="uMj-r2-3KC">
                                                 <font key="font" metaFont="smallSystemBold"/>
@@ -1270,8 +1275,8 @@ Gw
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IcH-1j-VxU">
-                                            <rect key="frame" x="18" y="84" width="43" height="14"/>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IcH-1j-VxU">
+                                            <rect key="frame" x="18" y="82" width="43" height="14"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Clean:" id="UUq-2G-gaI">
                                                 <font key="font" metaFont="smallSystemBold"/>
@@ -1279,8 +1284,8 @@ Gw
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hyA-4r-hKr">
-                                            <rect key="frame" x="30" y="106" width="121" height="14"/>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hyA-4r-hKr">
+                                            <rect key="frame" x="30" y="104" width="121" height="14"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="wdith x height" id="WKP-8U-NRU">
                                                 <font key="font" metaFont="message" size="11"/>
@@ -1295,8 +1300,8 @@ Gw
                                                 </binding>
                                             </connections>
                                         </textField>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ajV-RF-Ckp">
-                                            <rect key="frame" x="18" y="128" width="93" height="14"/>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ajV-RF-Ckp">
+                                            <rect key="frame" x="18" y="126" width="93" height="14"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Encoded pixel:" id="NaM-aq-87i">
                                                 <font key="font" metaFont="smallSystemBold"/>
@@ -1304,8 +1309,8 @@ Gw
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="68l-tO-SI5">
-                                            <rect key="frame" x="30" y="62" width="121" height="14"/>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="68l-tO-SI5">
+                                            <rect key="frame" x="30" y="60" width="121" height="14"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="wdith x height" id="Jl0-8M-U6y">
                                                 <font key="font" metaFont="message" size="11"/>
@@ -1320,8 +1325,8 @@ Gw
                                                 </binding>
                                             </connections>
                                         </textField>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ztk-rH-kUb">
-                                            <rect key="frame" x="30" y="18" width="121" height="14"/>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ztk-rH-kUb">
+                                            <rect key="frame" x="30" y="16" width="121" height="14"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="wdith x height" id="4KS-Dh-CJs">
                                                 <font key="font" metaFont="message" size="11"/>
@@ -1343,11 +1348,11 @@ Gw
                                 <rect key="frame" x="190" y="69" width="273" height="75"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <view key="contentView" id="0T6-3Q-FLF">
-                                    <rect key="frame" x="3" y="3" width="267" height="57"/>
+                                    <rect key="frame" x="4" y="5" width="265" height="55"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dPE-QT-C8c">
-                                            <rect key="frame" x="23" y="21" width="57" height="14"/>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dPE-QT-C8c">
+                                            <rect key="frame" x="23" y="19" width="57" height="14"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="hSpacing:" id="fbQ-2Y-4V5">
                                                 <font key="font" metaFont="message" size="11"/>
@@ -1355,8 +1360,8 @@ Gw
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cWW-On-RD2">
-                                            <rect key="frame" x="86" y="18" width="40" height="19"/>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cWW-On-RD2">
+                                            <rect key="frame" x="86" y="16" width="40" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="zK5-lU-LiQ">
                                                 <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="o8X-bm-616"/>
@@ -1375,8 +1380,8 @@ Gw
                                                 <outlet property="delegate" destination="UYa-fX-YNM" id="7Ij-Jl-UKD"/>
                                             </connections>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="boM-i5-omD">
-                                            <rect key="frame" x="201" y="18" width="40" height="19"/>
+                                        <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="boM-i5-omD">
+                                            <rect key="frame" x="201" y="16" width="40" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="I9B-KZ-Gqs">
                                                 <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="RDM-vd-iLs"/>
@@ -1395,8 +1400,8 @@ Gw
                                                 <outlet property="delegate" destination="UYa-fX-YNM" id="nhe-l0-xuj"/>
                                             </connections>
                                         </textField>
-                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6LX-LA-Vm4">
-                                            <rect key="frame" x="139" y="21" width="56" height="14"/>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6LX-LA-Vm4">
+                                            <rect key="frame" x="139" y="19" width="56" height="14"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="vSpacing:" id="OPx-sb-V6s">
                                                 <font key="font" metaFont="message" size="11"/>
@@ -1454,7 +1459,7 @@ Gw
                                                     <rect key="frame" x="6" y="26" width="300" height="200"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <view key="contentView" id="0GY-om-FBD">
-                                                        <rect key="frame" x="3" y="3" width="294" height="182"/>
+                                                        <rect key="frame" x="4" y="5" width="292" height="180"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <subviews>
                                                             <matrix verticalHuggingPriority="750" fixedFrame="YES" allowsEmptySelection="NO" autosizesCells="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2ho-1j-0Oy">
@@ -1523,7 +1528,7 @@ Gw
                                                     <rect key="frame" x="6" y="26" width="324" height="200"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <view key="contentView" id="iQh-gD-wFl">
-                                                        <rect key="frame" x="3" y="3" width="318" height="182"/>
+                                                        <rect key="frame" x="4" y="5" width="316" height="180"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <subviews>
                                                             <matrix verticalHuggingPriority="750" fixedFrame="YES" allowsEmptySelection="NO" autosizesCells="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lIi-xW-Fmc">
@@ -1577,7 +1582,7 @@ Gw
                                                     <rect key="frame" x="6" y="26" width="324" height="200"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <view key="contentView" id="dGi-hB-4XX">
-                                                        <rect key="frame" x="3" y="3" width="318" height="182"/>
+                                                        <rect key="frame" x="4" y="5" width="316" height="180"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <subviews>
                                                             <matrix verticalHuggingPriority="750" fixedFrame="YES" allowsEmptySelection="NO" autosizesCells="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1EQ-Uj-764">
@@ -1616,7 +1621,7 @@ Gw
                                                     <rect key="frame" x="6" y="26" width="324" height="200"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <view key="contentView" id="UfZ-e2-ywt">
-                                                        <rect key="frame" x="3" y="3" width="318" height="182"/>
+                                                        <rect key="frame" x="4" y="5" width="316" height="180"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <subviews>
                                                             <matrix verticalHuggingPriority="750" fixedFrame="YES" allowsEmptySelection="NO" autosizesCells="NO" translatesAutoresizingMaskIntoConstraints="NO" id="RWI-22-QJn">
@@ -1679,11 +1684,11 @@ Gw
                                                     <rect key="frame" x="11" y="116" width="281" height="98"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <view key="contentView" id="c3D-r3-esW">
-                                                        <rect key="frame" x="3" y="3" width="275" height="80"/>
+                                                        <rect key="frame" x="4" y="5" width="273" height="78"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <subviews>
-                                                            <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="JPr-yI-Hf3">
-                                                                <rect key="frame" x="164" y="44" width="60" height="22"/>
+                                                            <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="JPr-yI-Hf3">
+                                                                <rect key="frame" x="164" y="42" width="60" height="22"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="qLh-3A-vDX">
                                                                     <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="piT-Zu-bzD">
@@ -1698,8 +1703,8 @@ Gw
                                                                     <binding destination="aX0-52-9XP" name="value" keyPath="values.videoKbps" id="plX-d1-UHn"/>
                                                                 </connections>
                                                             </textField>
-                                                            <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ltE-Wi-WQU">
-                                                                <rect key="frame" x="164" y="17" width="60" height="22"/>
+                                                            <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ltE-Wi-WQU">
+                                                                <rect key="frame" x="164" y="15" width="60" height="22"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="Qda-nK-qKM">
                                                                     <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="vnK-65-Mfh">
@@ -1714,8 +1719,8 @@ Gw
                                                                     <binding destination="aX0-52-9XP" name="value" keyPath="values.audioKbps" id="5qr-pt-f7q"/>
                                                                 </connections>
                                                             </textField>
-                                                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6cJ-Nx-Uu8">
-                                                                <rect key="frame" x="230" y="44" width="31" height="17"/>
+                                                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6cJ-Nx-Uu8">
+                                                                <rect key="frame" x="230" y="42" width="31" height="17"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Kbps" id="hgP-a0-SBb">
                                                                     <font key="font" metaFont="message" size="11"/>
@@ -1723,8 +1728,8 @@ Gw
                                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
                                                             </textField>
-                                                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UOK-GC-Wzi">
-                                                                <rect key="frame" x="230" y="20" width="31" height="17"/>
+                                                            <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UOK-GC-Wzi">
+                                                                <rect key="frame" x="230" y="18" width="31" height="17"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Kbps" id="hwV-G9-932">
                                                                     <font key="font" metaFont="message" size="11"/>
@@ -1733,7 +1738,7 @@ Gw
                                                                 </textFieldCell>
                                                             </textField>
                                                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fg0-ST-ZUy">
-                                                                <rect key="frame" x="17" y="43" width="52" height="20"/>
+                                                                <rect key="frame" x="17" y="41" width="52" height="20"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <buttonCell key="cell" type="check" title="Video" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="v9K-Om-dEP">
                                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1744,7 +1749,7 @@ Gw
                                                                 </connections>
                                                             </button>
                                                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2nx-N2-Ms5">
-                                                                <rect key="frame" x="17" y="19" width="52" height="20"/>
+                                                                <rect key="frame" x="17" y="17" width="52" height="20"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <buttonCell key="cell" type="check" title="Audio" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="aYQ-9b-4KR">
                                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1755,7 +1760,7 @@ Gw
                                                                 </connections>
                                                             </button>
                                                             <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ByZ-78-vaQ">
-                                                                <rect key="frame" x="72" y="42" width="87" height="22"/>
+                                                                <rect key="frame" x="72" y="40" width="87" height="22"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <popUpButtonCell key="cell" type="push" title="H264 (avc1)" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="95I-rb-w3h" id="vsN-UM-cr2">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -1779,7 +1784,7 @@ Gw
                                                                 </popUpButtonCell>
                                                             </popUpButton>
                                                             <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ZoA-IR-aQt">
-                                                                <rect key="frame" x="72" y="18" width="87" height="22"/>
+                                                                <rect key="frame" x="72" y="16" width="87" height="22"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <popUpButtonCell key="cell" type="push" title="AAC-LC" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="Ye6-nb-HPc" id="aJa-zo-lGM">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -1804,11 +1809,11 @@ Gw
                                                     <rect key="frame" x="11" y="7" width="281" height="105"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <view key="contentView" id="in2-xc-3D2">
-                                                        <rect key="frame" x="3" y="3" width="275" height="87"/>
+                                                        <rect key="frame" x="4" y="5" width="273" height="85"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <subviews>
                                                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="izx-7w-vTU">
-                                                                <rect key="frame" x="17" y="10" width="184" height="20"/>
+                                                                <rect key="frame" x="17" y="8" width="184" height="20"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <buttonCell key="cell" type="check" title="Copy Other media track" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="xtZ-Pk-Evw">
                                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1819,7 +1824,7 @@ Gw
                                                                 </connections>
                                                             </button>
                                                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="VAJ-xQ-C7M">
-                                                                <rect key="frame" x="17" y="50" width="184" height="20"/>
+                                                                <rect key="frame" x="17" y="48" width="184" height="20"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <buttonCell key="cell" type="check" title="Copy Video Field Count/Detail" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="MFe-oz-9ZU">
                                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1830,7 +1835,7 @@ Gw
                                                                 </connections>
                                                             </button>
                                                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bxg-Bc-a9K">
-                                                                <rect key="frame" x="17" y="30" width="184" height="20"/>
+                                                                <rect key="frame" x="17" y="28" width="184" height="20"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <buttonCell key="cell" type="check" title="Copy Video Color Properties" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="qgt-JB-nK6">
                                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -1883,7 +1888,7 @@ Gw
                                 <rect key="frame" x="10" y="154" width="138" height="146"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <view key="contentView" id="KBQ-aP-4HG">
-                                    <rect key="frame" x="3" y="3" width="132" height="128"/>
+                                    <rect key="frame" x="4" y="5" width="130" height="126"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <matrix verticalHuggingPriority="750" fixedFrame="YES" allowsEmptySelection="NO" autosizesCells="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wq8-9O-Eaf">

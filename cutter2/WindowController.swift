@@ -58,4 +58,16 @@ class WindowController: NSWindowController, NSWindowDelegate {
         // Reset keyView/makeFirstResponder on Non-Fullscreen mode
         self.window!.selectNextKeyView(self)
     }
+    
+    @IBAction public func dumpResponderChain(_ sender: Any) {
+        var responder = self.window!.firstResponder
+        while let r = responder {
+            print(r)
+            responder = r.nextResponder
+        }
+        let vc = self.contentViewController as! ViewController
+        print(">vc.delegate:", vc.delegate ?? "n/a")
+        print(">window.nextRespondeer:", self.window!.nextResponder ?? "n/a")
+        print(">windowController.nextResponder:", self.nextResponder ?? "n/a")
+    }
 }

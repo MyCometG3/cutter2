@@ -16,6 +16,7 @@ class LayoutConverter {
     
     private typealias LayoutPtr = UnsafePointer<AudioChannelLayout>
     private typealias MutableLayoutPtr = UnsafeMutablePointer<AudioChannelLayout>
+    private typealias DescriptionsPtr = UnsafeBufferPointer<AudioChannelDescription>
     private typealias MutableDescriptionsPtr = UnsafeMutableBufferPointer<AudioChannelDescription>
     
     /* ============================================ */
@@ -90,12 +91,18 @@ class LayoutConverter {
                 p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: 1)
             ptr.pointee.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions
             ptr.pointee.mNumberChannelDescriptions = UInt32(acDescCount)
-            withUnsafeMutablePointer(to: &(ptr.pointee.mChannelDescriptions)) {offset in
-                let descPtr = MutableDescriptionsPtr(start: offset, count: acDescCount)
-                for index in 0..<acDescCount {
-                    descPtr[index] = array[index]
-                }
+            let offset :UnsafeMutablePointer<AudioChannelDescription> = ptr.pointer(to: \AudioChannelLayout.mChannelDescriptions)!
+            let acDescPtr = MutableDescriptionsPtr(start: offset, count: acDescCount)
+            for index in 0..<acDescCount {
+                acDescPtr[index] = array[index]
             }
+            
+            // Debug print
+            acDescPtr.forEach { (desc) in print(desc) }
+            let srcPos: [AudioChannelLabel] = array.map { $0.mChannelLabel }
+            let dstPos: [AudioChannelLabel] = (0..<acDescCount).map { acDescPtr[$0].mChannelLabel }
+            print("       AudioChannelCount: Input:\(acDescCount)")
+            print("Array<AudioChannelLabel>: Input:\(srcPos), Output:\(dstPos)")
         }
         return aclData
     }
@@ -245,17 +252,23 @@ class LayoutConverter {
             let unsupported: [AudioChannelLabel] = [kAudioChannelLabel_Unused,
                                                     kAudioChannelLabel_Unknown,
                                                     kAudioChannelLabel_UseCoordinates]
+            // Get UnsafeBufferPointer<AudioChannelDescription> inside AudioChannelLayout
+            let offset :UnsafePointer<AudioChannelDescription> = layoutPtr.pointer(to: \AudioChannelLayout.mChannelDescriptions)!
             let acDescCount = Int(layout.mNumberChannelDescriptions)
-            var acLayout = layout
-            withUnsafeMutablePointer(to: &(acLayout.mChannelDescriptions)) {offset in
-                let acDescPtr = MutableDescriptionsPtr(start: offset, count: acDescCount)
-                for desc in acDescPtr {
-                    let label: AudioChannelLabel = desc.mChannelLabel
-                    if false == unsupported.contains(label) {
-                        pos.insert(label)
-                    }
-                }
-            }
+            let acDescPtr = DescriptionsPtr(start: offset, count: acDescCount)
+            
+            // Validate AudioChannelLabel(s) to process
+            let srcPos: [AudioChannelLabel] = (0..<acDescCount).map { acDescPtr[$0].mChannelLabel }
+            let dstPos: [AudioChannelLabel] = srcPos.filter { !unsupported.contains($0) }
+            
+            // Make Set<AudioChannelLabel>
+            pos = Set(dstPos)
+            
+            // Debug print
+            acDescPtr.forEach { (desc) in print(desc) }
+            print("       AudioChannelCount: Input:\(acDescCount), Output:\(dstPos.count)")
+            print("Array<AudioChannelLabel>: Input:\(srcPos), Output:\(dstPos)")
+            print("  Set<AudioChannelLabel>: Output:\(pos)")
         default:
             // translate Channel Layout Tag to AudioChannelLabel Set
             switch layout.mChannelLayoutTag {

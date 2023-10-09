@@ -492,10 +492,7 @@ extension MovieWriter {
                 }
                 
                 //
-                let acDescCount: UInt32 = avacDstLayout.layout.pointee.mNumberChannelDescriptions
-                let acDescSize: Int = MemoryLayout<AudioChannelDescription>.size
-                let acLayoutSize: Int = MemoryLayout<AudioChannelLayout>.size + (Int(acDescCount) - 1) * acDescSize
-                aclData = Data.init(bytes: avacDstLayout.layout, count: acLayoutSize)
+                aclData = LayoutConverter().dataFor(layoutBytes: avacDstLayout.layout)
             }
             
             // destination

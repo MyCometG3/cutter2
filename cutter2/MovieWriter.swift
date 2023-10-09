@@ -475,17 +475,16 @@ extension MovieWriter {
                         }
                     }
                     if let data1 = dataSrc, let data2 = dataDst {
-                        let count1: Int = data1.count
                         data1.withUnsafeBytes {(p: UnsafeRawBufferPointer) in
                             let ptr: UnsafePointer<AudioChannelLayout> =
-                                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: count1)
+                                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: 1)
                             avacSrcLayout = AVAudioChannelLayout(layout: ptr)
                         }
-                        let count2: Int = data2.count
                         data2.withUnsafeBytes {(p: UnsafeRawBufferPointer) in
                             let ptr: UnsafePointer<AudioChannelLayout> =
-                                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: count2)
+                                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: 1)
                             avacDstLayout = AVAudioChannelLayout(layout: ptr)
+                            numChannel = Int(avacDstLayout.channelCount)
                         }
                     } else {
                         assert(false, "ERROR: Failed to convert layout")

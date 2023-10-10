@@ -18,6 +18,7 @@ class WindowController: NSWindowController, NSWindowDelegate {
         super.windowDidLoad()
         
         self.shouldCascadeWindows = true
+        self.window?.isMovableByWindowBackground = true
     }
     
     override func windowTitle(forDocumentDisplayName displayName: String) -> String {

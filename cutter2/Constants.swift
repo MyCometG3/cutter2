@@ -3,7 +3,7 @@
 //  cutter2
 //
 //  Created by Takashi Mochizuki on 2020/08/14.
-//  Copyright © 2023 MyCometG3. All rights reserved.
+//  Copyright © 2025 MyCometG3. All rights reserved.
 //
 
 import Foundation

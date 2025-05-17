@@ -8,6 +8,7 @@
 
 import Cocoa
 
+@MainActor
 class InspectorViewController: NSViewController {
     
     /* ============================================ */

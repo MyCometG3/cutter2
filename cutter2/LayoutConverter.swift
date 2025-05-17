@@ -33,7 +33,7 @@ class LayoutConverter {
         // "Copy" struct into Data as backing store
         //let acDescCount: Int = Int(ptr.pointee.mNumberChannelDescriptions)
         //let acLayoutSize: Int = dataSize(descCount: acDescCount)
-        //assert(size >= acLayoutSize)
+        //precondition(size >= acLayoutSize, "Not enough space for AudioChannelLayout")
         let aclData: Data = Data.init(bytes: ptr, count: size)
         return aclData
     }
@@ -55,9 +55,9 @@ class LayoutConverter {
     /* ============================================ */
     
     private func dataFor(tag: AudioChannelLayoutTag) -> AudioChannelLayoutData {
-        assert(tag != 0)
-        assert(tag != kAudioChannelLayoutTag_UseChannelDescriptions)
-        assert(tag != kAudioChannelLayoutTag_UseChannelBitmap)
+        precondition(tag != 0, "ERROR: AudioChannelLayoutTag must not be zero")
+        precondition(tag != kAudioChannelLayoutTag_UseChannelDescriptions, "ERROR: AudioChannelLayoutTag must not be kAudioChannelLayoutTag_UseChannelDescriptions")
+        precondition(tag != kAudioChannelLayoutTag_UseChannelBitmap, "ERROR: AudioChannelLayoutTag must not be kAudioChannelLayoutTag_UseChannelBitmap")
         let count: Int = dataSize(descCount: 0)
         var aclData: Data = Data.init(count: count)
         aclData.withUnsafeMutableBytes {(p: UnsafeMutableRawBufferPointer) in
@@ -69,7 +69,7 @@ class LayoutConverter {
     }
     
     private func dataFor(bitmap: AudioChannelBitmap) -> AudioChannelLayoutData {
-        assert(bitmap != [])
+        precondition(bitmap != [], "ERROR: AudioChannelBitmap must not be empty")
         let count: Int = dataSize(descCount: 0)
         var aclData: Data = Data.init(count: count)
         aclData.withUnsafeMutableBytes {(p: UnsafeMutableRawBufferPointer) in
@@ -83,7 +83,7 @@ class LayoutConverter {
     
     private func dataFor(desciptions array: [AudioChannelDescription]) -> AudioChannelLayoutData {
         let acDescCount = array.count
-        assert(acDescCount > 0)
+        precondition(acDescCount > 0, "ERROR: AudioChannelDescription array must not be empty")
         let count: Int = dataSize(descCount: acDescCount)
         var aclData: Data = Data.init(count: count)
         aclData.withUnsafeMutableBytes {(p: UnsafeMutableRawBufferPointer) in

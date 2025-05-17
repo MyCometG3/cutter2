@@ -10,6 +10,7 @@ import Cocoa
 import AVFoundation
 import AVKit
 
+@MainActor
 class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     /* ============================================ */
@@ -56,6 +57,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     public var cachedTime = CMTime.invalid
     public var cachedWithinLastSampleRange: Bool = false
     public var cachedLastSampleRange: CMTimeRange? = nil
+    
+    //
+    lazy var undoManagerWrapper: UndoManagerWrapper = UndoManagerWrapper(self.undoManager!)
     
     /* ============================================ */
     // MARK: - Private properties
@@ -116,6 +120,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         ])
     }
     
+    // nonisolated
     override class var autosavesInPlace: Bool {
         return false
     }
@@ -141,7 +146,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 self.movieMutator = MovieMutator(with: movie)
                 self.addMutationObserver()
             } else {
-                assert(false, "ERROR: Failed on AVMutableMovie()")
+                preconditionFailure("ERROR: Failed on AVMutableMovie()")
             }
         }
         
@@ -180,9 +185,10 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         typealias signature = @convention(c) (AnyObject, Selector, AnyObject, Bool, UnsafeMutableRawPointer?) -> Void
         let function = unsafeBitCast(method, to: signature.self)
         
-        self.closingBlock = {[obj, shouldCloseSelector, contextInfo, unowned self] (flag) -> Void in // @escaping
+        self.closingBlock = {[obj, shouldCloseSelector, contextInfo, weak self] (flag) -> Void in // @escaping
             // Swift.print(#function, #line, #file, "shouldClose =", flag)
             
+            guard let self else { fatalError("Unexpected nil self detected.") }
             function(obj, shouldCloseSelector!, self, flag, contextInfo)
         }
         
@@ -233,7 +239,11 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     // MARK: - Read
     /* ============================================ */
     
-    override func read(from url: URL, ofType typeName: String) throws {
+    /// Custom read(from:ofType:) throws w/ async
+    /// - Parameters:
+    ///   - url: The location from which the document contents are read.
+    ///   - typeName: The string that identifies the document type.
+    func readAsync(from url: URL, ofType typeName: String) async throws {
         // Swift.print(#function, #line, #file)
         
         // Check UTI for AVMovie fileType
@@ -247,9 +257,24 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         // Swift.print("##### READ STARTED #####")
         
-        // Setup document with new AVMovie
-        let movie :AVMutableMovie? = AVMutableMovie(url: url, options: nil)
-        if let movie = movie {
+        // Extract movie header from URL
+        let header = await Task.detached {
+            let movie: AVMutableMovie = AVMutableMovie(url: url, options: nil)
+            return movie.movHeader
+        }.value
+        
+        if let header = header {
+            // File opened successfully
+            self.fileURL = url
+            self.fileType = typeName
+            if let attribute = try? FileManager.default.attributesOfItem(atPath: url.path),
+               let modificationDate = attribute[.modificationDate] as? Date {
+                self.fileModificationDate = modificationDate
+            }
+            self.updateChangeCount(.changeCleared)
+            
+            // Initialize movieMutator
+            let movie = AVMutableMovie(data: header)
             self.removeMutationObserver()
             self.removeAllUndoRecords()
             self.movieMutator = MovieMutator(with: movie)
@@ -262,11 +287,26 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         }
         
         // Swift.print("##### READ FINISHED #####")
+    }
+    
+    override func read(from url: URL, ofType typeName: String) throws {
+        // Swift.print(#function, #line, #file)
         
-        // NOTE: following initialization is performed at makeWindowControllers()
+        var info: [String:Any] = [:]
+        info[NSLocalizedDescriptionKey] = "Internal error: read(from:ofType:) should never be called"
+        info[NSLocalizedFailureReasonErrorKey] = url.lastPathComponent + " at " + url.deletingLastPathComponent().path
+        throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: info)
     }
     
     override class func canConcurrentlyReadDocuments(ofType typeName: String) -> Bool {
+        /*
+         NOTE: This feature seems to be incompatible with Swift Concurrency and will cause a crash.
+         Returning `true` causes `makeDocument(withContentsOf:ofType:)` to be called off the main thread,
+         but that method is marked with `@MainActor`, so invoking it on a background thread crashes immediately.
+         
+         Instead, we override `NSDocumentController`'s `openDocument()` and `reopenDocument()` methods
+         and use a custom `readAsync()` implementation to support Swift Concurrency properly.
+         */
         return true
     }
     
@@ -274,7 +314,22 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     // MARK: - Write
     /* ============================================ */
     
-    override func writeSafely(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
+    override func save(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) async throws {
+        // Swift.print(#function, #line, #file)
+        
+        //
+        guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
+        guard mutator.movieDuration() > CMTime.zero else {
+            var info: [String:Any] = [:]
+            info[NSLocalizedDescriptionKey] = "Empty movie cannot be saved."
+            info[NSLocalizedFailureReasonErrorKey] = "Zero duration movie is not supported."
+            throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+        }
+        
+        try await super.save(to: url, ofType: typeName, for: saveOperation)
+    }
+    
+    private func preparation(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
         // Swift.print(#function, #line, #file)
         
         do {
@@ -336,13 +391,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         // Sandbox support - keep source document security scope bookmark
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
-            DispatchQueue.main.async { [typeName, srcURL, unowned self] in // @escaping
+            Task { [typeName, srcURL, weak self] in // @escaping
                 // Swift.print(#function, #line, #file)
                 
+                guard let self else { fatalError("Unexpected nil self detected.") }
                 let fileType: AVFileType = AVFileType.init(rawValue: typeName)
                 guard fileType == .mov else { return }
                 
-                guard let accessoryVC = self.accessoryVC else { return }
+                guard let accessoryVC = self.accessoryVC else { fatalError("Unexpected nil accessoryVC detected.") }
                 let saveAsRefMov: Bool = (accessoryVC.selfContained == false)
                 guard saveAsRefMov else { return }
                 
@@ -351,57 +407,89 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 app.addBookmark(for: srcURL)
             }
         }
+    }
+    
+    override nonisolated func writeSafely(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
+        // Swift.print(#function, #line, #file)
         
-        // Trigger actual write operation (saveTo, save/saveAs)
-        try super.writeSafely(to: url, ofType: typeName, for: saveOperation)
+        // Unblock main thread first to work w/ MainActor
+        self.unblockUserInteraction()
+        
+        do {
+            // Prepare to save
+            try performSyncOnMainActor {
+                try preparation(to: url, ofType: typeName, for: saveOperation)
+            }
+            
+            // Trigger actual write operation (saveTo, save/saveAs)
+            try super.writeSafely(to: url, ofType: typeName, for: saveOperation)
+        } catch {
+            performSyncOnMainActor {
+                showErrorSheet(error)
+            }
+            throw error // rethrow to abort write operation
+        }
         
         // Refresh internal movie (to sync selfcontained <> referece movie change)
         if saveOperation == .saveAsOperation {
-            self.refreshMutator()
+            performSyncOnMainActor {
+                refreshMutator()
+            }
         }
     }
     
-    override func write(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType,
+    override nonisolated func write(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType,
                         originalContentsURL absoluteOriginalContentsURL: URL?) throws {
         // Swift.print(#function, #line, #file)
         
-        do {
+        // Trigger long running task via global dispatch queue
+        try performAsync { [weak self] in
+            guard let self else { fatalError("Unexpected nil self detected.") }
+            
             switch saveOperation {
             case .saveToOperation:
                 // Export...
                 let transcodePreset: String? = UserDefaults.standard.string(forKey: kTranscodePresetKey)
                 let preset = transcodePreset ?? kTranscodePresetCustom
                 if preset == kTranscodePresetCustom {
-                    try exportCustom(to: url, ofType: typeName)
+                    try await exportCustom(to: url, ofType: typeName)
                 } else {
-                    try export(to: url, ofType: typeName, preset: preset)
+                    try await export(to: url, ofType: typeName, preset: preset)
                 }
             case .saveOperation, .saveAsOperation:
                 // Save.../Save as...
-                try super.write(to: url, ofType: typeName, for: saveOperation,
-                                originalContentsURL: absoluteOriginalContentsURL)
+                try await writeAsync(to: url, ofType: typeName)
             default:
                 var info: [String:Any] = [:]
                 info[NSLocalizedDescriptionKey] = "Unsupported SaveOperationType detected."
                 info[NSLocalizedFailureReasonErrorKey] = "No autoSave feature is implemented yet."
                 throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: info)
             }
-        } catch {
-            showErrorSheet(error)
-            throw error // rethrow to abort write operation
         }
     }
     
-    override func write(to url: URL, ofType typeName: String) throws {
+    private func writeAsync(to url: URL, ofType typeName: String) async throws {
         // Swift.print(#function, #line, #file)
         
+        guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
+        
         // Show busy sheet
-        let mutator :MovieMutator = self.movieMutator!
         showBusySheet("Writing...", "Please hold on second(s)...")
-        mutator.unblockUserInteraction = { self.unblockUserInteraction() }
+        mutator.unblockUserInteraction = { [weak self] in
+            self?.unblockUserInteraction()
+        }
         defer {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
+        }
+        mutator.updateProgress = { [weak self] (progress) in
+            guard let self else { fatalError("Unexpected nil self detected.") }
+            performSyncOnMainActor {
+                updateProgress(progress)
+            }
+        }
+        defer {
+            mutator.updateProgress = nil
         }
         
         // Swift.print("##### WRITE STARTED #####")
@@ -410,10 +498,10 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         let fileType: AVFileType = AVFileType.init(rawValue: typeName)
         if fileType == .mov {
             // Write mov file as either self-contained movie or reference movie
-            try mutator.writeMovie(to: url, fileType: fileType, copySampleData: self.copyData)
+            try await mutator.writeMovie(to: url, fileType: fileType, copySampleData: self.copyData)
         } else {
             // Export as specified file type with AVAssetExportPresetPassthrough
-            try mutator.exportMovie(to: url, fileType: fileType, presetName: nil)
+            try await mutator.exportMovie(to: url, fileType: fileType, presetName: nil)
         }
         
         // Swift.print("##### WRITE FINISHED #####")
@@ -428,13 +516,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print(#function, #line, #file)
         
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
-        DispatchQueue.main.async {[unowned self] in // @escaping
+        Task { [weak self] in
             // Swift.print(#function, #line, #file)
             
-            guard let url: URL = self.fileURL else { return }
+            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let url: URL = self.fileURL else { fatalError("Unexpected nil fileURL detected.") }
             let newMovie: AVMovie? = AVMovie(url: url, options: nil)
             if let newMovie = newMovie {
-                guard let mutator = self.movieMutator else { return }
+                guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
                 let time: CMTime = mutator.insertionTime
                 let range: CMTimeRange = mutator.selectedTimeRange
                 
@@ -459,7 +548,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     override func prepareSavePanel(_ savePanel: NSSavePanel) -> Bool {
         // Swift.print(#function, #line, #file)
         
-        guard let mutator = self.movieMutator else { return false }
+        guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
         
         // prepare accessory view controller
         if self.accessoryVC == nil {
@@ -470,7 +559,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             accessoryVC.loadView()
             accessoryVC.delegate = self
         }
-        guard let accessoryVC = self.accessoryVC else { return false }
+        guard let accessoryVC = self.accessoryVC else { fatalError("Unexpected nil accessoryVC detected.") }
         
         // prepare file types same as current source
         var uti: String = self.fileType ?? AVFileType.mov.rawValue
@@ -503,7 +592,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         savePanel.canSelectHiddenExtension = true
         savePanel.isExtensionHidden = false
         savePanel.delegate = self
-        savePanel.allowedFileTypes = [uti]
+        savePanel.allowedContentTypes = [UTType(uti)!]
         savePanel.accessoryView = accessoryVC.view
         self.savePanel = savePanel
         
@@ -514,14 +603,16 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         return false
     }
     
-    override var fileTypeFromLastRunSavePanel: String? {
+    override nonisolated var fileTypeFromLastRunSavePanel: String? {
         // Swift.print(#function, #line, #file)
         
-        if let accessoryVC = self.accessoryVC {
-            let type: String = accessoryVC.fileType.rawValue
-            return type
-        } else {
-            return AVFileType.mov.rawValue
+        return performSyncOnMainActor {
+            if let accessoryVC = self.accessoryVC {
+                let type: String = accessoryVC.fileType.rawValue
+                return type
+            } else {
+                return AVFileType.mov.rawValue
+            }
         }
     }
     
@@ -588,8 +679,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     public func didUpdateFileType(_ fileType: AVFileType, selfContained: Bool) {
         // Swift.print(#function, #line, #file)
         
-        guard let savePanel = self.savePanel else { return }
-        savePanel.allowedFileTypes = [fileType.rawValue]
+        guard let savePanel = self.savePanel else { fatalError("Unexpected nil savePanel detected.") }
+        savePanel.allowedContentTypes = [UTType(fileType.rawValue)!]
     }
     
     /* ============================================ */
@@ -606,16 +697,17 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // transcodeWC.loadWindow()
         
         // Prepare Transcode ViewController
-        guard let contVC = transcodeWC.contentViewController else { return }
-        guard let transcodeVC = contVC as? TranscodeViewController else { return }
+        guard let contVC = transcodeWC.contentViewController else { fatalError("Unexpected nil contentViewController detected.") }
+        guard let transcodeVC = contVC as? TranscodeViewController else { fatalError("Unexpected nil TranscodeViewController detected.") }
         
         // Show Transcode Sheet
-        transcodeVC.beginSheetModal(for: self.window!) {[unowned self] (response) in // @escaping
+        transcodeVC.beginSheetModal(for: self.window!) {[weak self] (response) in // @escaping
             // Swift.print(#function, #line, #file)
             
             guard response == NSApplication.ModalResponse.continue else { return }
             
-            DispatchQueue.main.async {[unowned self] in // @escaping
+            Task {
+                guard let self else { fatalError("Unexpected nil self detected.") }
                 self.transcoding = true
                 self.saveTo(self)
                 self.transcoding = false
@@ -623,18 +715,26 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         }
     }
     
-    private func export(to url: URL, ofType typeName: String, preset: String) throws {
+    private func export(to url: URL, ofType typeName: String, preset: String) async throws {
         // Swift.print(#function, #line, #file)
         
+        guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
+        
         // Show busy sheet
-        let mutator :MovieMutator = self.movieMutator!
         showBusySheet("Exporting...", "Please hold on minute(s)...")
-        mutator.unblockUserInteraction = { self.unblockUserInteraction() }
+        mutator.unblockUserInteraction = { [weak self] in
+            self?.unblockUserInteraction()
+        }
         defer {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-        mutator.updateProgress = {(progress) in self.updateProgress(progress) }
+        mutator.updateProgress = { [weak self] (progress) in
+            guard let self else { fatalError("Unexpected nil self detected.") }
+            performSyncOnMainActor {
+                updateProgress(progress)
+            }
+        }
         defer {
             mutator.updateProgress = nil
         }
@@ -644,24 +744,32 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         let fileType: AVFileType = AVFileType.init(rawValue: typeName)
         do {
             // Export as specified file type with AVAssetExportPresetPassthrough
-            try mutator.exportMovie(to: url, fileType: fileType, presetName: preset)
+            try await mutator.exportMovie(to: url, fileType: fileType, presetName: preset)
         }
         
         // Swift.print("##### EXPORT FINISHED #####")
     }
     
-    private func exportCustom(to url: URL, ofType typeName: String) throws {
+    private func exportCustom(to url: URL, ofType typeName: String) async throws {
         // Swift.print(#function, #line, #file)
         
+        guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
+        
         // Show busy sheet
-        let mutator :MovieMutator = self.movieMutator!
         showBusySheet("Exporting...", "Please hold on minute(s)...")
-        mutator.unblockUserInteraction = { self.unblockUserInteraction() }
+        mutator.unblockUserInteraction = { [weak self] in
+            self?.unblockUserInteraction()
+        }
         defer {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-        mutator.updateProgress = {(progress) in self.updateProgress(progress) }
+        mutator.updateProgress = { [weak self] (progress) in
+            guard let self else { fatalError("Unexpected nil self detected.") }
+            performSyncOnMainActor {
+                updateProgress(progress)
+            }
+        }
         defer {
             mutator.updateProgress = nil
         }
@@ -687,7 +795,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             let audioCodec = audioID[defaults.integer(forKey: kAudioCodecKey)]
             let lpcmDepth = lpcmBPC[defaults.integer(forKey: kAudioCodecKey)]
             
-            var param: [String:Any] = [:]
+            var param: [String:Sendable] = [:]
             param[kAudioKbpsKey] = audioRate
             param[kVideoKbpsKey] = videoRate
             param[kCopyFieldKey] = copyField
@@ -699,7 +807,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             param[kAudioCodecKey] = audioCodec
             param[kLPCMDepthKey] = lpcmDepth
             
-            try mutator.exportCustomMovie(to: url, fileType: fileType, settings: param)
+            try await mutator.exportCustomMovie(to: url, fileType: fileType, settings: param)
         }
         
         // Swift.print("##### EXPORT FINISHED #####")
@@ -824,7 +932,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     @IBAction func modifyClapPasp(_ sender: Any?) {
         // Swift.print(#function, #line, #file)
         
-        guard let mutator = self.movieMutator else { return }
+        guard let mutator = self.movieMutator else { NSSound.beep(); return }
+        guard let dict: [AnyHashable:Any] = mutator.clappaspDictionary() else { NSSound.beep(); return }
         
         // Prepare CAPAR SheetController
         let storyboard: NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
@@ -833,20 +942,20 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // caparWC.loadWindow()
         
         // Prepare CAPAR ViewController
-        guard let contVC = caparWC.contentViewController else { return }
-        guard let caparVC = contVC as? CAPARViewController else { return }
-        guard let dict: [AnyHashable:Any] = mutator.clappaspDictionary() else { return }
+        guard let contVC = caparWC.contentViewController else { fatalError("Unexpected nil contentViewController detected.") }
+        guard let caparVC = contVC as? CAPARViewController else { fatalError("Unexpected nil CAPARViewController detected.") }
         guard caparVC.applySource(dict) else { return }
         
         // Show CAPAR Sheet
-        caparVC.beginSheetModal(for: self.window!) {[caparVC, mutator, unowned self] (response) in // @escaping
+        caparVC.beginSheetModal(for: self.window!) {[caparVC, mutator, weak self] (response) in // @escaping
             // Swift.print(#function, #line, #file)
             
+            guard let self else { fatalError("Unexpected nil self detected.") }
             guard response == .continue else { return }
             
             // Update Clap/Pasp settings
             let result: [AnyHashable:Any] = caparVC.resultContent
-            let done: Bool = mutator.applyClapPasp(result, using: self.undoManager!)
+            let done: Bool = mutator.applyClapPasp(result, using: self.undoManagerWrapper)
             if !done {
                 var info: [String:Any] = [:]
                 info[NSLocalizedDescriptionKey] = "Failed to modify CAPAR extensions."

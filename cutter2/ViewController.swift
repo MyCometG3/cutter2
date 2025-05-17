@@ -9,11 +9,48 @@
 import Cocoa
 import AVFoundation
 
+/* ============================================ */
+// MARK: - Actor isolation
+/* ============================================ */
+
+extension ViewController {
+    nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () throws -> T) throws -> T {
+        if Thread.isMainThread {
+            return try MainActor.assumeIsolated {
+                try block()
+            }
+        } else {
+            return try DispatchQueue.main.sync {
+                return try MainActor.assumeIsolated {
+                    try block()
+                }
+            }
+        }
+    }
+
+    nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () -> T) -> T {
+        if Thread.isMainThread {
+            return MainActor.assumeIsolated {
+                block()
+            }
+        } else {
+            return DispatchQueue.main.sync {
+                return MainActor.assumeIsolated {
+                    block()
+                }
+            }
+        }
+    }
+}
+
+/* ============================================ */
+
 extension Notification.Name {
     static let timelineUpdateReq = Notification.Name("timelineUpdateReq")
 }
 
-protocol ViewControllerDelegate: TimelineUpdateDelegate {
+@MainActor
+protocol ViewControllerDelegate: TimelineUpdateDelegate, Sendable {
     func hasSelection() -> Bool
     func hasDuration() -> Bool
     func hasClipOnPBoard() -> Bool
@@ -40,6 +77,7 @@ protocol ViewControllerDelegate: TimelineUpdateDelegate {
     func doTogglePlay()
 }
 
+@MainActor
 class ViewController: NSViewController, TimelineUpdateDelegate {
     
     /* ============================================ */
@@ -167,34 +205,44 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                                 forKeyPath: keyPathStepMode)
     }
     
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey:Any]?, context: UnsafeMutableRawPointer?) {
+    override nonisolated func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey:Any]?,
+                                           context: UnsafeMutableRawPointer?) {
         guard let keyPath = keyPath else { return }
         guard let change: [NSKeyValueChangeKey:Any] = change else { return }
         guard let newAny = change[.newKey] else { return }
         
         if keyPath == keyPathStepMode, let newNumber = newAny as? NSNumber {
             let new: Bool = !newNumber.boolValue
-            if mimicJKLcombination != new {
-                mimicJKLcombination = new
-                
-                applyMode()
+            performSyncOnMainActor {
+                if mimicJKLcombination != new {
+                    mimicJKLcombination = new
+                    
+                    applyMode()
+                }
             }
         }
     }
     
     private func addWindowResizeObserver() {
-        let handler: (Notification) -> Void = {[unowned self] (notification) in // @escaping
+        let handler: @Sendable (Notification) -> Void = {[weak self] (notification) in // @escaping
             // Swift.print(#function, #line, #file)
             
-            guard let window = self.view.window else { return }
-            guard let object = notification.object as? NSWindow else { return }
-            guard object == window  else { return }
+            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard
+                let vcWindow = performSyncOnMainActor({ self.view.window }),
+                let object = notification.object as? NSWindow,
+                vcWindow == object
+            else {
+                return
+            }
             
             // After Live resize we needs tracking area update
-            self.timelineView.needsUpdateTrackingArea = true
-            self.timelineView.needsLayout = true
+            performSyncOnMainActor{
+                self.timelineView.needsUpdateTrackingArea = true
+                self.timelineView.needsLayout = true
+            }
         }
-        let addBlock: () -> Void = {
+        do {
             guard let window = self.view.window else { return }
             let center = NotificationCenter.default
             var observer: NSObjectProtocol? = nil
@@ -204,15 +252,10 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                                           using: handler)
             self.resizeObserver = observer
         }
-        if (Thread.isMainThread) {
-            addBlock()
-        } else {
-            DispatchQueue.main.sync(execute: addBlock)
-        }
     }
     
     private func removeWindowResizeObserver() {
-        let removeBlock: () -> Void = {
+        do {
             guard let observer = self.resizeObserver else { return }
             guard let window = self.view.window else { return }
             let center = NotificationCenter.default
@@ -221,35 +264,37 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                                   object: window)
             self.resizeObserver = nil
         }
-        if (Thread.isMainThread) {
-            removeBlock()
-        } else {
-            DispatchQueue.main.sync(execute: removeBlock)
-        }
     }
     
     private func addUpdateReqObserver() {
-        let handler: (Notification) -> Void = {[unowned self] (notification) in // @escaping
+        let handler: @Sendable (Notification) -> Void = { [weak self] (notification) in // @escaping
             // Swift.print(#function, #line, #file)
             
-            guard let delegate = self.delegate else { return }
-            guard let object = notification.object as? ViewControllerDelegate else { return }
-            guard object === delegate else { return } // ViewControllerDelegate is not Equatable
+            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard
+                let delegate = performSyncOnMainActor({ self.delegate }),
+                let object = notification.object as? ViewControllerDelegate,
+                object === delegate // ViewControllerDelegate is not Equatable
+            else { return }
             
-            if let userInfo = notification.userInfo {
-                let curPosition = Float64((userInfo[curPositionInfoKey] as! NSNumber).doubleValue)
-                let startPosition = Float64((userInfo[startPositionInfoKey] as! NSNumber).doubleValue)
-                let endPosition = Float64((userInfo[endPositionInfoKey] as! NSNumber).doubleValue)
-                let string = (userInfo[stringInfoKey] as! String)
-                let valid = (userInfo[durationInfoKey] as! NSNumber).doubleValue > 0.0
-                self.updateTimeline(current: curPosition,
-                                    from: startPosition,
-                                    to: endPosition,
-                                    label: string,
-                                    isValid: valid)
+            guard
+                let userInfo = notification.userInfo,
+                let curPosition = (userInfo[curPositionInfoKey] as? NSNumber)?.doubleValue,
+                let startPosition = (userInfo[startPositionInfoKey] as? NSNumber)?.doubleValue,
+                let endPosition = (userInfo[endPositionInfoKey] as? NSNumber)?.doubleValue,
+                let string = userInfo[stringInfoKey] as? String,
+                let duration = (userInfo[durationInfoKey] as? NSNumber)?.doubleValue
+            else { return }
+            let valid = duration > 0.0
+            performSyncOnMainActor {
+                updateTimeline(current: Float64(curPosition),
+                               from: Float64(startPosition),
+                               to: Float64(endPosition),
+                               label: string,
+                               isValid: valid)
             }
         }
-        let addBlock: () -> Void = {
+        do {
             guard let delegate = self.delegate else { return }
             let center = NotificationCenter.default
             var observer: NSObjectProtocol? = nil
@@ -259,15 +304,10 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                                           using: handler)
             self.updateObserver = observer
         }
-        if (Thread.isMainThread) {
-            addBlock()
-        } else {
-            DispatchQueue.main.sync(execute: addBlock)
-        }
     }
     
     private func removeUpdateReqObserver() {
-        let removeBlock: () -> Void = {
+        do {
             guard let observer = self.updateObserver else { return }
             guard let delegate = self.delegate else { return }
             let center = NotificationCenter.default
@@ -275,11 +315,6 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
                                   name: .timelineUpdateReq,
                                   object: delegate)
             self.updateObserver = nil
-        }
-        if (Thread.isMainThread) {
-            removeBlock()
-        } else {
-            DispatchQueue.main.sync(execute: removeBlock)
         }
     }
     

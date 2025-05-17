@@ -9,10 +9,12 @@
 import Cocoa
 import AVFoundation
 
+@MainActor
 protocol AccessoryViewDelegate: AnyObject {
     func didUpdateFileType(_ fileType: AVFileType, selfContained: Bool)
 }
 
+@MainActor
 class AccessoryViewController: NSViewController {
     
     /* ============================================ */

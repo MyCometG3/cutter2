@@ -22,6 +22,7 @@ extension NSPasteboard.PasteboardType {
 /* ============================================ */
 
 /// Wrapper of AVMutableMovie as model object of movie editor
+@MainActor
 class MovieMutator: MovieMutatorBase {
     
     /* ============================================ */
@@ -33,7 +34,7 @@ class MovieMutator: MovieMutatorBase {
     /// - Parameter range: clip range
     /// - Returns: clip as AVMutableMovie
     private func movieClip(_ range: CMTimeRange) -> AVMutableMovie? {
-        assert(validateRange(range, true), #function)
+        precondition(validateRange(range, true), "ERROR: Invalid range \(range)")
         
         // Prepare clip
         var clip: AVMutableMovie = internalMovie.mutableCopy() as! AVMutableMovie
@@ -55,7 +56,7 @@ class MovieMutator: MovieMutatorBase {
                 // Swift.print(ts(), #function, #line, #file)
             } catch {
                 Swift.print(ts(), error)
-                assert(false, #function)
+                preconditionFailure("ERROR: invalid clip")
             }
         }
         
@@ -74,11 +75,10 @@ class MovieMutator: MovieMutatorBase {
                         CMTimeGetSeconds(clip.range.duration), "at", #function, #line)
             Swift.print(ts(), range.duration)
             Swift.print(ts(), clip.range.duration)
-            assert(false, #function) //
-            return nil
+            preconditionFailure("ERROR: invalid clip")
         }
         
-        assert(validateClip(clip), #function)
+        precondition(validateClip(clip), "ERROR: invalid clip")
         return clip
     }
     
@@ -88,57 +88,36 @@ class MovieMutator: MovieMutatorBase {
     
     /// Read movie clip data from PasteBoard
     ///
-    /// - Returns: AVMutableMovie
-    private func readClipFromPBoard() -> AVMutableMovie? {
+    /// - Returns: Data of movie header
+    private func readClipFromPBoard() -> Data? {
         let pBoard: NSPasteboard = NSPasteboard.general
         
         // extract movie header data from PBoard
         let data: Data? = pBoard.data(forType: .movieMutator)
-        
-        if let data = data {
-            // create movie from movieHeader data
-            // Swift.print(ts(), #function, #line, #file)
-            let clip: AVMutableMovie? = AVMutableMovie(data: data, options: nil)
-            // Swift.print(ts(), #function, #line, #file)
-            
-            if let clip = clip, validateClip(clip) {
-                return clip
-            } else {
-                return nil
-            }
-        } else {
-            return nil
-        }
+        return data
     }
     
-    /// Write movie clip data to PasteBoard
+    /// Write movie header data to PasteBoard
     ///
-    /// - Parameter clip: AVMutableMovie
+    /// - Parameter data: Data of movie header
     /// - Returns: true if success
-    private func writeClipToPBoard(_ clip: AVMutableMovie) -> Bool {
-        assert(validateClip(clip), #function) //
-        
-        // create movieHeader data from movie
-        if let data = clip.movHeader {
-            // register data to PBoard
-            let pBoard: NSPasteboard = NSPasteboard.general
-            pBoard.clearContents()
-            pBoard.setData(data, forType: .movieMutator)
-            
-            return true
-        } else {
-            return false
-        }
+    private func writeClipToPBoard(_ data: Data) -> Bool {
+        // register data to PBoard
+        let pBoard: NSPasteboard = NSPasteboard.general
+        pBoard.clearContents()
+        let result = pBoard.setData(data, forType: .movieMutator)
+        return result
     }
     
     /// Write movie clip data to PasteBoard
     ///
     /// - Parameter range: CMTimeRange of clip
-    /// - Returns: AVMutableMovie of clip
-    private func writeRangeToPBoard(_ range: CMTimeRange) -> AVMutableMovie? {
+    /// - Returns: Data of movie header
+    private func writeRangeToPBoard(_ range: CMTimeRange) -> Data? {
         guard let clip = self.movieClip(range) else { return nil }
-        guard self.writeClipToPBoard(clip) else { return nil }
-        return clip
+        guard let data = clip.movHeader else { return nil }
+        guard self.writeClipToPBoard(data) else { return nil }
+        return data
     }
     
     /* ============================================ */
@@ -168,7 +147,7 @@ class MovieMutator: MovieMutatorBase {
     ///   - range: Range to remove
     ///   - time: insertionTime
     private func doRemove(_ range: CMTimeRange, _ time: CMTime) {
-        assert(validateRange(range, true), #function)
+        precondition(validateRange(range, true), "ERROR: Invalid range \(range)")
         
         // perform delete selection
         do {
@@ -191,22 +170,23 @@ class MovieMutator: MovieMutatorBase {
     ///   - data: movieHeader data to be restored.
     ///   - range: original selection
     ///   - time: original intertionTime
-    ///   - clip: removed clip - unused
-    private func undoRemove(_ data: Data, _ range: CMTimeRange, _ time: CMTime, _ clip: AVMutableMovie) {
-        assert(validateClip(clip), #function)
+    ///   - clip: removed clip data
+    private func undoRemove(_ data: Data, _ range: CMTimeRange, _ time: CMTime, _ clip: Data) {
+        precondition(validateClipData(clip), "ERROR: Invalid clip data")
         
         let reloadDone: Bool = reloadAndNotify(from: data, range: range, time: time)
-        assert(reloadDone, #function)
+        precondition(reloadDone, "ERROR: Failed to reload movie")
     }
     
     /// Insert clip at insertionTime. Adjust insertionTime/selection.
     ///
     /// - Parameters:
-    ///   - clip: insertionTime
-    ///   - time: selection
-    private func doInsert(_ clip: AVMutableMovie, _ time: CMTime) {
-        assert(validateClip(clip), #function)
-        assert(validateTime(time), #function)
+    ///   - clip: clip data to insert
+    ///   - time: insertionTime
+    private func doInsert(_ clip: Data, _ time: CMTime) {
+        let clip = AVMutableMovie(data: clip, options: nil)
+        precondition(validateClip(clip), "ERROR: Invalid clip data")
+        precondition(validateTime(time), "ERROR: Invalid insertion time")
         
         // perform insert clip at marker
         do {
@@ -237,7 +217,7 @@ class MovieMutator: MovieMutatorBase {
             resetMarker(newTime, newRange, true)
         } catch {
             Swift.print("ERROR:", error)
-            assert(false, #function) //
+            preconditionFailure("ERROR: failed to insert clip")
         }
     }
     
@@ -247,16 +227,16 @@ class MovieMutator: MovieMutatorBase {
     ///   - data: movieHeader data to be restored.
     ///   - range: original selection
     ///   - time: original insertionTime
-    ///   - clip: inserted clip
-    private func undoInsert(_ data: Data, _ range: CMTimeRange, _ time: CMTime, _ clip: AVMutableMovie) {
-        assert(validateClip(clip), #function)
+    ///   - clip: inserted clip data
+    private func undoInsert(_ data: Data, _ range: CMTimeRange, _ time: CMTime, _ clip: Data) {
+        precondition(validateClipData(clip), "ERROR: invalid clip data")
         
         // populate PBoard with original clip
         let pbDone: Bool = writeClipToPBoard(clip)
-        assert(pbDone, #function)
+        precondition(pbDone, "ERROR: failed to populate PBoard")
         
         let reloadDone: Bool = reloadAndNotify(from: data, range: range, time: time)
-        assert(reloadDone, #function)
+        precondition(reloadDone, "ERROR: failed to reload movie")
     }
     
     /* ============================================ */
@@ -272,13 +252,13 @@ class MovieMutator: MovieMutatorBase {
         guard validateRange(range, true) else { NSSound.beep(); return; }
         
         let pbDone = (writeRangeToPBoard(range) != nil)
-        assert(pbDone, #function)
+        precondition(pbDone, "ERROR: failed to copy selection")
     }
     
     /// Cut selection of internalMovie
     ///
     /// - Parameter undoManager: UndoManager for this operation
-    public func cutSelection(using undoManager: UndoManager) {
+    public func cutSelection(using undoManager: UndoManagerWrapper) {
         // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
@@ -289,17 +269,21 @@ class MovieMutator: MovieMutatorBase {
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record
-        let undoCutHandler: (MovieMutator) -> Void = {[data, clip, range, time, unowned undoManager] (me1) in // @escaping
+        let undoCutHandler: @Sendable (MovieMutator) -> Void = {[data, clip, range, time, unowned undoManager, unowned self] (me1) in // @escaping
             // register redo record
-            let redoCutHandler: (MovieMutator) -> Void = {[range, time, unowned undoManager] (me2) in // @escaping
-                me2.resetMarker(time, range, false)
-                me2.cutSelection(using: undoManager)
+            performSyncOnMainActor {
+                let redoCutHandler: @Sendable (MovieMutator) -> Void = {[range, time, unowned undoManager, unowned self] (me2) in // @escaping
+                    performSyncOnMainActor {
+                        me2.resetMarker(time, range, false)
+                        me2.cutSelection(using: undoManager)
+                    }
+                }
+                undoManager.registerUndo(withTarget: me1, handler: redoCutHandler)
+                undoManager.setActionName("Cut selection")
+                
+                // perform undo cut
+                me1.undoRemove(data, range, time, clip)
             }
-            undoManager.registerUndo(withTarget: me1, handler: redoCutHandler)
-            undoManager.setActionName("Cut selection")
-            
-            // perform undo cut
-            me1.undoRemove(data, range, time, clip)
         }
         undoManager.registerUndo(withTarget: self, handler: undoCutHandler)
         undoManager.setActionName("Cut selection")
@@ -312,7 +296,7 @@ class MovieMutator: MovieMutatorBase {
     /// Paste clip into internalMovie
     ///
     /// - Parameter undoManager: UndoManager for this operation
-    public func pasteAtInsertionTime(using undoManager: UndoManager) {
+    public func pasteAtInsertionTime(using undoManager: UndoManagerWrapper) {
         // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
@@ -323,16 +307,20 @@ class MovieMutator: MovieMutatorBase {
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record
-        let undoPasteHandler: (MovieMutator) -> Void = {[data, clip, range, time, unowned undoManager] (me1) in // @escaping
+        let undoPasteHandler: @Sendable (MovieMutator) -> Void = {[data, clip, range, time, unowned undoManager, unowned self] (me1) in // @escaping
             // register redo record
-            let redoPasteHandler: (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
-                me2.pasteAtInsertionTime(using: undoManager)
+            performSyncOnMainActor {
+                let redoPasteHandler: @Sendable (MovieMutator) -> Void = {[unowned undoManager, unowned self] (me2) in // @escaping
+                    performSyncOnMainActor {
+                        me2.pasteAtInsertionTime(using: undoManager)
+                    }
+                }
+                undoManager.registerUndo(withTarget: me1, handler: redoPasteHandler)
+                undoManager.setActionName("Paste at marker")
+                
+                // perform undo paste
+                me1.undoInsert(data, range, time, clip)
             }
-            undoManager.registerUndo(withTarget: me1, handler: redoPasteHandler)
-            undoManager.setActionName("Paste at marker")
-            
-            // perform undo paste
-            me1.undoInsert(data, range, time, clip)
         }
         undoManager.registerUndo(withTarget: self, handler: undoPasteHandler)
         undoManager.setActionName("Paste at marker")
@@ -345,28 +333,32 @@ class MovieMutator: MovieMutatorBase {
     /// Delete selection of internalMovie
     ///
     /// - Parameter undoManager: UndoManager for this operation
-    public func deleteSelection(using undoManager: UndoManager) {
+    public func deleteSelection(using undoManager: UndoManagerWrapper) {
         // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
         let range = self.selectedTimeRange
         
         guard validateRange(range, true) else { NSSound.beep(); return; }
-        guard let clip = movieClip(range) else { NSSound.beep(); return; }
+        guard let clip = movieClip(range)?.movHeader else { NSSound.beep(); return; }
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo redord
-        let undoDeleteHandler: (MovieMutator) -> Void = {[data, clip, range, time, unowned undoManager] (me1) in // @escaping
+        let undoDeleteHandler: @Sendable (MovieMutator) -> Void = {[data, clip, range, time, unowned undoManager, unowned self] (me1) in // @escaping
             // register redo record
-            let redoDeleteHandler: (MovieMutator) -> Void = {[range, time, unowned undoManager] (me2) in // @escaping
-                me2.resetMarker(time, range, false)
-                me2.deleteSelection(using: undoManager)
+            performSyncOnMainActor {
+                let redoDeleteHandler: @Sendable (MovieMutator) -> Void = {[range, time, unowned undoManager, unowned self] (me2) in // @escaping
+                    performSyncOnMainActor {
+                        me2.resetMarker(time, range, false)
+                        me2.deleteSelection(using: undoManager)
+                    }
+                }
+                undoManager.registerUndo(withTarget: me1, handler: redoDeleteHandler)
+                undoManager.setActionName("Delete selection")
+                
+                // perform undo delete
+                me1.undoRemove(data, range, time, clip)
             }
-            undoManager.registerUndo(withTarget: me1, handler: redoDeleteHandler)
-            undoManager.setActionName("Delete selection")
-            
-            // perform undo delete
-            me1.undoRemove(data, range, time, clip)
         }
         undoManager.registerUndo(withTarget: self, handler: undoDeleteHandler)
         undoManager.setActionName("Delete selection")
@@ -381,16 +373,17 @@ class MovieMutator: MovieMutatorBase {
     /* ============================================ */
     
     //
-    private func doReplace(_ movie: AVMutableMovie, _ range: CMTimeRange, _ time: CMTime) {
-        assert(validateRange(range, false), #function)
+    private func doReplace(_ movie: Data, _ range: CMTimeRange, _ time: CMTime) {
+        precondition(validateRange(range, false), "ERROR: invalid range")
         
         // perform replacement
         do {
             // Swift.print(ts(), #function, #line, #file)
-            internalMovie = movie
+            precondition(reloadMovie(from: movie), "ERROR: reloadMovie failed")
             // Swift.print(ts(), #function, #line, #file)
             
             // Update Marker
+            let movie = internalMovie
             let newTime: CMTime = (time < movie.range.end) ? time : movie.range.end
             let newRange: CMTimeRange = CMTimeRangeGetIntersection(range, otherRange: movie.range)
             resetMarker(newTime, newRange, true)
@@ -400,11 +393,11 @@ class MovieMutator: MovieMutatorBase {
     //
     private func undoReplace(_ data: Data, _ range: CMTimeRange, _ time: CMTime) {
         let reloadDone: Bool = reloadAndNotify(from: data, range: range, time: time)
-        assert(reloadDone, #function)
+        precondition(reloadDone, "ERROR: reloadAndNotify failed")
     }
     
     //
-    private func updateFormat(_ movie: AVMutableMovie, using undoManager: UndoManager) {
+    private func updateFormat(_ movie: Data, using undoManager: UndoManagerWrapper) {
         // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
@@ -414,16 +407,20 @@ class MovieMutator: MovieMutatorBase {
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record
-        let undoPasteHandler: (MovieMutator) -> Void = {[data, range, time, unowned movie, unowned undoManager] (me1) in // @escaping
+        let undoPasteHandler: @Sendable (MovieMutator) -> Void = {[data, range, time, movie, unowned undoManager, unowned self] (me1) in // @escaping
             // register redo replace
-            let redoPasteHandler: (MovieMutator) -> Void = {[movie, unowned undoManager] (me2) in // @escaping
-                me2.updateFormat(movie, using: undoManager)
+            performSyncOnMainActor {
+                let redoPasteHandler: @Sendable (MovieMutator) -> Void = {[movie, unowned undoManager, unowned self] (me2) in // @escaping
+                    performSyncOnMainActor {
+                        me2.updateFormat(movie, using: undoManager)
+                    }
+                }
+                undoManager.registerUndo(withTarget: me1, handler: redoPasteHandler)
+                undoManager.setActionName("Update format")
+                
+                // perform undo replace
+                me1.undoReplace(data, range, time)
             }
-            undoManager.registerUndo(withTarget: me1, handler: redoPasteHandler)
-            undoManager.setActionName("Update format")
-            
-            // perform undo replace
-            me1.undoReplace(data, range, time)
         }
         undoManager.registerUndo(withTarget: self, handler: undoPasteHandler)
         undoManager.setActionName("Update format")
@@ -485,7 +482,7 @@ class MovieMutator: MovieMutatorBase {
     }
     
     //
-    public func applyClapPasp(_ dict: [AnyHashable:Any], using undoManager: UndoManager) -> Bool {
+    public func applyClapPasp(_ dict: [AnyHashable:Any], using undoManager: UndoManagerWrapper) -> Bool {
         guard let clapSize = dict[clapSizeKey] as? NSSize else { return false }
         guard let clapOffset = dict[clapOffsetKey] as? NSPoint else { return false }
         guard let paspRatio = dict[paspRatioKey] as? NSSize else { return false }
@@ -578,7 +575,7 @@ class MovieMutator: MovieMutatorBase {
             }
         }
         
-        if count > 0 {
+        if count > 0, let movie = movie.movHeader {
             // Replace movie object with undo record
             self.updateFormat(movie, using: undoManager)
             // Swift.print(ts(), self.clappaspDictionary()! as! [String:Any])
@@ -701,8 +698,8 @@ extension MovieMutatorBase {
                         name = String(nameStr)
                     } else {
                         let fcc: FourCharCode = CMFormatDescriptionGetMediaSubType(desc)
-                        let fccString: NSString = UTCreateStringForOSType(fcc).takeUnretainedValue()
-                        name = "FourCC(\(fccString))"
+                        let fccString: NSString = osTypeToString(fcc) as NSString
+                        name = "\'\(fccString)\'"
                     }
                 }
                 var dimension: String = ""
@@ -842,6 +839,15 @@ extension MovieMutatorBase {
         cachedAudioFormats = (trackStrings.count > 0) ? trackStrings : ["-"]
         return cachedAudioFormats
     }
+    
+    // subs for UTCreateStringForOSType()
+    private func osTypeToString(_ code:OSType) -> String {
+        let s0 = UInt8(code >> 24 & 255)
+        let s1 = UInt8(code >> 16 & 255)
+        let s2 = UInt8(code >> 8  & 255)
+        let s3 = UInt8(code       & 255)
+        return [s0, s1, s2, s3].map{ String(UnicodeScalar($0)) }.joined()
+    }
 }
 
 /* ============================================ */
@@ -884,24 +890,33 @@ extension MovieMutator {
 /* ============================================ */
 
 extension MovieMutator {
-    
-    public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) throws {
-        let movieWriter = MovieWriter(internalMovie)
-        movieWriter.unblockUserInteraction = self.unblockUserInteraction
-        movieWriter.updateProgress = self.updateProgress
-        try movieWriter.exportMovie(to: url, fileType: type, presetName: preset)
+    private func prepareMovieWriterParams() -> MovieWriterParams {
+        return MovieWriterParams(movie: self.internalMovie,
+                                 unblockUserInteraction: self.unblockUserInteraction,
+                                 updateProgress: self.updateProgress)
     }
     
-    public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String:Any]) throws {
-        let movieWriter = MovieWriter(internalMovie)
-        movieWriter.unblockUserInteraction = self.unblockUserInteraction
-        movieWriter.updateProgress = self.updateProgress
-        try movieWriter.exportCustomMovie(to: url, fileType: type, settings: param)
+    public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws {
+        let movieWriterParams = prepareMovieWriterParams()
+        try await Task {
+            let movieWriter = MovieWriter(params: movieWriterParams)
+            try await movieWriter.exportMovie(to: url, fileType: type, presetName: preset)
+        }.value
     }
     
-    public func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) throws {
-        let movieWriter = MovieWriter(internalMovie)
-        movieWriter.unblockUserInteraction = self.unblockUserInteraction
-        try movieWriter.writeMovie(to: url, fileType: type, copySampleData: selfContained)
+    public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String:Sendable]) async throws {
+        let movieWriterParams = prepareMovieWriterParams()
+        try await Task {
+            let movieWriter = MovieWriter(params: movieWriterParams)
+            try await movieWriter.exportCustomMovie(to: url, fileType: type, settings: param)
+        }.value
+    }
+    
+    public func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) async throws {
+        let movieWriterParams = prepareMovieWriterParams()
+        try await Task {
+            let movieWriter = MovieWriter(params: movieWriterParams)
+            try await movieWriter.writeMovie(to: url, fileType: type, copySampleData: selfContained)
+        }.value
     }
 }

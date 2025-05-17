@@ -8,6 +8,7 @@
 
 import Cocoa
 
+@MainActor
 class Window: NSWindow {
     // Dummy Window object to suppress the error
     // "Unknown Window class (null) in Interface Builder file, creating generic Window instead"

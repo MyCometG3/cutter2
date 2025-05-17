@@ -38,6 +38,7 @@ public extension NSBezierPath {
 }
 
 /// View to ViewController - Mouse Event related protocol (No CMTime)
+@MainActor
 protocol TimelineUpdateDelegate: AnyObject {
     // called on mouse down/drag event
     func didUpdateCursor(to position: Float64)
@@ -94,6 +95,7 @@ enum marker {
     case none
 }
 
+@MainActor
 class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     
     /* ============================================ */

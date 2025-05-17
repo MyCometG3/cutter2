@@ -31,10 +31,22 @@ extension Notification.Name {
 // MARK: -
 /* ============================================ */
 
-class MovieWriter: NSObject, SampleBufferChannelDelegate {
+struct MovieWriterParams: @unchecked Sendable {
+    let movie: AVMutableMovie
+    let unblockUserInteraction: (@Sendable () -> Void)?
+    let updateProgress: (@Sendable (Float) -> Void)?
+}
+
+/* ============================================ */
+// MARK: -
+/* ============================================ */
+
+actor MovieWriter: SampleBufferChannelDelegate {
     
-    public init(_ movie: AVMovie) {
-        internalMovie = movie.mutableCopy() as! AVMutableMovie
+    public init(params: MovieWriterParams) {
+        self.internalMovie = params.movie
+        self.unblockUserInteraction = params.unblockUserInteraction
+        self.updateProgress = params.updateProgress
     }
     
     /* ============================================ */
@@ -44,10 +56,10 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     private var internalMovie: AVMutableMovie
     
     /// callback for NSDocument.unblockUserInteraction()
-    public var unblockUserInteraction: (() -> Void)? = nil
+    private var unblockUserInteraction: (@Sendable () -> Void)? = nil
     
     /// Progress update block
-    public var updateProgress: ((Float) -> Void)? = nil
+    private var updateProgress: (@Sendable (Float) -> Void)? = nil
     
     /// Flag if writer is running
     public private(set) var writeInProgress: Bool = false
@@ -83,8 +95,8 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
     /// Status of last exportSession (update after finished)
     private var exportSessionStatus: AVAssetExportSession.Status = .unknown
     
-    /// Status polling timer
-    private var exportSessionTimer: Timer? = nil
+    /// Status polling task
+    private var exportSessionPollingTask: Task<Void, Never>?
     
     /* ============================================ */
     // MARK: - exportCustomMovie properties
@@ -106,34 +118,32 @@ class MovieWriter: NSObject, SampleBufferChannelDelegate {
 
 extension MovieWriter {
     
-    /// Status update timer
-    ///
-    /// - Parameter timer: Timer object
-    @objc dynamic func timerFireMethod(_ timer: Timer) {
-        guard let session = self.exportSession, session.status == .exporting else { return }
-        guard let updateProgress = updateProgress else { return }
+    /// Get current progress if exportSession is exporting
+    private func currentProgressIfExporting() -> Float? {
+        guard let session = exportSession, session.status == .exporting else { return nil }
+        return session.progress
+    }
+    
+    /// Install status polling task
+    public func exportSessionPollingStart() {
+        // Swift.print(#function, #line, #file)
+        exportSessionPollingStop()
         
-        let progress: Float = session.progress
-        updateProgress(progress)
-        // Swift.print("#####", "Progress:", progress)
-    }
-    
-    /// Install status polling timer on main thread
-    private func exportSessionStartTimer() {
-        DispatchQueue.main.sync {
-            let timer = Timer.scheduledTimer(timeInterval: exportSessionTimerRefreshInterval,
-                                             target: self, selector: #selector(timerFireMethod),
-                                             userInfo: nil, repeats: true)
-            self.exportSessionTimer = timer
+        exportSessionPollingTask = Task<Void, Never> { [weak self] in
+            guard let self else { fatalError("Unexpected nil self detected.") }
+            while let progress = await self.currentProgressIfExporting() {
+                await self.updateProgress?(progress)
+                try? await Task.sleep(nanoseconds: UInt64(self.exportSessionTimerRefreshInterval * 1_000_000_000))
+            }
         }
     }
     
-    /// Uninstall status polling timer
-    private func exportSessionStopTimer() {
-        DispatchQueue.main.sync {
-            self.exportSessionTimer?.invalidate()
-            self.exportSessionTimer = nil
-        }
+    /// Uninstall status polling task
+    public func exportSessionPollingStop() {
+        // Swift.print(#function, #line, #file)
+        guard let currentTask = self.exportSessionPollingTask else { return }
+        currentTask.cancel()
+        self.exportSessionPollingTask = nil
     }
     
     /// Status string representation
@@ -156,7 +166,7 @@ extension MovieWriter {
     ///   - type: AVFileType
     ///   - preset: AVAssetExportSessionPreset. Specify nil for pass-through
     /// - Throws: Raised by any internal error
-    public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) throws {
+    public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws {
         // Swift.print(#function, #line, #file)
         
         guard writeInProgress == false else {
@@ -221,17 +231,20 @@ extension MovieWriter {
         self.exportSession = exportSession
         
         // Start progress timer
-        exportSessionStartTimer()
+        exportSessionPollingStart()
         defer {
-            exportSessionStopTimer()
+            exportSessionPollingStop()
         }
         
         /* ============================================ */
         
         // Start ExportSession
-        let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
-        let handler: () -> Void = {[semaphore, unowned self] in // @escaping
-            guard let exportSession = self.exportSession else { return }
+        do {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                exportSession.exportAsynchronously {
+                    continuation.resume()
+                }
+            }
             
             // Check results
             let progress: Float = exportSession.progress
@@ -258,12 +271,7 @@ extension MovieWriter {
             } else {
                 Swift.print("#####", "result:", statusStr, "progress:", progressStr, "elapsed:", intervalStr)
             }
-            
-            //
-            semaphore.signal()
         }
-        exportSession.exportAsynchronously(completionHandler: handler)
-        semaphore.wait()
         
         //
         if writeSuccess == false, let error = writeError {
@@ -487,7 +495,7 @@ extension MovieWriter {
                             numChannel = Int(avacDstLayout.channelCount)
                         }
                     } else {
-                        assert(false, "ERROR: Failed to convert layout")
+                        preconditionFailure("ERROR: Failed to convert layout")
                     }
                 }
                 
@@ -497,7 +505,7 @@ extension MovieWriter {
             
             // destination
             var awInputSetting: [String:Any] = [:]
-            awInputSetting[AVFormatIDKey] = UTGetOSTypeFromString(fourcc)
+            awInputSetting[AVFormatIDKey] = stringToOSType(fourcc as String)
             awInputSetting[AVSampleRateKey] = sampleRate
             awInputSetting[AVNumberOfChannelsKey] = numChannel
             awInputSetting[AVChannelLayoutKey] = aclData
@@ -774,9 +782,83 @@ extension MovieWriter {
         } // for track in movie.tracks(withMediaType: .video)
     }
     
-    public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String:Any]) throws {
+    private func exportCustomMovieCore(ar: AVAssetReader, aw: AVAssetWriter,
+                                       startTime: CMTime, endTime: CMTime,
+                                       dateStart: Date) async {
+        // Start the writing session on the asset writer.
+        aw.startSession(atSourceTime: startTime)
+        
+        // Process sample buffer channels concurrently
+        await withTaskGroup(of: Void.self) { group in
+            for sbc in customSampleBufferChannels {
+                group.addTask { 
+                    await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                        sbc.start(with: self) {
+                            continuation.resume()
+                        }
+                    }
+                }
+            }
+            for await _ in group { }
+        }
+        
+        // Check for cancellation.
+        let cancel = self.writeCancelled
+        if cancel {
+            ar.cancelReading()
+            aw.cancelWriting()
+        }
+        
+        // Finish the writing session on the asset writer.
+        aw.endSession(atSourceTime: endTime)
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            aw.finishWriting {
+                continuation.resume()
+            }
+        }
+        
+        // Evaluate success or failure.
+        var success = false
+        var error: Error? = nil
+        if ar.status == .completed && aw.status == .completed {
+            success = true
+        } else {
+            if ar.status == .failed {
+                error = ar.error
+            } else if aw.status == .failed {
+                error = aw.error
+            }
+            success = false
+        }
+        
+        // Calculate final progress and elapsed time.
+        let progress: Float = 1.0
+        let dateEnd: Date = Date()
+        let interval: TimeInterval = dateEnd.timeIntervalSince(dateStart)
+        
+        // Update export properties.
+        self.writeSuccess  = success
+        self.writeError    = error
+        self.writeCancelled = cancel
+        self.writeStart    = dateStart
+        self.writeEnd      = dateEnd
+        self.writeProgress = progress
+        
+        // Log the result for debugging.
+        let statusStr = success ? "completed" : (cancel ? "cancelled" : "failed")
+        let progressStr = String(format: "%.2f", progress * 100)
+        let intervalStr = String(format: "%.2f", interval)
+        if let error = self.writeError {
+            Swift.print("##### result:", statusStr, "progress:", progressStr, "elapsed:", intervalStr, "error", error)
+        } else {
+            Swift.print("##### result:", statusStr, "progress:", progressStr, "elapsed:", intervalStr)
+        }
+    }
+    
+    public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String:Any]) async throws {
         // Swift.print(#function, #line, #file)
         
+        // Check that no export is already running.
         guard writeInProgress == false else {
             var info: [String:Any] = [:]
             info[NSLocalizedDescriptionKey] = "Another exportSession is running."
@@ -789,7 +871,7 @@ extension MovieWriter {
         
         /* ============================================ */
         
-        // Update Properties
+        // Set up initial export state.
         self.writeInProgress = true
         self.writeSuccess = false
         self.writeError = nil
@@ -805,10 +887,10 @@ extension MovieWriter {
         self.customQueue = dgQueue
         self.customSampleBufferChannels = []
         
-        //
+        // Unblock user interaction.
         self.unblockUserInteraction?()
         
-        // Issue start notification
+        // Notify that export is starting.
         let userInfoStart: [AnyHashable:Any] = [urlInfoKey:url,
                                                 startInfoKey:dateStart]
         let notificationStart = Notification(name: .movieWillExportCustom,
@@ -817,7 +899,7 @@ extension MovieWriter {
         
         /* ============================================ */
         
-        // Prepare assetReader/assetWriter
+        // Initialize asset reader and writer.
         let movie: AVMutableMovie = internalMovie
         let startTime: CMTime = movie.range.start
         let endTime: CMTime = movie.range.end
@@ -843,19 +925,19 @@ extension MovieWriter {
             throw self.writeError ?? NSError()
         }
         
-        // Configure assetReader/assetWriter
+        // Configure asset reader and writer.
         do {
-            // setup aw parameters here
+            // Set writer parameters.
             aw.movieTimeScale = movie.timescale
             aw.movieFragmentInterval = CMTime.invalid
             aw.shouldOptimizeForNetworkUse = true
             
-            // setup sampleBufferChannels for each track
+            // Prepare media channels.
             prepareAudioChannels(movie, ar, aw)
             prepareVideoChannels(movie, ar, aw)
             prepareOtherMediaChannels(movie, ar, aw)
             
-            // setup assetReader/assetWriter
+            // Begin reading and writing.
             let readyReader: Bool = ar.startReading()
             let readyWriter: Bool = aw.startWriting()
             guard readyReader && readyWriter else {
@@ -870,89 +952,17 @@ extension MovieWriter {
         
         /* ============================================ */
         
-        // Start actual writing session
-        aw.startSession(atSourceTime: startTime)
-        
-        // Start sampleBufferChannel as DispatchGroup
-        let dg: DispatchGroup = DispatchGroup()
-        for sbc in customSampleBufferChannels {
-            dg.enter()
-            let handler: () -> Void = { [dg] in dg.leave() } // @escaping
-            sbc.start(with: self, completionHandler: handler)
-        }
-        
-        // Wait the completion of DispatchGroup
-        let semaphore  = DispatchSemaphore(value: 0)
-        dg.notify(queue: dgQueue) {[semaphore, ar, aw, unowned self] in // @escaping
-            var success: Bool = false
-            let cancel: Bool = self.writeCancelled
-            var error: Error? = nil
-            
-            // Cancel assetReader/Writer if required
-            if cancel {
-                ar.cancelReading()
-                aw.cancelWriting()
-            }
-            
-            // Finish writing session - blocking
-            let sem = DispatchSemaphore(value: 0)
-            aw.endSession(atSourceTime: endTime)
-            aw.finishWriting { [sem] in // @escaping
-                sem.signal()
-            }
-            sem.wait() // await completion
-            
-            // Verify status from assetReader/Writer
-            if (ar.status == .completed && aw.status == .completed) {
-                success = true
-            } else {
-                if (ar.status == .failed) {
-                    success = false
-                    error = ar.error
-                } else if (aw.status == .failed) {
-                    success = false
-                    error = aw.error
-                } else {
-                    success = false
-                }
-            }
-            
-            //
-            let progress: Float = 1.0
-            let dateEnd: Date = Date()
-            let interval: TimeInterval = dateEnd.timeIntervalSince(dateStart)
-            
-            // Update Properties
-            self.writeSuccess = success
-            self.writeError = error
-            self.writeCancelled = cancel
-            self.writeStart = dateStart
-            self.writeEnd = dateEnd
-            self.writeProgress = progress
-            
-            //
-            let status = (success ? "completed" : (cancel ? "cancelled" : "failed"))
-            let progressStr = String(format:"%.2f",progress * 100)
-            let intervalStr = String(format:"%.2f",interval)
-            if let error = self.writeError {
-                Swift.print("#####", "result:", status, "progress:", progressStr, "elapsed:", intervalStr, "error", error)
-            } else {
-                Swift.print("#####", "result:", status, "progress:", progressStr, "elapsed:", intervalStr)
-            }
-            
-            //
-            semaphore.signal()
-        }
-        semaphore.wait()
-        
-        //
+        // Export using the async method.
+        await exportCustomMovieCore(ar: ar, aw: aw, startTime: startTime, endTime: endTime, dateStart: dateStart)
+
+        // If export failed, throw the error.
         if writeSuccess == false, let error = writeError {
             throw error
         }
         
         /* ============================================ */
         
-        // Issue end notification
+        // Notify that export has finished.
         var userInfoEnd: [AnyHashable:Any] = [urlInfoKey:url,
                                               startInfoKey:dateStart,
                                               completedInfoKey:self.writeSuccess]
@@ -966,16 +976,32 @@ extension MovieWriter {
     }
     
     public func cancelCustomMovie(_ sender: Any) {
-        customQueue?.async { [unowned self] in // @escaping
-            for sbc in self.customSampleBufferChannels {
-                sbc.cancel()
+        guard let customQueue = customQueue else { fatalError("Unexpected nil customQueue detected.") }
+        if writeCancelled == false {
+            let params = cancelParams(channels: customSampleBufferChannels)
+            customQueue.async { // @escaping
+                for sbc in params.channels {
+                    sbc.cancel()
+                }
             }
-            self.writeCancelled = true
+            writeCancelled = true
         }
     }
     
+    private struct cancelParams: @unchecked Sendable {
+        let channels: [SampleBufferChannel]
+    }
+    
     // SampleBufferChannelDelegate
-    public func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer) {
+    nonisolated public func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer) {
+        let params = didReadParams(channel: channel, buffer: buffer)
+        Task {
+            await self.didReadCore(params)
+        }
+    }
+    
+    private func didReadCore(_ params: didReadParams) {
+        let buffer = params.buffer
         if let updateProgress = updateProgress {
             let progress: Float = Float(calcProgress(of: buffer))
             updateProgress(progress)
@@ -990,9 +1016,14 @@ extension MovieWriter {
         //    }
         //}
         //
-        //DispatchQueue.main.async { [unowned self] in // @escaping
+        //Task { [weak self] in // @escaping
         //    // Any GUI related processing - update GUI etc. here
         //}
+    }
+    
+    private struct didReadParams: @unchecked Sendable {
+        let channel: SampleBufferChannel
+        let buffer: CMSampleBuffer
     }
     
     private func calcProgress(of sampleBuffer: CMSampleBuffer) -> Float64 {
@@ -1004,6 +1035,17 @@ extension MovieWriter {
         let ptsSec: Float64 = CMTimeGetSeconds(pts)
         let lenSec: Float64 = CMTimeGetSeconds(internalMovie.range.duration)
         return (lenSec != 0.0) ? (ptsSec/lenSec) : 0.0
+    }
+    
+    // subs for UTGetOSTypeFromString()
+    private func stringToOSType(_ type:String) -> OSType {
+        guard type.count == 4 else { return 0 }
+        let code:[UInt8] = type.map{ $0.asciiValue ?? UInt8(0) }
+        let v0 = UInt32(code[0])
+        let v1 = UInt32(code[1])
+        let v2 = UInt32(code[2])
+        let v3 = UInt32(code[3])
+        return v0 << 24 + v1 << 16 + v2 << 8 + v3
     }
 }
 
@@ -1031,18 +1073,18 @@ extension MovieWriter {
     ///   - type: AVFileType. If it is not .mov, exportSession will be triggered.
     ///   - selfContained: Other than AVFileType.mov should be true.
     /// - Throws: Misc Error while exporting AVMovie
-    public func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) throws {
+    public func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) async throws {
         // Swift.print(#function, #line, #file, url.lastPathComponent, type.rawValue,
         //     selfContained ? "selfContained movie" : "reference movie")
         
         if type == .mov {
             if selfContained {
-                try flattenMovie(to: url, with: .writeSelfContaind)
+                try await flattenMovie(to: url, with: .writeSelfContaind)
             } else {
-                try flattenMovie(to: url, with: .writeReferenceMovie)
+                try await flattenMovie(to: url, with: .writeReferenceMovie)
             }
         } else {
-            try exportMovie(to: url, fileType: type, presetName: nil)
+            try await exportMovie(to: url, fileType: type, presetName: nil)
         }
     }
     
@@ -1051,7 +1093,7 @@ extension MovieWriter {
     /// - Parameters:
     ///   - url: destination to write
     ///   - mode: FlattenMode
-    private func flattenMovie(to url: URL, with mode: FlattenMode) throws {
+    private func flattenMovie(to url: URL, with mode: FlattenMode) async throws {
         // Swift.print(#function, #line, #file)
         
         guard writeInProgress == false else {
@@ -1116,9 +1158,7 @@ extension MovieWriter {
         let movie: AVMutableMovie = internalMovie
         let range: CMTimeRange = movie.range
         guard let newMovie: AVMutableMovie = try? AVMutableMovie(settingsFrom: movie, options: nil) else {
-            Swift.print("ERROR: Failed to create proxy object.")
-            assert(false, #function);
-            return
+            fatalError("ERROR: Failed to create proxy object.")
         }
         newMovie.timescale = movie.timescale // workaround
         newMovie.defaultMediaDataStorage = selfContained ? AVMediaDataStorage(url: url, options: nil) : nil

@@ -150,7 +150,7 @@ extension Document: ViewControllerDelegate {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        mutator.cutSelection(using: self.undoManager!)
+        mutator.cutSelection(using: self.undoManagerWrapper)
     }
     
     public func doCopy() throws {
@@ -164,7 +164,7 @@ extension Document: ViewControllerDelegate {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        mutator.pasteAtInsertionTime(using: self.undoManager!)
+        mutator.pasteAtInsertionTime(using: self.undoManagerWrapper)
     }
     
     /// Delete selection range
@@ -172,7 +172,7 @@ extension Document: ViewControllerDelegate {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
-        mutator.deleteSelection(using: self.undoManager!)
+        mutator.deleteSelection(using: self.undoManagerWrapper)
     }
     
     /// Select all range of movie
@@ -202,7 +202,7 @@ extension Document: ViewControllerDelegate {
         
         // pause first
         let rate = player.rate
-        player.rate = 0.0
+        updateRate(player, 0.0)
         
         //
         let nowTime = mutator.insertionTime
@@ -265,7 +265,7 @@ extension Document: ViewControllerDelegate {
         
         // pause first
         var rate = player.rate
-        player.rate = 0.0
+        updateRate(player, 0.0)
         
         // calc target time
         var adjust: Bool = true
@@ -382,14 +382,14 @@ extension Document: ViewControllerDelegate {
         let newRate: Float = min(max(ratio, -1.0), 1.0)
         
         if newRate == 0.0 {
-            player.pause()
+            updateRate(player, newRate)
             return
         }
         if newRate > 0.0 && okForward && okSlowForward {
             if checkTailOfMovie() { // Restart from head of movie
                 self.resumeAfterSeek(to: CMTime.zero, with: newRate)
             } else { // Start play
-                player.rate = newRate
+                updateRate(player, newRate)
             }
             return
         }
@@ -397,7 +397,7 @@ extension Document: ViewControllerDelegate {
             if checkHeadOfMovie() { // Restart from tail of the movie
                 self.resumeAfterSeek(to: item.duration, with: newRate)
             } else { // Start play
-                player.rate = newRate
+                updateRate(player, newRate)
             }
             return
         }
@@ -436,7 +436,7 @@ extension Document: ViewControllerDelegate {
         
         //
         if newRate == 0.0 {
-            player.pause()
+            updateRate(player, newRate)
             return
         }
         if newRate > 0.0 && okForward {
@@ -444,7 +444,7 @@ extension Document: ViewControllerDelegate {
                 if checkTailOfMovie() { // Restart from head of movie
                     self.resumeAfterSeek(to: CMTime.zero, with: newRate)
                 } else { // Start play
-                    player.rate = newRate
+                    updateRate(player, newRate)
                 }
                 return
             }
@@ -454,7 +454,7 @@ extension Document: ViewControllerDelegate {
                 if checkHeadOfMovie() { // Restart from tail of the movie
                     self.resumeAfterSeek(to: item.duration, with: newRate)
                 } else { // Start play
-                    player.rate = newRate
+                    updateRate(player, newRate)
                 }
                 return
             }

@@ -8,7 +8,7 @@
 
 import Cocoa
 
-@NSApplicationMain
+@main
 class AppDelegate: NSObject, NSApplicationDelegate {
     
     /* ============================================ */
@@ -124,8 +124,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     /// Validate bookmarks with block
     ///
-    /// - Parameter task: block to process bookmark url
-    private func validateBookmarks(_ verbose: Bool, using task: ((URL) -> Void)) {
+    /// - Parameter block: block to process bookmark url
+    private func validateBookmarks(_ verbose: Bool, using block: ((URL) -> Void)) {
         // Swift.print(#function, #line, #file)
         
         let useLogOriginal: Bool = useLog
@@ -145,7 +145,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 let validated: Data? = refreshBookmarkIfRequired(item, urlOut: &url, acceptStale: false)
                 if let validated = validated, let url = url {
                     validItems.append(validated)
-                    task(url)
+                    block(url)
                 }
             }
         }

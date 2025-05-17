@@ -13,23 +13,22 @@ protocol SampleBufferChannelDelegate: AnyObject {
     func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer)
 }
 
-class SampleBufferChannel: NSObject {
+class SampleBufferChannel: @unchecked Sendable {
     
     init(readerOutput: AVAssetReaderOutput, writerInput: AVAssetWriterInput, trackID: CMPersistentTrackID) {
-        arOutput = readerOutput
-        awInput = writerInput
-        
-        queue = DispatchQueue.init(label: String(format: "SBC-\(arOutput.mediaType.rawValue)"))
-        
-        super.init()
+        self.arOutput = readerOutput
+        self.awInput = writerInput
+        self.trackID = trackID
+        self.queue = DispatchQueue.init(label: String(format: "SBC-\(arOutput.mediaType.rawValue)"))
     }
     
     /* ============================================ */
     // MARK: - Public properties
     /* ============================================ */
     
-    public private(set) var arOutput: AVAssetReaderOutput
-    public private(set) var awInput: AVAssetWriterInput
+    public let arOutput: AVAssetReaderOutput
+    public let awInput: AVAssetWriterInput
+    public let trackID: CMPersistentTrackID
     public private(set) var finished: Bool = false
     
     public var mediaType: String {
@@ -42,7 +41,7 @@ class SampleBufferChannel: NSObject {
     
     private weak var delegate: SampleBufferChannelDelegate? = nil
     private var completionHandler: (() -> Void)? = nil
-    private var queue: DispatchQueue? = nil
+    private let queue: DispatchQueue
     
     /* ============================================ */
     // MARK: - Public functions
@@ -50,12 +49,11 @@ class SampleBufferChannel: NSObject {
     
     public func start(with delegate: SampleBufferChannelDelegate,
                       completionHandler: @escaping ()->Void) {
-        guard let queue = self.queue else { return }
-        
         self.delegate = delegate
         self.completionHandler = completionHandler
         
-        awInput.requestMediaDataWhenReady(on: queue) {[unowned self] in // @escaping
+        awInput.requestMediaDataWhenReady(on: queue) {[weak self] in // @escaping
+            guard let self else { fatalError("Unexpected nil self detected.") }
             if self.finished { return }
             
             let delegate: SampleBufferChannelDelegate = self.delegate!
@@ -82,9 +80,11 @@ class SampleBufferChannel: NSObject {
     }
     
     public func cancel() {
-        guard let queue = self.queue else { return }
-        queue.async { [unowned self] in
-            self.callCompletionHandlerIfNecessary()
+        queue.async { [weak self] in
+            do {
+                guard let self else { fatalError("Unexpected nil self detected.") }
+                self.callCompletionHandlerIfNecessary()
+            }
         }
     }
     

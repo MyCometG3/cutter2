@@ -9,6 +9,43 @@
 import Cocoa
 import AVFoundation
 
+/* ============================================ */
+// MARK: - Actor isolation
+/* ============================================ */
+
+extension CAPARViewController {
+    nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () throws -> T) throws -> T {
+        if Thread.isMainThread {
+            return try MainActor.assumeIsolated {
+                try block()
+            }
+        } else {
+            return try DispatchQueue.main.sync {
+                return try MainActor.assumeIsolated {
+                    try block()
+                }
+            }
+        }
+    }
+
+    nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () -> T) -> T {
+        if Thread.isMainThread {
+            return MainActor.assumeIsolated {
+                block()
+            }
+        } else {
+            return DispatchQueue.main.sync {
+                return MainActor.assumeIsolated {
+                    block()
+                }
+            }
+        }
+    }
+}
+
+/* ============================================ */
+
+@MainActor
 class CAPARViewController: NSViewController {
     
     /* ============================================ */
@@ -67,17 +104,23 @@ class CAPARViewController: NSViewController {
         guard let sheet = self.view.window else { return }
         parent.beginSheet(sheet, completionHandler: handler)
         
-        let textHandler: (Notification) -> Void = {[unowned self] (notification) in //@escaping
+        let textHandler: @Sendable (Notification) -> Void = { [weak self] notification in
             // Swift.print(#function, #line, #file)
             
-            guard let sheet = self.view.window else { return }
-            guard let object = notification.object as? NSControl else { return }
-            guard sheet == object.window else { return }
+            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard
+                let sheetWindow = performSyncOnMainActor({ self.view.window }),
+                let control = notification.object as? NSControl,
+                let controlWindow = performSyncOnMainActor({ control.window }),
+                sheetWindow == controlWindow
+            else { return }
             
-            self.updateStruct()
-            self.updateLabels(self)
+            performSyncOnMainActor {
+                updateStruct()
+                updateLabels(self)
+            }
         }
-        let addBlock: () -> Void = {
+        do {
             let center = NotificationCenter.default
             var observer: NSObjectProtocol? = nil
             observer = center.addObserver(forName: NSControl.textDidChangeNotification,
@@ -85,11 +128,6 @@ class CAPARViewController: NSViewController {
                                           queue: OperationQueue.main,
                                           using: textHandler)
             self.textObserver = observer
-        }
-        if (Thread.isMainThread) {
-            addBlock()
-        } else {
-            DispatchQueue.main.sync(execute: addBlock)
         }
     }
     
@@ -101,18 +139,13 @@ class CAPARViewController: NSViewController {
         guard let sheet = self.view.window else { return }
         parent.endSheet(sheet, returnCode: response)
         
-        let removeBlock: () -> Void = {
+        do {
             guard let observer = self.textObserver else { return }
             let center = NotificationCenter.default
             center.removeObserver(observer,
                                   name: NSControl.textDidChangeNotification,
                                   object: nil)
             self.textObserver = nil
-        }
-        if (Thread.isMainThread) {
-            removeBlock()
-        } else {
-            DispatchQueue.main.sync(execute: removeBlock)
         }
     }
     

@@ -10,6 +10,7 @@ import Cocoa
 import AVFoundation
 import VideoToolbox
 
+@MainActor
 class TranscodeViewController: NSViewController {
     
     /* ============================================ */

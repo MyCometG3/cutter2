@@ -10,6 +10,7 @@ import Cocoa
 import AVFoundation
 import AVKit
 
+@MainActor
 class MyPlayerView: AVPlayerView {
     
     /* ============================================ */

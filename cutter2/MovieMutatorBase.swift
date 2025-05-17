@@ -78,7 +78,7 @@ extension AVMovie {
                         if let url = url {
                             set.insert(url)
                         } else {
-                            assert(false, #function)
+                            preconditionFailure("ERROR: url string conversion failed.")
                         }
                     }
                 }
@@ -151,9 +151,68 @@ public struct PresentationInfo {
 }
 
 /* ============================================ */
+// MARK: - Actor isolation
+/* ============================================ */
+
+@MainActor
+final class UndoManagerWrapper {
+    private let undoManager: UndoManager
+    
+    init(_ undoManager: UndoManager) {
+        self.undoManager = undoManager
+    }
+    
+    func registerUndo<T: AnyObject>(
+        withTarget target: T,
+        handler: @Sendable @escaping (T) -> Void
+    ) {
+        undoManager.registerUndo(withTarget: target, handler: handler)
+    }
+    
+    func setActionName(_ actionName: String) {
+        undoManager.setActionName(actionName)
+    }
+    
+    func removeAllActions(withTarget target: AnyObject) {
+        undoManager.removeAllActions(withTarget: target)
+    }
+}
+
+extension MovieMutatorBase {
+    nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () throws -> T) throws -> T {
+        if Thread.isMainThread {
+            return try MainActor.assumeIsolated {
+                try block()
+            }
+        } else {
+            return try DispatchQueue.main.sync {
+                return try MainActor.assumeIsolated {
+                    try block()
+                }
+            }
+        }
+    }
+    
+    nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () -> T) -> T {
+        if Thread.isMainThread {
+            return MainActor.assumeIsolated {
+                block()
+            }
+        } else {
+            return DispatchQueue.main.sync {
+                return MainActor.assumeIsolated {
+                    block()
+                }
+            }
+        }
+    }
+}
+
+/* ============================================ */
 // MARK: -
 /* ============================================ */
 
+@MainActor
 class MovieMutatorBase: NSObject {
     /* ============================================ */
     // MARK: - public init
@@ -189,8 +248,8 @@ class MovieMutatorBase: NSObject {
     /// Timestamp formatter
     public var timestampFormatter: DateFormatter
     
-    public var unblockUserInteraction: (() -> Void)? = nil
-    public var updateProgress: ((Float) -> Void)? = nil
+    public var unblockUserInteraction: (@Sendable () -> Void)? = nil
+    public var updateProgress: (@Sendable (Float) -> Void)? = nil
     
     /// Respect tapt atom on clean aperture detection
     public var acceptTapt: Bool = true
@@ -210,6 +269,11 @@ class MovieMutatorBase: NSObject {
     /* ============================================ */
     // MARK: - public method - validation and clamp
     /* ============================================ */
+    
+    @inline(__always) public func validateClipData(_ data: Data) -> Bool {
+        let clip = AVMutableMovie(data: data, options: nil)
+        return validateClip(clip)
+    }
     
     @inline(__always) public func validateClip(_ clip: AVMovie) -> Bool {
         return clip.range.duration > CMTime.zero
@@ -280,11 +344,11 @@ class MovieMutatorBase: NSObject {
         // AVMovie.duration seems to be broken after edit operation
         guard let data: Data = internalMovie.movHeader else {
             Swift.print(ts(), "ERROR: Failed to create Data from AVMovie")
-            assert(false, #function); return
+            preconditionFailure("ERROR: Failed to create Data from AVMovie")
         }
         guard self.reloadMovie(from: data) else {
             Swift.print(ts(), "ERROR: Failed to create AVMovie from Data")
-            assert(false, #function); return
+            preconditionFailure("ERROR: Failed to create AVMovie from Data")
         }
         do {
             let prop: CMTime = internalMovie.duration
@@ -306,8 +370,8 @@ class MovieMutatorBase: NSObject {
     public func resetMarker(_ time: CMTime, _ range: CMTimeRange, _ notify: Bool) {
         // Swift.print(ts(), #function, #line, #file)
         
-        assert(validateRange(range, false), #function)
-        assert(validateTime(time), #function)
+        precondition(validateRange(range, false), "ERROR: Invalid range: \(range)")
+        precondition(validateTime(time), "ERROR: Invalid time: \(time)")
         
         insertionTime = time
         selectedTimeRange = range
@@ -316,26 +380,24 @@ class MovieMutatorBase: NSObject {
         }
     }
     
-    /* ============================================ */
-    // MARK: - private method - movie management
-    /* ============================================ */
-    
     /// Refresh Internal movie using Data
     ///
     /// - Parameter data: MovieHeader data
     /// - Returns: true if success
-    private func reloadMovie(from data: Data?) -> Bool {
+    public func reloadMovie(from data: Data?) -> Bool {
         // Swift.print(ts(), #function, #line, #file)
         
         if let data = data {
-            let newMovie: AVMutableMovie? = AVMutableMovie(data: data, options: nil)
-            if let newMovie = newMovie {
-                internalMovie = newMovie
-                return true
-            }
+            let newMovie = AVMutableMovie(data: data)
+            internalMovie = newMovie
+            return true
         }
         return false
     }
+    
+    /* ============================================ */
+    // MARK: - private method - movie management
+    /* ============================================ */
     
     /// Trigger notification to update GUI when the internal movie is edited.
     /// userInfo will contain timeValueKey and timeRangeValueKey.
@@ -458,7 +520,7 @@ class MovieMutatorBase: NSObject {
         for track in tracks {
             let trackTransform: CGAffineTransform = track.preferredTransform
             let size: NSSize = mediaDimensions(of: type, in: track, useTapt: acceptTapt)
-            assert(size != NSZeroSize, "ERROR: Failed to get presentation dimensions.")
+            precondition(size != NSZeroSize, "ERROR: Failed to get presentation dimensions.")
             let point: NSPoint = NSPoint(x: -size.width/2, y: -size.height/2)
             let rect: NSRect = NSRect(origin: point, size: size)
             let resultedRect: NSRect = rect.applying(trackTransform)
@@ -765,6 +827,8 @@ class MovieMutatorBase: NSObject {
         
         for track: AVMovieTrack in orderedTracks() {
             // Get AVSampleCursor/AVAssetTrackSegment at specified track time
+            let mediaRange = track.mediaPresentationTimeRange
+            guard mediaRange.start <= time && time <= mediaRange.end else { continue }
             let pts = track.samplePresentationTime(forTrackTime: time)
             guard CMTIME_IS_VALID(pts) else { continue }
             guard let cursor: AVSampleCursor = track.makeSampleCursor(presentationTimeStamp: pts)
@@ -844,8 +908,7 @@ class MovieMutatorBase: NSObject {
             return info
         }
         
-        assert(false, #function) //
-        return nil // Should not occur
+        preconditionFailure("ERROR: Cannot find previous sample's PresentationInfo")
     }
     
     /// Query Next sample's PresentationInfo
@@ -900,7 +963,6 @@ class MovieMutatorBase: NSObject {
             return info
         }
         
-        assert(false, #function) //
-        return nil // Shouild not occur
+        preconditionFailure("ERROR: Cannot find next sample's PresentationInfo")
     }
 }

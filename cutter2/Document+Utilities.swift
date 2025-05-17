@@ -10,6 +10,78 @@ import Cocoa
 import AVFoundation
 
 /* ============================================ */
+// MARK: - Actor isolation
+/* ============================================ */
+
+extension Document {
+    final class Box<T>: @unchecked Sendable {
+        var value: T?
+        init(_ value: T? = nil) {
+            self.value = value
+        }
+    }
+    
+    nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async throws -> T) throws -> T {
+        let semaphore = DispatchSemaphore(value: 0)
+        let resultBox = Box<Result<T, Error>>()
+        DispatchQueue.global(qos: .userInitiated).async {
+            Task {
+                do {
+                    let value = try await block()
+                    resultBox.value = .success(value)
+                } catch {
+                    resultBox.value = .failure(error)
+                }
+                semaphore.signal()
+            }
+        }
+        semaphore.wait()
+        return try resultBox.value!.get()
+    }
+    
+    nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async -> T) -> T {
+        let semaphore = DispatchSemaphore(value: 0)
+        let resultBox = Box<T>()
+        DispatchQueue.global(qos: .userInitiated).async {
+            Task {
+                resultBox.value = await block()
+                semaphore.signal()
+            }
+        }
+        semaphore.wait()
+        return resultBox.value!
+    }
+    
+    nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () throws -> T) throws -> T {
+        if Thread.isMainThread {
+            return try MainActor.assumeIsolated {
+                try block()
+            }
+        } else {
+            return try DispatchQueue.main.sync {
+                return try MainActor.assumeIsolated {
+                    try block()
+                }
+            }
+        }
+    }
+    
+    nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () -> T) -> T {
+        if Thread.isMainThread {
+            return MainActor.assumeIsolated {
+                block()
+            }
+        } else {
+            return DispatchQueue.main.sync {
+                return MainActor.assumeIsolated {
+                    block()
+                }
+            }
+        }
+    }
+}
+
+/* ============================================ */
 // MARK: - Sheet control
 /* ============================================ */
 
@@ -19,13 +91,9 @@ extension Document {
     public func updateProgress(_ progress: Float) {
         // Swift.print(#function, #line, #file)
         
-        // Thread safety
-        objc_sync_enter(self)
-        defer { objc_sync_exit(self) }
-        
         // Use Low frequency update
         let unit = NSEC_PER_MSEC * 100 // 100ms
-        let t: UInt64 = CVGetCurrentHostTime()
+        let t: UInt64 = clock_gettime_nsec_np(CLOCK_REALTIME)
         if lastUpdateAt == 0 {
             lastUpdateAt = t
         } else {
@@ -37,7 +105,7 @@ extension Document {
         }
         
         // Update UI in main queue
-        DispatchQueue.main.async { [progress, unowned self] in // @escaping
+        Task {
             // Swift.print(#function, #line, #file)
             
             guard let alert = self.alert else { return }
@@ -51,7 +119,7 @@ extension Document {
     public func showBusySheet(_ message: String?, _ info: String?) {
         // Swift.print(#function, #line, #file)
         
-        DispatchQueue.main.async { [message, info, unowned self] in // @escaping
+        Task {
             // Swift.print(#function, #line, #file)
             
             guard let window = self.window else { return }
@@ -75,7 +143,7 @@ extension Document {
     public func hideBusySheet() {
         // Swift.print(#function, #line, #file)
         
-        DispatchQueue.main.async { [unowned self] in // @escaping
+        Task {
             // Swift.print(#function, #line, #file)
             
             guard let window = self.window else { return }
@@ -93,7 +161,7 @@ extension Document {
         // Swift.print(#function, #line, #file)
         
         // Don't use NSDocument default error handling
-        DispatchQueue.main.async { [error, unowned self] in // @escaping
+        Task {
             // Swift.print(#function, #line, #file)
             
             let alert = NSAlert(error: error)
@@ -197,8 +265,8 @@ extension Document {
     public func resumeAfterSeek(to time: CMTime, with rate: Float) {
         // Swift.print(#function, #line, #file)
         
-        #if false
         guard let mutator = self.movieMutator else { return }
+        #if false
         Swift.print("#####", "resumeAfterSeek",
                     mutator.shortTimeString(time, withDecimals: true),
                     mutator.rawTimeString(time))
@@ -206,11 +274,15 @@ extension Document {
         
         guard let player = self.player else { return }
         
-        player.pause()
-        let handler: (Bool) -> Void = {[player, unowned self] (finished) in // @escaping
-            guard let mutator = self.movieMutator else { return }
-            player.rate = rate
-            self.updateTimeline(time, range: mutator.selectedTimeRange)
+        updateRate(player, 0.0)
+        let handler: @Sendable (Bool) -> Void = {[weak self, weak player, weak mutator] (finished) in // @escaping
+            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let player = player else { fatalError("Unexpected nil player detected.") }
+            guard let mutator = mutator else { fatalError("Unexpected nil mutator detected.") }
+            performSyncOnMainActor {
+                updateRate(player, rate)
+                updateTimeline(time, range: mutator.selectedTimeRange)
+            }
         }
         player.seek(to: time, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero, completionHandler: handler)
     }
@@ -255,8 +327,14 @@ extension Document {
             player.replaceCurrentItem(with: playerItem)
             
             // seek
-            let handler: (Bool) -> Void = {[pv] (finished) in // @escaping
-                pv.needsDisplay = true
+            let handler: @Sendable (Bool) -> Void = {[weak self, weak pv] (finished) in // @escaping
+                // Swift.print(#function, #line, #file)
+                
+                guard let self else { fatalError("Unexpected nil self detected.") }
+                guard let pv = pv else { fatalError("Unexpected nil pv detected.") }
+                performSyncOnMainActor {
+                    pv.needsDisplay = true
+                }
             }
             playerItem.seek(to: mutator.insertionTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero,
                             completionHandler: handler)
@@ -318,6 +396,14 @@ extension Document {
         }
     }
     
+    /// Update AVPlayer.rate if required
+    /// - Parameters:
+    ///   - player: AVPlayer to be updated
+    ///   - newRate: new requested rate
+    func updateRate(_ player: AVPlayer, _ newRate: Float) {
+        guard player.rate != newRate else { return }
+        player.rate = newRate
+    }
 }
 
 /* ============================================ */
@@ -356,49 +442,87 @@ extension Document {
                               context: &(self.kvoContext))
     }
     
+    /// compare KVO context address as UInt
+    @MainActor func checkKVOContext(_ contextAddress: UInt) -> Bool {
+        return withUnsafePointer(to: &self.kvoContext) { kvoPointer in
+            let kvoAddress = UInt(bitPattern: kvoPointer)
+            return (contextAddress == kvoAddress)
+        }
+    }
+    
     // NSKeyValueObserving protocol - observeValue(forKeyPath:of:change:context:)
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey:Any]?,
-                               context: UnsafeMutableRawPointer?) {
+    override nonisolated func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey:Any]?,
+                                           context: UnsafeMutableRawPointer?) {
         // Swift.print(#function, #line, #file)
         
-        guard context == &(self.kvoContext) else { return }
-        guard let object = object as? AVPlayer else { return }
-        guard let keyPath = keyPath, let change = change else { return }
-        guard let mutator = self.movieMutator else { return }
-        guard let player = self.player else { return }
+        guard
+            let context = context, let object = object as? AVPlayer, let keyPath = keyPath, let change = change
+        else {
+            super.observeValue(forKeyPath: keyPath,
+                               of: object,
+                               change: change,
+                               context: context)
+            return
+        }
         
-        if object == player && keyPath == #keyPath(AVPlayer.status) {
+        let contextAddress = UInt(bitPattern: context) // Cast UnsafeMutableRawPointer to UInt for actor isolation
+        let (objectIsPlayer, keyPathIsAVPlayerStatus, keyPathIsAVPlayerRate) = performSyncOnMainActor {
+            let contextMatch: Bool = checkKVOContext(contextAddress)
+            let objectIsPlayer: Bool = (object === self.player)
+            let keyPathIsAVPlayerStatus: Bool = (keyPath == #keyPath(AVPlayer.status))
+            let keyPathIsAVPlayerRate: Bool = (keyPath == #keyPath(AVPlayer.rate))
+            return (contextMatch && objectIsPlayer, keyPathIsAVPlayerStatus, keyPathIsAVPlayerRate)
+        }
+        
+        if objectIsPlayer && keyPathIsAVPlayerStatus {
             // Swift.print("#####", "#keyPath(AVPlayer.status)")
             
             // Force redraw when AVPlayer.status is updated
             let newStatus = change[.newKey] as! NSNumber
             if newStatus.intValue == AVPlayer.Status.readyToPlay.rawValue {
                 // Seek and refresh View
-                let time = mutator.insertionTime
-                let range = mutator.selectedTimeRange
-                self.updateGUI(time, range, false)
+                performSyncOnMainActor {
+                    guard let mutator = self.movieMutator else { return }
+                    let time = mutator.insertionTime
+                    let range = mutator.selectedTimeRange
+                    updateGUI(time, range, false)
+                }
             } else if newStatus.intValue == AVPlayer.Status.failed.rawValue {
                 //
                 Swift.print("ERROR: AVPlayerStatus.failed detected.")
             }
             return
-        } else if object == player && keyPath == #keyPath(AVPlayer.rate) {
+        } else if objectIsPlayer && keyPathIsAVPlayerRate {
             // Swift.print("#####", "#keyPath(AVPlayer.rate)")
             
             // Check special case: movie play reached at end of movie
             let oldRate = change[.oldKey] as! NSNumber
             let newRate = change[.newKey] as! NSNumber
             if oldRate.floatValue > 0.0 && newRate.floatValue == 0.0 {
-                // TODO: refine here
-                let current = player.currentTime()
-                let duration = mutator.movieDuration()
-                let selection = mutator.selectedTimeRange
-                if current == duration {
-                    // now Stopped at end of movie - force update GUI to end of movie
-                    updateTimeline(current, range: selection)
+                // Movie stopped
+                performSyncOnMainActor {
+                    guard let player = self.player else { return }
+                    guard let mutator = self.movieMutator else { return }
+                    
+                    // Check if it is tail of movie
+                    let current = player.currentTime()
+                    let duration = mutator.movieDuration()
+                    let selection = mutator.selectedTimeRange
+                    if current == duration {
+                        // Force-refresh GUI at the end of movie
+                        updateTimeline(current, range: selection)
+                    }
                 }
-            } else {
-                // ignore
+                Swift.print("Movie stopped")
+            }
+            if oldRate.floatValue == 0.0 && newRate.floatValue > 0.0 {
+                Swift.print("Movie started (forward)")
+            }
+            if oldRate.floatValue == 0.0 && newRate.floatValue < 0.0 {
+                Swift.print("Movie started (backward)")
+            }
+            if oldRate.floatValue == newRate.floatValue {
+                Swift.print("No rate change. FIXME!")
             }
             return
         } else {
@@ -413,12 +537,15 @@ extension Document {
     public func addMutationObserver() {
         // Swift.print(#function, #line, #file)
         
-        let handler: (Notification) -> Void = {[unowned self] (notification) in // @escaping
+        let handler: @Sendable (Notification) -> Void = {[weak self] (notification) in // @escaping
             // Swift.print(#function, #line, #file)
             
-            guard let mutator = self.movieMutator else { return }
-            guard let object = notification.object as? MovieMutator else { return }
-            guard mutator == object else { return }
+            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard
+                let mutator = performSyncOnMainActor({ self.movieMutator }),
+                let object = notification.object as? MovieMutator,
+                mutator == object
+            else { return }
             
             #if false
             Swift.print("#####", "========================",
@@ -426,15 +553,19 @@ extension Document {
             #endif
             
             // extract CMTime/CMTimeRange from userInfo
-            guard let userInfo = notification.userInfo else { return }
-            guard let timeValue = userInfo[timeValueInfoKey] as? NSValue else { return }
-            guard let timeRangeValue = userInfo[timeRangeValueInfoKey] as? NSValue else { return }
+            guard
+                let userInfo = notification.userInfo,
+                let timeValue = userInfo[timeValueInfoKey] as? NSValue,
+                let timeRangeValue = userInfo[timeRangeValueInfoKey] as? NSValue
+            else { return }
             
             let time: CMTime = timeValue.timeValue
             let timeRange: CMTimeRange = timeRangeValue.timeRangeValue
-            self.updateGUI(time, timeRange, true)
+            performSyncOnMainActor {
+                updateGUI(time, timeRange, true)
+            }
         }
-        let addBlock: () -> Void = {
+        do {
             guard let mutator = self.movieMutator else { return }
             let center = NotificationCenter.default
             var observer: NSObjectProtocol? = nil
@@ -444,18 +575,13 @@ extension Document {
                                           using: handler)
             self.mutationObserver = observer
         }
-        if (Thread.isMainThread) {
-            addBlock()
-        } else {
-            DispatchQueue.main.sync(execute: addBlock)
-        }
     }
     
     /// Unregister observer for movie mutation
     public func removeMutationObserver() {
         // Swift.print(#function, #line, #file)
         
-        let removeBlock = {
+        do {
             guard let mutator = self.movieMutator else { return }
             guard let observer = self.mutationObserver else { return }
             let center = NotificationCenter.default
@@ -464,20 +590,14 @@ extension Document {
                                   object: mutator)
             self.mutationObserver = nil
         }
-        if (Thread.isMainThread) {
-            removeBlock()
-        } else {
-            DispatchQueue.main.sync(execute: removeBlock)
-        }
     }
     
     /// Unregister all undo record for current MovieMutator object
     public func removeAllUndoRecords() {
         // Swift.print(#function, #line, #file)
         
-        if let mutator = self.movieMutator, let undoManager = self.undoManager {
-            undoManager.removeAllActions(withTarget: mutator)
-        }
+        guard let mutator = self.movieMutator else { return }
+        self.undoManagerWrapper.removeAllActions(withTarget: mutator)
     }
 }
 
@@ -539,6 +659,20 @@ extension Document {
         return false
     }
     
+    private func debugTrackRange(_ range: CMTimeRange, _ current: CMTime, _ endOfRange: Bool) {
+        guard let mutator = self.movieMutator else { return }
+        Swift.print("#  range:",
+                    String(format: "%4.3f", range.start.seconds),
+                    String(format: "%4.3f", range.end.seconds))
+        Swift.print("#cur/ins:",
+                    String(format: "%4.3f", current.seconds),
+                    String(format: "%4.3f", mutator.insertionTime.seconds),
+                    current == mutator.insertionTime ? "" : "diff")
+        Swift.print("#containsTime():",
+                    (range.start <= current && current <= range.end),
+                    endOfRange ? ": End of Movie detected" : "")
+    }
+    
     /// Check if it is tail of movie
     public func checkTailOfMovie() -> Bool {
         // Swift.print(#function, #line, #file)
@@ -553,8 +687,9 @@ extension Document {
         let duration: CMTime = mutator.movieDuration()
         
         // validate cached range value
-        if cachedTime == current {
+        if let range = cachedLastSampleRange, range.start <= current, current <= range.end {
             // use cached result
+            // debugTrackRange(range, current, true)
             return cachedWithinLastSampleRange
         } else {
             // reset cache
@@ -569,6 +704,7 @@ extension Document {
                     cachedWithinLastSampleRange = true
                     cachedLastSampleRange = info.timeRange
                 }
+                // debugTrackRange(info.timeRange, current, endOfRange)
             }
             return cachedWithinLastSampleRange
         }

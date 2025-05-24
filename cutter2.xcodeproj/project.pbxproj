@@ -372,7 +372,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.8.7;
+				MARKETING_VERSION = 0.8.8a;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mycometg3.cutter2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -398,7 +398,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.8.7;
+				MARKETING_VERSION = 0.8.8a;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mycometg3.cutter2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

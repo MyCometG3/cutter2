@@ -18,6 +18,64 @@ extension NSPasteboard.PasteboardType {
 }
 
 /* ============================================ */
+// MARK: - Actor isolation
+/* ============================================ */
+
+@MainActor
+final class UndoManagerWrapper {
+    private let undoManager: UndoManager
+    
+    init(_ undoManager: UndoManager) {
+        self.undoManager = undoManager
+    }
+    
+    func registerUndo<T: AnyObject>(
+        withTarget target: T,
+        handler: @Sendable @escaping (T) -> Void
+    ) {
+        undoManager.registerUndo(withTarget: target, handler: handler)
+    }
+    
+    func setActionName(_ actionName: String) {
+        undoManager.setActionName(actionName)
+    }
+    
+    func removeAllActions(withTarget target: AnyObject) {
+        undoManager.removeAllActions(withTarget: target)
+    }
+}
+
+extension MovieMutator {
+    nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () throws -> T) throws -> T {
+        if Thread.isMainThread {
+            return try MainActor.assumeIsolated {
+                try block()
+            }
+        } else {
+            return try DispatchQueue.main.sync {
+                return try MainActor.assumeIsolated {
+                    try block()
+                }
+            }
+        }
+    }
+    
+    nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () -> T) -> T {
+        if Thread.isMainThread {
+            return MainActor.assumeIsolated {
+                block()
+            }
+        } else {
+            return DispatchQueue.main.sync {
+                return MainActor.assumeIsolated {
+                    block()
+                }
+            }
+        }
+    }
+}
+
+/* ============================================ */
 // MARK: -
 /* ============================================ */
 

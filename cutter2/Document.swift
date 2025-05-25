@@ -521,7 +521,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             
             guard let self else { fatalError("Unexpected nil self detected.") }
             guard let url: URL = self.fileURL else { fatalError("Unexpected nil fileURL detected.") }
-            let newMovie: AVMovie? = AVMovie(url: url, options: nil)
+            let newMovie: AVMutableMovie? = AVMutableMovie(url: url, options: nil)
             if let newMovie = newMovie {
                 guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
                 let time: CMTime = mutator.insertionTime

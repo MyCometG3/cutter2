@@ -370,7 +370,7 @@ extension MovieWriter {
 
 extension MovieWriter {
     
-    private func prepareCopyChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter, _ mediaType: AVMediaType) {
+    private func prepareCopyChannels(_ movie: AVMutableMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter, _ mediaType: AVMediaType) {
         for track in movie.tracks(withMediaType: mediaType) {
             // source
             let arOutputSetting: [String:Any]? = nil
@@ -393,7 +393,7 @@ extension MovieWriter {
         }
     }
     
-    private func prepareOtherMediaChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
+    private func prepareOtherMediaChannels(_ movie: AVMutableMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
         let numCopyOtherMedia = customParam[kCopyOtherMediaKey] as? NSNumber
         let copyOtherMedia: Bool = numCopyOtherMedia?.boolValue ?? false
         guard copyOtherMedia else { return }
@@ -407,7 +407,7 @@ extension MovieWriter {
         prepareCopyChannels(movie, ar, aw, .depthData)
     }
     
-    private func prepareAudioChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
+    private func prepareAudioChannels(_ movie: AVMutableMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
         let numAudioEncode = customParam[kAudioEncodeKey] as? NSNumber
         let audioEncode: Bool = numAudioEncode?.boolValue ?? true
         if audioEncode == false {
@@ -554,7 +554,7 @@ extension MovieWriter {
         } // for track in movie.tracks(withMediaType: .audio)
     }
     
-    private func hasFieldModeSupport(of track: AVMovieTrack) -> Bool {
+    private func hasFieldModeSupport(of track: AVMutableMovieTrack) -> Bool {
         let descArray: [Any] = track.formatDescriptions
         guard descArray.count > 0 else { return false }
         
@@ -594,7 +594,7 @@ extension MovieWriter {
         return false
     }
     
-    private func addDecompressionProperties(_ track: AVMovieTrack, _ copyField: Bool, _ arOutputSetting: inout [String:Any]) {
+    private func addDecompressionProperties(_ track: AVMutableMovieTrack, _ copyField: Bool, _ arOutputSetting: inout [String:Any]) {
         if hasFieldModeSupport(of: track) {
             var decompressionProperties: NSDictionary? = nil
             if copyField {
@@ -616,7 +616,7 @@ extension MovieWriter {
         }
     }
     
-    private func prepareVideoChannels(_ movie: AVMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
+    private func prepareVideoChannels(_ movie: AVMutableMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
         let numVideoEncode = customParam[kVideoEncodeKey] as? NSNumber
         let videoEncode: Bool = numVideoEncode?.boolValue ?? true
         if videoEncode == false {

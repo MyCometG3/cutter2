@@ -21,13 +21,13 @@ extension Notification.Name {
 // MARK: -
 /* ============================================ */
 
-extension AVMovie {
+extension AVMutableMovie {
     /// Movie timeRange (union of all track range)
     ///
     /// NOTE: See MovieMutator.refreshMovie()
     public var range: CMTimeRange {
         var range: CMTimeRange = CMTimeRange.zero
-        for track: AVMovieTrack in self.tracks {
+        for track: AVMutableMovieTrack in self.tracks {
             range = CMTimeRangeGetUnion(range, otherRange: track.timeRange)
         }
         return range
@@ -140,7 +140,7 @@ public struct PresentationInfo {
     var startPosition: Float64 = 0.0
     var endPosition: Float64 = 0.0
     
-    init(range: CMTimeRange, of movie: AVMovie) {
+    init(range: CMTimeRange, of movie: AVMutableMovie) {
         timeRange = range
         startSecond = CMTimeGetSeconds(range.start)
         endSecond = CMTimeGetSeconds(range.end)
@@ -160,7 +160,7 @@ class MovieMutatorBase: NSObject {
     // MARK: - public init
     /* ============================================ */
     
-    init(with movie:AVMovie) {
+    init(with movie:AVMutableMovie) {
         internalMovie = movie.mutableCopy() as! AVMutableMovie
         
         do {
@@ -217,7 +217,7 @@ class MovieMutatorBase: NSObject {
         return validateClip(clip)
     }
     
-    @inline(__always) public func validateClip(_ clip: AVMovie) -> Bool {
+    @inline(__always) public func validateClip(_ clip: AVMutableMovie) -> Bool {
         return clip.range.duration > CMTime.zero
     }
     
@@ -381,7 +381,7 @@ class MovieMutatorBase: NSObject {
     ///   - track: AVMutableMovieTrack
     /// - Returns: visual size of media in a track
     private func mediaDimensionsFD(of type: dimensionsType, in track: AVMutableMovieTrack) -> NSSize {
-        guard(track.hasMediaCharacteristic(.visual)) else { return NSSize.zero }
+        guard(track.mediaType == .video) else { return NSSize.zero }
         
         var size = NSZeroSize
         let formats = track.formatDescriptions as! [CMFormatDescription]
@@ -413,7 +413,7 @@ class MovieMutatorBase: NSObject {
     ///   - track: AVMutableMovieTrack
     /// - Returns: visual size of media in a track
     private func mediaDimensionsTapt(of type: dimensionsType, in track: AVMutableMovieTrack) -> NSSize {
-        guard(track.hasMediaCharacteristic(.visual)) else { return NSSize.zero }
+        guard(track.mediaType == .video) else { return NSSize.zero }
         
         var size: NSSize
         switch type {
@@ -452,7 +452,7 @@ class MovieMutatorBase: NSObject {
     /// - Returns: visual size of the movie
     public func dimensions(of type: dimensionsType) -> NSSize {
         let movie = internalMovie
-        let tracks = movie.tracks(withMediaCharacteristic: .visual)
+        let tracks = movie.tracks(withMediaType: .video)
         guard tracks.count > 0 else {
             // use dummy size for 16:9 (commonly used for .m4a format)
             return NSSize(width: 320, height: 180)
@@ -647,12 +647,12 @@ class MovieMutatorBase: NSObject {
     
     /// Tracks ordered in video-timecode-audio
     ///
-    /// - Returns: array of AVMovieTrack
-    private func orderedTracks() -> [AVMovieTrack] {
-        let videoTracks: [AVMovieTrack] = internalMovie.tracks(withMediaType: .video)
-        let timecodeTracks: [AVMovieTrack] = internalMovie.tracks(withMediaType: .timecode)
-        let audioTracks: [AVMovieTrack] = internalMovie.tracks(withMediaType: .audio)
-        let tracks: [AVMovieTrack] = videoTracks + timecodeTracks + audioTracks
+    /// - Returns: array of AVMutableMovieTrack
+    private func orderedTracks() -> [AVMutableMovieTrack] {
+        let videoTracks: [AVMutableMovieTrack] = internalMovie.tracks(withMediaType: .video)
+        let timecodeTracks: [AVMutableMovieTrack] = internalMovie.tracks(withMediaType: .timecode)
+        let audioTracks: [AVMutableMovieTrack] = internalMovie.tracks(withMediaType: .audio)
+        let tracks: [AVMutableMovieTrack] = videoTracks + timecodeTracks + audioTracks
         return tracks
     }
     
@@ -767,7 +767,7 @@ class MovieMutatorBase: NSObject {
             time = time - movieResolution()
         }
         
-        for track: AVMovieTrack in orderedTracks() {
+        for track: AVMutableMovieTrack in orderedTracks() {
             // Get AVSampleCursor/AVAssetTrackSegment at specified track time
             let mediaRange = track.mediaPresentationTimeRange
             guard mediaRange.start <= time && time <= mediaRange.end else { continue }
@@ -808,7 +808,7 @@ class MovieMutatorBase: NSObject {
             return nil
         }
         
-        for track: AVMovieTrack in orderedTracks() {
+        for track: AVMutableMovieTrack in orderedTracks() {
             // Get AVSampleCursor/AVAssetTrackSegment at range.start
             let pts = track.samplePresentationTime(forTrackTime: range.start)
             guard CMTIME_IS_VALID(pts) else { continue }
@@ -863,7 +863,7 @@ class MovieMutatorBase: NSObject {
             return nil
         }
         
-        for track: AVMovieTrack in orderedTracks() {
+        for track: AVMutableMovieTrack in orderedTracks() {
             // Get AVSampleCursor/AVAssetTrackSegment at range.start
             let pts = track.samplePresentationTime(forTrackTime: range.start)
             guard CMTIME_IS_VALID(pts) else { continue }

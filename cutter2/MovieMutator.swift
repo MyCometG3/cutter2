@@ -496,7 +496,7 @@ class MovieMutator: MovieMutatorBase {
     public func clappaspDictionary() -> [AnyHashable: Any]? {
         var dict: [AnyHashable:Any] = [:]
         
-        let vTracks: [AVMovieTrack] = internalMovie.tracks(withMediaType: .video)
+        let vTracks: [AVMutableMovieTrack] = internalMovie.tracks(withMediaType: .video)
         guard vTracks.count > 0 else { NSSound.beep(); return nil }
         
         let formats: [Any] = (vTracks[0]).formatDescriptions
@@ -934,7 +934,7 @@ extension MovieMutator {
     ///
     /// - Returns: AVVideoComposition
     private func makeVideoComposition() -> AVVideoComposition? {
-        let vCount = internalMovie.tracks(withMediaType: AVMediaType.video).count
+        let vCount = internalMovie.tracks(withMediaType: .video).count
         if vCount > 1 {
             let comp: AVVideoComposition = AVVideoComposition(propertiesOf: internalMovie)
             return comp

@@ -210,7 +210,7 @@ extension MovieWriter {
         // Prepare exportSession
         let preset: String = (preset ?? AVAssetExportPresetPassthrough)
         let movie: AVMutableMovie = internalMovie
-        let valid: Bool = validateExportSession(fileType: type, presetName: preset)
+        let valid: Bool = await validateExportSession(fileType: type, presetName: preset)
         guard valid, let exportSession = AVAssetExportSession(asset: movie, presetName: preset) else {
             var info: [String:Any] = [:]
             info[NSLocalizedDescriptionKey] = "Incompatible b/w UTI/preset is detected."
@@ -299,14 +299,17 @@ extension MovieWriter {
     ///   - type: target AVFileType
     ///   - preset: one of AVAssetExportSession.exportPresets()
     /// - Returns: True if compatible
-    public func validateExportSession(fileType type: AVFileType, presetName preset: String?) -> Bool {
+    public func validateExportSession(fileType type: AVFileType, presetName preset: String?) async -> Bool {
         let preset: String = (preset ?? AVAssetExportPresetPassthrough)
-        let movie: AVAsset = internalMovie
+        let movie: AVAsset = internalMovie.copy() as! AVAsset
         
-        var compatiblePresets: [String] = AVAssetExportSession.exportPresets(compatibleWith: movie)
-        compatiblePresets = compatiblePresets + [AVAssetExportPresetPassthrough]
-        guard compatiblePresets.contains(preset) else {
-            Swift.print("ERROR: Incompatible presetName detected.")
+        let compatible = await withCheckedContinuation { continuation in
+            AVAssetExportSession.determineCompatibility(ofExportPreset: preset, with: movie, outputFileType: type) { compatible in
+                continuation.resume(returning: compatible)
+            }
+        }
+        guard compatible else {
+            Swift.print("ERROR: Incompatible presetName detected with AVAsset.")
             return false
         }
         

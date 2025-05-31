@@ -14,6 +14,12 @@ import AVFoundation
 /* ============================================ */
 
 extension ViewController {
+    
+    /// Runs a throwing `@MainActor`-isolated closure synchronously.
+    /// - Parameter block: A closure isolated to the main actor that may throw an error.
+    /// - Returns: The result of the closure's operation.
+    /// - Throws: Any error thrown by the closure.
+    /// - Warning: Blocks the calling thread if not already on the main thread, potentially causing UI freezes.
     nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () throws -> T) throws -> T {
         if Thread.isMainThread {
             return try MainActor.assumeIsolated {
@@ -27,7 +33,11 @@ extension ViewController {
             }
         }
     }
-
+    
+    /// Runs a non-throwing `@MainActor`-isolated closure synchronously.
+    /// - Parameter block: A non-throwing closure isolated to the main actor.
+    /// - Returns: The result of the closure's operation.
+    /// - Warning: Blocks the calling thread if not already on the main thread, potentially causing UI freezes.
     nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () -> T) -> T {
         if Thread.isMainThread {
             return MainActor.assumeIsolated {

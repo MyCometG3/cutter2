@@ -14,44 +14,56 @@ import AVFoundation
 /* ============================================ */
 
 extension Document {
-    final class Box<T>: @unchecked Sendable {
-        var value: T?
-        init(_ value: T? = nil) {
-            self.value = value
-        }
-    }
     
+    /// Executes an asynchronous, throwing operation synchronously on a detached task.
+    /// - Parameter block: A closure that performs asynchronous work and may throw.
+    /// - Returns: The result produced by the closure.
+    /// - Throws: An error thrown by the closure.
+    /// - Warning: This blocks the current thread. Do not call from the main thread.
     nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async throws -> T) throws -> T {
         let semaphore = DispatchSemaphore(value: 0)
-        let resultBox = Box<Result<T, Error>>()
-        DispatchQueue.global(qos: .userInitiated).async {
-            Task {
-                do {
-                    let value = try await block()
-                    resultBox.value = .success(value)
-                } catch {
-                    resultBox.value = .failure(error)
-                }
-                semaphore.signal()
+        let lock = DispatchQueue(label: "ResultLock")
+        var result: Result<T, Error>?
+        Task.detached(priority: .userInitiated) {
+            let taskResult: Result<T, Error>
+            do {
+                taskResult = .success(try await block())
+            } catch {
+                taskResult = .failure(error)
             }
+            lock.sync {
+                result = taskResult
+            }
+            semaphore.signal()
         }
         semaphore.wait()
-        return try resultBox.value!.get()
+        return try lock.sync { try result!.get() }
     }
     
+    /// Executes an asynchronous, non-throwing operation synchronously on a detached task.
+    /// - Parameter block: A closure that performs asynchronous work.
+    /// - Returns: The result produced by the closure.
+    /// - Warning: This blocks the current thread. Do not call from the main thread.
     nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async -> T) -> T {
         let semaphore = DispatchSemaphore(value: 0)
-        let resultBox = Box<T>()
-        DispatchQueue.global(qos: .userInitiated).async {
-            Task {
-                resultBox.value = await block()
-                semaphore.signal()
+        let lock = DispatchQueue(label: "ResultLock")
+        var result: T?
+        Task.detached(priority: .userInitiated) {
+            let taskResult = await block()
+            lock.sync {
+                result = taskResult
             }
+            semaphore.signal()
         }
         semaphore.wait()
-        return resultBox.value!
+        return lock.sync { result! }
     }
     
+    /// Runs a throwing `@MainActor`-isolated closure synchronously.
+    /// - Parameter block: A closure isolated to the main actor that may throw an error.
+    /// - Returns: The result of the closure's operation.
+    /// - Throws: Any error thrown by the closure.
+    /// - Warning: Blocks the calling thread if not already on the main thread, potentially causing UI freezes.
     nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () throws -> T) throws -> T {
         if Thread.isMainThread {
             return try MainActor.assumeIsolated {
@@ -66,6 +78,10 @@ extension Document {
         }
     }
     
+    /// Runs a non-throwing `@MainActor`-isolated closure synchronously.
+    /// - Parameter block: A non-throwing closure isolated to the main actor.
+    /// - Returns: The result of the closure's operation.
+    /// - Warning: Blocks the calling thread if not already on the main thread, potentially causing UI freezes.
     nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () -> T) -> T {
         if Thread.isMainThread {
             return MainActor.assumeIsolated {

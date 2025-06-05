@@ -391,7 +391,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         // Sandbox support - keep source document security scope bookmark
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
-            Task { [typeName, srcURL, weak self] in // @escaping
+            Task { @Sendable @MainActor [typeName, srcURL, weak self] in // @escaping
                 // Swift.print(#function, #line, #file)
                 
                 guard let self else { fatalError("Unexpected nil self detected.") }
@@ -443,7 +443,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print(#function, #line, #file)
         
         // Trigger long running task via global dispatch queue
-        try performAsync { [weak self] in
+        try performAsync { @Sendable [weak self] in
             guard let self else { fatalError("Unexpected nil self detected.") }
             
             switch saveOperation {
@@ -475,14 +475,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         // Show busy sheet
         showBusySheet("Writing...", "Please hold on second(s)...")
-        mutator.unblockUserInteraction = { [weak self] in
+        mutator.unblockUserInteraction = { @Sendable [weak self] in
             self?.unblockUserInteraction()
         }
         defer {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-        mutator.updateProgress = { [weak self] (progress) in
+        mutator.updateProgress = { @Sendable [weak self] (progress) in
             guard let self else { fatalError("Unexpected nil self detected.") }
             performSyncOnMainActor {
                 updateProgress(progress)
@@ -516,7 +516,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print(#function, #line, #file)
         
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
-        Task { [weak self] in
+        Task { @MainActor [weak self] in
             // Swift.print(#function, #line, #file)
             
             guard let self else { fatalError("Unexpected nil self detected.") }
@@ -701,12 +701,12 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         guard let transcodeVC = contVC as? TranscodeViewController else { fatalError("Unexpected nil TranscodeViewController detected.") }
         
         // Show Transcode Sheet
-        transcodeVC.beginSheetModal(for: self.window!) {[weak self] (response) in // @escaping
+        transcodeVC.beginSheetModal(for: self.window!) { @Sendable @MainActor [weak self] (response) in // @escaping
             // Swift.print(#function, #line, #file)
             
             guard response == NSApplication.ModalResponse.continue else { return }
             
-            Task {
+            Task { @MainActor in
                 guard let self else { fatalError("Unexpected nil self detected.") }
                 self.transcoding = true
                 self.saveTo(self)
@@ -722,14 +722,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         // Show busy sheet
         showBusySheet("Exporting...", "Please hold on minute(s)...")
-        mutator.unblockUserInteraction = { [weak self] in
+        mutator.unblockUserInteraction = { @Sendable [weak self] in
             self?.unblockUserInteraction()
         }
         defer {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-        mutator.updateProgress = { [weak self] (progress) in
+        mutator.updateProgress = { @Sendable [weak self] (progress) in
             guard let self else { fatalError("Unexpected nil self detected.") }
             performSyncOnMainActor {
                 updateProgress(progress)
@@ -757,14 +757,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         // Show busy sheet
         showBusySheet("Exporting...", "Please hold on minute(s)...")
-        mutator.unblockUserInteraction = { [weak self] in
+        mutator.unblockUserInteraction = { @Sendable [weak self] in
             self?.unblockUserInteraction()
         }
         defer {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-        mutator.updateProgress = { [weak self] (progress) in
+        mutator.updateProgress = { @Sendable [weak self] (progress) in
             guard let self else { fatalError("Unexpected nil self detected.") }
             performSyncOnMainActor {
                 updateProgress(progress)

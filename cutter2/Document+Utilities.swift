@@ -121,7 +121,7 @@ extension Document {
         }
         
         // Update UI in main queue
-        Task {
+        Task { @MainActor in
             // Swift.print(#function, #line, #file)
             
             guard let alert = self.alert else { return }
@@ -135,7 +135,7 @@ extension Document {
     public func showBusySheet(_ message: String?, _ info: String?) {
         // Swift.print(#function, #line, #file)
         
-        Task {
+        Task { @MainActor in
             // Swift.print(#function, #line, #file)
             
             guard let window = self.window else { return }
@@ -159,7 +159,7 @@ extension Document {
     public func hideBusySheet() {
         // Swift.print(#function, #line, #file)
         
-        Task {
+        Task { @MainActor in
             // Swift.print(#function, #line, #file)
             
             guard let window = self.window else { return }
@@ -177,7 +177,7 @@ extension Document {
         // Swift.print(#function, #line, #file)
         
         // Don't use NSDocument default error handling
-        Task {
+        Task { @MainActor in
             // Swift.print(#function, #line, #file)
             
             let alert = NSAlert(error: error)

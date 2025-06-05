@@ -129,7 +129,7 @@ extension MovieWriter {
         // Swift.print(#function, #line, #file)
         exportSessionPollingStop()
         
-        exportSessionPollingTask = Task<Void, Never> { [weak self] in
+        exportSessionPollingTask = Task<Void, Never> { @Sendable [weak self] in
             guard let self else { fatalError("Unexpected nil self detected.") }
             while let progress = await self.currentProgressIfExporting() {
                 await self.updateProgress?(progress)
@@ -241,7 +241,7 @@ extension MovieWriter {
         // Start ExportSession
         do {
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-                exportSession.exportAsynchronously {
+                exportSession.exportAsynchronously { @Sendable in
                     continuation.resume()
                 }
             }
@@ -794,7 +794,7 @@ extension MovieWriter {
         // Process sample buffer channels concurrently
         await withTaskGroup(of: Void.self) { group in
             for sbc in customSampleBufferChannels {
-                group.addTask { 
+                group.addTask { @Sendable in
                     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
                         sbc.start(with: self) {
                             continuation.resume()
@@ -815,7 +815,7 @@ extension MovieWriter {
         // Finish the writing session on the asset writer.
         aw.endSession(atSourceTime: endTime)
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            aw.finishWriting {
+            aw.finishWriting { @Sendable in
                 continuation.resume()
             }
         }
@@ -982,7 +982,7 @@ extension MovieWriter {
         guard let customQueue = customQueue else { fatalError("Unexpected nil customQueue detected.") }
         if writeCancelled == false {
             let params = cancelParams(channels: customSampleBufferChannels)
-            customQueue.async { // @escaping
+            customQueue.async { @Sendable in // @escaping
                 for sbc in params.channels {
                     sbc.cancel()
                 }
@@ -998,7 +998,7 @@ extension MovieWriter {
     // SampleBufferChannelDelegate
     nonisolated public func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer) {
         let params = didReadParams(channel: channel, buffer: buffer)
-        Task {
+        Task { @Sendable in
             await self.didReadCore(params)
         }
     }
@@ -1019,7 +1019,7 @@ extension MovieWriter {
         //    }
         //}
         //
-        //Task { [weak self] in // @escaping
+        //Task { @Sendable [weak self] in // @escaping
         //    // Any GUI related processing - update GUI etc. here
         //}
     }

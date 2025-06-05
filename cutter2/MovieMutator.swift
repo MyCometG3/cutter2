@@ -966,7 +966,7 @@ extension MovieMutator {
     
     public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws {
         let movieWriterParams = prepareMovieWriterParams()
-        try await Task {
+        try await Task { @MainActor in
             let movieWriter = MovieWriter(params: movieWriterParams)
             try await movieWriter.exportMovie(to: url, fileType: type, presetName: preset)
         }.value
@@ -974,7 +974,7 @@ extension MovieMutator {
     
     public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String:Sendable]) async throws {
         let movieWriterParams = prepareMovieWriterParams()
-        try await Task {
+        try await Task { @MainActor in
             let movieWriter = MovieWriter(params: movieWriterParams)
             try await movieWriter.exportCustomMovie(to: url, fileType: type, settings: param)
         }.value
@@ -982,7 +982,7 @@ extension MovieMutator {
     
     public func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) async throws {
         let movieWriterParams = prepareMovieWriterParams()
-        try await Task {
+        try await Task { @MainActor in
             let movieWriter = MovieWriter(params: movieWriterParams)
             try await movieWriter.writeMovie(to: url, fileType: type, copySampleData: selfContained)
         }.value

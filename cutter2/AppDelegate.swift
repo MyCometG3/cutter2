@@ -8,7 +8,7 @@
 
 import Cocoa
 
-@main
+@main @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     
     /* ============================================ */
@@ -46,8 +46,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBAction func nextDocument(_ sender: Any) {
         // Swift.print(#function, #line, #file)
         
-        let docList: [Document]? = NSApp.orderedDocuments as? [Document]
-        if let docList = docList, docList.count > 0 {
+        let docList: [Document] = NSApp.orderedDocuments.compactMap { $0 as? Document }
+        if docList.count > 0 {
             if let doc = docList.last, let window = doc.window {
                 window.makeKeyAndOrderFront(self)
             }
@@ -94,8 +94,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             
             let defaults = UserDefaults.standard
             var bookmarks: [Data] = []
-            if let array = defaults.array(forKey: bookmarksKey) {
-                bookmarks = array as! [Data]
+            if let array = defaults.array(forKey: bookmarksKey) as? [Data] {
+                bookmarks = array
             }
             bookmarks.append(data)
             defaults.set(bookmarks, forKey: bookmarksKey)
@@ -132,8 +132,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         useLog = verbose
         var validItems: [Data] = []
         let defaults = UserDefaults.standard
-        if let bookmarks = defaults.array(forKey: bookmarksKey) {
-            for item: Data in (bookmarks as! [Data]) {
+        if let bookmarks = defaults.array(forKey: bookmarksKey) as? [Data] {
+            for item: Data in bookmarks {
                 /*
                  Preserve souce movie file information as security scoped bookmark data.
                  
@@ -141,8 +141,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                  Different from legacy QuickTime framework, AVMovie does not use bookmark/alias for
                  sample reference. It depends on filepath string and doesn't follow file path change.
                  */
-                var url: URL? = nil
-                let validated: Data? = refreshBookmarkIfRequired(item, urlOut: &url, acceptStale: false)
+                let (validated, url): (Data?, URL?) = refreshBookmarkIfRequired(item, acceptStale: false)
                 if let validated = validated, let url = url {
                     validItems.append(validated)
                     block(url)
@@ -159,7 +158,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     ///   - urlOut: resolved url from the bookmark
     ///   - acceptStale: accept stale bookmark or not
     /// - Returns: resulted bookmark data
-    private func refreshBookmarkIfRequired(_ item: Data, urlOut: inout URL?, acceptStale: Bool) -> Data? {
+    private func refreshBookmarkIfRequired(_ item: Data, acceptStale: Bool) -> (data: Data?, url: URL?) {
         // Swift.print(#function, #line, #file)
         
         // Validate bookmark item
@@ -169,29 +168,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                                    options: .withSecurityScope,
                                    relativeTo: nil,
                                    bookmarkDataIsStale: &stale)
-            urlOut = url
             if !stale {
                 log("NOTE: Valid bookmark -", url.path)
-                return item // Valid bookmark - No change
+                return (item, url) // Valid bookmark - No change
             } else {
                 // Try renewing bookmark item
                 if let newItem = createBookmark(for: url) {
                     log("NOTE: Valid bookmark -", url.path, "(renewed)")
-                    return newItem // Renewed bookmark
+                    return (newItem, url) // Renewed bookmark
                 }
-                
-                // Failed to create new bookmark for the url
-                if acceptStale {
-                    log("NOTE: Valid bookmark -", url.path, (stale ? "(stale)" : ""))
-                    return item // Staled bookmark - No change
-                } else {
-                    log("NOTE: Invalidate bookmark -", url.path, (stale ? "(stale)" : ""))
-                    return nil // Staled => Invalid
-                }
+            }
+            
+            // Failed to create new bookmark for the url
+            if acceptStale {
+                log("NOTE: Valid bookmark -", url.path, "(stale)")
+                return (item, url) // Staled bookmark - No change
+            } else {
+                log("NOTE: Invalidate bookmark -", url.path, "(stale)")
+                return (nil, url) // Staled => Invalidate
             }
         } catch {
             log("NOTE: Invalid bookmark -", error.localizedDescription)
-            return nil // Invalid bookmark - nil returned
+            return (nil, nil) // Invalid bookmark - nil returned
         }
     }
     
@@ -213,7 +211,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Swift.print(#function, #line, #file)
         
         if useLog {
-            let output = items.map{ ($0 as AnyObject).description }.joined(separator:" ")
+            let output = items.map { String(describing: $0) }.joined(separator: " ")
             Swift.print(output)
         }
     }

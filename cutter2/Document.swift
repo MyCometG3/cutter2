@@ -337,8 +337,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             // File opened successfully
             self.fileURL = url
             self.fileType = typeName
-            if let attribute = try? FileManager.default.attributesOfItem(atPath: url.path),
-               let modificationDate = attribute[.modificationDate] as? Date {
+            let attribute = try FileManager.default.attributesOfItem(atPath: url.path)
+            if let modificationDate = attribute[.modificationDate] as? Date {
                 self.fileModificationDate = modificationDate
             }
             self.updateChangeCount(.changeCleared)

@@ -38,8 +38,8 @@ class DocumentController: NSDocumentController {
         // Set the document properties
         document.fileURL = url
         document.fileType = typeName
-        if let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
-           let modificationDate = attributes[.modificationDate] as? Date {
+        let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+        if let modificationDate = attributes[.modificationDate] as? Date {
             document.fileModificationDate = modificationDate
         }
         document.updateChangeCount(.changeCleared)
@@ -84,8 +84,8 @@ class DocumentController: NSDocumentController {
         // Set the document properties
         document.fileURL = urlOrNil
         document.fileType = typeName
-        if let attributes = try? FileManager.default.attributesOfItem(atPath: contentsURL.path),
-           let modificationDate = attributes[.modificationDate] as? Date {
+        let attributes = try FileManager.default.attributesOfItem(atPath: contentsURL.path)
+        if let modificationDate = attributes[.modificationDate] as? Date {
             document.fileModificationDate = modificationDate
         }
         document.updateChangeCount(.changeReadOtherContents)

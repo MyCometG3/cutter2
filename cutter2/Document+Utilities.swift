@@ -177,6 +177,7 @@ extension Document {
         // Swift.print(#function, #line, #file)
         
         // Don't use NSDocument default error handling
+        guard let window = self.window else { fatalError("Unexpected nil window detected.") }
         Task { @MainActor in
             // Swift.print(#function, #line, #file)
             
@@ -199,7 +200,7 @@ extension Document {
             if let text = text {
                 alert.informativeText = text
             }
-            alert.beginSheetModal(for: self.window!, completionHandler: nil)
+            alert.beginSheetModal(for: window, completionHandler: nil)
         }
     }
 }

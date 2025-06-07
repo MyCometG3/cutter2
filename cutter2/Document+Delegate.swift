@@ -146,21 +146,21 @@ extension Document: ViewControllerDelegate {
         return mutator.positionOfTime(time)
     }
     
-    public func doCut() throws {
+    public func doCut() {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         mutator.cutSelection(using: self.undoManagerWrapper)
     }
     
-    public func doCopy() throws {
+    public func doCopy() {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         mutator.copySelection()
     }
     
-    public func doPaste() throws {
+    public func doPaste() {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
@@ -168,7 +168,7 @@ extension Document: ViewControllerDelegate {
     }
     
     /// Delete selection range
-    public func doDelete() throws {
+    public func doDelete() {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }

@@ -10,6 +10,78 @@ import Cocoa
 import AVFoundation
 import AVKit
 
+/* ============================================ */
+// MARK: - DocumentError
+/* ============================================ */
+
+enum DocumentError: Error {
+    case incompatibleFileType
+    case unableToOpenFile
+    case emptyMovie
+    case unsupportedSaveOperation
+    case unsupportedFileExtension
+    case fileTypeAndExtensionMismatch
+    case overwriteSelfContainedWithReference
+    case internalError
+    case modifyCaparFailed
+    
+    var nsError: NSError {
+        let domain = NSOSStatusErrorDomain
+        switch self {
+        case .incompatibleFileType:
+            let info = [NSLocalizedDescriptionKey: "Incompatible file type detected."]
+            return NSError(domain: domain, code: unimpErr, userInfo: info)
+        case .unableToOpenFile:
+            let info = [NSLocalizedDescriptionKey: "Unable to open specified file as AVMovie."]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
+        case .emptyMovie:
+            let info = [NSLocalizedDescriptionKey: "Empty movie cannot be saved."]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
+        case .unsupportedSaveOperation:
+            let info = [NSLocalizedDescriptionKey: "Unsupported SaveOperationType detected."]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
+        case .unsupportedFileExtension:
+            let info = [NSLocalizedDescriptionKey: "Unsupported file extension is detected."]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
+        case .fileTypeAndExtensionMismatch:
+            let info = [NSLocalizedDescriptionKey: "Mismatch between file extension and file type."]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
+        case .overwriteSelfContainedWithReference:
+            let info = [NSLocalizedDescriptionKey: "Please choose different file name."]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
+        case .internalError:
+            let info = [NSLocalizedDescriptionKey: "Internal error occurred."]
+            return NSError(domain: domain, code: unimpErr, userInfo: info)
+        case .modifyCaparFailed:
+            let info = [NSLocalizedDescriptionKey: "Failed to modify CAPAR extensions."]
+            return NSError(domain: domain, code: unimpErr, userInfo: info)
+        }
+    }
+    
+    func nsError(with reason: String) -> NSError {
+        let error = self.nsError
+        var userInfo = error.userInfo
+        userInfo[NSLocalizedFailureReasonErrorKey] = reason
+        return NSError(domain: error.domain, code: error.code, userInfo: userInfo)
+    }
+}
+
+extension Document {
+    /// Throw an error with a specific reason.
+    /// - Parameters:
+    ///   - error: The `DocumentError` to throw.
+    ///   - reason: An optional reason for the error.
+    /// - Returns: Never
+    private nonisolated func throwError(_ error: DocumentError, reason: String? = nil) throws -> Never {
+        let nsError = reason != nil ? error.nsError(with: reason!) : error.nsError
+        throw nsError
+    }
+}
+
+/* ============================================ */
+// MARK: -
+/* ============================================ */
+
 @MainActor
 class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
@@ -249,10 +321,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Check UTI for AVMovie fileType
         let fileType = AVFileType.init(rawValue: typeName)
         if AVMovie.movieTypes().contains(fileType) == false {
-            var info: [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Incompatible file type detected."
-            info[NSLocalizedFailureReasonErrorKey] = "(UTI:" + typeName + ")"
-            throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: info)
+            let reason = "(UTI: \(typeName))"
+            try throwError(.incompatibleFileType, reason: reason)
         }
         
         // Swift.print("##### READ STARTED #####")
@@ -280,10 +350,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             self.movieMutator = MovieMutator(with: movie)
             self.addMutationObserver()
         } else {
-            var info: [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Unable to open specified file as AVMovie."
-            info[NSLocalizedFailureReasonErrorKey] = url.lastPathComponent + " at " + url.deletingLastPathComponent().path
-            throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+            let reason = url.lastPathComponent + " at " + url.deletingLastPathComponent().path
+            try throwError(.unableToOpenFile, reason: reason)
         }
         
         // Swift.print("##### READ FINISHED #####")
@@ -292,10 +360,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     override func read(from url: URL, ofType typeName: String) throws {
         // Swift.print(#function, #line, #file)
         
-        var info: [String:Any] = [:]
-        info[NSLocalizedDescriptionKey] = "Internal error: read(from:ofType:) should never be called"
-        info[NSLocalizedFailureReasonErrorKey] = url.lastPathComponent + " at " + url.deletingLastPathComponent().path
-        throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: info)
+        let reason = "read(from:ofType:) should never be called"
+        try throwError(.internalError, reason: reason)
     }
     
     override class func canConcurrentlyReadDocuments(ofType typeName: String) -> Bool {
@@ -320,10 +386,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         //
         guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
         guard mutator.movieDuration() > CMTime.zero else {
-            var info: [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Empty movie cannot be saved."
-            info[NSLocalizedFailureReasonErrorKey] = "Zero duration movie is not supported."
-            throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+            let reason = "Zero duration movie is not supported."
+            try throwError(.emptyMovie, reason: reason)
         }
         
         try await super.save(to: url, ofType: typeName, for: saveOperation)
@@ -374,19 +438,15 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 // Reset cached accessoryVCselfContained to avoid unexpected behavior
                 self.accessoryVCselfContained = true
                 
-                var info: [String:Any] = [:]
-                info[NSLocalizedDescriptionKey] = "Please choose different file name."
-                info[NSLocalizedFailureReasonErrorKey] = "You cannot overwrite self-contained movie with reference movie."
-                throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+                let reason = "You cannot overwrite self-contained movie with reference movie."
+                try throwError(.overwriteSelfContainedWithReference, reason: reason)
             }
         }
         
         // Verify UTI compatibility with AVFileType
         if AVMovie.movieTypes().contains(fileType) == false {
-            var info: [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Incompatible file type detected."
-            info[NSLocalizedFailureReasonErrorKey] = "(UTI:" + typeName + ")"
-            throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: nil)
+            let reason = "(UTI:" + typeName + ")"
+            try throwError(.incompatibleFileType, reason: reason)
         }
         
         // Sandbox support - keep source document security scope bookmark
@@ -460,10 +520,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 // Save.../Save as...
                 try await writeAsync(to: url, ofType: typeName)
             default:
-                var info: [String:Any] = [:]
-                info[NSLocalizedDescriptionKey] = "Unsupported SaveOperationType detected."
-                info[NSLocalizedFailureReasonErrorKey] = "No autoSave feature is implemented yet."
-                throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: info)
+                let reason = "No autoSave feature is implemented yet."
+                try throwError(.unsupportedSaveOperation, reason: reason)
             }
         }
     }
@@ -625,22 +683,18 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print(#function, #line, #file)
         
         guard let accessoryVC = self.accessoryVC else {
-            throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: nil)
+            let reason = "Unexpected nil accessoryVC detected."
+            try throwError(.internalError, reason: reason)
         }
         
         guard let fileType = fileTypeForURL(url) else {
-            var info: [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Unsupported file extension is detected."
-            info[NSLocalizedFailureReasonErrorKey] = "(" + url.pathExtension + ")"
-            throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+            let reason = "(" + url.pathExtension + ")"
+            try throwError(.unsupportedFileExtension, reason: reason)
         }
         
         if accessoryVC.fileType != fileType {
-            var info: [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Mismatch between file extension and file type."
-            info[NSLocalizedFailureReasonErrorKey] =
-                "URL(" + fileType.rawValue + ") vs Popup(" + accessoryVC.fileType.rawValue + ")"
-            throw NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: info)
+            let reason = "URL(" + fileType.rawValue + ") vs Popup(" + accessoryVC.fileType.rawValue + ")"
+            try throwError(.fileTypeAndExtensionMismatch, reason: reason)
         }
         
         // Cache last selection state in MainThread here

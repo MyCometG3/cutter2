@@ -11,6 +11,64 @@ import AVFoundation
 import VideoToolbox
 
 /* ============================================ */
+// MARK: - MovieWriterError
+/* ============================================ */
+
+enum MovieWriterError: Error {
+    case compatibilityError
+    case assetReaderWriterUnavailable
+    case anotherExportSessionRunning
+    case movieWriterFailed
+    case assetReaderWriterFailed
+    case unknown
+
+    var nsError: NSError {
+        let domain = "MovieWriterError"
+        switch self {
+        case .compatibilityError:
+            let info = [NSLocalizedDescriptionKey: "The selected file type or preset is not compatible with the current movie."]
+            return NSError(domain: domain, code: 1, userInfo: info)
+        case .assetReaderWriterUnavailable:
+            let info = [NSLocalizedDescriptionKey: "AVAssetReader or AVAssetWriter could not be created or is unavailable."]
+            return NSError(domain: domain, code: 2, userInfo: info)
+        case .anotherExportSessionRunning:
+            let info = [NSLocalizedDescriptionKey: "An export session is already in progress."]
+            return NSError(domain: domain, code: 3, userInfo: info)
+        case .movieWriterFailed:
+            let info = [NSLocalizedDescriptionKey: "The movie writer encountered an error during the writing process."]
+            return NSError(domain: domain, code: 4, userInfo: info)
+        case .assetReaderWriterFailed:
+            let info = [NSLocalizedDescriptionKey: "The asset reader or writer encountered an error."]
+            return NSError(domain: domain, code: 5, userInfo: info)
+        case .unknown:
+            let info = [NSLocalizedDescriptionKey: "An unknown error has occurred."]
+            return NSError(domain: domain, code: -1, userInfo: info)
+        }
+    }
+    
+    func nsError(with reason: String) -> NSError {
+        let error = self.nsError
+        var userInfo = error.userInfo
+        userInfo[NSLocalizedFailureReasonErrorKey] = reason
+        return NSError(domain: error.domain, code: error.code, userInfo: userInfo)
+    }
+}
+
+extension MovieWriter {
+    /// Throw an error with a specific reason. This method updates the internal state of the writer and throws the error.
+    /// - Parameters:
+    ///   - error: The `MovieWriterError` to throw
+    ///   - reason: Optional reason for the error
+    /// - Returns: Never
+    private func throwError(_ error: MovieWriterError, reason: String? = nil) throws -> Never {
+        let error = reason != nil ? error.nsError(with: reason!) : error.nsError
+        self.writeError = error
+        self.writeSuccess = false
+        throw error
+    }
+}
+
+/* ============================================ */
 // MARK: -
 /* ============================================ */
 
@@ -170,10 +228,8 @@ extension MovieWriter {
         // Swift.print(#function, #line, #file)
         
         guard writeInProgress == false else {
-            var info: [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Another exportSession is running."
-            info[NSLocalizedFailureReasonErrorKey] = "Try after export session is completed."
-            throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+            let reason = "Please wait until the current export session finishes."
+            try throwError(.anotherExportSessionRunning, reason: reason)
         }
         defer {
             writeInProgress = false
@@ -212,12 +268,8 @@ extension MovieWriter {
         let movie: AVMutableMovie = internalMovie
         let valid: Bool = await validateExportSession(fileType: type, presetName: preset)
         guard valid, let exportSession = AVAssetExportSession(asset: movie, presetName: preset) else {
-            var info: [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Incompatible b/w UTI/preset is detected."
-            info[NSLocalizedFailureReasonErrorKey] = "(type:" + type.rawValue + ", preset:" + preset + ") is incompatible."
-            self.writeError = NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
-            self.writeSuccess = false
-            throw self.writeError ?? NSError()
+            let reason: String = "(type:" + type.rawValue + ", preset:" + preset + ") is incompatible."
+            try throwError(.compatibilityError, reason: reason)
         }
         
         // Configure exportSession
@@ -863,10 +915,8 @@ extension MovieWriter {
         
         // Check that no export is already running.
         guard writeInProgress == false else {
-            var info: [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Another exportSession is running."
-            info[NSLocalizedFailureReasonErrorKey] = "Try after export session is completed."
-            throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+            let reason = "Please wait until the current export session finishes."
+            try throwError(.anotherExportSessionRunning, reason: reason)
         }
         defer {
             writeInProgress = false
@@ -909,23 +959,10 @@ extension MovieWriter {
         var ar: AVAssetReader
         var aw: AVAssetWriter
         do {
-            let assetReader: AVAssetReader? = try AVAssetReader(asset: movie)
-            let assetWriter: AVAssetWriter? = try AVAssetWriter(url: url, fileType: type)
-            if let assetReader = assetReader, let assetWriter = assetWriter {
-                ar = assetReader
-                aw = assetWriter
-            } else {
-                var info: [String:Any] = [:]
-                info[NSLocalizedDescriptionKey] = "Internal error"
-                info[NSLocalizedFailureReasonErrorKey] = "Either AVAssetReader or AVAssetWriter is not available."
-                self.writeError = NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
-                self.writeSuccess = false
-                throw self.writeError ?? NSError()
-            }
+            ar = try AVAssetReader(asset: movie)
+            aw = try AVAssetWriter(url: url, fileType: type)
         } catch {
-            self.writeError = error
-            self.writeSuccess = false
-            throw self.writeError ?? NSError()
+            try throwError(.assetReaderWriterUnavailable, reason: "Failed to create AVAssetReader or AVAssetWriter.")
         }
         
         // Configure asset reader and writer.
@@ -947,9 +984,7 @@ extension MovieWriter {
                 let error = (readyReader == false) ? ar.error : aw.error
                 ar.cancelReading()
                 aw.cancelWriting()
-                self.writeError = error
-                self.writeSuccess = false
-                throw error ?? NSError()
+                try throwError(.assetReaderWriterFailed, reason: error.debugDescription)
             }
         }
         
@@ -1100,10 +1135,8 @@ extension MovieWriter {
         // Swift.print(#function, #line, #file)
         
         guard writeInProgress == false else {
-            var info: [String:Any] = [:]
-            info[NSLocalizedDescriptionKey] = "Another exportSession is running."
-            info[NSLocalizedFailureReasonErrorKey] = "Try after export session is completed."
-            throw NSError(domain: NSOSStatusErrorDomain, code: paramErr, userInfo: info)
+            let reason = "Please wait until the current export session finishes."
+            try throwError(.anotherExportSessionRunning, reason: reason)
         }
         defer {
             writeInProgress = false
@@ -1210,9 +1243,8 @@ extension MovieWriter {
                 Swift.print("#####", "result:", status, "progress:", progressStr, "elapsed:", intervalStr)
             }
         } catch {
-            self.writeError = error
-            self.writeSuccess = false
-            throw self.writeError ?? NSError()
+            let reason = "Failed to write movie: \(option)."
+            try throwError(.movieWriterFailed, reason: reason)
         }
         
         /* ============================================ */

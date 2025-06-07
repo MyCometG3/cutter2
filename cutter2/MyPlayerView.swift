@@ -7,7 +7,6 @@
 //
 
 import Cocoa
-import AVFoundation
 import AVKit
 
 @MainActor

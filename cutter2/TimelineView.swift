@@ -256,6 +256,13 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
             
             // dark mode support
             label.foregroundColor = labelColor
+            
+            // HiDPI support for text rendering
+            if let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor {
+                if label.contentsScale != scale {
+                    label.contentsScale = scale
+                }
+            }
         }
         CATransaction.commit()
     }
@@ -286,8 +293,8 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
             timeLabel = label
         }
         
-        if let layer = self.layer {
-            layer.addSublayer(timeLabel!)
+        if let layer = self.layer, let timeLabel = timeLabel {
+            layer.addSublayer(timeLabel)
         }
     }
     
@@ -307,7 +314,7 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
             shape.fillColor = fillColorInactive
             shape.lineWidth = 1.0
             shape.path = path.cgPath
-            shape.bounds = shape.path!.boundingBox
+            shape.bounds = path.cgPath.boundingBox
             currentMarker = shape
         }
         
@@ -326,7 +333,7 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
             shape.fillColor = fillColorInactive
             shape.lineWidth = 1.0
             shape.path = path.cgPath
-            shape.bounds = shape.path!.boundingBox
+            shape.bounds = path.cgPath.boundingBox
             startMarker = shape
         }
         
@@ -345,7 +352,7 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
             shape.fillColor = fillColorInactive
             shape.lineWidth = 1.0
             shape.path = path.cgPath
-            shape.bounds = shape.path!.boundingBox
+            shape.bounds = path.cgPath.boundingBox
             endMarker = shape
         }
         
@@ -363,7 +370,7 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
             shape.fillColor = fillColorInactive
             shape.lineWidth = 1.0
             shape.path = path.cgPath
-            shape.bounds = shape.path!.boundingBox
+            shape.bounds = path.cgPath.boundingBox
             timeline = shape
         }
         
@@ -382,7 +389,7 @@ class TimelineView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
             shape.fillColor = fillColorActive
             shape.lineWidth = 1.0
             shape.path = path.cgPath
-            shape.bounds = shape.path!.boundingBox
+            shape.bounds = path.cgPath.boundingBox
             selection = shape
         }
         

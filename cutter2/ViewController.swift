@@ -116,10 +116,10 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     public var offsetM: Float64 = 5.0
     public var offsetL: Float64 = 15.0
     
-    // To mimic legacy QT7PlayerPro JKL combinationset this true
+    // To mimic legacy QT7PlayerPro JKL combination
     @objc public var mimicJKLcombination: Bool = true
     
-    // To mimic legacy QT7PlayerPro left/right combination set this true
+    // To mimic legacy QT7PlayerPro left/right combination
     public var ignoreOptionWhenShift: Bool = false
     
     // To mimic legacy QT7PlayerPro selectionMarker move sync w/ current
@@ -720,7 +720,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
             }
         }
         
-        // use interpretKeyEvents: for other key events
+        // use interpretKeyEvents(_:) for other key events
         self.interpretKeyEvents([event])
     }
     

@@ -326,8 +326,12 @@ extension MovieWriter {
         }
         
         //
-        if writeSuccess == false, let error = writeError {
-            throw error
+        if writeSuccess == false {
+            if let error = writeError {
+                throw error
+            } else {
+                try throwError(.movieWriterFailed, reason: "Export session failed with unknown error.")
+            }
         }
         
         /* ============================================ */
@@ -425,6 +429,9 @@ extension MovieWriter {
 
 extension MovieWriter {
     
+    private typealias LayoutPtr = UnsafePointer<AudioChannelLayout>
+    private typealias ASBDPtr = UnsafePointer<AudioStreamBasicDescription>
+    
     private func prepareCopyChannels(_ movie: AVMutableMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter, _ mediaType: AVMediaType) {
         for track in movie.tracks(withMediaType: mediaType) {
             // source
@@ -497,7 +504,7 @@ extension MovieWriter {
                 let descArray: [Any] = track.formatDescriptions
                 let desc: CMFormatDescription = descArray[0] as! CMFormatDescription
                 
-                let asbdPtr = CMAudioFormatDescriptionGetStreamBasicDescription(desc)
+                let asbdPtr: ASBDPtr? = CMAudioFormatDescriptionGetStreamBasicDescription(desc)
                 if let asbd = asbdPtr?.pointee {
                     sampleRate = Int(asbd.mSampleRate)
                     numChannel = Int(asbd.mChannelsPerFrame)
@@ -516,8 +523,7 @@ extension MovieWriter {
                     var dataDst: AudioChannelLayoutData? = nil
                     
                     var layoutSize: Int = 0
-                    let aclPtr: UnsafePointer<AudioChannelLayout>? =
-                        CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &layoutSize)
+                    let aclPtr: LayoutPtr? = CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &layoutSize)
                     if let aclPtr = aclPtr {
                         avacDstLayout = AVAudioChannelLayout(layout: aclPtr)
                         dataSrc = conv.dataFor(layoutBytes: aclPtr, size: layoutSize)
@@ -539,13 +545,13 @@ extension MovieWriter {
                     }
                     if let data1 = dataSrc, let data2 = dataDst {
                         data1.withUnsafeBytes {(p: UnsafeRawBufferPointer) in
-                            let ptr: UnsafePointer<AudioChannelLayout> =
-                                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: 1)
+                            guard let baseAddress: UnsafeRawPointer = p.baseAddress else { fatalError("ERROR: Invalid AudioChannelLayoutData") }
+                            let ptr: LayoutPtr = baseAddress.bindMemory(to: AudioChannelLayout.self, capacity: 1)
                             avacSrcLayout = AVAudioChannelLayout(layout: ptr)
                         }
                         data2.withUnsafeBytes {(p: UnsafeRawBufferPointer) in
-                            let ptr: UnsafePointer<AudioChannelLayout> =
-                                p.baseAddress!.bindMemory(to: AudioChannelLayout.self, capacity: 1)
+                            guard let baseAddress: UnsafeRawPointer = p.baseAddress else { fatalError("ERROR: Invalid AudioChannelLayoutData") }
+                            let ptr: LayoutPtr = baseAddress.bindMemory(to: AudioChannelLayout.self, capacity: 1)
                             avacDstLayout = AVAudioChannelLayout(layout: ptr)
                             numChannel = Int(avacDstLayout.channelCount)
                         }
@@ -994,8 +1000,12 @@ extension MovieWriter {
         await exportCustomMovieCore(ar: ar, aw: aw, startTime: startTime, endTime: endTime, dateStart: dateStart)
 
         // If export failed, throw the error.
-        if writeSuccess == false, let error = writeError {
-            throw error
+        if writeSuccess == false {
+            if let error = writeError {
+                throw error
+            } else {
+                try throwError(.movieWriterFailed, reason: "Export failed without an error.")
+            }
         }
         
         /* ============================================ */

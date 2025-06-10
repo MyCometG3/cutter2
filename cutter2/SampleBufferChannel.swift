@@ -56,7 +56,7 @@ class SampleBufferChannel: @unchecked Sendable {
             guard let self else { fatalError("Unexpected nil self detected.") }
             if self.finished { return }
             
-            let delegate: SampleBufferChannelDelegate = self.delegate!
+            guard let delegate: SampleBufferChannelDelegate = self.delegate else { fatalError("Unexpected nil delegate detected.") }
             let arOutput: AVAssetReaderOutput = self.arOutput
             let awInput: AVAssetWriterInput = self.awInput
             

@@ -63,6 +63,7 @@ class InspectorViewController: NSViewController {
     private func startTimer() {
         // Swift.print(#function, #line, #file)
         
+        stopTimer()
         timer = Timer.scheduledTimer(timeInterval: refreshInterval,
                                      target: self, selector: #selector(timerFireMethod),
                                      userInfo: nil, repeats: true)
@@ -83,12 +84,11 @@ class InspectorViewController: NSViewController {
             return
         }
         
-        let document: Document? = NSApp.orderedDocuments.first as? Document
-        guard let doc = document else { return }
-        let dict: [String:Any] = doc.inspecterDictionary()
-        let content: NSMutableDictionary = objectController.content as! NSMutableDictionary
+        guard let document: Document = NSApp.orderedDocuments.first as? Document else { return }
+        let dict: [String:Any] = document.inspecterDictionary()
+        guard let content: NSMutableDictionary = objectController.content as? NSMutableDictionary else { return }
         for key in dict.keys {
-            let dictValue: String = dict[key] as! String
+            guard let dictValue: String = dict[key] as? String else { continue }
             let contValue: String? = content[key] as? String
             if let contValue = contValue, contValue == dictValue {
                 // same value - no update

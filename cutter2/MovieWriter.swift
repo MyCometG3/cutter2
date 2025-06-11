@@ -188,7 +188,7 @@ extension MovieWriter {
         exportSessionPollingStop()
         
         exportSessionPollingTask = Task<Void, Never> { @Sendable [weak self] in
-            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
             while let progress = await self.currentProgressIfExporting() {
                 await self.updateProgress?(progress)
                 try? await Task.sleep(nanoseconds: UInt64(self.exportSessionTimerRefreshInterval * 1_000_000_000))
@@ -545,12 +545,12 @@ extension MovieWriter {
                     }
                     if let data1 = dataSrc, let data2 = dataDst {
                         data1.withUnsafeBytes {(p: UnsafeRawBufferPointer) in
-                            guard let baseAddress: UnsafeRawPointer = p.baseAddress else { fatalError("ERROR: Invalid AudioChannelLayoutData") }
+                            guard let baseAddress: UnsafeRawPointer = p.baseAddress else { preconditionFailure("ERROR: Invalid AudioChannelLayoutData") }
                             let ptr: LayoutPtr = baseAddress.bindMemory(to: AudioChannelLayout.self, capacity: 1)
                             avacSrcLayout = AVAudioChannelLayout(layout: ptr)
                         }
                         data2.withUnsafeBytes {(p: UnsafeRawBufferPointer) in
-                            guard let baseAddress: UnsafeRawPointer = p.baseAddress else { fatalError("ERROR: Invalid AudioChannelLayoutData") }
+                            guard let baseAddress: UnsafeRawPointer = p.baseAddress else { preconditionFailure("ERROR: Invalid AudioChannelLayoutData") }
                             let ptr: LayoutPtr = baseAddress.bindMemory(to: AudioChannelLayout.self, capacity: 1)
                             avacDstLayout = AVAudioChannelLayout(layout: ptr)
                             numChannel = Int(avacDstLayout.channelCount)
@@ -1024,7 +1024,7 @@ extension MovieWriter {
     }
     
     public func cancelCustomMovie(_ sender: Any) {
-        guard let customQueue = customQueue else { fatalError("Unexpected nil customQueue detected.") }
+        guard let customQueue = customQueue else { preconditionFailure("Unexpected nil customQueue detected.") }
         if writeCancelled == false {
             let params = cancelParams(channels: customSampleBufferChannels)
             customQueue.async { @Sendable in // @escaping
@@ -1204,7 +1204,7 @@ extension MovieWriter {
         let movie: AVMutableMovie = internalMovie
         let range: CMTimeRange = movie.range
         guard let newMovie: AVMutableMovie = try? AVMutableMovie(settingsFrom: movie, options: nil) else {
-            fatalError("ERROR: Failed to create proxy object.")
+            preconditionFailure("ERROR: Failed to create proxy object.")
         }
         newMovie.timescale = movie.timescale // workaround
         newMovie.defaultMediaDataStorage = selfContained ? AVMediaDataStorage(url: url, options: nil) : nil

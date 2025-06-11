@@ -260,7 +260,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         self.closingBlock = {[obj, shouldCloseSelector, contextInfo, weak self] (flag) -> Void in // @escaping
             // Swift.print(#function, #line, #file, "shouldClose =", flag)
             
-            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
             function(obj, shouldCloseSelector!, self, flag, contextInfo)
         }
         
@@ -384,7 +384,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print(#function, #line, #file)
         
         //
-        guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
+        guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         guard mutator.movieDuration() > CMTime.zero else {
             let reason = "Zero duration movie is not supported."
             try throwError(.emptyMovie, reason: reason)
@@ -454,11 +454,11 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             Task { @Sendable @MainActor [typeName, srcURL, weak self] in // @escaping
                 // Swift.print(#function, #line, #file)
                 
-                guard let self else { fatalError("Unexpected nil self detected.") }
+                guard let self else { preconditionFailure("Unexpected nil self detected.") }
                 let fileType: AVFileType = AVFileType.init(rawValue: typeName)
                 guard fileType == .mov else { return }
                 
-                guard let accessoryVC = self.accessoryVC else { fatalError("Unexpected nil accessoryVC detected.") }
+                guard let accessoryVC = self.accessoryVC else { preconditionFailure("Unexpected nil accessoryVC detected.") }
                 let saveAsRefMov: Bool = (accessoryVC.selfContained == false)
                 guard saveAsRefMov else { return }
                 
@@ -504,7 +504,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         // Trigger long running task via global dispatch queue
         try performAsync { @Sendable [weak self] in
-            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
             
             switch saveOperation {
             case .saveToOperation:
@@ -529,7 +529,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     private func writeAsync(to url: URL, ofType typeName: String) async throws {
         // Swift.print(#function, #line, #file)
         
-        guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
+        guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
         // Show busy sheet
         showBusySheet("Writing...", "Please hold on second(s)...")
@@ -541,7 +541,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             hideBusySheet()
         }
         mutator.updateProgress = { @Sendable [weak self] (progress) in
-            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
             performSyncOnMainActor {
                 updateProgress(progress)
             }
@@ -577,11 +577,11 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         Task { @MainActor [weak self] in
             // Swift.print(#function, #line, #file)
             
-            guard let self else { fatalError("Unexpected nil self detected.") }
-            guard let url: URL = self.fileURL else { fatalError("Unexpected nil fileURL detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
+            guard let url: URL = self.fileURL else { preconditionFailure("Unexpected nil fileURL detected.") }
             let newMovie: AVMutableMovie? = AVMutableMovie(url: url, options: nil)
             if let newMovie = newMovie {
-                guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
+                guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
                 let time: CMTime = mutator.insertionTime
                 let range: CMTimeRange = mutator.selectedTimeRange
                 
@@ -606,7 +606,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     override func prepareSavePanel(_ savePanel: NSSavePanel) -> Bool {
         // Swift.print(#function, #line, #file)
         
-        guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
+        guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
         // prepare accessory view controller
         if self.accessoryVC == nil {
@@ -617,7 +617,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             accessoryVC.loadView()
             accessoryVC.delegate = self
         }
-        guard let accessoryVC = self.accessoryVC else { fatalError("Unexpected nil accessoryVC detected.") }
+        guard let accessoryVC = self.accessoryVC else { preconditionFailure("Unexpected nil accessoryVC detected.") }
         
         // prepare file types same as current source
         var uti: String = self.fileType ?? AVFileType.mov.rawValue
@@ -733,7 +733,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     public func didUpdateFileType(_ fileType: AVFileType, selfContained: Bool) {
         // Swift.print(#function, #line, #file)
         
-        guard let savePanel = self.savePanel else { fatalError("Unexpected nil savePanel detected.") }
+        guard let savePanel = self.savePanel else { preconditionFailure("Unexpected nil savePanel detected.") }
         savePanel.allowedContentTypes = [UTType(fileType.rawValue)!]
     }
     
@@ -751,8 +751,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // transcodeWC.loadWindow()
         
         // Prepare Transcode ViewController
-        guard let contVC = transcodeWC.contentViewController else { fatalError("Unexpected nil contentViewController detected.") }
-        guard let transcodeVC = contVC as? TranscodeViewController else { fatalError("Unexpected nil TranscodeViewController detected.") }
+        guard let contVC = transcodeWC.contentViewController else { preconditionFailure("Unexpected nil contentViewController detected.") }
+        guard let transcodeVC = contVC as? TranscodeViewController else { preconditionFailure("Unexpected nil TranscodeViewController detected.") }
         
         // Show Transcode Sheet
         transcodeVC.beginSheetModal(for: self.window!) { @Sendable @MainActor [weak self] (response) in // @escaping
@@ -761,7 +761,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             guard response == NSApplication.ModalResponse.continue else { return }
             
             Task { @MainActor in
-                guard let self else { fatalError("Unexpected nil self detected.") }
+                guard let self else { preconditionFailure("Unexpected nil self detected.") }
                 self.transcoding = true
                 self.saveTo(self)
                 self.transcoding = false
@@ -772,7 +772,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     private func export(to url: URL, ofType typeName: String, preset: String) async throws {
         // Swift.print(#function, #line, #file)
         
-        guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
+        guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
         // Show busy sheet
         showBusySheet("Exporting...", "Please hold on minute(s)...")
@@ -784,7 +784,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             hideBusySheet()
         }
         mutator.updateProgress = { @Sendable [weak self] (progress) in
-            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
             performSyncOnMainActor {
                 updateProgress(progress)
             }
@@ -807,7 +807,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     private func exportCustom(to url: URL, ofType typeName: String) async throws {
         // Swift.print(#function, #line, #file)
         
-        guard let mutator = self.movieMutator else { fatalError("Unexpected nil mutator detected.") }
+        guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
         // Show busy sheet
         showBusySheet("Exporting...", "Please hold on minute(s)...")
@@ -819,7 +819,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             hideBusySheet()
         }
         mutator.updateProgress = { @Sendable [weak self] (progress) in
-            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
             performSyncOnMainActor {
                 updateProgress(progress)
             }
@@ -996,15 +996,15 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // caparWC.loadWindow()
         
         // Prepare CAPAR ViewController
-        guard let contVC = caparWC.contentViewController else { fatalError("Unexpected nil contentViewController detected.") }
-        guard let caparVC = contVC as? CAPARViewController else { fatalError("Unexpected nil CAPARViewController detected.") }
+        guard let contVC = caparWC.contentViewController else { preconditionFailure("Unexpected nil contentViewController detected.") }
+        guard let caparVC = contVC as? CAPARViewController else { preconditionFailure("Unexpected nil CAPARViewController detected.") }
         guard caparVC.applySource(dict) else { return }
         
         // Show CAPAR Sheet
         caparVC.beginSheetModal(for: self.window!) {[caparVC, mutator, weak self] (response) in // @escaping
             // Swift.print(#function, #line, #file)
             
-            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
             guard response == .continue else { return }
             
             // Update Clap/Pasp settings

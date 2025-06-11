@@ -177,7 +177,7 @@ extension Document {
         // Swift.print(#function, #line, #file)
         
         // Don't use NSDocument default error handling
-        guard let window = self.window else { fatalError("Unexpected nil window detected.") }
+        guard let window = self.window else { preconditionFailure("Unexpected nil window detected.") }
         Task { @MainActor in
             // Swift.print(#function, #line, #file)
             
@@ -293,9 +293,9 @@ extension Document {
         
         updateRate(player, 0.0)
         let handler: @Sendable (Bool) -> Void = {[weak self, weak player, weak mutator] (finished) in // @escaping
-            guard let self else { fatalError("Unexpected nil self detected.") }
-            guard let player = player else { fatalError("Unexpected nil player detected.") }
-            guard let mutator = mutator else { fatalError("Unexpected nil mutator detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
+            guard let player = player else { preconditionFailure("Unexpected nil player detected.") }
+            guard let mutator = mutator else { preconditionFailure("Unexpected nil mutator detected.") }
             performSyncOnMainActor {
                 updateRate(player, rate)
                 updateTimeline(time, range: mutator.selectedTimeRange)
@@ -347,8 +347,8 @@ extension Document {
             let handler: @Sendable (Bool) -> Void = {[weak self, weak pv] (finished) in // @escaping
                 // Swift.print(#function, #line, #file)
                 
-                guard let self else { fatalError("Unexpected nil self detected.") }
-                guard let pv = pv else { fatalError("Unexpected nil pv detected.") }
+                guard let self else { preconditionFailure("Unexpected nil self detected.") }
+                guard let pv = pv else { preconditionFailure("Unexpected nil pv detected.") }
                 performSyncOnMainActor {
                     pv.needsDisplay = true
                 }
@@ -557,7 +557,7 @@ extension Document {
         let handler: @Sendable (Notification) -> Void = {[weak self] (notification) in // @escaping
             // Swift.print(#function, #line, #file)
             
-            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
             guard
                 let mutator = performSyncOnMainActor({ self.movieMutator }),
                 let object = notification.object as? MovieMutator,

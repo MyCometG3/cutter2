@@ -53,10 +53,10 @@ class SampleBufferChannel: @unchecked Sendable {
         self.completionHandler = completionHandler
         
         awInput.requestMediaDataWhenReady(on: queue) {[weak self] in // @escaping
-            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
             if self.finished { return }
             
-            guard let delegate: SampleBufferChannelDelegate = self.delegate else { fatalError("Unexpected nil delegate detected.") }
+            guard let delegate: SampleBufferChannelDelegate = self.delegate else { preconditionFailure("Unexpected nil delegate detected.") }
             let arOutput: AVAssetReaderOutput = self.arOutput
             let awInput: AVAssetWriterInput = self.awInput
             
@@ -82,7 +82,7 @@ class SampleBufferChannel: @unchecked Sendable {
     public func cancel() {
         queue.async { [weak self] in
             do {
-                guard let self else { fatalError("Unexpected nil self detected.") }
+                guard let self else { preconditionFailure("Unexpected nil self detected.") }
                 self.callCompletionHandlerIfNecessary()
             }
         }

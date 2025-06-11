@@ -237,7 +237,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         let handler: @Sendable (Notification) -> Void = {[weak self] (notification) in // @escaping
             // Swift.print(#function, #line, #file)
             
-            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
             guard
                 let vcWindow = performSyncOnMainActor({ self.view.window }),
                 let object = notification.object as? NSWindow,
@@ -280,7 +280,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         let handler: @Sendable (Notification) -> Void = { [weak self] (notification) in // @escaping
             // Swift.print(#function, #line, #file)
             
-            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
             guard
                 let delegate = performSyncOnMainActor({ self.delegate }),
                 let object = notification.object as? ViewControllerDelegate,

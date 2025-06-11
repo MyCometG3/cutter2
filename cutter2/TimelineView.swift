@@ -30,7 +30,7 @@ public extension NSBezierPath {
             case .quadraticCurveTo:
                 path.addQuadCurve(to: points[1], control: points[0])
             @unknown default:
-                fatalError()
+                preconditionFailure("Unknown NSBezierPath element type encountered")
             }
         }
         return path

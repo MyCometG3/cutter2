@@ -117,7 +117,7 @@ class CAPARViewController: NSViewController {
         let textHandler: @Sendable (Notification) -> Void = { [weak self] notification in
             // Swift.print(#function, #line, #file)
             
-            guard let self else { fatalError("Unexpected nil self detected.") }
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
             guard
                 let sheetWindow = performSyncOnMainActor({ self.view.window }),
                 let control = notification.object as? NSControl,

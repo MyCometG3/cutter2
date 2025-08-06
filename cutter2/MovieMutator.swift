@@ -53,17 +53,7 @@ extension MovieMutator {
     /// - Throws: Any error thrown by the closure.
     /// - Warning: Blocks the calling thread if not already on the main thread, potentially causing UI freezes.
     nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () throws -> T) throws -> T {
-        if Thread.isMainThread {
-            return try MainActor.assumeIsolated {
-                try block()
-            }
-        } else {
-            return try DispatchQueue.main.sync {
-                return try MainActor.assumeIsolated {
-                    try block()
-                }
-            }
-        }
+        return try ActorIsolationUtils.performSyncOnMainActor(block)
     }
     
     /// Runs a non-throwing `@MainActor`-isolated closure synchronously.
@@ -71,17 +61,7 @@ extension MovieMutator {
     /// - Returns: The result of the closure's operation.
     /// - Warning: Blocks the calling thread if not already on the main thread, potentially causing UI freezes.
     nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () -> T) -> T {
-        if Thread.isMainThread {
-            return MainActor.assumeIsolated {
-                block()
-            }
-        } else {
-            return DispatchQueue.main.sync {
-                return MainActor.assumeIsolated {
-                    block()
-                }
-            }
-        }
+        return ActorIsolationUtils.performSyncOnMainActor(block)
     }
 }
 

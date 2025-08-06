@@ -12,14 +12,27 @@ import Foundation
 // MARK: - Document + TranscodeViewController (UserDefaultsKey)
 /* ============================================ */
 
-let kTranscodePresetKey = "transcodePreset"
-let kTranscodeTypeKey = "transcodeType"
-let kTrancode0Key = "transcode0"
-let kTrancode1Key = "transcode1"
-let kTrancode2Key = "transcode2"
-let kTrancode3Key = "transcode3"
-let kAVFileTypeKey = "avFileType"
-let kHEVCReadyKey = "hevcReady"
+/// User defaults keys for transcoding settings
+enum TranscodeUserDefaultsKey: String {
+    case transcodePreset = "transcodePreset"
+    case transcodeType = "transcodeType"
+    case transcode0 = "transcode0"
+    case transcode1 = "transcode1"
+    case transcode2 = "transcode2"
+    case transcode3 = "transcode3"
+    case avFileType = "avFileType"
+    case hevcReady = "hevcReady"
+}
+
+// Legacy constants for backward compatibility
+let kTranscodePresetKey = TranscodeUserDefaultsKey.transcodePreset.rawValue
+let kTranscodeTypeKey = TranscodeUserDefaultsKey.transcodeType.rawValue
+let kTrancode0Key = TranscodeUserDefaultsKey.transcode0.rawValue
+let kTrancode1Key = TranscodeUserDefaultsKey.transcode1.rawValue
+let kTrancode2Key = TranscodeUserDefaultsKey.transcode2.rawValue
+let kTrancode3Key = TranscodeUserDefaultsKey.transcode3.rawValue
+let kAVFileTypeKey = TranscodeUserDefaultsKey.avFileType.rawValue
+let kHEVCReadyKey = TranscodeUserDefaultsKey.hevcReady.rawValue
 
 let kTranscodePresetCustom = "Custom"
 
@@ -27,16 +40,31 @@ let kTranscodePresetCustom = "Custom"
 // MARK: - Document + MovieWriter (UserDefaultsKey)
 /* ============================================ */
 
-let kLPCMDepthKey = "lpcmDepth"
-let kAudioKbpsKey = "audioKbps"
-let kVideoKbpsKey = "videoKbps"
-let kCopyFieldKey = "copyField"
-let kCopyNCLCKey = "copyNCLC"
-let kCopyOtherMediaKey = "copyOtherMedia"
-let kVideoEncodeKey = "videoEncode"
-let kAudioEncodeKey = "audioEncode"
-let kVideoCodecKey = "videoCodec"
-let kAudioCodecKey = "audioCodec"
+/// User defaults keys for movie writer settings
+enum MovieWriterUserDefaultsKey: String {
+    case lpcmDepth = "lpcmDepth"
+    case audioKbps = "audioKbps"
+    case videoKbps = "videoKbps"
+    case copyField = "copyField"
+    case copyNCLC = "copyNCLC"
+    case copyOtherMedia = "copyOtherMedia"
+    case videoEncode = "videoEncode"
+    case audioEncode = "audioEncode"
+    case videoCodec = "videoCodec"
+    case audioCodec = "audioCodec"
+}
+
+// Legacy constants for backward compatibility
+let kLPCMDepthKey = MovieWriterUserDefaultsKey.lpcmDepth.rawValue
+let kAudioKbpsKey = MovieWriterUserDefaultsKey.audioKbps.rawValue
+let kVideoKbpsKey = MovieWriterUserDefaultsKey.videoKbps.rawValue
+let kCopyFieldKey = MovieWriterUserDefaultsKey.copyField.rawValue
+let kCopyNCLCKey = MovieWriterUserDefaultsKey.copyNCLC.rawValue
+let kCopyOtherMediaKey = MovieWriterUserDefaultsKey.copyOtherMedia.rawValue
+let kVideoEncodeKey = MovieWriterUserDefaultsKey.videoEncode.rawValue
+let kAudioEncodeKey = MovieWriterUserDefaultsKey.audioEncode.rawValue
+let kVideoCodecKey = MovieWriterUserDefaultsKey.videoCodec.rawValue
+let kAudioCodecKey = MovieWriterUserDefaultsKey.audioCodec.rawValue
 
 /* ============================================ */
 // MARK: - Document + MovieMutatorBase (InfoDictionaryKey)

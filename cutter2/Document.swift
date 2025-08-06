@@ -24,6 +24,10 @@ enum DocumentError: Error {
     case overwriteSelfContainedWithReference
     case internalError
     case modifyCaparFailed
+    case mutatorNotAvailable
+    case playerNotReady
+    case windowNotAvailable
+    case viewControllerNotAvailable
     
     var nsError: NSError {
         let domain = NSOSStatusErrorDomain
@@ -55,6 +59,18 @@ enum DocumentError: Error {
         case .modifyCaparFailed:
             let info = [NSLocalizedDescriptionKey: "Failed to modify CAPAR extensions."]
             return NSError(domain: domain, code: unimpErr, userInfo: info)
+        case .mutatorNotAvailable:
+            let info = [NSLocalizedDescriptionKey: "Movie mutator is not available."]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
+        case .playerNotReady:
+            let info = [NSLocalizedDescriptionKey: "Video player is not ready."]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
+        case .windowNotAvailable:
+            let info = [NSLocalizedDescriptionKey: "Document window is not available."]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
+        case .viewControllerNotAvailable:
+            let info = [NSLocalizedDescriptionKey: "View controller is not available."]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
         }
     }
     
@@ -75,6 +91,36 @@ extension Document {
     private nonisolated func throwError(_ error: DocumentError, reason: String? = nil) throws -> Never {
         let nsError = reason != nil ? error.nsError(with: reason!) : error.nsError
         throw nsError
+    }
+    
+    /// Safely unwrap movieMutator or throw an appropriate error
+    /// - Returns: The movieMutator instance
+    /// - Throws: DocumentError.mutatorNotAvailable if mutator is nil
+    internal func requireMutator() throws -> MovieMutator {
+        guard let mutator = self.movieMutator else {
+            try throwError(.mutatorNotAvailable)
+        }
+        return mutator
+    }
+    
+    /// Safely unwrap player or throw an appropriate error
+    /// - Returns: The player instance
+    /// - Throws: DocumentError.playerNotReady if player is nil
+    internal func requirePlayer() throws -> AVPlayer {
+        guard let player = self.player else {
+            try throwError(.playerNotReady)
+        }
+        return player
+    }
+    
+    /// Safely unwrap window or throw an appropriate error
+    /// - Returns: The window instance
+    /// - Throws: DocumentError.windowNotAvailable if window is nil
+    internal func requireWindow() throws -> Window {
+        guard let window = self.window else {
+            try throwError(.windowNotAvailable)
+        }
+        return window
     }
 }
 

@@ -21,23 +21,7 @@ extension Document {
     /// - Throws: An error thrown by the closure.
     /// - Warning: This blocks the current thread. Do not call from the main thread.
     nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async throws -> T) throws -> T {
-        let semaphore = DispatchSemaphore(value: 0)
-        let lock = DispatchQueue(label: "ResultLock")
-        var result: Result<T, Error>?
-        Task.detached(priority: .userInitiated) {
-            let taskResult: Result<T, Error>
-            do {
-                taskResult = .success(try await block())
-            } catch {
-                taskResult = .failure(error)
-            }
-            lock.sync {
-                result = taskResult
-            }
-            semaphore.signal()
-        }
-        semaphore.wait()
-        return try lock.sync { try result!.get() }
+        return try ActorIsolationUtils.performAsync(block)
     }
     
     /// Executes an asynchronous, non-throwing operation synchronously on a detached task.
@@ -45,18 +29,7 @@ extension Document {
     /// - Returns: The result produced by the closure.
     /// - Warning: This blocks the current thread. Do not call from the main thread.
     nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async -> T) -> T {
-        let semaphore = DispatchSemaphore(value: 0)
-        let lock = DispatchQueue(label: "ResultLock")
-        var result: T?
-        Task.detached(priority: .userInitiated) {
-            let taskResult = await block()
-            lock.sync {
-                result = taskResult
-            }
-            semaphore.signal()
-        }
-        semaphore.wait()
-        return lock.sync { result! }
+        return ActorIsolationUtils.performAsync(block)
     }
     
     /// Runs a throwing `@MainActor`-isolated closure synchronously.
@@ -65,17 +38,7 @@ extension Document {
     /// - Throws: Any error thrown by the closure.
     /// - Warning: Blocks the calling thread if not already on the main thread, potentially causing UI freezes.
     nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () throws -> T) throws -> T {
-        if Thread.isMainThread {
-            return try MainActor.assumeIsolated {
-                try block()
-            }
-        } else {
-            return try DispatchQueue.main.sync {
-                return try MainActor.assumeIsolated {
-                    try block()
-                }
-            }
-        }
+        return try ActorIsolationUtils.performSyncOnMainActor(block)
     }
     
     /// Runs a non-throwing `@MainActor`-isolated closure synchronously.
@@ -83,17 +46,7 @@ extension Document {
     /// - Returns: The result of the closure's operation.
     /// - Warning: Blocks the calling thread if not already on the main thread, potentially causing UI freezes.
     nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () -> T) -> T {
-        if Thread.isMainThread {
-            return MainActor.assumeIsolated {
-                block()
-            }
-        } else {
-            return DispatchQueue.main.sync {
-                return MainActor.assumeIsolated {
-                    block()
-                }
-            }
-        }
+        return ActorIsolationUtils.performSyncOnMainActor(block)
     }
 }
 

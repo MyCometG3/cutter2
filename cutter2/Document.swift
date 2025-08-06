@@ -14,7 +14,7 @@ import AVKit
 // MARK: - DocumentError
 /* ============================================ */
 
-enum DocumentError: Error {
+enum DocumentError: Error, NSErrorConvertible {
     case incompatibleFileType
     case unableToOpenFile
     case emptyMovie
@@ -57,13 +57,6 @@ enum DocumentError: Error {
             return NSError(domain: domain, code: unimpErr, userInfo: info)
         }
     }
-    
-    func nsError(with reason: String) -> NSError {
-        let error = self.nsError
-        var userInfo = error.userInfo
-        userInfo[NSLocalizedFailureReasonErrorKey] = reason
-        return NSError(domain: error.domain, code: error.code, userInfo: userInfo)
-    }
 }
 
 extension Document {
@@ -73,8 +66,7 @@ extension Document {
     ///   - reason: An optional reason for the error.
     /// - Returns: Never
     private nonisolated func throwError(_ error: DocumentError, reason: String? = nil) throws -> Never {
-        let nsError = reason != nil ? error.nsError(with: reason!) : error.nsError
-        throw nsError
+        try ErrorUtilities.throwError(error, reason: reason)
     }
 }
 

@@ -14,7 +14,7 @@ import VideoToolbox
 // MARK: - MovieWriterError
 /* ============================================ */
 
-enum MovieWriterError: Error {
+enum MovieWriterError: Error, NSErrorConvertible {
     case compatibilityError
     case assetReaderWriterUnavailable
     case anotherExportSessionRunning
@@ -45,13 +45,6 @@ enum MovieWriterError: Error {
             return NSError(domain: domain, code: -1, userInfo: info)
         }
     }
-    
-    func nsError(with reason: String) -> NSError {
-        let error = self.nsError
-        var userInfo = error.userInfo
-        userInfo[NSLocalizedFailureReasonErrorKey] = reason
-        return NSError(domain: error.domain, code: error.code, userInfo: userInfo)
-    }
 }
 
 extension MovieWriter {
@@ -61,10 +54,13 @@ extension MovieWriter {
     ///   - reason: Optional reason for the error
     /// - Returns: Never
     private func throwError(_ error: MovieWriterError, reason: String? = nil) throws -> Never {
-        let error = reason != nil ? error.nsError(with: reason!) : error.nsError
-        self.writeError = error
-        self.writeSuccess = false
-        throw error
+        do {
+            try ErrorUtilities.throwError(error, reason: reason)
+        } catch let nsError as NSError {
+            self.writeError = nsError
+            self.writeSuccess = false
+            throw nsError
+        }
     }
 }
 

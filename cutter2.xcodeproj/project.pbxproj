@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		1605508520AC14910029AE1C /* Document+Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1605508420AC14910029AE1C /* Document+Delegate.swift */; };
 		1605508720AC232A0029AE1C /* Document+Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1605508620AC232A0029AE1C /* Document+Utilities.swift */; };
+		160553D62E4382D6008D05B5 /* ActorUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160553D42E4382D6008D05B5 /* ActorUtilities.swift */; };
+		160553D72E4382D6008D05B5 /* ErrorUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160553D52E4382D6008D05B5 /* ErrorUtilities.swift */; };
 		160CFA1720AFA7C7002813D2 /* InspectorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160CFA1520AFA7C7002813D2 /* InspectorViewController.swift */; };
 		161D7BA2208C278500647FD3 /* CAPARViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161D7BA1208C278500647FD3 /* CAPARViewController.swift */; };
 		162ED4B1207A2F4E00DFAD7E /* MovieWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */; };
@@ -34,6 +36,8 @@
 /* Begin PBXFileReference section */
 		1605508420AC14910029AE1C /* Document+Delegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Document+Delegate.swift"; sourceTree = "<group>"; };
 		1605508620AC232A0029AE1C /* Document+Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Document+Utilities.swift"; sourceTree = "<group>"; };
+		160553D42E4382D6008D05B5 /* ActorUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActorUtilities.swift; sourceTree = "<group>"; };
+		160553D52E4382D6008D05B5 /* ErrorUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorUtilities.swift; sourceTree = "<group>"; };
 		160CFA1520AFA7C7002813D2 /* InspectorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectorViewController.swift; sourceTree = "<group>"; };
 		161D7BA1208C278500647FD3 /* CAPARViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CAPARViewController.swift; sourceTree = "<group>"; };
 		162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieWriter.swift; sourceTree = "<group>"; };
@@ -89,6 +93,8 @@
 		16EE23ED200AF2C800980467 /* cutter2 */ = {
 			isa = PBXGroup;
 			children = (
+				160553D42E4382D6008D05B5 /* ActorUtilities.swift */,
+				160553D52E4382D6008D05B5 /* ErrorUtilities.swift */,
 				1674686424E64CE400254957 /* Constants.swift */,
 				16EE23EE200AF2C800980467 /* AppDelegate.swift */,
 				16CD66ED203835080089EB86 /* WindowController.swift */,
@@ -214,6 +220,8 @@
 				16EE2401200AFE3300980467 /* MyPlayerView.swift in Sources */,
 				16E189F92078405600A68696 /* DocumentController.swift in Sources */,
 				1674686524E64CE400254957 /* Constants.swift in Sources */,
+				160553D62E4382D6008D05B5 /* ActorUtilities.swift in Sources */,
+				160553D72E4382D6008D05B5 /* ErrorUtilities.swift in Sources */,
 				168DAE1F204A3BBC00C1DEFA /* Window.swift in Sources */,
 				16DBCF19209C643700887A77 /* MovieMutatorBase.swift in Sources */,
 				1605508520AC14910029AE1C /* Document+Delegate.swift in Sources */,

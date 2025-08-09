@@ -12,7 +12,7 @@ import AVFoundation
 /// Actor that manages document operations to ensure proper sequencing
 /// and prevent race conditions during save/export operations
 @MainActor
-public actor DocumentSession {
+public class DocumentSession {
     
     /// The document this session manages
     private weak var document: Document?
@@ -39,7 +39,7 @@ public actor DocumentSession {
         
         // Execute the new operation
         return try await withCheckedThrowingContinuation { continuation in
-            currentOperation = Task { @MainActor in
+            currentOperation = Task {
                 do {
                     let result = try await operation()
                     continuation.resume(returning: result)

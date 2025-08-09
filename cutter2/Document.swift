@@ -65,7 +65,7 @@ extension Document {
     ///   - error: The `DocumentError` to throw.
     ///   - reason: An optional reason for the error.
     /// - Returns: Never
-    private nonisolated func throwError(_ error: DocumentError, reason: String? = nil) throws -> Never {
+    internal nonisolated func throwError(_ error: DocumentError, reason: String? = nil) throws -> Never {
         try ErrorUtilities.throwError(error, reason: reason)
     }
 }

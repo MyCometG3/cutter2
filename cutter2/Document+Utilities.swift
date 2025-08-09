@@ -40,7 +40,7 @@ extension Document {
             isCompleted = true
             
             // Wake up the run loop
-            runLoop.perform { @Sendable in
+            runLoop.perform {
                 // This will interrupt the run loop
             }
         }
@@ -72,7 +72,7 @@ extension Document {
             isCompleted = true
             
             // Wake up the run loop
-            runLoop.perform { @Sendable in
+            runLoop.perform {
                 // This will interrupt the run loop
             }
         }

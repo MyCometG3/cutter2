@@ -15,48 +15,35 @@ import AVFoundation
 
 extension Document {
     
-    /// Executes an asynchronous, throwing operation synchronously on a detached task.
+    /// Executes an asynchronous, throwing operation using Swift Concurrency continuations.
     /// - Parameter block: A closure that performs asynchronous work and may throw.
     /// - Returns: The result produced by the closure.
     /// - Throws: An error thrown by the closure.
-    /// - Warning: This blocks the current thread. Do not call from the main thread.
-    nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async throws -> T) throws -> T {
-        let semaphore = DispatchSemaphore(value: 0)
-        let lock = DispatchQueue(label: "ResultLock")
-        var result: Result<T, Error>?
-        Task.detached(priority: .userInitiated) {
-            let taskResult: Result<T, Error>
-            do {
-                taskResult = .success(try await block())
-            } catch {
-                taskResult = .failure(error)
+    /// - Note: This method bridges sync-to-async for cases where a synchronous interface is required by the system (e.g., NSDocument.write)
+    nonisolated func performAsyncWithContinuation<T: Sendable>(_ block: @Sendable @escaping () async throws -> T) throws -> T {
+        return try withCheckedThrowingContinuation { continuation in
+            Task.detached(priority: .userInitiated) {
+                do {
+                    let result = try await block()
+                    continuation.resume(returning: result)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
             }
-            lock.sync {
-                result = taskResult
-            }
-            semaphore.signal()
         }
-        semaphore.wait()
-        return try lock.sync { try result!.get() }
     }
     
-    /// Executes an asynchronous, non-throwing operation synchronously on a detached task.
+    /// Executes an asynchronous, non-throwing operation using Swift Concurrency continuations.
     /// - Parameter block: A closure that performs asynchronous work.
     /// - Returns: The result produced by the closure.
-    /// - Warning: This blocks the current thread. Do not call from the main thread.
-    nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async -> T) -> T {
-        let semaphore = DispatchSemaphore(value: 0)
-        let lock = DispatchQueue(label: "ResultLock")
-        var result: T?
-        Task.detached(priority: .userInitiated) {
-            let taskResult = await block()
-            lock.sync {
-                result = taskResult
+    /// - Note: This method bridges sync-to-async for cases where a synchronous interface is required by the system (e.g., NSDocument.write)
+    nonisolated func performAsyncWithContinuation<T: Sendable>(_ block: @Sendable @escaping () async -> T) -> T {
+        return withCheckedContinuation { continuation in
+            Task.detached(priority: .userInitiated) {
+                let result = await block()
+                continuation.resume(returning: result)
             }
-            semaphore.signal()
         }
-        semaphore.wait()
-        return lock.sync { result! }
     }
     
     /// Runs a throwing `@MainActor`-isolated closure synchronously.

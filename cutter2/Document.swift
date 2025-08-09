@@ -125,6 +125,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     //
     lazy var undoManagerWrapper: UndoManagerWrapper = UndoManagerWrapper(self.undoManager!)
     
+    /// Document session actor for managing async operations with proper sequencing
+    private var documentSession: DocumentSession!
+    
     /* ============================================ */
     // MARK: - Private properties
     /* ============================================ */
@@ -159,6 +162,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         super.init()
         
         self.hasUndoManager = true
+        
+        // Initialize the document session actor
+        self.documentSession = DocumentSession(document: self)
         
         let def = UserDefaults.standard
         def.register(defaults: [
@@ -494,31 +500,16 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                         originalContentsURL absoluteOriginalContentsURL: URL?) throws {
         // Swift.print(#function, #line, #file)
         
-        // Trigger long running task via global dispatch queue
-        try performAsync { @Sendable [weak self] in
+        // Bridge to async operations using the document session actor
+        try performAsyncWithContinuation { @Sendable [weak self] in
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             
-            switch saveOperation {
-            case .saveToOperation:
-                // Export...
-                let transcodePreset: String? = UserDefaults.standard.string(forKey: kTranscodePresetKey)
-                let preset = transcodePreset ?? kTranscodePresetCustom
-                if preset == kTranscodePresetCustom {
-                    try await exportCustom(to: url, ofType: typeName)
-                } else {
-                    try await export(to: url, ofType: typeName, preset: preset)
-                }
-            case .saveOperation, .saveAsOperation:
-                // Save.../Save as...
-                try await writeAsync(to: url, ofType: typeName)
-            default:
-                let reason = "No autoSave feature is implemented yet."
-                try throwError(.unsupportedSaveOperation, reason: reason)
-            }
+            // Execute the write operation through the document session actor for proper sequencing
+            try await self.documentSession.executeWrite(to: url, ofType: typeName, for: saveOperation)
         }
     }
     
-    private func writeAsync(to url: URL, ofType typeName: String) async throws {
+    internal func writeAsync(to url: URL, ofType typeName: String) async throws {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
@@ -761,7 +752,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         }
     }
     
-    private func export(to url: URL, ofType typeName: String, preset: String) async throws {
+    internal func export(to url: URL, ofType typeName: String, preset: String) async throws {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
@@ -796,7 +787,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print("##### EXPORT FINISHED #####")
     }
     
-    private func exportCustom(to url: URL, ofType typeName: String) async throws {
+    internal func exportCustom(to url: URL, ofType typeName: String) async throws {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }

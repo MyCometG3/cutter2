@@ -17,8 +17,8 @@ public actor DocumentSession {
     /// The document this session manages
     private weak var document: Document?
     
-    /// Indicates if an operation is currently in progress
-    private var isOperationInProgress = false
+    /// Current operation task for sequential execution
+    private var currentOperation: Task<Void, Never>?
     
     /// Initialize with the document to manage
     public init(document: Document) {
@@ -34,17 +34,20 @@ public actor DocumentSession {
             throw NSError(domain: "DocumentSession", code: -1, userInfo: [NSLocalizedDescriptionKey: "Document was deallocated"])
         }
         
-        // Ensure operations are sequential
-        while isOperationInProgress {
-            try await Task.sleep(nanoseconds: 10_000_000) // 10ms
-        }
+        // Wait for any current operation to complete
+        await currentOperation?.value
         
-        isOperationInProgress = true
-        defer {
-            isOperationInProgress = false
+        // Execute the new operation
+        return try await withCheckedThrowingContinuation { continuation in
+            currentOperation = Task { @MainActor in
+                do {
+                    let result = try await operation()
+                    continuation.resume(returning: result)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
         }
-        
-        return try await operation()
     }
     
     /// Execute a write operation with the document

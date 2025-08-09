@@ -15,35 +15,74 @@ import AVFoundation
 
 extension Document {
     
-    /// Executes an asynchronous, throwing operation using Swift Concurrency continuations.
+    /// Executes an asynchronous, throwing operation using Swift Concurrency task coordination.
     /// - Parameter block: A closure that performs asynchronous work and may throw.
     /// - Returns: The result produced by the closure.
     /// - Throws: An error thrown by the closure.
     /// - Note: This method bridges sync-to-async for cases where a synchronous interface is required by the system (e.g., NSDocument.write)
     nonisolated func performAsyncWithContinuation<T: Sendable>(_ block: @Sendable @escaping () async throws -> T) throws -> T {
-        return try withCheckedThrowingContinuation { continuation in
-            Task.detached(priority: .userInitiated) {
-                do {
-                    let result = try await block()
-                    continuation.resume(returning: result)
-                } catch {
-                    continuation.resume(throwing: error)
-                }
+        let task = Task.detached(priority: .userInitiated) {
+            return try await block()
+        }
+        
+        // Block until the task completes using RunLoop to avoid blocking the calling thread completely
+        let runLoop = RunLoop.current
+        var isCompleted = false
+        var result: Result<T, Error>!
+        
+        Task.detached {
+            do {
+                let value = try await task.value
+                result = .success(value)
+            } catch {
+                result = .failure(error)
+            }
+            isCompleted = true
+            
+            // Wake up the run loop
+            runLoop.perform {
+                // This will interrupt the run loop
             }
         }
+        
+        // Wait for completion while allowing the run loop to process events
+        while !isCompleted {
+            let _ = runLoop.run(mode: .default, before: Date(timeIntervalSinceNow: 0.01))
+        }
+        
+        return try result.get()
     }
     
-    /// Executes an asynchronous, non-throwing operation using Swift Concurrency continuations.
+    /// Executes an asynchronous, non-throwing operation using Swift Concurrency task coordination.
     /// - Parameter block: A closure that performs asynchronous work.
     /// - Returns: The result produced by the closure.
     /// - Note: This method bridges sync-to-async for cases where a synchronous interface is required by the system (e.g., NSDocument.write)
     nonisolated func performAsyncWithContinuation<T: Sendable>(_ block: @Sendable @escaping () async -> T) -> T {
-        return withCheckedContinuation { continuation in
-            Task.detached(priority: .userInitiated) {
-                let result = await block()
-                continuation.resume(returning: result)
+        let task = Task.detached(priority: .userInitiated) {
+            return await block()
+        }
+        
+        // Block until the task completes using RunLoop to avoid blocking the calling thread completely
+        let runLoop = RunLoop.current
+        var isCompleted = false
+        var result: T!
+        
+        Task.detached {
+            result = await task.value
+            isCompleted = true
+            
+            // Wake up the run loop
+            runLoop.perform {
+                // This will interrupt the run loop
             }
         }
+        
+        // Wait for completion while allowing the run loop to process events
+        while !isCompleted {
+            let _ = runLoop.run(mode: .default, before: Date(timeIntervalSinceNow: 0.01))
+        }
+        
+        return result
     }
     
     /// Runs a throwing `@MainActor`-isolated closure synchronously.

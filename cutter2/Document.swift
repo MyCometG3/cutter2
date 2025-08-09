@@ -501,7 +501,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print(#function, #line, #file)
         
         // Bridge to async operations using the document session actor
-        try performAsyncWithContinuation { @Sendable [weak self] in
+        try performAsyncWithTask { @Sendable [weak self] in
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             
             // Execute the write operation through the document session actor for proper sequencing

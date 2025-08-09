@@ -20,7 +20,7 @@ extension Document {
     /// - Returns: The result produced by the closure.
     /// - Throws: An error thrown by the closure.
     /// - Note: This method bridges sync-to-async for cases where a synchronous interface is required by the system (e.g., NSDocument.write)
-    nonisolated func performAsyncWithContinuation<T: Sendable>(_ block: @Sendable @escaping () async throws -> T) throws -> T {
+    nonisolated func performAsyncWithTask<T: Sendable>(_ block: @Sendable @escaping () async throws -> T) throws -> T {
         let task = Task.detached(priority: .userInitiated) {
             return try await block()
         }
@@ -40,7 +40,7 @@ extension Document {
             isCompleted = true
             
             // Wake up the run loop
-            runLoop.perform {
+            runLoop.perform { @Sendable in
                 // This will interrupt the run loop
             }
         }
@@ -57,7 +57,7 @@ extension Document {
     /// - Parameter block: A closure that performs asynchronous work.
     /// - Returns: The result produced by the closure.
     /// - Note: This method bridges sync-to-async for cases where a synchronous interface is required by the system (e.g., NSDocument.write)
-    nonisolated func performAsyncWithContinuation<T: Sendable>(_ block: @Sendable @escaping () async -> T) -> T {
+    nonisolated func performAsyncWithTask<T: Sendable>(_ block: @Sendable @escaping () async -> T) -> T {
         let task = Task.detached(priority: .userInitiated) {
             return await block()
         }
@@ -72,7 +72,7 @@ extension Document {
             isCompleted = true
             
             // Wake up the run loop
-            runLoop.perform {
+            runLoop.perform { @Sendable in
                 // This will interrupt the run loop
             }
         }

@@ -263,7 +263,7 @@ extension Document {
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             guard let player = player else { preconditionFailure("Unexpected nil player detected.") }
             guard let mutator = mutator else { preconditionFailure("Unexpected nil mutator detected.") }
-            performSyncOnMainActor {
+            self.performSyncOnMainActor {
                 updateRate(player, rate)
                 updateTimeline(time, range: mutator.selectedTimeRange)
             }
@@ -316,7 +316,7 @@ extension Document {
                 
                 guard let self else { preconditionFailure("Unexpected nil self detected.") }
                 guard let pv = pv else { preconditionFailure("Unexpected nil pv detected.") }
-                performSyncOnMainActor {
+                self.performSyncOnMainActor {
                     pv.needsDisplay = true
                 }
             }
@@ -450,7 +450,7 @@ extension Document {
         }
         
         let contextAddress = UInt(bitPattern: context) // Cast UnsafeMutableRawPointer to UInt for actor isolation
-        let (objectIsPlayer, keyPathIsAVPlayerStatus, keyPathIsAVPlayerRate) = performSyncOnMainActor {
+        let (objectIsPlayer, keyPathIsAVPlayerStatus, keyPathIsAVPlayerRate) = self.performSyncOnMainActor {
             let contextMatch: Bool = checkKVOContext(contextAddress)
             let objectIsPlayer: Bool = (object === self.player)
             let keyPathIsAVPlayerStatus: Bool = (keyPath == #keyPath(AVPlayer.status))
@@ -465,7 +465,7 @@ extension Document {
             let newStatus = change[.newKey] as! NSNumber
             if newStatus.intValue == AVPlayer.Status.readyToPlay.rawValue {
                 // Seek and refresh View
-                performSyncOnMainActor {
+                self.performSyncOnMainActor {
                     guard let mutator = self.movieMutator else { return }
                     let time = mutator.insertionTime
                     let range = mutator.selectedTimeRange
@@ -484,7 +484,7 @@ extension Document {
             let newRate = change[.newKey] as! NSNumber
             if oldRate.floatValue > 0.0 && newRate.floatValue == 0.0 {
                 // Movie stopped
-                performSyncOnMainActor {
+                self.performSyncOnMainActor {
                     guard let player = self.player else { return }
                     guard let mutator = self.movieMutator else { return }
                     
@@ -526,7 +526,7 @@ extension Document {
             
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             guard
-                let mutator = performSyncOnMainActor({ self.movieMutator }),
+                let mutator = self.performSyncOnMainActor({ self.movieMutator }),
                 let object = notification.object as? MovieMutator,
                 mutator == object
             else { return }
@@ -545,7 +545,7 @@ extension Document {
             
             let time: CMTime = timeValue.timeValue
             let timeRange: CMTimeRange = timeRangeValue.timeRangeValue
-            performSyncOnMainActor {
+            self.performSyncOnMainActor {
                 updateGUI(time, timeRange, true)
             }
         }

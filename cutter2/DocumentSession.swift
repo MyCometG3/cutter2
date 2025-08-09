@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Cocoa
 import AVFoundation
 
 /// Actor that manages document operations to ensure proper sequencing
@@ -21,7 +22,7 @@ public class DocumentSession {
     private var currentOperation: Task<Void, Never>?
     
     /// Initialize with the document to manage
-    public init(document: Document) {
+    init(document: Document) {
         self.document = document
     }
     
@@ -29,8 +30,8 @@ public class DocumentSession {
     /// - Parameter operation: The async operation to execute
     /// - Returns: The result of the operation
     /// - Throws: Any error from the operation or if document is deallocated
-    public func executeOperation<T>(_ operation: @escaping () async throws -> T) async throws -> T {
-        guard let document = document else {
+    public func executeOperation<T: Sendable>(_ operation: @escaping @Sendable () async throws -> T) async throws -> T {
+        guard document != nil else {
             throw NSError(domain: "DocumentSession", code: -1, userInfo: [NSLocalizedDescriptionKey: "Document was deallocated"])
         }
         

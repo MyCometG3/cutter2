@@ -30,7 +30,7 @@ extension Document {
         var isCompleted = false
         var result: Result<T, Error>!
         
-        Task.detached {
+        Task.detached { @Sendable in
             do {
                 let value = try await task.value
                 result = .success(value)
@@ -67,7 +67,7 @@ extension Document {
         var isCompleted = false
         var result: T!
         
-        Task.detached {
+        Task.detached { @Sendable in
             result = await task.value
             isCompleted = true
             

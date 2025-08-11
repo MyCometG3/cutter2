@@ -106,7 +106,7 @@ func readAsync(from url: URL, ofType typeName: String) async throws {
 ### Video Export Patterns
 ```swift
 // Show progress UI
-showBusySheet("Exporting...", "Please hold on minute(s)...")
+showBusySheet("Exporting...", "Please wait a few minutes...")
 mutator.updateProgress = { progress in
     performSyncOnMainActor { updateProgress(progress) }
 }

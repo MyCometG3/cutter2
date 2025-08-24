@@ -519,7 +519,10 @@ extension Document {
                 Swift.print("Movie started (backward)")
             }
             if oldRate.floatValue == newRate.floatValue {
-                Swift.print("No rate change. FIXME!")
+                // Spurious rate change notification - ignore as no actual rate change occurred
+                #if DEBUG
+                Swift.print("DEBUG: Spurious rate change notification received (oldRate == newRate: \(oldRate.floatValue))")
+                #endif
             }
             return
         } else {

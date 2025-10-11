@@ -129,7 +129,7 @@ extension Document {
                 // Normal case: time moved forward
                 if (t - lastUpdateAt) > unit {
                     // Sufficient time passed: update timestamp
-                    lastUpdateAt = t
+                    lastUpdateAt += unit
                 } else {
                     // Too soon: skip this update
                     return

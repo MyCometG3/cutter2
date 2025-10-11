@@ -122,16 +122,20 @@ extension Document {
         let unit = NSEC_PER_MSEC * 100 // 100ms
         let t: UInt64 = clock_gettime_nsec_np(CLOCK_REALTIME)
         if lastUpdateAt == 0 {
+            // First call: initialize timestamp
             lastUpdateAt = t
         } else {
             if t > lastUpdateAt {
+                // Normal case: time moved forward
                 if (t - lastUpdateAt) > unit {
+                    // Sufficient time passed: update timestamp
                     lastUpdateAt = t
                 } else {
+                    // Too soon: skip this update
                     return
                 }
             } else {
-                // Clock went backwards, reset
+                // Edge case: clock went backwards, reset
                 lastUpdateAt = t
             }
         }

@@ -554,12 +554,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
-        // Create NSProgress with proper lifecycle management
+        // Create NSProgress with proper lifecycle management and system integration
+        Progress.becomeCurrent(withPendingUnitCount: 100)
         let progress = Progress(totalUnitCount: 100)
         progress.isCancellable = true
         progress.cancellationHandler = { [weak mutator] in
             mutator?.cancel()
         }
+        Progress.resignCurrent()
         self.saveProgress = progress
         defer {
             self.saveProgress = nil
@@ -826,12 +828,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
-        // Create NSProgress with proper lifecycle management
+        // Create NSProgress with proper lifecycle management and system integration
+        Progress.becomeCurrent(withPendingUnitCount: 100)
         let progress = Progress(totalUnitCount: 100)
         progress.isCancellable = true
         progress.cancellationHandler = { [weak mutator] in
             mutator?.cancel()
         }
+        Progress.resignCurrent()
         self.saveProgress = progress
         defer {
             self.saveProgress = nil
@@ -874,12 +878,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
-        // Create NSProgress with proper lifecycle management
+        // Create NSProgress with proper lifecycle management and system integration
+        Progress.becomeCurrent(withPendingUnitCount: 100)
         let progress = Progress(totalUnitCount: 100)
         progress.isCancellable = true
         progress.cancellationHandler = { [weak mutator] in
             mutator?.cancel()
         }
+        Progress.resignCurrent()
         self.saveProgress = progress
         defer {
             self.saveProgress = nil

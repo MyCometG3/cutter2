@@ -171,10 +171,9 @@ extension Document {
             let handler: (NSApplication.ModalResponse) -> Void = { @Sendable [weak self] (response) in // @escaping
                 guard let self else { return }
                 if response == .alertFirstButtonReturn {
-                    // User clicked Cancel
+                    // User clicked Cancel - the cancellationHandler will call mutator.cancel()
                     performSyncOnMainActor {
                         self.saveProgress?.cancel()
-                        self.movieMutator?.cancel()
                     }
                 }
             }

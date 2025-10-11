@@ -124,10 +124,15 @@ extension Document {
         if lastUpdateAt == 0 {
             lastUpdateAt = t
         } else {
-            if (t - lastUpdateAt) > unit {
-                lastUpdateAt = lastUpdateAt + unit
+            if t > lastUpdateAt {
+                if (t - lastUpdateAt) > unit {
+                    lastUpdateAt = t
+                } else {
+                    return
+                }
             } else {
-                return
+                // Clock went backwards, reset
+                lastUpdateAt = t
             }
         }
         

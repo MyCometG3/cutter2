@@ -117,6 +117,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     //
     public var lastUpdateAt: UInt64 = 0
     
+    // NSProgress support for save/export operations
+    private var saveProgress: Progress? = nil
+    
     //
     public var cachedTime = CMTime.invalid
     public var cachedWithinLastSampleRange: Bool = false
@@ -523,6 +526,13 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
+        // Create NSProgress
+        let progress = Progress(totalUnitCount: 100)
+        self.saveProgress = progress
+        defer {
+            self.saveProgress = nil
+        }
+        
         // Show busy sheet
         showBusySheet("Writing...", "Please hold on second(s)...")
         mutator.unblockUserInteraction = { @Sendable [weak self] in
@@ -532,10 +542,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-        mutator.updateProgress = { @Sendable [weak self] (progress) in
+        mutator.updateProgress = { @Sendable [weak self] (progressValue) in
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             performSyncOnMainActor {
-                updateProgress(progress)
+                updateProgress(progressValue)
+                // Update NSProgress
+                if let progress = self.saveProgress {
+                    progress.completedUnitCount = Int64(progressValue * 100)
+                }
             }
         }
         defer {
@@ -766,6 +780,13 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
+        // Create NSProgress
+        let progress = Progress(totalUnitCount: 100)
+        self.saveProgress = progress
+        defer {
+            self.saveProgress = nil
+        }
+        
         // Show busy sheet
         showBusySheet("Exporting...", "Please hold on minute(s)...")
         mutator.unblockUserInteraction = { @Sendable [weak self] in
@@ -775,10 +796,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-        mutator.updateProgress = { @Sendable [weak self] (progress) in
+        mutator.updateProgress = { @Sendable [weak self] (progressValue) in
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             performSyncOnMainActor {
-                updateProgress(progress)
+                updateProgress(progressValue)
+                // Update NSProgress
+                if let progress = self.saveProgress {
+                    progress.completedUnitCount = Int64(progressValue * 100)
+                }
             }
         }
         defer {
@@ -801,6 +826,13 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
+        // Create NSProgress
+        let progress = Progress(totalUnitCount: 100)
+        self.saveProgress = progress
+        defer {
+            self.saveProgress = nil
+        }
+        
         // Show busy sheet
         showBusySheet("Exporting...", "Please hold on minute(s)...")
         mutator.unblockUserInteraction = { @Sendable [weak self] in
@@ -810,10 +842,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-        mutator.updateProgress = { @Sendable [weak self] (progress) in
+        mutator.updateProgress = { @Sendable [weak self] (progressValue) in
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             performSyncOnMainActor {
-                updateProgress(progress)
+                updateProgress(progressValue)
+                // Update NSProgress
+                if let progress = self.saveProgress {
+                    progress.completedUnitCount = Int64(progressValue * 100)
+                }
             }
         }
         defer {

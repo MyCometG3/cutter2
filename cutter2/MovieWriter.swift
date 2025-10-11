@@ -22,9 +22,11 @@ enum MovieWriterError: Error, NSErrorConvertible {
     case assetReaderWriterFailed
     case operationCancelled
     case unknown
+    
+    static let errorDomain = "MovieWriterError"
 
     var nsError: NSError {
-        let domain = "MovieWriterError"
+        let domain = MovieWriterError.errorDomain
         switch self {
         case .compatibilityError:
             let info = [NSLocalizedDescriptionKey: "The selected file type or preset is not compatible with the current movie."]
@@ -42,6 +44,8 @@ enum MovieWriterError: Error, NSErrorConvertible {
             let info = [NSLocalizedDescriptionKey: "The asset reader or writer encountered an error."]
             return NSError(domain: domain, code: 5, userInfo: info)
         case .operationCancelled:
+            // Note: This uses the custom domain internally. Document.write() converts it
+            // to NSCocoaErrorDomain before rethrowing to conform to system conventions.
             let info = [NSLocalizedDescriptionKey: "The operation was cancelled by the user."]
             return NSError(domain: domain, code: NSUserCancelledError, userInfo: info)
         case .unknown:

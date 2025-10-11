@@ -983,10 +983,12 @@ extension MovieMutator {
     /// - If no operation is in progress, it has no effect
     /// - If an operation is in progress, it attempts to cancel it gracefully
     /// - For custom exports, both cancelExport() and cancelCustomMovie() are called
+    ///
+    /// Note: This method is synchronous and actor-isolated to avoid race conditions
+    /// when accessing currentMovieWriter.
     public func cancel() {
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            guard let writer = self.currentMovieWriter else { return }
+        guard let writer = self.currentMovieWriter else { return }
+        Task {
             await writer.cancelExport()
             await writer.cancelCustomMovie(())
         }

@@ -540,7 +540,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             }
         } catch let error as NSError {
             // Handle cancellation specially - don't show error sheet
-            if error.domain == "MovieWriterError" && error.code == NSUserCancelledError {
+            if error.domain == MovieWriterError.errorDomain && error.code == NSUserCancelledError {
                 // Rethrow as standard user cancellation error
                 // This prevents error sheet and maintains document dirty flag
                 throw NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: error.userInfo)

@@ -162,7 +162,7 @@ extension Document {
             alert.messageText = message ?? "Processing...(message)"
             alert.informativeText = info ?? "Hold on seconds...(informative)"
             alert.alertStyle = .informational
-            alert.addButton(withTitle: "Cancel")
+            alert.addButton(withTitle: NSLocalizedString("Cancel", comment: "Cancel button for canceling save/export operations"))
             let handler: (NSApplication.ModalResponse) -> Void = { @Sendable [weak self] (response) in // @escaping
                 guard let self else { return }
                 if response == .alertFirstButtonReturn {

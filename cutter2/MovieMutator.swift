@@ -985,10 +985,12 @@ extension MovieMutator {
     /// - For custom exports, both cancelExport() and cancelCustomMovie() are called
     ///
     /// Note: This method is synchronous and actor-isolated to avoid race conditions
-    /// when accessing currentMovieWriter.
+    /// when accessing currentMovieWriter. The writer reference is captured before
+    /// creating the async Task to ensure the same instance is used throughout.
     public func cancel() {
         guard let writer = self.currentMovieWriter else { return }
-        Task {
+        // Capture the writer reference to avoid race condition between check and use
+        Task { [writer] in
             await writer.cancelExport()
             await writer.cancelCustomMovie(())
         }

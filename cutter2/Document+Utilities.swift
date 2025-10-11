@@ -13,6 +13,14 @@ import AVFoundation
 // MARK: - Actor isolation
 /* ============================================ */
 
+// Simple Sendable box to hold mutable results captured by @Sendable closures
+private final class SendableBox<T> {
+    var value: T
+    init(_ value: T) { self.value = value }
+}
+
+extension SendableBox: @unchecked Sendable {}
+
 extension Document {
     
     /// Executes an asynchronous, throwing operation synchronously on a detached task.
@@ -23,8 +31,8 @@ extension Document {
     nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async throws -> T) throws -> T {
         let semaphore = DispatchSemaphore(value: 0)
         let lock = DispatchQueue(label: "ResultLock")
-        var result: Result<T, Error>?
-        Task.detached(priority: .userInitiated) {
+        let resultBox = SendableBox<Result<T, Error>?>(nil)
+        Task.detached(priority: .userInitiated) { @Sendable in
             let taskResult: Result<T, Error>
             do {
                 taskResult = .success(try await block())
@@ -32,12 +40,12 @@ extension Document {
                 taskResult = .failure(error)
             }
             lock.sync {
-                result = taskResult
+                resultBox.value = taskResult
             }
             semaphore.signal()
         }
         semaphore.wait()
-        return try lock.sync { try result!.get() }
+        return try lock.sync { try resultBox.value!.get() }
     }
     
     /// Executes an asynchronous, non-throwing operation synchronously on a detached task.
@@ -47,16 +55,16 @@ extension Document {
     nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async -> T) -> T {
         let semaphore = DispatchSemaphore(value: 0)
         let lock = DispatchQueue(label: "ResultLock")
-        var result: T?
-        Task.detached(priority: .userInitiated) {
+        let resultBox = SendableBox<T?>(nil)
+        Task.detached(priority: .userInitiated) { @Sendable in
             let taskResult = await block()
             lock.sync {
-                result = taskResult
+                resultBox.value = taskResult
             }
             semaphore.signal()
         }
         semaphore.wait()
-        return lock.sync { result! }
+        return lock.sync { resultBox.value! }
     }
     
     /// Runs a throwing `@MainActor`-isolated closure synchronously.

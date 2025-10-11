@@ -493,6 +493,24 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         }
     }
     
+    /// Override of NSDocument's write method to support async save/export operations.
+    ///
+    /// This method is called by AppKit on a background queue (due to `canAsynchronouslyWrite` returning true).
+    /// It bridges the synchronous AppKit document save API to our async/await implementation.
+    ///
+    /// The method uses `performAsync` to:
+    /// - Execute async operations (writeAsync, export, exportCustom) in a detached Task
+    /// - Block until the operation completes
+    /// - Return results or throw errors synchronously back to AppKit
+    ///
+    /// This approach enables:
+    /// - Swift Concurrency in save/export operations
+    /// - Progress reporting via NSProgress
+    /// - Proper resource cleanup with defer blocks
+    /// - Integration with AppKit's document save machinery
+    ///
+    /// - SeeAlso: `canAsynchronouslyWrite(to:ofType:for:)` - enables background execution
+    /// - SeeAlso: `performAsync(_:)` - async-to-sync bridge implementation
     override nonisolated func write(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType,
                         originalContentsURL absoluteOriginalContentsURL: URL?) throws {
         // Swift.print(#function, #line, #file)
@@ -571,6 +589,22 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print("##### WRITE FINISHED #####")
     }
     
+    /// Indicates that this document can perform write operations asynchronously.
+    ///
+    /// By returning true, we inform AppKit that `write(to:ofType:for:originalContentsURL:)` can be
+    /// safely called on a background queue. This is essential for our async/await bridge pattern:
+    ///
+    /// - AppKit executes `write()` on a background queue (not main thread)
+    /// - Our `write()` method uses `performAsync` to run async operations
+    /// - The background thread blocks (via semaphore) until async operation completes
+    /// - Main thread remains responsive during long save/export operations
+    ///
+    /// This pattern works because:
+    /// - We never block the main thread (write is called on background queue)
+    /// - Progress updates are dispatched to main thread via `performSyncOnMainActor`
+    /// - User can interact with UI via the Busy Sheet during operations
+    ///
+    /// - Returns: Always returns `true` to enable background write operations
     override func canAsynchronouslyWrite(to url: URL, ofType typeName: String,
                                          for saveOperation: NSDocument.SaveOperationType) -> Bool {
         return true

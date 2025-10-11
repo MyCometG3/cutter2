@@ -13,7 +13,13 @@ import AVFoundation
 // MARK: - Actor isolation
 /* ============================================ */
 
-// Simple Sendable box to hold mutable results captured by @Sendable closures
+/// A simple thread-safe container for holding mutable results captured by @Sendable closures.
+///
+/// This class uses `@unchecked Sendable` because:
+/// - Access is synchronized via a DispatchQueue in `performAsync`
+/// - The value is only written once and read once
+/// - No concurrent access occurs during normal operation
+/// - The DispatchQueue provides the necessary memory barrier
 private final class SendableBox<T> {
     var value: T
     init(_ value: T) { self.value = value }
@@ -24,6 +30,20 @@ extension SendableBox: @unchecked Sendable {}
 extension Document {
     
     /// Executes an asynchronous, throwing operation synchronously on a detached task.
+    ///
+    /// This method bridges async/await operations to synchronous AppKit document APIs.
+    /// It is designed to be called from `nonisolated` contexts (specifically `Document.write(...)`).
+    ///
+    /// **Design Rationale:**
+    /// - `Task.detached` is used because:
+    ///   - Must be called from a `nonisolated` context (no parent task to inherit from)
+    ///   - AppKit's `canAsynchronouslyWrite` already executes `write()` on a background queue
+    ///   - No task priority inheritance is needed (AppKit manages thread priority)
+    /// - Semaphore waiting is used because:
+    ///   - Must block until async operation completes (AppKit document save requires synchronous return)
+    ///   - DispatchQueue provides thread-safe result passing
+    /// - Works in conjunction with `canAsynchronouslyWrite() -> Bool { true }`
+    ///
     /// - Parameter block: A closure that performs asynchronous work and may throw.
     /// - Returns: The result produced by the closure.
     /// - Throws: An error thrown by the closure.
@@ -49,6 +69,9 @@ extension Document {
     }
     
     /// Executes an asynchronous, non-throwing operation synchronously on a detached task.
+    ///
+    /// This is the non-throwing variant of `performAsync`. See the throwing version for detailed rationale.
+    ///
     /// - Parameter block: A closure that performs asynchronous work.
     /// - Returns: The result produced by the closure.
     /// - Warning: This blocks the current thread. Do not call from the main thread.

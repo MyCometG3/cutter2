@@ -143,6 +143,13 @@ extension Document {
     }
     
     /// Show busy modalSheet
+    ///
+    /// Displays a modal sheet with progress information and an optional Cancel button.
+    /// When the user clicks Cancel, the operation is cancelled via NSProgress and MovieMutator.
+    ///
+    /// - Parameters:
+    ///   - message: The main message to display (defaults to "Processing...")
+    ///   - info: Additional information text (defaults to "Hold on seconds...")
     public func showBusySheet(_ message: String?, _ info: String?) {
         // Swift.print(#function, #line, #file)
         
@@ -155,9 +162,16 @@ extension Document {
             alert.messageText = message ?? "Processing...(message)"
             alert.informativeText = info ?? "Hold on seconds...(informative)"
             alert.alertStyle = .informational
-            alert.addButton(withTitle: "") // No button on sheet
-            let handler: (NSApplication.ModalResponse) -> Void = {(response) in // @escaping
-                //if response == .stop {/* hideBusySheet() called */}
+            alert.addButton(withTitle: "Cancel")
+            let handler: (NSApplication.ModalResponse) -> Void = { @Sendable [weak self] (response) in // @escaping
+                guard let self else { return }
+                if response == .alertFirstButtonReturn {
+                    // User clicked Cancel
+                    performSyncOnMainActor {
+                        self.saveProgress?.cancel()
+                        self.movieMutator?.cancel()
+                    }
+                }
             }
             alert.beginSheetModal(for: window, completionHandler: handler)
             

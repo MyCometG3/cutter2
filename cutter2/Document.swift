@@ -516,26 +516,36 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print(#function, #line, #file)
         
         // Trigger long running task via global dispatch queue
-        try performAsync { @Sendable [weak self] in
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
-            
-            switch saveOperation {
-            case .saveToOperation:
-                // Export...
-                let transcodePreset: String? = UserDefaults.standard.string(forKey: kTranscodePresetKey)
-                let preset = transcodePreset ?? kTranscodePresetCustom
-                if preset == kTranscodePresetCustom {
-                    try await exportCustom(to: url, ofType: typeName)
-                } else {
-                    try await export(to: url, ofType: typeName, preset: preset)
+        do {
+            try performAsync { @Sendable [weak self] in
+                guard let self else { preconditionFailure("Unexpected nil self detected.") }
+                
+                switch saveOperation {
+                case .saveToOperation:
+                    // Export...
+                    let transcodePreset: String? = UserDefaults.standard.string(forKey: kTranscodePresetKey)
+                    let preset = transcodePreset ?? kTranscodePresetCustom
+                    if preset == kTranscodePresetCustom {
+                        try await exportCustom(to: url, ofType: typeName)
+                    } else {
+                        try await export(to: url, ofType: typeName, preset: preset)
+                    }
+                case .saveOperation, .saveAsOperation:
+                    // Save.../Save as...
+                    try await writeAsync(to: url, ofType: typeName)
+                default:
+                    let reason = "No autoSave feature is implemented yet."
+                    try throwError(.unsupportedSaveOperation, reason: reason)
                 }
-            case .saveOperation, .saveAsOperation:
-                // Save.../Save as...
-                try await writeAsync(to: url, ofType: typeName)
-            default:
-                let reason = "No autoSave feature is implemented yet."
-                try throwError(.unsupportedSaveOperation, reason: reason)
             }
+        } catch let error as NSError {
+            // Handle cancellation specially - don't show error sheet
+            if error.domain == "MovieWriterError" && error.code == NSUserCancelledError {
+                // Rethrow as standard user cancellation error
+                // This prevents error sheet and maintains document dirty flag
+                throw NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: error.userInfo)
+            }
+            throw error
         }
     }
     

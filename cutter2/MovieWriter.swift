@@ -20,6 +20,7 @@ enum MovieWriterError: Error, NSErrorConvertible {
     case anotherExportSessionRunning
     case movieWriterFailed
     case assetReaderWriterFailed
+    case operationCancelled
     case unknown
 
     var nsError: NSError {
@@ -40,6 +41,9 @@ enum MovieWriterError: Error, NSErrorConvertible {
         case .assetReaderWriterFailed:
             let info = [NSLocalizedDescriptionKey: "The asset reader or writer encountered an error."]
             return NSError(domain: domain, code: 5, userInfo: info)
+        case .operationCancelled:
+            let info = [NSLocalizedDescriptionKey: "The operation was cancelled by the user."]
+            return NSError(domain: domain, code: NSUserCancelledError, userInfo: info)
         case .unknown:
             let info = [NSLocalizedDescriptionKey: "An unknown error has occurred."]
             return NSError(domain: domain, code: -1, userInfo: info)
@@ -200,6 +204,21 @@ extension MovieWriter {
         self.exportSessionPollingTask = nil
     }
     
+    /// Cancel ongoing export operation
+    ///
+    /// This method sets the `writeCancelled` flag and cancels the export session if one is active.
+    /// For custom exports, the cancellation is handled via `cancelCustomMovie`.
+    ///
+    /// The method is safe to call at any time:
+    /// - If no export is in progress, it has no effect
+    /// - If an export is in progress, it attempts to cancel it gracefully
+    /// - The export session's status will be set to `.cancelled`
+    public func cancelExport() {
+        writeCancelled = true
+        exportSession?.cancelExport()
+        // Note: For custom exports, cancelCustomMovie must be called separately
+    }
+    
     /// Status string representation
     ///
     /// - Parameter status: AVAssetExportSessionStatus
@@ -323,7 +342,9 @@ extension MovieWriter {
         
         //
         if writeSuccess == false {
-            if let error = writeError {
+            if writeCancelled {
+                try throwError(.operationCancelled, reason: "Export was cancelled by the user.")
+            } else if let error = writeError {
                 throw error
             } else {
                 try throwError(.movieWriterFailed, reason: "Export session failed with unknown error.")
@@ -997,7 +1018,9 @@ extension MovieWriter {
 
         // If export failed, throw the error.
         if writeSuccess == false {
-            if let error = writeError {
+            if writeCancelled {
+                try throwError(.operationCancelled, reason: "Export was cancelled by the user.")
+            } else if let error = writeError {
                 throw error
             } else {
                 try throwError(.movieWriterFailed, reason: "Export failed without an error.")

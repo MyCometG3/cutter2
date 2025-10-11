@@ -118,7 +118,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     public var lastUpdateAt: UInt64 = 0
     
     // NSProgress support for save/export operations
-    private var saveProgress: Progress? = nil
+    public var saveProgress: Progress? = nil
     
     //
     public var cachedTime = CMTime.invalid

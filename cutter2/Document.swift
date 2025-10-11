@@ -558,7 +558,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         let progress = Progress(totalUnitCount: 100)
         progress.isCancellable = true
         progress.cancellationHandler = { [weak mutator] in
-            mutator?.cancel()
+            Task { @MainActor in
+                mutator?.cancel()
+            }
         }
         self.saveProgress = progress
         defer {
@@ -830,7 +832,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         let progress = Progress(totalUnitCount: 100)
         progress.isCancellable = true
         progress.cancellationHandler = { [weak mutator] in
-            mutator?.cancel()
+            Task { @MainActor in
+                mutator?.cancel()
+            }
         }
         self.saveProgress = progress
         defer {
@@ -878,7 +882,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         let progress = Progress(totalUnitCount: 100)
         progress.isCancellable = true
         progress.cancellationHandler = { [weak mutator] in
-            mutator?.cancel()
+            Task { @MainActor in
+                mutator?.cancel()
+            }
         }
         self.saveProgress = progress
         defer {

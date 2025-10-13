@@ -9,6 +9,7 @@
 ## Build generated
 build/
 DerivedData/
+.build/
 
 ## Various settings
 *.pbxuser
@@ -35,3 +36,10 @@ xcuserdata/
 
 # End of https://www.gitignore.io/api/xcode
 *.xcbkptlist
+
+# Test Coverage
+coverage.lcov
+*.profdata
+
+# Test Results
+*.xcresult

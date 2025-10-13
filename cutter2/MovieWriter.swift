@@ -892,7 +892,10 @@ extension MovieWriter {
         }
         
         // Finish the writing session on the asset writer.
-        aw.endSession(atSourceTime: endTime)
+        // Note: endSession should only be called if the writer is in a valid state (not cancelled)
+        if !cancel {
+            aw.endSession(atSourceTime: endTime)
+        }
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             aw.finishWriting { @Sendable in
                 continuation.resume()

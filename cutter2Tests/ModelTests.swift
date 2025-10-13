@@ -121,8 +121,8 @@ final class ModelTests: XCTestCase {
         // Test common AVFileType values
         XCTAssertEqual(AVFileType.mov.rawValue, "com.apple.quicktime-movie")
         XCTAssertEqual(AVFileType.mp4.rawValue, "public.mpeg-4")
-        XCTAssertEqual(AVFileType.m4v.rawValue, "public.mpeg-4")
-        XCTAssertEqual(AVFileType.m4a.rawValue, "public.mpeg-4-audio")
+        XCTAssertEqual(AVFileType.m4v.rawValue, "com.apple.m4v-video")
+        XCTAssertEqual(AVFileType.m4a.rawValue, "com.apple.m4a-audio")
     }
     
     // MARK: - Codec Tests

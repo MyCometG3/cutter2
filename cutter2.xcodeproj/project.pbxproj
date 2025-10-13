@@ -3,73 +3,69 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 90;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		1605508520AC14910029AE1C /* Document+Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1605508420AC14910029AE1C /* Document+Delegate.swift */; };
-		1605508720AC232A0029AE1C /* Document+Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1605508620AC232A0029AE1C /* Document+Utilities.swift */; };
-		160553D62E4382D6008D05B5 /* ActorUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160553D42E4382D6008D05B5 /* ActorUtilities.swift */; };
-		160553D72E4382D6008D05B5 /* ErrorUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160553D52E4382D6008D05B5 /* ErrorUtilities.swift */; };
-		160CFA1720AFA7C7002813D2 /* InspectorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160CFA1520AFA7C7002813D2 /* InspectorViewController.swift */; };
-		161D7BA2208C278500647FD3 /* CAPARViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161D7BA1208C278500647FD3 /* CAPARViewController.swift */; };
-		162ED4B1207A2F4E00DFAD7E /* MovieWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */; };
-		162ED4B3207A3F2A00DFAD7E /* SampleBufferChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */; };
-		1674686524E64CE400254957 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1674686424E64CE400254957 /* Constants.swift */; };
-		168DAE1F204A3BBC00C1DEFA /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168DAE1E204A3BBC00C1DEFA /* Window.swift */; };
-		16B60C2520A3DFB7003065AC /* LayoutConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B60C2420A3DFB7003065AC /* LayoutConverter.swift */; };
-		16BCA6C3204B715900D4B2A5 /* AccessoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BCA6C2204B715900D4B2A5 /* AccessoryViewController.swift */; };
-		16C773CA2014348500033B74 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C773C92014348500033B74 /* TimelineView.swift */; };
-		16CD66EE203835080089EB86 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CD66ED203835080089EB86 /* WindowController.swift */; };
-		16DBCF19209C643700887A77 /* MovieMutatorBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DBCF18209C643700887A77 /* MovieMutatorBase.swift */; };
-		16E189F92078405600A68696 /* DocumentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E189F82078405600A68696 /* DocumentController.swift */; };
-		16E189FF207876EE00A68696 /* TranscodeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E189FE207876EE00A68696 /* TranscodeViewController.swift */; };
-		16EE23EF200AF2C800980467 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EE23EE200AF2C800980467 /* AppDelegate.swift */; };
-		16EE23F1200AF2C800980467 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EE23F0200AF2C800980467 /* ViewController.swift */; };
-		16EE23F3200AF2C800980467 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EE23F2200AF2C800980467 /* Document.swift */; };
-		16EE23F5200AF2C800980467 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 16EE23F4200AF2C800980467 /* Assets.xcassets */; };
-		16EE23F8200AF2C800980467 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 16EE23F6200AF2C800980467 /* Main.storyboard */; };
-		16EE2401200AFE3300980467 /* MyPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EE2400200AFE3300980467 /* MyPlayerView.swift */; };
-		16EE2403200B036800980467 /* MovieMutator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EE2402200B036800980467 /* MovieMutator.swift */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
-		1605508420AC14910029AE1C /* Document+Delegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Document+Delegate.swift"; sourceTree = "<group>"; };
-		1605508620AC232A0029AE1C /* Document+Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Document+Utilities.swift"; sourceTree = "<group>"; };
-		160553D42E4382D6008D05B5 /* ActorUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActorUtilities.swift; sourceTree = "<group>"; };
-		160553D52E4382D6008D05B5 /* ErrorUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorUtilities.swift; sourceTree = "<group>"; };
-		160CFA1520AFA7C7002813D2 /* InspectorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectorViewController.swift; sourceTree = "<group>"; };
-		161D7BA1208C278500647FD3 /* CAPARViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CAPARViewController.swift; sourceTree = "<group>"; };
-		162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieWriter.swift; sourceTree = "<group>"; };
-		162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleBufferChannel.swift; sourceTree = "<group>"; };
-		1674686424E64CE400254957 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
-		168DAE1E204A3BBC00C1DEFA /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
-		16B60C2420A3DFB7003065AC /* LayoutConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutConverter.swift; sourceTree = "<group>"; };
-		16BCA6C2204B715900D4B2A5 /* AccessoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessoryViewController.swift; sourceTree = "<group>"; };
-		16C773C92014348500033B74 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
-		16CD66ED203835080089EB86 /* WindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
-		16DBCF18209C643700887A77 /* MovieMutatorBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieMutatorBase.swift; sourceTree = "<group>"; };
-		16E189F82078405600A68696 /* DocumentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentController.swift; sourceTree = "<group>"; };
-		16E189FE207876EE00A68696 /* TranscodeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscodeViewController.swift; sourceTree = "<group>"; };
 		16EE23EB200AF2C800980467 /* cutter2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = cutter2.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		16EE23EE200AF2C800980467 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		16EE23F0200AF2C800980467 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		16EE23F2200AF2C800980467 /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
-		16EE23F4200AF2C800980467 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		16EE23F7200AF2C800980467 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		16EE23F9200AF2C800980467 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		16EE23FA200AF2C800980467 /* cutter2.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = cutter2.entitlements; sourceTree = "<group>"; };
-		16EE2400200AFE3300980467 /* MyPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPlayerView.swift; sourceTree = "<group>"; };
-		16EE2402200B036800980467 /* MovieMutator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieMutator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		16C997CF2E9C8F14008E0B7C /* Exceptions for "Resources" folder in "cutter2" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 16EE23EA200AF2C800980467 /* cutter2 */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		16C997962E9C8EB8008E0B7C /* Application */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Application;
+			sourceTree = "<group>";
+		};
+		16C9979A2E9C8EB8008E0B7C /* Document */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Document;
+			sourceTree = "<group>";
+		};
+		16C9979F2E9C8EB8008E0B7C /* Models */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Models;
+			sourceTree = "<group>";
+		};
+		16C997A52E9C8EB8008E0B7C /* Resources */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				16C997CF2E9C8F14008E0B7C /* Exceptions for "Resources" folder in "cutter2" target */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		16C997AA2E9C8EB8008E0B7C /* Utilities */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		16C997B12E9C8EB8008E0B7C /* ViewControllers */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ViewControllers;
+			sourceTree = "<group>";
+		};
+		16C997B52E9C8EB8008E0B7C /* Views */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		16EE23E8200AF2C800980467 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -93,32 +89,13 @@
 		16EE23ED200AF2C800980467 /* cutter2 */ = {
 			isa = PBXGroup;
 			children = (
-				160553D42E4382D6008D05B5 /* ActorUtilities.swift */,
-				160553D52E4382D6008D05B5 /* ErrorUtilities.swift */,
-				1674686424E64CE400254957 /* Constants.swift */,
-				16EE23EE200AF2C800980467 /* AppDelegate.swift */,
-				16CD66ED203835080089EB86 /* WindowController.swift */,
-				168DAE1E204A3BBC00C1DEFA /* Window.swift */,
-				16E189F82078405600A68696 /* DocumentController.swift */,
-				16EE23F2200AF2C800980467 /* Document.swift */,
-				1605508420AC14910029AE1C /* Document+Delegate.swift */,
-				1605508620AC232A0029AE1C /* Document+Utilities.swift */,
-				16DBCF18209C643700887A77 /* MovieMutatorBase.swift */,
-				16EE2402200B036800980467 /* MovieMutator.swift */,
-				16EE23F0200AF2C800980467 /* ViewController.swift */,
-				16C773C92014348500033B74 /* TimelineView.swift */,
-				16EE2400200AFE3300980467 /* MyPlayerView.swift */,
-				16BCA6C2204B715900D4B2A5 /* AccessoryViewController.swift */,
-				16E189FE207876EE00A68696 /* TranscodeViewController.swift */,
-				161D7BA1208C278500647FD3 /* CAPARViewController.swift */,
-				16EE23F4200AF2C800980467 /* Assets.xcassets */,
-				16EE23F6200AF2C800980467 /* Main.storyboard */,
-				16EE23F9200AF2C800980467 /* Info.plist */,
-				16EE23FA200AF2C800980467 /* cutter2.entitlements */,
-				162ED4B0207A2F4E00DFAD7E /* MovieWriter.swift */,
-				162ED4B2207A3F2A00DFAD7E /* SampleBufferChannel.swift */,
-				16B60C2420A3DFB7003065AC /* LayoutConverter.swift */,
-				160CFA1520AFA7C7002813D2 /* InspectorViewController.swift */,
+				16C997962E9C8EB8008E0B7C /* Application */,
+				16C9979A2E9C8EB8008E0B7C /* Document */,
+				16C9979F2E9C8EB8008E0B7C /* Models */,
+				16C997A52E9C8EB8008E0B7C /* Resources */,
+				16C997AA2E9C8EB8008E0B7C /* Utilities */,
+				16C997B12E9C8EB8008E0B7C /* ViewControllers */,
+				16C997B52E9C8EB8008E0B7C /* Views */,
 			);
 			path = cutter2;
 			sourceTree = "<group>";
@@ -136,7 +113,14 @@
 			);
 			buildRules = (
 			);
-			dependencies = (
+			fileSystemSynchronizedGroups = (
+				16C997962E9C8EB8008E0B7C /* Application */,
+				16C9979A2E9C8EB8008E0B7C /* Document */,
+				16C9979F2E9C8EB8008E0B7C /* Models */,
+				16C997A52E9C8EB8008E0B7C /* Resources */,
+				16C997AA2E9C8EB8008E0B7C /* Utilities */,
+				16C997B12E9C8EB8008E0B7C /* ViewControllers */,
+				16C997B52E9C8EB8008E0B7C /* Views */,
 			);
 			name = cutter2;
 			productName = cutter2;
@@ -151,7 +135,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 0920;
-				LastUpgradeCheck = 1630;
+				LastUpgradeCheck = 2600;
 				ORGANIZATIONNAME = MyCometG3;
 				TargetAttributes = {
 					16EE23EA200AF2C800980467 = {
@@ -170,7 +154,6 @@
 				};
 			};
 			buildConfigurationList = 16EE23E6200AF2C800980467 /* Build configuration list for PBXProject "cutter2" */;
-			compatibilityVersion = "Xcode 8.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -178,6 +161,7 @@
 				Base,
 			);
 			mainGroup = 16EE23E2200AF2C800980467;
+			preferredProjectObjectVersion = 90;
 			productRefGroup = 16EE23EC200AF2C800980467 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -190,60 +174,21 @@
 /* Begin PBXResourcesBuildPhase section */
 		16EE23E9200AF2C800980467 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
-				16EE23F5200AF2C800980467 /* Assets.xcassets in Resources */,
-				16EE23F8200AF2C800980467 /* Main.storyboard in Resources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		16EE23E7200AF2C800980467 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
-				16EE23F1200AF2C800980467 /* ViewController.swift in Sources */,
-				162ED4B1207A2F4E00DFAD7E /* MovieWriter.swift in Sources */,
-				160CFA1720AFA7C7002813D2 /* InspectorViewController.swift in Sources */,
-				162ED4B3207A3F2A00DFAD7E /* SampleBufferChannel.swift in Sources */,
-				16C773CA2014348500033B74 /* TimelineView.swift in Sources */,
-				161D7BA2208C278500647FD3 /* CAPARViewController.swift in Sources */,
-				16E189FF207876EE00A68696 /* TranscodeViewController.swift in Sources */,
-				16B60C2520A3DFB7003065AC /* LayoutConverter.swift in Sources */,
-				16BCA6C3204B715900D4B2A5 /* AccessoryViewController.swift in Sources */,
-				16EE23EF200AF2C800980467 /* AppDelegate.swift in Sources */,
-				16CD66EE203835080089EB86 /* WindowController.swift in Sources */,
-				16EE23F3200AF2C800980467 /* Document.swift in Sources */,
-				16EE2403200B036800980467 /* MovieMutator.swift in Sources */,
-				16EE2401200AFE3300980467 /* MyPlayerView.swift in Sources */,
-				16E189F92078405600A68696 /* DocumentController.swift in Sources */,
-				1674686524E64CE400254957 /* Constants.swift in Sources */,
-				160553D62E4382D6008D05B5 /* ActorUtilities.swift in Sources */,
-				160553D72E4382D6008D05B5 /* ErrorUtilities.swift in Sources */,
-				168DAE1F204A3BBC00C1DEFA /* Window.swift in Sources */,
-				16DBCF19209C643700887A77 /* MovieMutatorBase.swift in Sources */,
-				1605508520AC14910029AE1C /* Document+Delegate.swift in Sources */,
-				1605508720AC232A0029AE1C /* Document+Utilities.swift in Sources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXVariantGroup section */
-		16EE23F6200AF2C800980467 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				16EE23F7200AF2C800980467 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
-
 /* Begin XCBuildConfiguration section */
-		16EE23FB200AF2C800980467 /* Debug */ = {
+		16EE23FB200AF2C800980467 /* Debug configuration for PBXProject "cutter2" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -301,12 +246,13 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
-		16EE23FC200AF2C800980467 /* Release */ = {
+		16EE23FC200AF2C800980467 /* Release configuration for PBXProject "cutter2" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -357,16 +303,17 @@
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 			};
 			name = Release;
 		};
-		16EE23FE200AF2C800980467 /* Debug */ = {
+		16EE23FE200AF2C800980467 /* Debug configuration for PBXNativeTarget "cutter2" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = cutter2/cutter2.entitlements;
+				CODE_SIGN_ENTITLEMENTS = cutter2/Resources/cutter2.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -374,12 +321,13 @@
 				CURRENT_PROJECT_VERSION = 20250611;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = cutter2/Info.plist;
+				INFOPLIST_FILE = cutter2/Resources/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MARKETING_VERSION = 0.8.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mycometg3.cutter2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -388,11 +336,11 @@
 			};
 			name = Debug;
 		};
-		16EE23FF200AF2C800980467 /* Release */ = {
+		16EE23FF200AF2C800980467 /* Release configuration for PBXNativeTarget "cutter2" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = cutter2/cutter2.entitlements;
+				CODE_SIGN_ENTITLEMENTS = cutter2/Resources/cutter2.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -400,12 +348,13 @@
 				CURRENT_PROJECT_VERSION = 20250611;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = cutter2/Info.plist;
+				INFOPLIST_FILE = cutter2/Resources/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MARKETING_VERSION = 0.8.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mycometg3.cutter2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -420,19 +369,17 @@
 		16EE23E6200AF2C800980467 /* Build configuration list for PBXProject "cutter2" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				16EE23FB200AF2C800980467 /* Debug */,
-				16EE23FC200AF2C800980467 /* Release */,
+				16EE23FB200AF2C800980467 /* Debug configuration for PBXProject "cutter2" */,
+				16EE23FC200AF2C800980467 /* Release configuration for PBXProject "cutter2" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		16EE23FD200AF2C800980467 /* Build configuration list for PBXNativeTarget "cutter2" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				16EE23FE200AF2C800980467 /* Debug */,
-				16EE23FF200AF2C800980467 /* Release */,
+				16EE23FE200AF2C800980467 /* Debug configuration for PBXNativeTarget "cutter2" */,
+				16EE23FF200AF2C800980467 /* Release configuration for PBXNativeTarget "cutter2" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */

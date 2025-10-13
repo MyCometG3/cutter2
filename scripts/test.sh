@@ -22,6 +22,16 @@ NC='\033[0m' # No Color
 # Use custom derived data path or default
 DERIVED_DATA_PATH="${1:-./.build}"
 
+# Validate custom path if provided
+if [ $# -ge 1 ] && [ ! -d "$DERIVED_DATA_PATH" ]; then
+  echo -e "${YELLOW}⚠️  Warning: Custom derived data path does not exist: $DERIVED_DATA_PATH${NC}"
+  echo "   Creating directory..."
+  mkdir -p "$DERIVED_DATA_PATH" || {
+    echo -e "${RED}❌ Failed to create derived data path${NC}"
+    exit 1
+  }
+fi
+
 # Run tests with code coverage using explicit derived data path
 xcodebuild clean test \
   -project cutter2.xcodeproj \
@@ -56,7 +66,7 @@ if [ $TEST_RESULT -eq 0 ]; then
     if [ -d "$search_path" ]; then
       PROFDATA=$(find "$search_path" -name "Coverage.profdata" 2>/dev/null | head -1)
       if [ -n "$PROFDATA" ]; then
-        BINARY=$(find "$search_path" -name "cutter2" -type f 2>/dev/null | grep -v ".dSYM" | grep "MacOS" | head -1)
+        BINARY=$(find "$search_path" -type f -path "*/MacOS/cutter2" ! -path "*/.dSYM/*" 2>/dev/null | head -1)
         if [ -n "$BINARY" ]; then
           echo -e "${YELLOW}ℹ️  Found coverage data in: $search_path${NC}"
           break
@@ -75,15 +85,17 @@ if [ $TEST_RESULT -eq 0 ]; then
       -format="lcov" \
       -instr-profile="$PROFDATA" \
       "$BINARY" \
-      > coverage.lcov 2>&1; then
+      > coverage.lcov; then
       echo -e "${GREEN}✅ Coverage report generated: coverage.lcov${NC}"
       echo ""
       
       # Display coverage summary
       echo "📈 Coverage Summary:"
-      xcrun llvm-cov report \
+      if ! xcrun llvm-cov report \
         -instr-profile="$PROFDATA" \
-        "$BINARY" 2>&1 || echo -e "${YELLOW}⚠️  Could not generate coverage summary${NC}"
+        "$BINARY"; then
+        echo -e "${YELLOW}⚠️  Could not generate coverage summary${NC}"
+      fi
     else
       echo -e "${YELLOW}⚠️  Could not generate coverage report${NC}"
     fi

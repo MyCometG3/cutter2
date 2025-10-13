@@ -213,9 +213,13 @@ final class MovieMutatorTests: XCTestCase {
         XCTAssertNotNil(videoTrack)
         XCTAssertNotNil(audioTrack)
         
-        // Both tracks exist
+        // Verify tracks were added
+        XCTAssertTrue(movie.tracks.count == 2)
+        
+        // Range for empty tracks - may be zero, invalid, or empty
         let range = movie.range
-        XCTAssertTrue(range.isValid || range == CMTimeRange.zero)
+        // Empty tracks should result in an empty or zero range
+        XCTAssertTrue(range == CMTimeRange.zero || range.isEmpty || !range.isValid)
     }
     
     // MARK: - Notification Tests

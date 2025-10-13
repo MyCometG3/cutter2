@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		16B506752E9C949F0040C3A7 /* Keyboard Shortcut.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Keyboard Shortcut.pdf"; sourceTree = "<group>"; };
+		16B506762E9C949F0040C3A7 /* LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		16B506772E9C949F0040C3A7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		16EE23EB200AF2C800980467 /* cutter2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = cutter2.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -74,6 +77,9 @@
 			isa = PBXGroup;
 			children = (
 				16EE23ED200AF2C800980467 /* cutter2 */,
+				16B506752E9C949F0040C3A7 /* Keyboard Shortcut.pdf */,
+				16B506762E9C949F0040C3A7 /* LICENSE.txt */,
+				16B506772E9C949F0040C3A7 /* README.md */,
 				16EE23EC200AF2C800980467 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -318,7 +324,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 20250611;
+				CURRENT_PROJECT_VERSION = 20251013;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = cutter2/Resources/Info.plist;
@@ -328,7 +334,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.8.9;
+				MARKETING_VERSION = 0.8.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mycometg3.cutter2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -345,7 +351,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 20250611;
+				CURRENT_PROJECT_VERSION = 20251013;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = cutter2/Resources/Info.plist;
@@ -355,7 +361,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.8.9;
+				MARKETING_VERSION = 0.8.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mycometg3.cutter2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

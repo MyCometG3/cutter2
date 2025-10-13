@@ -13,7 +13,13 @@ import AVFoundation
 // MARK: - Actor isolation
 /* ============================================ */
 
-// Simple Sendable box to hold mutable results captured by @Sendable closures
+/// A simple thread-safe container for holding mutable results captured by @Sendable closures.
+///
+/// This class uses `@unchecked Sendable` because:
+/// - Access is synchronized via a DispatchQueue in `performAsync`
+/// - The value is only written once and read once
+/// - No concurrent access occurs during normal operation
+/// - The DispatchQueue provides the necessary memory barrier
 private final class SendableBox<T> {
     var value: T
     init(_ value: T) { self.value = value }
@@ -24,6 +30,20 @@ extension SendableBox: @unchecked Sendable {}
 extension Document {
     
     /// Executes an asynchronous, throwing operation synchronously on a detached task.
+    ///
+    /// This method bridges async/await operations to synchronous AppKit document APIs.
+    /// It is designed to be called from `nonisolated` contexts (specifically `Document.write(...)`).
+    ///
+    /// **Design Rationale:**
+    /// - `Task.detached` is used because:
+    ///   - Must be called from a `nonisolated` context (no parent task to inherit from)
+    ///   - AppKit's `canAsynchronouslyWrite` already executes `write()` on a background queue
+    ///   - No task priority inheritance is needed (AppKit manages thread priority)
+    /// - Semaphore waiting is used because:
+    ///   - Must block until async operation completes (AppKit document save requires synchronous return)
+    ///   - DispatchQueue provides thread-safe result passing
+    /// - Works in conjunction with `canAsynchronouslyWrite() -> Bool { true }`
+    ///
     /// - Parameter block: A closure that performs asynchronous work and may throw.
     /// - Returns: The result produced by the closure.
     /// - Throws: An error thrown by the closure.
@@ -49,6 +69,9 @@ extension Document {
     }
     
     /// Executes an asynchronous, non-throwing operation synchronously on a detached task.
+    ///
+    /// This is the non-throwing variant of `performAsync`. See the throwing version for detailed rationale.
+    ///
     /// - Parameter block: A closure that performs asynchronous work.
     /// - Returns: The result produced by the closure.
     /// - Warning: This blocks the current thread. Do not call from the main thread.
@@ -99,12 +122,21 @@ extension Document {
         let unit = NSEC_PER_MSEC * 100 // 100ms
         let t: UInt64 = clock_gettime_nsec_np(CLOCK_REALTIME)
         if lastUpdateAt == 0 {
+            // First call: initialize timestamp
             lastUpdateAt = t
         } else {
-            if (t - lastUpdateAt) > unit {
-                lastUpdateAt = lastUpdateAt + unit
+            if t > lastUpdateAt {
+                // Normal case: time moved forward
+                if (t - lastUpdateAt) > unit {
+                    // Sufficient time passed: update timestamp
+                    lastUpdateAt += unit
+                } else {
+                    // Too soon: skip this update
+                    return
+                }
             } else {
-                return
+                // Edge case: clock went backwards, reset
+                lastUpdateAt = t
             }
         }
         
@@ -120,6 +152,13 @@ extension Document {
     }
     
     /// Show busy modalSheet
+    ///
+    /// Displays a modal sheet with progress information and an optional Cancel button.
+    /// When the user clicks Cancel, the operation is cancelled via NSProgress and MovieMutator.
+    ///
+    /// - Parameters:
+    ///   - message: The main message to display (defaults to "Processing...")
+    ///   - info: Additional information text (defaults to "Hold on seconds...")
     public func showBusySheet(_ message: String?, _ info: String?) {
         // Swift.print(#function, #line, #file)
         
@@ -132,9 +171,15 @@ extension Document {
             alert.messageText = message ?? "Processing...(message)"
             alert.informativeText = info ?? "Hold on seconds...(informative)"
             alert.alertStyle = .informational
-            alert.addButton(withTitle: "") // No button on sheet
-            let handler: (NSApplication.ModalResponse) -> Void = {(response) in // @escaping
-                //if response == .stop {/* hideBusySheet() called */}
+            alert.addButton(withTitle: NSLocalizedString("Cancel", comment: "Cancel button for canceling save/export operations"))
+            let handler: (NSApplication.ModalResponse) -> Void = { @Sendable [weak self] (response) in // @escaping
+                guard let self else { return }
+                if response == .alertFirstButtonReturn {
+                    // User clicked Cancel - the cancellationHandler will call mutator.cancel()
+                    performSyncOnMainActor {
+                        self.saveProgress?.cancel()
+                    }
+                }
             }
             alert.beginSheetModal(for: window, completionHandler: handler)
             

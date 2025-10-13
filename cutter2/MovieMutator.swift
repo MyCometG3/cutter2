@@ -948,6 +948,8 @@ extension MovieMutator {
         let movieWriterParams = prepareMovieWriterParams()
         try await Task { @MainActor in
             let movieWriter = MovieWriter(params: movieWriterParams)
+            self.currentMovieWriter = movieWriter
+            defer { self.currentMovieWriter = nil }
             try await movieWriter.exportMovie(to: url, fileType: type, presetName: preset)
         }.value
     }
@@ -956,6 +958,8 @@ extension MovieMutator {
         let movieWriterParams = prepareMovieWriterParams()
         try await Task { @MainActor in
             let movieWriter = MovieWriter(params: movieWriterParams)
+            self.currentMovieWriter = movieWriter
+            defer { self.currentMovieWriter = nil }
             try await movieWriter.exportCustomMovie(to: url, fileType: type, settings: param)
         }.value
     }
@@ -964,7 +968,33 @@ extension MovieMutator {
         let movieWriterParams = prepareMovieWriterParams()
         try await Task { @MainActor in
             let movieWriter = MovieWriter(params: movieWriterParams)
+            self.currentMovieWriter = movieWriter
+            defer { self.currentMovieWriter = nil }
             try await movieWriter.writeMovie(to: url, fileType: type, copySampleData: selfContained)
         }.value
+    }
+    
+    /// Cancel ongoing export or write operation
+    ///
+    /// This method cancels any ongoing export or write operation by calling the appropriate
+    /// cancel method on the current MovieWriter instance.
+    ///
+    /// The method is safe to call at any time:
+    /// - If no operation is in progress, it has no effect
+    /// - If an operation is in progress, it attempts to cancel it gracefully
+    /// - For custom exports, both cancelExport() and cancelCustomMovie() are called
+    ///
+    /// **Design Notes:**
+    /// - This method is asynchronous and should be awaited to ensure proper cancellation
+    /// - The writer reference is captured to avoid race conditions
+    /// - Uses structured concurrency to ensure the cancellation does not outlive the parent instance
+    ///   - Actual cancellation happens asynchronously in MovieWriter
+    ///   - Cancellation state is tracked via writeCancelled flag
+    ///   - The ongoing operation will detect cancellation and throw appropriately
+    public func cancel() async {
+        guard let writer = self.currentMovieWriter else { return }
+        // Capture the writer reference to avoid race condition between check and use
+        await writer.cancelExport()
+        await writer.cancelCustomMovie(())
     }
 }

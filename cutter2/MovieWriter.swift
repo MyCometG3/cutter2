@@ -20,10 +20,13 @@ enum MovieWriterError: Error, NSErrorConvertible {
     case anotherExportSessionRunning
     case movieWriterFailed
     case assetReaderWriterFailed
+    case operationCancelled
     case unknown
+    
+    static let errorDomain = "MovieWriterError"
 
     var nsError: NSError {
-        let domain = "MovieWriterError"
+        let domain = MovieWriterError.errorDomain
         switch self {
         case .compatibilityError:
             let info = [NSLocalizedDescriptionKey: "The selected file type or preset is not compatible with the current movie."]
@@ -40,6 +43,11 @@ enum MovieWriterError: Error, NSErrorConvertible {
         case .assetReaderWriterFailed:
             let info = [NSLocalizedDescriptionKey: "The asset reader or writer encountered an error."]
             return NSError(domain: domain, code: 5, userInfo: info)
+        case .operationCancelled:
+            // Note: This uses the custom domain internally. Document.write() converts it
+            // to NSCocoaErrorDomain before rethrowing to conform to system conventions.
+            let info = [NSLocalizedDescriptionKey: "The operation was cancelled by the user."]
+            return NSError(domain: domain, code: NSUserCancelledError, userInfo: info)
         case .unknown:
             let info = [NSLocalizedDescriptionKey: "An unknown error has occurred."]
             return NSError(domain: domain, code: -1, userInfo: info)
@@ -200,6 +208,21 @@ extension MovieWriter {
         self.exportSessionPollingTask = nil
     }
     
+    /// Cancel ongoing export operation
+    ///
+    /// This method sets the `writeCancelled` flag and cancels the export session if one is active.
+    /// For custom exports, the cancellation is handled via `cancelCustomMovie`.
+    ///
+    /// The method is safe to call at any time:
+    /// - If no export is in progress, it has no effect
+    /// - If an export is in progress, it attempts to cancel it gracefully
+    /// - The export session's status will be set to `.cancelled`
+    public func cancelExport() {
+        writeCancelled = true
+        exportSession?.cancelExport()
+        // Note: For custom exports, cancelCustomMovie must be called separately
+    }
+    
     /// Status string representation
     ///
     /// - Parameter status: AVAssetExportSessionStatus
@@ -323,7 +346,9 @@ extension MovieWriter {
         
         //
         if writeSuccess == false {
-            if let error = writeError {
+            if writeCancelled {
+                try throwError(.operationCancelled, reason: "Export was cancelled by the user.")
+            } else if let error = writeError {
                 throw error
             } else {
                 try throwError(.movieWriterFailed, reason: "Export session failed with unknown error.")
@@ -864,13 +889,16 @@ extension MovieWriter {
         if cancel {
             ar.cancelReading()
             aw.cancelWriting()
-        }
-        
-        // Finish the writing session on the asset writer.
-        aw.endSession(atSourceTime: endTime)
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            aw.finishWriting { @Sendable in
-                continuation.resume()
+            // Note: After cancelWriting(), the writer is in .cancelled state and
+            // no further methods (endSession, finishWriting) should be called.
+            // cancelWriting() already performs cleanup.
+        } else {
+            // Normal completion flow
+            aw.endSession(atSourceTime: endTime)
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                aw.finishWriting { @Sendable in
+                    continuation.resume()
+                }
             }
         }
         
@@ -997,7 +1025,9 @@ extension MovieWriter {
 
         // If export failed, throw the error.
         if writeSuccess == false {
-            if let error = writeError {
+            if writeCancelled {
+                try throwError(.operationCancelled, reason: "Export was cancelled by the user.")
+            } else if let error = writeError {
                 throw error
             } else {
                 try throwError(.movieWriterFailed, reason: "Export failed without an error.")
@@ -1019,8 +1049,15 @@ extension MovieWriter {
         NotificationCenter.default.post(notificationEnd)
     }
     
+    /// Cancel ongoing custom export operation
+    ///
+    /// This method cancels a custom export operation if one is in progress.
+    /// It is safe to call even if no custom export is active (customQueue will be nil).
+    ///
+    /// - Parameter sender: The object requesting cancellation (unused)
     public func cancelCustomMovie(_ sender: Any) {
-        guard let customQueue = customQueue else { preconditionFailure("Unexpected nil customQueue detected.") }
+        // Only proceed if a custom export is actually in progress
+        guard let customQueue = customQueue else { return }
         if writeCancelled == false {
             let params = cancelParams(channels: customSampleBufferChannels)
             customQueue.async { @Sendable in // @escaping

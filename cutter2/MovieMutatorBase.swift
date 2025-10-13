@@ -193,6 +193,9 @@ class MovieMutatorBase: NSObject {
     public var unblockUserInteraction: (@Sendable () -> Void)? = nil
     public var updateProgress: (@Sendable (Float) -> Void)? = nil
     
+    /// Current MovieWriter instance (for cancellation support)
+    public var currentMovieWriter: MovieWriter? = nil
+    
     /// Respect tapt atom on clean aperture detection
     public var acceptTapt: Bool = true
     

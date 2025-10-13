@@ -117,6 +117,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     //
     public var lastUpdateAt: UInt64 = 0
     
+    // NSProgress support for save/export operations
+    public var saveProgress: Progress? = nil
+    
     //
     public var cachedTime = CMTime.invalid
     public var cachedWithinLastSampleRange: Bool = false
@@ -490,31 +493,59 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         }
     }
     
+    /// Override of NSDocument's write method to support async save/export operations.
+    ///
+    /// This method is called by AppKit on a background queue (due to `canAsynchronouslyWrite` returning true).
+    /// It bridges the synchronous AppKit document save API to our async/await implementation.
+    ///
+    /// The method uses `performAsync` to:
+    /// - Execute async operations (writeAsync, export, exportCustom) in a detached Task
+    /// - Block until the operation completes
+    /// - Return results or throw errors synchronously back to AppKit
+    ///
+    /// This approach enables:
+    /// - Swift Concurrency in save/export operations
+    /// - Progress reporting via NSProgress
+    /// - Proper resource cleanup with defer blocks
+    /// - Integration with AppKit's document save machinery
+    ///
+    /// - SeeAlso: `canAsynchronouslyWrite(to:ofType:for:)` - enables background execution
+    /// - SeeAlso: `performAsync(_:)` - async-to-sync bridge implementation
     override nonisolated func write(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType,
                         originalContentsURL absoluteOriginalContentsURL: URL?) throws {
         // Swift.print(#function, #line, #file)
         
         // Trigger long running task via global dispatch queue
-        try performAsync { @Sendable [weak self] in
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
-            
-            switch saveOperation {
-            case .saveToOperation:
-                // Export...
-                let transcodePreset: String? = UserDefaults.standard.string(forKey: kTranscodePresetKey)
-                let preset = transcodePreset ?? kTranscodePresetCustom
-                if preset == kTranscodePresetCustom {
-                    try await exportCustom(to: url, ofType: typeName)
-                } else {
-                    try await export(to: url, ofType: typeName, preset: preset)
+        do {
+            try performAsync { @Sendable [weak self] in
+                guard let self else { preconditionFailure("Unexpected nil self detected.") }
+                
+                switch saveOperation {
+                case .saveToOperation:
+                    // Export...
+                    let transcodePreset: String? = UserDefaults.standard.string(forKey: kTranscodePresetKey)
+                    let preset = transcodePreset ?? kTranscodePresetCustom
+                    if preset == kTranscodePresetCustom {
+                        try await exportCustom(to: url, ofType: typeName)
+                    } else {
+                        try await export(to: url, ofType: typeName, preset: preset)
+                    }
+                case .saveOperation, .saveAsOperation:
+                    // Save.../Save as...
+                    try await writeAsync(to: url, ofType: typeName)
+                default:
+                    let reason = "No autoSave feature is implemented yet."
+                    try throwError(.unsupportedSaveOperation, reason: reason)
                 }
-            case .saveOperation, .saveAsOperation:
-                // Save.../Save as...
-                try await writeAsync(to: url, ofType: typeName)
-            default:
-                let reason = "No autoSave feature is implemented yet."
-                try throwError(.unsupportedSaveOperation, reason: reason)
             }
+        } catch let error as NSError {
+            // Handle cancellation specially - don't show error sheet
+            if error.domain == MovieWriterError.errorDomain && error.code == NSUserCancelledError {
+                // Rethrow as standard user cancellation error
+                // This prevents error sheet and maintains document dirty flag
+                throw NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: error.userInfo)
+            }
+            throw error
         }
     }
     
@@ -522,6 +553,19 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
+        
+        // Create NSProgress with proper lifecycle management
+        let progress = Progress(totalUnitCount: 100)
+        progress.isCancellable = true
+        progress.cancellationHandler = { [weak mutator] in
+            Task { @MainActor [weak mutator] in
+                await mutator?.cancel()
+            }
+        }
+        self.saveProgress = progress
+        defer {
+            self.saveProgress = nil
+        }
         
         // Show busy sheet
         showBusySheet("Writing...", "Please hold on second(s)...")
@@ -532,10 +576,12 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-        mutator.updateProgress = { @Sendable [weak self] (progress) in
+        mutator.updateProgress = { @Sendable [weak self, weak progress] (progressValue) in
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             performSyncOnMainActor {
-                updateProgress(progress)
+                updateProgress(progressValue)
+                // Update NSProgress (thread-safe with weak capture)
+                progress?.completedUnitCount = Int64(progressValue * 100)
             }
         }
         defer {
@@ -557,6 +603,22 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Swift.print("##### WRITE FINISHED #####")
     }
     
+    /// Indicates that this document can perform write operations asynchronously.
+    ///
+    /// By returning true, we inform AppKit that `write(to:ofType:for:originalContentsURL:)` can be
+    /// safely called on a background queue. This is essential for our async/await bridge pattern:
+    ///
+    /// - AppKit executes `write()` on a background queue (not main thread)
+    /// - Our `write()` method uses `performAsync` to run async operations
+    /// - The background thread blocks (via semaphore) until async operation completes
+    /// - Main thread remains responsive during long save/export operations
+    ///
+    /// This pattern works because:
+    /// - We never block the main thread (write is called on background queue)
+    /// - Progress updates are dispatched to main thread via `performSyncOnMainActor`
+    /// - User can interact with UI via the Busy Sheet during operations
+    ///
+    /// - Returns: Always returns `true` to enable background write operations
     override func canAsynchronouslyWrite(to url: URL, ofType typeName: String,
                                          for saveOperation: NSDocument.SaveOperationType) -> Bool {
         return true
@@ -766,6 +828,19 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
+        // Create NSProgress with proper lifecycle management
+        let progress = Progress(totalUnitCount: 100)
+        progress.isCancellable = true
+        progress.cancellationHandler = { [weak mutator] in
+            Task { @MainActor [weak mutator] in
+                await mutator?.cancel()
+            }
+        }
+        self.saveProgress = progress
+        defer {
+            self.saveProgress = nil
+        }
+        
         // Show busy sheet
         showBusySheet("Exporting...", "Please hold on minute(s)...")
         mutator.unblockUserInteraction = { @Sendable [weak self] in
@@ -775,10 +850,12 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-        mutator.updateProgress = { @Sendable [weak self] (progress) in
+        mutator.updateProgress = { @Sendable [weak self, weak progress] (progressValue) in
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             performSyncOnMainActor {
-                updateProgress(progress)
+                updateProgress(progressValue)
+                // Update NSProgress (thread-safe with weak capture)
+                progress?.completedUnitCount = Int64(progressValue * 100)
             }
         }
         defer {
@@ -801,6 +878,19 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
+        // Create NSProgress with proper lifecycle management
+        let progress = Progress(totalUnitCount: 100)
+        progress.isCancellable = true
+        progress.cancellationHandler = { [weak mutator] in
+            Task { @MainActor [weak mutator] in
+                await mutator?.cancel()
+            }
+        }
+        self.saveProgress = progress
+        defer {
+            self.saveProgress = nil
+        }
+        
         // Show busy sheet
         showBusySheet("Exporting...", "Please hold on minute(s)...")
         mutator.unblockUserInteraction = { @Sendable [weak self] in
@@ -810,10 +900,12 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-        mutator.updateProgress = { @Sendable [weak self] (progress) in
+        mutator.updateProgress = { @Sendable [weak self, weak progress] (progressValue) in
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             performSyncOnMainActor {
-                updateProgress(progress)
+                updateProgress(progressValue)
+                // Update NSProgress (thread-safe with weak capture)
+                progress?.completedUnitCount = Int64(progressValue * 100)
             }
         }
         defer {

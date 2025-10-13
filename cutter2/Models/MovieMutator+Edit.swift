@@ -278,7 +278,7 @@ extension MovieMutator {
         guard let clip = movieClip(range)?.movHeader else { NSSound.beep(); return; }
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
-        // register undo redord
+        // register undo record
         let undoDeleteHandler: @Sendable (MovieMutator) -> Void = {[data, clip, range, time, unowned undoManager, unowned self] (me1) in // @escaping
             // register redo record
             performSyncOnMainActor {

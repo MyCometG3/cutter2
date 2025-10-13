@@ -1046,8 +1046,15 @@ extension MovieWriter {
         NotificationCenter.default.post(notificationEnd)
     }
     
+    /// Cancel ongoing custom export operation
+    ///
+    /// This method cancels a custom export operation if one is in progress.
+    /// It is safe to call even if no custom export is active (customQueue will be nil).
+    ///
+    /// - Parameter sender: The object requesting cancellation (unused)
     public func cancelCustomMovie(_ sender: Any) {
-        guard let customQueue = customQueue else { preconditionFailure("Unexpected nil customQueue detected.") }
+        // Only proceed if a custom export is actually in progress
+        guard let customQueue = customQueue else { return }
         if writeCancelled == false {
             let params = cancelParams(channels: customSampleBufferChannels)
             customQueue.async { @Sendable in // @escaping

@@ -33,6 +33,20 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 - Xcode 26.0.1
 - Swift 6.2.0
 
+#### Testing
+
+Tests are available in the `cutter2Tests` target. To run tests:
+
+```bash
+# Run all tests
+xcodebuild test -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS'
+
+# Or use Xcode
+# Press ⌘U to run all tests
+```
+
+See [TESTING_GUIDE.md](docs/TESTING_GUIDE.md) for detailed testing documentation.
+
 #### License
 - The MIT License
 

@@ -52,6 +52,7 @@ final class cutter2Tests: XCTestCase {
         _ = CMTimeRange.zero
     }
     
+    @MainActor
     func testCocoaAvailability() throws {
         // Verify Cocoa framework is available
         XCTAssertTrue(true, "Cocoa framework is available")
@@ -68,8 +69,8 @@ final class cutter2Tests: XCTestCase {
         // Test that the application supports common video file types
         let movType = "com.apple.quicktime-movie"
         let mp4Type = "public.mpeg-4"
-        let m4vType = "public.mpeg-4"
-        let m4aType = "public.mpeg-4-audio"
+        let m4vType = "com.apple.m4v-video"
+        let m4aType = "com.apple.m4a-audio"
         
         XCTAssertFalse(movType.isEmpty)
         XCTAssertFalse(mp4Type.isEmpty)
@@ -77,6 +78,7 @@ final class cutter2Tests: XCTestCase {
         XCTAssertFalse(m4aType.isEmpty)
     }
     
+    @MainActor
     func testDocumentTypeRegistration() throws {
         // Verify Document class can handle different file types
         let readableTypes = Document.readableTypes
@@ -181,13 +183,11 @@ final class cutter2Tests: XCTestCase {
             }
         }
         
-        do {
-            try ErrorUtilities.throwError(TestError.testError)
-            XCTFail("Should have thrown an error")
-        } catch let error as NSError {
-            XCTAssertEqual(error.domain, "com.test.integration")
-            XCTAssertEqual(error.code, 100)
-            XCTAssertTrue(error.localizedDescription.contains("Integration test error"))
+        XCTAssertThrowsError(try ErrorUtilities.throwError(TestError.testError)) { error in
+            let nsError = error as NSError
+            XCTAssertEqual(nsError.domain, "com.test.integration")
+            XCTAssertEqual(nsError.code, 100)
+            XCTAssertTrue(nsError.localizedDescription.contains("Integration test error"))
         }
     }
     
@@ -204,11 +204,9 @@ final class cutter2Tests: XCTestCase {
             }
         }
         
-        do {
-            try ErrorUtilities.throwError(TestError.testError, reason: "Detailed reason")
-            XCTFail("Should have thrown an error")
-        } catch let error as NSError {
-            XCTAssertEqual(error.userInfo[NSLocalizedFailureReasonErrorKey] as? String, "Detailed reason")
+        XCTAssertThrowsError(try ErrorUtilities.throwError(TestError.testError, reason: "Detailed reason")) { error in
+            let nsError = error as NSError
+            XCTAssertEqual(nsError.userInfo[NSLocalizedFailureReasonErrorKey] as? String, "Detailed reason")
         }
     }
     

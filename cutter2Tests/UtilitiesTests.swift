@@ -159,12 +159,10 @@ final class UtilitiesTests: XCTestCase {
             }
         }
         
-        do {
-            try ErrorUtilities.throwError(TestError.testCase)
-            XCTFail("Should have thrown an error")
-        } catch let error as NSError {
-            XCTAssertEqual(error.domain, "com.test.error")
-            XCTAssertEqual(error.code, 3)
+        XCTAssertThrowsError(try ErrorUtilities.throwError(TestError.testCase)) { error in
+            let nsError = error as NSError
+            XCTAssertEqual(nsError.domain, "com.test.error")
+            XCTAssertEqual(nsError.code, 3)
         }
     }
     
@@ -181,13 +179,11 @@ final class UtilitiesTests: XCTestCase {
             }
         }
         
-        do {
-            try ErrorUtilities.throwError(TestError.testCase, reason: "Detailed reason")
-            XCTFail("Should have thrown an error")
-        } catch let error as NSError {
-            XCTAssertEqual(error.domain, "com.test.error")
-            XCTAssertEqual(error.code, 4)
-            XCTAssertEqual(error.userInfo[NSLocalizedFailureReasonErrorKey] as? String, "Detailed reason")
+        XCTAssertThrowsError(try ErrorUtilities.throwError(TestError.testCase, reason: "Detailed reason")) { error in
+            let nsError = error as NSError
+            XCTAssertEqual(nsError.domain, "com.test.error")
+            XCTAssertEqual(nsError.code, 4)
+            XCTAssertEqual(nsError.userInfo[NSLocalizedFailureReasonErrorKey] as? String, "Detailed reason")
         }
     }
     

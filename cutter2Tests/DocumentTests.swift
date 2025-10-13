@@ -13,7 +13,7 @@ import AVFoundation
 @MainActor
 final class DocumentTests: XCTestCase {
     
-    var document: Document?
+    var document: Document!
     
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -28,11 +28,11 @@ final class DocumentTests: XCTestCase {
     
     func testDocumentInitialization() throws {
         XCTAssertNotNil(document)
-        XCTAssertNil(document?.movieMutator)
+        XCTAssertNil(document.movieMutator)
     }
     
     func testDocumentDisplayName() throws {
-        XCTAssertNotNil(document?.displayName)
+        XCTAssertNotNil(document.displayName)
     }
     
     // MARK: - Document Type Tests
@@ -67,12 +67,12 @@ final class DocumentTests: XCTestCase {
     // MARK: - Document State Tests
     
     func testDocumentInitialState() throws {
-        XCTAssertNil(document?.movieMutator)
-        XCTAssertNotNil(document?.undoManager)
+        XCTAssertNil(document.movieMutator)
+        XCTAssertNotNil(document.undoManager)
     }
     
     func testDocumentHasUndoManager() throws {
-        let undoManager = document?.undoManager
+        let undoManager = document.undoManager
         
         XCTAssertNotNil(undoManager)
     }
@@ -102,7 +102,7 @@ final class DocumentTests: XCTestCase {
     // MARK: - Window Management Tests
     
     func testWindowControllers() throws {
-        let controllers = document?.windowControllers ?? []
+        let controllers = document.windowControllers
         
         // Initially should be empty before makeWindowControllers is called
         XCTAssertTrue(controllers.isEmpty || controllers.count >= 0)
@@ -144,7 +144,7 @@ final class DocumentTests: XCTestCase {
     
     func testUndoManagerPerformance() throws {
         measure {
-            _ = document?.undoManager
+            _ = document.undoManager
         }
     }
 }

@@ -6,7 +6,18 @@
 	objectVersion = 90;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		16674FA62E9CF64900453BBE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 16EE23E3200AF2C800980467 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 16EE23EA200AF2C800980467;
+			remoteInfo = cutter2;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		16674FA22E9CF64900453BBE /* cutter2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = cutter2Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		16B506752E9C949F0040C3A7 /* Keyboard Shortcut.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = "Keyboard Shortcut.pdf"; sourceTree = "<group>"; };
 		16B506762E9C949F0040C3A7 /* LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		16B506772E9C949F0040C3A7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -24,6 +35,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		16674FA32E9CF64900453BBE /* cutter2Tests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = cutter2Tests;
+			sourceTree = "<group>";
+		};
 		16C997962E9C8EB8008E0B7C /* Application */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Application;
@@ -65,6 +81,11 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		16674F9F2E9CF64900453BBE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
 		16EE23E8200AF2C800980467 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -80,6 +101,7 @@
 				16B506752E9C949F0040C3A7 /* Keyboard Shortcut.pdf */,
 				16B506762E9C949F0040C3A7 /* LICENSE.txt */,
 				16B506772E9C949F0040C3A7 /* README.md */,
+				16674FA32E9CF64900453BBE /* cutter2Tests */,
 				16EE23EC200AF2C800980467 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,6 +110,7 @@
 			isa = PBXGroup;
 			children = (
 				16EE23EB200AF2C800980467 /* cutter2.app */,
+				16674FA22E9CF64900453BBE /* cutter2Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -109,6 +132,27 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		16674FA12E9CF64900453BBE /* cutter2Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 16674FAA2E9CF64900453BBE /* Build configuration list for PBXNativeTarget "cutter2Tests" */;
+			buildPhases = (
+				16674F9E2E9CF64900453BBE /* Sources */,
+				16674F9F2E9CF64900453BBE /* Frameworks */,
+				16674FA02E9CF64900453BBE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				16674FA72E9CF64900453BBE /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				16674FA32E9CF64900453BBE /* cutter2Tests */,
+			);
+			name = cutter2Tests;
+			productName = cutter2Tests;
+			productReference = 16674FA22E9CF64900453BBE /* cutter2Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		16EE23EA200AF2C800980467 /* cutter2 */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 16EE23FD200AF2C800980467 /* Build configuration list for PBXNativeTarget "cutter2" */;
@@ -140,10 +184,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastSwiftUpdateCheck = 0920;
+				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				ORGANIZATIONNAME = MyCometG3;
 				TargetAttributes = {
+					16674FA12E9CF64900453BBE = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = 16EE23EA200AF2C800980467;
+					};
 					16EE23EA200AF2C800980467 = {
 						CreatedOnToolsVersion = 9.2;
 						LastSwiftMigration = 1020;
@@ -173,11 +221,17 @@
 			projectRoot = "";
 			targets = (
 				16EE23EA200AF2C800980467 /* cutter2 */,
+				16674FA12E9CF64900453BBE /* cutter2Tests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		16674FA02E9CF64900453BBE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
 		16EE23E9200AF2C800980467 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
@@ -186,6 +240,11 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		16674F9E2E9CF64900453BBE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 		16EE23E7200AF2C800980467 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -193,7 +252,73 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		16674FA72E9CF64900453BBE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 16EE23EA200AF2C800980467 /* cutter2 */;
+			targetProxy = 16674FA62E9CF64900453BBE /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		16674FA82E9CF64900453BBE /* Debug configuration for PBXNativeTarget "cutter2Tests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BV5C4YNA4Z;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mycometg3.cutter2Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/cutter2.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/cutter2";
+			};
+			name = Debug;
+		};
+		16674FA92E9CF64900453BBE /* Release configuration for PBXNativeTarget "cutter2Tests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BV5C4YNA4Z;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mycometg3.cutter2Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/cutter2.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/cutter2";
+			};
+			name = Release;
+		};
 		16EE23FB200AF2C800980467 /* Debug configuration for PBXProject "cutter2" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -372,6 +497,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		16674FAA2E9CF64900453BBE /* Build configuration list for PBXNativeTarget "cutter2Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				16674FA82E9CF64900453BBE /* Debug configuration for PBXNativeTarget "cutter2Tests" */,
+				16674FA92E9CF64900453BBE /* Release configuration for PBXNativeTarget "cutter2Tests" */,
+			);
+			defaultConfigurationName = Release;
+		};
 		16EE23E6200AF2C800980467 /* Build configuration list for PBXProject "cutter2" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

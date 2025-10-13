@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import AVFoundation
 @testable import cutter2
 
 /// Unit tests for utility classes and extensions
@@ -21,26 +22,178 @@ final class UtilitiesTests: XCTestCase {
     
     // MARK: - Constants Tests
     
-    func testConstants() throws {
-        // TODO: Test constant values
-        // Verify that key constants are properly defined
+    func testTranscodeConstants() throws {
+        // Verify UserDefaults keys for transcoding
+        XCTAssertEqual(kTranscodePresetKey, "transcodePreset")
+        XCTAssertEqual(kTranscodeTypeKey, "transcodeType")
+        XCTAssertEqual(kTrancode0Key, "transcode0")
+        XCTAssertEqual(kTrancode1Key, "transcode1")
+        XCTAssertEqual(kTrancode2Key, "transcode2")
+        XCTAssertEqual(kTrancode3Key, "transcode3")
+        XCTAssertEqual(kAVFileTypeKey, "avFileType")
+        XCTAssertEqual(kHEVCReadyKey, "hevcReady")
+        XCTAssertEqual(kTranscodePresetCustom, "Custom")
+    }
+    
+    func testMovieWriterConstants() throws {
+        // Verify UserDefaults keys for MovieWriter
+        XCTAssertEqual(kLPCMDepthKey, "lpcmDepth")
+        XCTAssertEqual(kAudioKbpsKey, "audioKbps")
+        XCTAssertEqual(kVideoKbpsKey, "videoKbps")
+        XCTAssertEqual(kCopyFieldKey, "copyField")
+        XCTAssertEqual(kCopyNCLCKey, "copyNCLC")
+        XCTAssertEqual(kCopyOtherMediaKey, "copyOtherMedia")
+        XCTAssertEqual(kVideoEncodeKey, "videoEncode")
+        XCTAssertEqual(kAudioEncodeKey, "audioEncode")
+        XCTAssertEqual(kVideoCodecKey, "videoCodec")
+        XCTAssertEqual(kAudioCodecKey, "audioCodec")
+    }
+    
+    func testInfoDictionaryConstants() throws {
+        // Verify InfoDictionary keys
+        XCTAssertEqual(timeValueInfoKey, "timeValue")
+        XCTAssertEqual(timeRangeValueInfoKey, "timeRangeValue")
+        XCTAssertEqual(timeInfoKey, "time")
+        XCTAssertEqual(rangeInfoKey, "range")
+        XCTAssertEqual(curPositionInfoKey, "curPosition")
+        XCTAssertEqual(startPositionInfoKey, "startPosition")
+        XCTAssertEqual(endPositionInfoKey, "endPosition")
+        XCTAssertEqual(stringInfoKey, "string")
+        XCTAssertEqual(durationInfoKey, "duration")
+    }
+    
+    func testClapPaspConstants() throws {
+        // Verify Clean Aperture and Pixel Aspect Ratio keys
+        XCTAssertEqual(clapSizeKey, "clapSize")
+        XCTAssertEqual(clapOffsetKey, "clapOffset")
+        XCTAssertEqual(paspRatioKey, "paspRatio")
+        XCTAssertEqual(dimensionsKey, "dimensions")
+        XCTAssertEqual(modClapPaspKey, "modClapPasp")
+    }
+    
+    func testInspectConstants() throws {
+        // Verify inspect keys
+        XCTAssertEqual(titleInspectKey, "title")
+        XCTAssertEqual(pathInspectKey, "path")
+        XCTAssertEqual(videoFormatInspectKey, "videoFormat")
+        XCTAssertEqual(videoFPSInspectKey, "videoFPS")
+        XCTAssertEqual(audioFormatInspectKey, "audioFormat")
+        XCTAssertEqual(videoDataSizeInspectKey, "videoDataSize")
+        XCTAssertEqual(audioDataSizeInspectKey, "audioDataSize")
+        XCTAssertEqual(currentTimeInspectKey, "currentTime")
+        XCTAssertEqual(movieDurationInspectKey, "movieDuration")
+        XCTAssertEqual(selectionStartInspectKey, "selectionStart")
+        XCTAssertEqual(selectionEndInspectKey, "selectionEnd")
+        XCTAssertEqual(selectionDurationInspectKey, "selectionDuration")
+    }
+    
+    func testProgressInfoConstants() throws {
+        // Verify progress info keys for MovieWriter
+        XCTAssertEqual(urlInfoKey, "url")
+        XCTAssertEqual(startInfoKey, "start")
+        XCTAssertEqual(endInfoKey, "end")
+        XCTAssertEqual(completedInfoKey, "completed")
+        XCTAssertEqual(intervalInfoKey, "interval")
+        XCTAssertEqual(progressInfoKey, "progress")
+        XCTAssertEqual(statusInfoKey, "status")
+        XCTAssertEqual(elapsedInfoKey, "elapsed")
+        XCTAssertEqual(estimatedRemainingInfoKey, "estimatedRemaining")
+        XCTAssertEqual(estimatedTotalInfoKey, "estimatedTotal")
     }
     
     // MARK: - Error Utilities Tests
     
-    func testErrorConversion() throws {
-        // TODO: Test ErrorUtilities error conversion
-        // Test NSErrorConvertible protocol implementation
+    func testNSErrorConvertibleProtocol() throws {
+        // Create a test error type
+        enum TestError: NSErrorConvertible {
+            case testCase
+            
+            var nsError: NSError {
+                return NSError(
+                    domain: "com.test.error",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Test error"]
+                )
+            }
+        }
+        
+        let error = TestError.testCase
+        let nsError = error.nsError
+        
+        XCTAssertEqual(nsError.domain, "com.test.error")
+        XCTAssertEqual(nsError.code, 1)
+        XCTAssertEqual(nsError.localizedDescription, "Test error")
     }
     
-    func testErrorPresentation() throws {
-        // TODO: Test error presentation to users
+    func testNSErrorConvertibleWithReason() throws {
+        enum TestError: NSErrorConvertible {
+            case testCase
+            
+            var nsError: NSError {
+                return NSError(
+                    domain: "com.test.error",
+                    code: 2,
+                    userInfo: [NSLocalizedDescriptionKey: "Base error"]
+                )
+            }
+        }
+        
+        let error = TestError.testCase
+        let nsError = error.nsError(with: "Custom reason")
+        
+        XCTAssertEqual(nsError.domain, "com.test.error")
+        XCTAssertEqual(nsError.code, 2)
+        XCTAssertEqual(nsError.userInfo[NSLocalizedFailureReasonErrorKey] as? String, "Custom reason")
+    }
+    
+    func testErrorUtilitiesThrow() throws {
+        enum TestError: NSErrorConvertible {
+            case testCase
+            
+            var nsError: NSError {
+                return NSError(
+                    domain: "com.test.error",
+                    code: 3,
+                    userInfo: [NSLocalizedDescriptionKey: "Throw test"]
+                )
+            }
+        }
+        
+        do {
+            try ErrorUtilities.throwError(TestError.testCase)
+            XCTFail("Should have thrown an error")
+        } catch let error as NSError {
+            XCTAssertEqual(error.domain, "com.test.error")
+            XCTAssertEqual(error.code, 3)
+        }
+    }
+    
+    func testErrorUtilitiesThrowWithReason() throws {
+        enum TestError: NSErrorConvertible {
+            case testCase
+            
+            var nsError: NSError {
+                return NSError(
+                    domain: "com.test.error",
+                    code: 4,
+                    userInfo: [NSLocalizedDescriptionKey: "Throw test with reason"]
+                )
+            }
+        }
+        
+        do {
+            try ErrorUtilities.throwError(TestError.testCase, reason: "Detailed reason")
+            XCTFail("Should have thrown an error")
+        } catch let error as NSError {
+            XCTAssertEqual(error.domain, "com.test.error")
+            XCTAssertEqual(error.code, 4)
+            XCTAssertEqual(error.userInfo[NSLocalizedFailureReasonErrorKey] as? String, "Detailed reason")
+        }
     }
     
     // MARK: - Actor Utilities Tests
     
     func testMainActorExecution() throws {
-        // TODO: Test performSyncOnMainActor utility
         let expectation = self.expectation(description: "Main actor execution")
         
         Task { @MainActor in
@@ -52,13 +205,68 @@ final class UtilitiesTests: XCTestCase {
         wait(for: [expectation], timeout: 1.0)
     }
     
-    // MARK: - Extension Tests
-    
-    func testCMTimeExtensions() throws {
-        // TODO: Test CMTime extensions if any exist
+    func testAsyncMainActorExecution() async throws {
+        // Test async/await on main actor
+        await MainActor.run {
+            XCTAssertTrue(Thread.isMainThread)
+        }
     }
     
-    func testStringExtensions() throws {
-        // TODO: Test String extensions if any exist
+    // MARK: - Notification Tests
+    
+    func testMovieWasMutatedNotification() throws {
+        // Verify notification name
+        let notificationName = Notification.Name.movieWasMutated
+        XCTAssertEqual(notificationName.rawValue, "movieWasMutated")
+    }
+    
+    func testNotificationPosting() throws {
+        let expectation = self.expectation(description: "Notification received")
+        
+        let observer = NotificationCenter.default.addObserver(
+            forName: .movieWasMutated,
+            object: nil,
+            queue: .main
+        ) { notification in
+            XCTAssertEqual(notification.name, .movieWasMutated)
+            expectation.fulfill()
+        }
+        
+        NotificationCenter.default.post(name: .movieWasMutated, object: nil)
+        
+        wait(for: [expectation], timeout: 1.0)
+        NotificationCenter.default.removeObserver(observer)
+    }
+    
+    // MARK: - Performance Tests
+    
+    func testConstantAccessPerformance() throws {
+        measure {
+            for _ in 0..<1000 {
+                _ = kTranscodePresetKey
+                _ = kVideoCodecKey
+                _ = timeInfoKey
+            }
+        }
+    }
+    
+    func testErrorCreationPerformance() throws {
+        enum TestError: NSErrorConvertible {
+            case testCase
+            
+            var nsError: NSError {
+                return NSError(
+                    domain: "com.test.error",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Performance test"]
+                )
+            }
+        }
+        
+        measure {
+            for _ in 0..<100 {
+                _ = TestError.testCase.nsError
+            }
+        }
     }
 }

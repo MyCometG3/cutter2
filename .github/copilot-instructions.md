@@ -214,7 +214,11 @@ mutator.applySomething(parameters, using: self.undoManagerWrapper)
 - `.m4a`: Audio-only format
 
 ### Internal Organization
-- Main app code in `cutter2/` directory
-- Storyboards in `Base.lproj/`
-- Assets in `Assets.xcassets/`
+- **Application/**: App delegate and document controller
+- **Document/**: Document class and related extensions
+- **Models/**: Core business logic (MovieMutator, MovieWriter, SampleBufferChannel)
+- **ViewControllers/**: All view controllers (ViewController, WindowController, InspectorViewController, etc.)
+- **Views/**: Custom views (MyPlayerView, TimelineView)
+- **Utilities/**: Helper classes and utilities (ErrorUtilities, Constants, ActorUtilities, etc.)
+- **Resources/**: Storyboards (`Base.lproj/`), assets (`Assets.xcassets/`), and other resources
 - Entitlements in `cutter2.entitlements`

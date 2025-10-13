@@ -813,14 +813,14 @@ extension MovieMutatorBase {
                     let asbdPtr: UnsafePointer<AudioStreamBasicDescription>? =
                         CMAudioFormatDescriptionGetStreamBasicDescription(desc)
                     if asbdPtr != nil {
-                        var formatSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
-                        var format: CFString = String() as CFString
-                        withUnsafeMutablePointer(to: &format) { formatPtr -> Void in
-                            let err: OSStatus = AudioFormatGetProperty(kAudioFormatProperty_FormatName,
-                                                                       asbdSize, asbdPtr, &formatSize, formatPtr)
-                            if err == noErr {
-                                formatString = formatPtr.pointee as String
-                            }
+                        var formatSize: UInt32 = UInt32(MemoryLayout<CFString?>.size)
+                        var format: Unmanaged<CFString>? = nil
+                        let err: OSStatus = withUnsafeMutablePointer(to: &format) { formatPtr in
+                            AudioFormatGetProperty(kAudioFormatProperty_FormatName,
+                                                   asbdSize, asbdPtr, &formatSize, formatPtr)
+                        }
+                        if err == noErr, let format = format {
+                            formatString = format.takeUnretainedValue() as String
                         }
                     }
                 }
@@ -847,14 +847,14 @@ extension MovieMutatorBase {
                         err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutForTag,
                                                      tagSize, &tag, &aclSize, aclPtr)
                         if err == noErr {
-                            var nameSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
-                            var name: CFString = String() as CFString
-                            withUnsafeMutablePointer(to: &name) { namePtr -> Void in
-                                err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
-                                                             aclSize, aclPtr, &nameSize, namePtr)
-                                if err == noErr {
-                                    layoutString = namePtr.pointee as String
-                                }
+                            var nameSize: UInt32 = UInt32(MemoryLayout<CFString?>.size)
+                            var name: Unmanaged<CFString>? = nil
+                            err = withUnsafeMutablePointer(to: &name) { namePtr in
+                                AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
+                                                       aclSize, aclPtr, &nameSize, namePtr)
+                            }
+                            if err == noErr, let name = name {
+                                layoutString = name.takeUnretainedValue() as String
                             }
                         }
                     }
@@ -865,14 +865,14 @@ extension MovieMutatorBase {
                     let aclPtr: UnsafePointer<AudioChannelLayout>? =
                         CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &aclSize)
                     if aclSize > 0, let aclPtr = aclPtr {
-                        var nameSize: UInt32 = UInt32(MemoryLayout<CFString>.size)
-                        var name: CFString = String() as CFString
-                        withUnsafeMutablePointer(to: &name) { namePtr -> Void in
-                            err = AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
-                                                         UInt32(aclSize), aclPtr, &nameSize, namePtr)
-                            if err == noErr {
-                                layoutString = namePtr.pointee as String
-                            }
+                        var nameSize: UInt32 = UInt32(MemoryLayout<CFString?>.size)
+                        var name: Unmanaged<CFString>? = nil
+                        err = withUnsafeMutablePointer(to: &name) { namePtr in
+                            AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
+                                                   UInt32(aclSize), aclPtr, &nameSize, namePtr)
+                        }
+                        if err == noErr, let name = name {
+                            layoutString = name.takeUnretainedValue() as String
                         }
                     }
                 }

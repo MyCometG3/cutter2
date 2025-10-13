@@ -733,5 +733,456 @@ cutter2/Models/
 
 ---
 
+**Status**: ✅ MovieMutator.swift refactoring completed  
+**Next Action**: Proceed to ViewController.swift refactoring
+
+---
+
+# Code Refactoring Plan - ViewController.swift
+
+**Date**: October 13, 2025  
+**Target**: Phase 1.3 - Code Refactoring (Week 5-6)  
+**Goal**: Split ViewController.swift into logical, maintainable extensions
+
+---
+
+## Current State Analysis
+
+### File Structure Overview
+
+```
+cutter2/ViewControllers/
+└── ViewController.swift            968 lines  (Main class + all functionality)
+```
+
+### ViewController.swift Section Breakdown
+
+| Start | End  | Lines | Section Name                        | Category          |
+|-------|------|-------|-------------------------------------|-------------------|
+| 1     | 11   | 11    | Imports and header                  | Setup             |
+| 12    | 35   | 24    | Actor isolation extension           | Actor Isolation   |
+| 36    | 41   | 6     | Notification.Name extension         | Core              |
+| 42    | 68   | 27    | ViewControllerDelegate protocol     | Core              |
+| 69    | 115  | 47    | Class declaration & properties      | Core              |
+| 116   | 179  | 64    | Lifecycle & public methods          | Core              |
+| 180   | 315  | 136   | Observer utilities                  | Observer          |
+| 316   | 339  | 24    | Validate menu                       | Menu              |
+| 340   | 737  | 398   | Key Event utilities                 | KeyEvent          |
+| 738   | 770  | 33    | Cut/Copy/Paste/Delete IBAction      | Edit              |
+| 771   | 899  | 129   | Keyboard Action handling            | KeyAction         |
+| 900   | 968  | 69    | TimelineUpdateDelegate              | Timeline          |
+
+**Total**: 968 lines
+
+### Category Grouping
+
+1. **Core Setup** (85 lines)
+   - Imports and header (11 lines)
+   - Actor isolation extension (24 lines)
+   - Notification.Name extension (6 lines)
+   - ViewControllerDelegate protocol (27 lines)
+   - Class declaration & properties (47 lines)
+
+2. **Lifecycle & Setup** (64 lines)
+   - viewDidLoad, viewWillAppear (64 lines)
+
+3. **Observer Management** (136 lines)
+   - UserDefaults observer (136 lines)
+   - Window resize observer
+   - Update request observer
+
+4. **Menu Validation** (24 lines)
+   - validateMenuItem implementation
+
+5. **Key Event Handling** (398 lines)
+   - JKL mode key handling (complex)
+   - Step mode key handling
+   - keyDown/keyUp overrides
+   - Key utilities
+
+6. **Edit Actions** (33 lines)
+   - Cut/Copy/Paste/Delete IBActions
+
+7. **Keyboard Actions** (129 lines)
+   - Arrow key handling
+   - Movement actions
+   - Selection modifications
+
+8. **Timeline Delegate** (69 lines)
+   - TimelineUpdateDelegate protocol implementation
+
+---
+
+## Refactoring Strategy
+
+### Proposed File Structure
+
+```
+cutter2/ViewControllers/
+├── ViewController.swift                ~150 lines  (Core class definition only)
+│   ├── Imports
+│   ├── ViewControllerDelegate protocol
+│   ├── Notification.Name extension
+│   ├── Class declaration
+│   ├── Properties
+│   └── Essential lifecycle methods
+│
+├── ViewController+Observer.swift       ~140 lines  (NEW)
+│   ├── UserDefaults observer
+│   ├── Window resize observer
+│   └── Update request observer
+│
+├── ViewController+KeyEvent.swift       ~400 lines  (NEW)
+│   ├── JKL mode key handling
+│   ├── Step mode key handling
+│   ├── keyDown/keyUp overrides
+│   └── Key event utilities
+│
+├── ViewController+Edit.swift           ~40 lines   (NEW)
+│   ├── Menu validation
+│   └── Cut/Copy/Paste/Delete IBActions
+│
+├── ViewController+KeyboardAction.swift ~130 lines  (NEW)
+│   ├── Arrow key handling
+│   ├── Movement actions
+│   └── Selection modifications
+│
+└── ViewController+Timeline.swift       ~70 lines   (NEW)
+    └── TimelineUpdateDelegate implementation
+```
+
+**After Refactoring Total**: ~930 lines (slight reduction due to better organization)
+
+---
+
+## Detailed Refactoring Plan
+
+### Step 1: Create ViewController+Observer.swift
+
+**Purpose**: Consolidate all observer management (UserDefaults, Window, Notifications)
+
+**Content to Extract** (lines 180-315, ~136 lines):
+- addUserDefaultObserver / removeUserDefaultsObserver
+- observeValue(forKeyPath:...) override
+- addWindowResizeObserver / removeWindowResizeObserver
+- addUpdateReqObserver / removeUpdateReqObserver
+- applyMode() utility
+
+**Dependencies**:
+- Uses `timelineView` property
+- Uses `delegate` property
+- Uses `mimicJKLcombination` property
+- NotificationCenter API
+
+**Benefits**:
+- Clear separation of observer lifecycle management
+- Easy to add new observers
+- Reduces main ViewController.swift
+
+---
+
+### Step 2: Create ViewController+KeyEvent.swift
+
+**Purpose**: Handle all keyboard event processing (JKL mode, Step mode)
+
+**Content to Extract** (lines 340-737, ~398 lines):
+- doMoveLeft / doMoveRight utilities
+- modifier() utility
+- keyMimic(with:) - JKL mode handler
+- keyMimicUp(with:) - JKL mode key up handler
+- keyStep(with:) - Step mode handler
+- keyDown(with:) override
+- keyUp(with:) override
+- keyDump(with:) debug utility
+
+**Dependencies**:
+- Uses `delegate` property
+- Uses `timelineView` property
+- Uses `keyDownJ/K/L`, `acceptAuto` properties
+- Uses `mimicJKLcombination` property
+- Uses `offsetS/M/L` properties
+
+**Benefits**:
+- Isolates complex key handling logic
+- Easier to maintain JKL mode behavior
+- Clear separation of input handling
+
+---
+
+### Step 3: Create ViewController+Edit.swift
+
+**Purpose**: Handle edit menu actions and validation
+
+**Content to Extract** (lines 316-770, ~57 lines):
+- validateMenuItem(_:) implementation
+- cut(_:) IBAction
+- copy(_:) IBAction
+- paste(_:) IBAction
+- delete(_:) IBAction
+
+**Dependencies**:
+- Uses `delegate` property
+- NSMenuItem validation
+
+**Benefits**:
+- Groups all edit-related menu actions
+- Clear API for cut/copy/paste operations
+- Easy to extend with new edit actions
+
+---
+
+### Step 4: Create ViewController+KeyboardAction.swift
+
+**Purpose**: Handle keyboard action overrides (arrows, navigation)
+
+**Content to Extract** (lines 771-899, ~129 lines):
+- deleteBackward(_:) override
+- selectAll(_:) override
+- insertNewline(_:) override
+- insertTab / insertBacktab overrides
+- moveUp / moveDown overrides
+- moveLeft / moveRight overrides
+- moveWordLeft / moveWordRight overrides
+- moveLeftAndModifySelection / moveRightAndModifySelection overrides
+- moveWordLeftAndModifySelection / moveWordRightAndModifySelection overrides
+- moveToLeftEndOfLine / moveToRightEndOfLine overrides
+- insertText(_:) override
+
+**Dependencies**:
+- Uses `delegate` property
+- Uses `timelineView` property
+- Uses `ignoreOptionWhenShift` property
+- Uses modifier(_:) utility (from KeyEvent extension)
+
+**Benefits**:
+- Groups all NSResponder action overrides
+- Clear API for keyboard navigation
+- Easy to customize navigation behavior
+
+---
+
+### Step 5: Create ViewController+Timeline.swift
+
+**Purpose**: TimelineUpdateDelegate protocol implementation
+
+**Content to Extract** (lines 900-968, ~69 lines):
+- didUpdateCursor(to:)
+- didUpdateStart(to:)
+- didUpdateEnd(to:)
+- didUpdateSelection(from:to:)
+- presentationInfo(at:)
+- previousInfo(of:)
+- nextInfo(of:)
+- doSetCurrent(to:)
+- doSetStart(to:)
+- doSetEnd(to:)
+
+**Dependencies**:
+- Uses `delegate` property
+- Uses `followSelectionMove` property
+- TimelineUpdateDelegate protocol
+
+**Benefits**:
+- Clear separation of timeline delegation
+- Easy to extend timeline features
+- Isolated timeline state management
+
+---
+
+### Step 6: Cleanup ViewController.swift
+
+**Final ViewController.swift Content** (~150 lines):
+- Imports (11 lines)
+- Actor isolation extension (24 lines)
+- Notification.Name extension (6 lines)
+- ViewControllerDelegate protocol (27 lines)
+- Class declaration (7 lines)
+- Private properties (15 lines)
+- Public properties (25 lines)
+- Lifecycle methods (~35 lines)
+  - representedObject
+  - viewDidLoad()
+  - viewWillAppear()
+  - setup()
+  - cleanup()
+  - updateTimeline(...)
+  - showController(_:)
+
+**All other functionality**: Moved to extensions
+
+---
+
+## Implementation Order
+
+### Week 5: Days 1-3
+1. ✅ Analyze current structure (DONE)
+2. Create feature branch `feature/refactor-viewcontroller`
+3. Create `ViewController+Observer.swift`
+4. Test observer functionality (UserDefaults, window resize, notifications)
+5. Run compilation and basic tests
+
+### Week 5: Days 4-5
+6. Create `ViewController+KeyEvent.swift`
+7. Test JKL mode and Step mode key handling
+8. Verify keyboard shortcuts work correctly
+
+### Week 6: Days 1-2
+9. Create `ViewController+Edit.swift`
+10. Create `ViewController+KeyboardAction.swift`
+11. Test edit menu actions and keyboard navigation
+
+### Week 6: Days 3-4
+12. Create `ViewController+Timeline.swift`
+13. Test timeline delegate methods
+14. Final cleanup of ViewController.swift
+
+### Week 6: Day 5
+15. Run full test suite
+16. Update documentation
+17. Create PR and merge to work branch
+
+---
+
+## Testing Strategy
+
+### After Each Refactoring Step
+
+1. **Compilation Check**
+   ```bash
+   xcodebuild build -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS'
+   ```
+
+2. **Functionality Test**
+   - Open a movie file
+   - Test keyboard shortcuts (JKL mode, arrow keys)
+   - Test edit menu (cut, copy, paste, delete)
+   - Test timeline interaction (dragging markers)
+   - Verify UserDefaults observer updates
+   - Test window resize behavior
+
+3. **Run Unit Tests**
+   ```bash
+   xcodebuild test -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS'
+   ```
+
+### Final Verification
+
+- ✅ All tests pass
+- ✅ No compiler warnings
+- ✅ All keyboard shortcuts work
+- ✅ Timeline updates correctly
+- ✅ Edit operations function properly
+- ✅ No performance regression
+
+---
+
+## Risk Assessment
+
+### Low Risk
+- ✅ Pure code movement (no logic changes)
+- ✅ Swift extensions maintain same access to class members
+- ✅ Keyboard event handling is well-isolated
+
+### Medium Risk
+- ⚠️ Complex key event handling (JKL mode) needs careful testing
+- ⚠️ Actor isolation must be preserved (@MainActor)
+- ⚠️ Observer lifecycle management is critical
+
+### Mitigation
+- Test keyboard shortcuts thoroughly after extraction
+- Verify observer cleanup on document close
+- Keep git commits small and focused
+- Use feature branch for safety
+- Test after each file extraction
+
+---
+
+## Success Criteria
+
+1. ✅ ViewController.swift reduced from 968 to ~150 lines
+2. ✅ Clear separation of concerns (Observer, KeyEvent, Edit, KeyboardAction, Timeline)
+3. ✅ All keyboard shortcuts work correctly
+4. ✅ All tests pass
+5. ✅ No functionality regression
+6. ✅ Code is more maintainable
+7. ✅ Easier to write future tests
+
+---
+
+## Dependencies Analysis
+
+### ViewController Dependencies
+
+**Internal Properties Used**:
+- `delegate: ViewControllerDelegate?`
+- `playerView: MyPlayerView!`
+- `timelineView: TimelineView!`
+- `controllerBox: NSBox!`
+- `keyDownJ/K/L: Bool`
+- `acceptAuto: Bool`
+- `resizeObserver: NSObjectProtocol?`
+- `updateObserver: NSObjectProtocol?`
+- `offsetS/M/L: Float64`
+- `mimicJKLcombination: Bool`
+- `ignoreOptionWhenShift: Bool`
+- `followSelectionMove: Bool`
+
+**External Dependencies**:
+- `Cocoa` framework
+- `AVFoundation` framework
+- `MyPlayerView` custom view
+- `TimelineView` custom view
+- `ViewControllerDelegate` protocol
+- `TimelineUpdateDelegate` protocol
+
+**Protocol Conformances**:
+- `NSViewController` (base class)
+- `TimelineUpdateDelegate` protocol
+
+---
+
+## Notes
+
+- All extensions use `extension ViewController` syntax
+- All extensions maintain `@MainActor` isolation
+- Import statements duplicated in each file for clarity
+- File headers follow existing project conventions
+- MARK comments preserved for navigation
+- Actor isolation utilities remain in core file
+- ViewControllerDelegate protocol remains in core file
+
+---
+
+**Status**: ✅ ViewController.swift refactoring completed  
+**Next Action**: Merge feature/refactor-viewcontroller into work branch
+
+---
+
+## Refactoring Results Summary
+
+### Document.swift Refactoring (Week 1-2)
+- ✅ Original: 1,107 lines → Core: ~300 lines
+- ✅ Split into 5 focused extensions (FileIO, SavePanel, Export, UI, Delegate, Utilities)
+- ✅ All tests pass, no functionality changes
+
+### MovieMutator.swift Refactoring (Week 3-4)
+- ✅ Original: 1,000 lines → Core: ~100 lines
+- ✅ Split into 6 focused extensions (Clipboard, Edit, Transform, Inspector, Player, Export)
+- ✅ All tests pass, no functionality changes
+
+### ViewController.swift Refactoring (Week 5-6)
+- ✅ Original: 968 lines → Core: 179 lines (81% reduction)
+- ✅ Split into 5 focused extensions:
+  - ViewController+Observer.swift: 165 lines (observer management)
+  - ViewController+KeyEvent.swift: 432 lines (JKL/Step key handling)
+  - ViewController+KeyboardAction.swift: 142 lines (responder overrides)
+  - ViewController+Edit.swift: 76 lines (edit actions & menu validation)
+  - ViewController+Timeline.swift: 82 lines (timeline delegate)
+- ✅ Total: 1,076 lines across 6 well-organized files
+- ✅ All tests pass, no functionality changes
+- ✅ All keyboard shortcuts verified working
+
+---
+
 **Status**: Ready to begin implementation  
-**Next Action**: Create MovieMutator+Clipboard.swift
+**Next Action**: Merge feature/refactor-viewcontroller into work branch

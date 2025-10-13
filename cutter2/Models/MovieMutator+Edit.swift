@@ -104,7 +104,7 @@ extension MovieMutator {
     /// - Parameters:
     ///   - data: movieHeader data to be restored.
     ///   - range: original selection
-    ///   - time: original intertionTime
+    ///   - time: original insertionTime
     ///   - clip: removed clip data
     private func undoRemove(_ data: Data, _ range: CMTimeRange, _ time: CMTime, _ clip: Data) {
         precondition(validateClipData(clip), "ERROR: Invalid clip data")

@@ -889,16 +889,16 @@ extension MovieWriter {
         if cancel {
             ar.cancelReading()
             aw.cancelWriting()
-        }
-        
-        // Finish the writing session on the asset writer.
-        // Note: endSession should only be called if the writer is in a valid state (not cancelled)
-        if !cancel {
+            // Note: After cancelWriting(), the writer is in .cancelled state and
+            // no further methods (endSession, finishWriting) should be called.
+            // cancelWriting() already performs cleanup.
+        } else {
+            // Normal completion flow
             aw.endSession(atSourceTime: endTime)
-        }
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            aw.finishWriting { @Sendable in
-                continuation.resume()
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                aw.finishWriting { @Sendable in
+                    continuation.resume()
+                }
             }
         }
         

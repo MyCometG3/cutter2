@@ -360,6 +360,114 @@
           }
         }
       }
+    },
+    "progress.exporting.title" : {
+      "comment" : "Title for export progress dialog",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporting..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き出し中..."
+          }
+        }
+      }
+    },
+    "progress.exporting.message" : {
+      "comment" : "Message for export progress dialog",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please hold on minute(s)..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "しばらくお待ちください..."
+          }
+        }
+      }
+    },
+    "error.reason.zero_duration_movie" : {
+      "comment" : "Error reason when movie has zero duration",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zero duration movie is not supported."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "長さがゼロのムービーはサポートされていません。"
+          }
+        }
+      }
+    },
+    "progress.default.title" : {
+      "comment" : "Default title for progress dialog",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processing..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "処理中..."
+          }
+        }
+      }
+    },
+    "progress.default.message" : {
+      "comment" : "Default message for progress dialog",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold on seconds..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "少々お待ちください..."
+          }
+        }
+      }
+    },
+    "progress.format.percent" : {
+      "comment" : "Progress percentage format with placeholder. Format: 'Please hold on minute(s)...: XX %'",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please hold on minute(s)...: %d %%"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "しばらくお待ちください...: %d %%"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

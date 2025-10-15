@@ -108,7 +108,8 @@ extension Document {
         //
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         guard mutator.movieDuration() > CMTime.zero else {
-            let reason = "Zero duration movie is not supported."
+            let reason = NSLocalizedString("error.reason.zero_duration_movie",
+                                         comment: "Error reason when movie has zero duration")
             try throwError(.emptyMovie, reason: reason)
         }
         

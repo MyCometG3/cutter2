@@ -66,7 +66,9 @@ extension Document {
         }
         
         // Show busy sheet
-        showBusySheet("Exporting...", "Please hold on minute(s)...")
+        let title = NSLocalizedString("progress.exporting.title", comment: "Title for export progress dialog")
+        let message = NSLocalizedString("progress.exporting.message", comment: "Message for export progress dialog")
+        showBusySheet(title, message)
         mutator.unblockUserInteraction = { @Sendable [weak self] in
             self?.unblockUserInteraction()
         }
@@ -116,7 +118,9 @@ extension Document {
         }
         
         // Show busy sheet
-        showBusySheet("Exporting...", "Please hold on minute(s)...")
+        let title = NSLocalizedString("progress.exporting.title", comment: "Title for export progress dialog")
+        let message = NSLocalizedString("progress.exporting.message", comment: "Message for export progress dialog")
+        showBusySheet(title, message)
         mutator.unblockUserInteraction = { @Sendable [weak self] in
             self?.unblockUserInteraction()
         }

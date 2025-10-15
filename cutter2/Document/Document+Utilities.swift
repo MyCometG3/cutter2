@@ -147,7 +147,8 @@ extension Document {
             guard let alert = self.alert else { return }
             guard progress.isNormal else { return }
             
-            alert.informativeText = String("Please hold on minute(s)...: \(Int(progress * 100)) %")
+            let format = NSLocalizedString("progress.format.percent", comment: "Progress percentage format")
+            alert.informativeText = String(format: format, Int(progress * 100))
         }
     }
     
@@ -168,8 +169,10 @@ extension Document {
             guard let window = self.window else { return }
             
             let alert: NSAlert = NSAlert()
-            alert.messageText = message ?? "Processing...(message)"
-            alert.informativeText = info ?? "Hold on seconds...(informative)"
+            let defaultTitle = NSLocalizedString("progress.default.title", comment: "Default title for progress dialog")
+            let defaultMessage = NSLocalizedString("progress.default.message", comment: "Default message for progress dialog")
+            alert.messageText = message ?? defaultTitle
+            alert.informativeText = info ?? defaultMessage
             alert.alertStyle = .informational
             alert.addButton(withTitle: NSLocalizedString("ui.button.cancel", comment: "Cancel button for canceling operations"))
             let handler: (NSApplication.ModalResponse) -> Void = { @Sendable [weak self] (response) in // @escaping

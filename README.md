@@ -117,9 +117,13 @@ See [TESTING_GUIDE.md](docs/TESTING_GUIDE.md) for detailed testing documentation
 **Testing**:
 - [TESTING_GUIDE.md](docs/TESTING_GUIDE.md) - Testing practices and automation
 
-**Localization** ✨ **NEW**:
+**Localization** ✅ **Phase 2.1 Complete**:
 - [LOCALIZATION_PLAN.md](docs/LOCALIZATION_PLAN.md) - Localization implementation plan
 - [LOCALIZATION_COMPLETE.md](docs/LOCALIZATION_COMPLETE.md) - Phase 2.1 completion summary
+
+**Performance** 📋 **Phase 2.2 Planning**:
+- [PERFORMANCE_ANALYSIS.md](docs/PERFORMANCE_ANALYSIS.md) - Performance analysis and optimization opportunities
+- [PERFORMANCE_OPTIMIZATION_PLAN.md](docs/PERFORMANCE_OPTIMIZATION_PLAN.md) - Detailed implementation plan for Phase 2.2
 
 #### License
 - The MIT License

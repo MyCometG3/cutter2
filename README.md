@@ -6,6 +6,7 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 - __Framework__: AVFoundation (macOS native)
 - __Restriction__: No autosave support.
 - __Architecture__: Universal binary (x86_64 + arm64)
+- __Languages__: English, Japanese (日本語) ✨ **NEW**
 
 #### Basic feature
 - Standard key shortcuts - JKL mode - like legacy QuickTime Player Pro 7
@@ -13,6 +14,7 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 - Support remux b/w mov/mp4/m4v/m4a
 - Transcode to H264+AAC.mov/.mp4/m4v
 - Transcode to HEVC+AAC.mov/.mp4/m4v
+- Full internationalization support (English/Japanese) ✨ **NEW**
 
 #### Advanced feature
 - Save as reference movie (AVFoundation based)
@@ -28,10 +30,17 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 - Customizing CleanAperture/PixelAspectRatio does not modify media data.
 - Custom export keeps customized CleanAperture/PixelAspectRatio.
 
-#### Development environment
+**Development environment**
 - macOS 26.0.1 Tahoe
 - Xcode 26.0.1
 - Swift 6.2.0
+
+**Internationalization** ✨ **NEW (Phase 2.1 Complete)**:
+- String Catalog (.xcstrings) - 55 localized keys
+- Supported languages: English, Japanese (日本語)
+- LocalizationHelper utility for easy localization
+- All error messages, UI labels, menus localized
+- See [LOCALIZATION_COMPLETE.md](docs/LOCALIZATION_COMPLETE.md) for details
 
 #### Code Structure
 
@@ -61,19 +70,25 @@ See [docs/REFACTORING_PLAN.md](docs/REFACTORING_PLAN.md) for detailed architectu
 
 #### Testing
 
-The project includes comprehensive test coverage with 6 test files:
+The project includes comprehensive test coverage with 7 test files and 60 tests:
 - `cutter2Tests.swift` - Base test class
 - `MovieMutatorTests.swift` - Model layer tests
+- `ModelTests.swift` - Additional model tests
+- `DocumentTests.swift` - Document tests
 - `UtilitiesTests.swift` - Utility tests
-- `ActorUtilitiesTests.swift` - Actor isolation tests
-- `ErrorUtilitiesTests.swift` - Error handling tests
 - `ViewControllerTests.swift` - ViewController tests
+- `LocalizationTests.swift` - Localization tests (11 tests) ✨ **NEW**
+
+**Test Results**: ✅ 60/60 tests passing (100%)
 
 To run tests:
 
 ```bash
 # Run all tests
 xcodebuild test -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS'
+
+# Run specific test class
+xcodebuild test -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS' -only-testing:cutter2Tests/LocalizationTests
 
 # Or use the test script with code coverage
 ./scripts/test.sh
@@ -99,7 +114,10 @@ See [TESTING_GUIDE.md](docs/TESTING_GUIDE.md) for detailed testing documentation
 
 **Testing**:
 - [TESTING_GUIDE.md](docs/TESTING_GUIDE.md) - Testing practices and automation
-- [SETUP_TEST_TARGET.md](docs/SETUP_TEST_TARGET.md) - Test environment setup (historical reference)
+
+**Localization** ✨ **NEW**:
+- [LOCALIZATION_PLAN.md](docs/LOCALIZATION_PLAN.md) - Localization implementation plan
+- [LOCALIZATION_COMPLETE.md](docs/LOCALIZATION_COMPLETE.md) - Phase 2.1 completion summary
 
 #### License
 - The MIT License

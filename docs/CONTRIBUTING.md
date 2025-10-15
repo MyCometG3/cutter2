@@ -1,6 +1,13 @@
 # Contributing to cutter2
 
+**Last Updated**: October 15, 2025
+
 Thank you for your interest in contributing to cutter2! This document provides guidelines and instructions for contributing to the project.
+
+**Recent Updates**:
+- ✅ Phase 2.1 complete: Full internationalization support
+- ✅ LocalizationTests added
+- ✅ String Catalog integration (55 localized keys)
 
 ---
 

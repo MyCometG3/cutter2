@@ -1,7 +1,12 @@
 # Development Guide for cutter2
 
-**Last Updated**: October 13, 2025  
+**Last Updated**: October 15, 2025  
 **Status**: ✅ Active and Maintained
+
+**Recent Updates**:
+- ✅ Phase 2.1: Internationalization Support (Complete)
+- ✅ LocalizationTests added (11 tests)
+- ✅ String Catalog integration
 
 ---
 
@@ -15,7 +20,8 @@
 6. [Making Changes](#making-changes)
 7. [Debugging](#debugging)
 8. [Common Tasks](#common-tasks)
-9. [Troubleshooting](#troubleshooting)
+9. [Localization](#localization)
+10. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -688,6 +694,78 @@ deinit {
 
 ---
 
+## Localization
+
+### Overview
+
+cutter2 supports internationalization using String Catalogs (.xcstrings format).
+
+**Supported Languages**:
+- English (base language)
+- Japanese (日本語)
+
+### Adding Localized Strings
+
+1. **Add to String Catalog**:
+   - Open `cutter2/Resources/Localizable.xcstrings` in Xcode
+   - Add new key with English and Japanese translations
+
+2. **Use in Code**:
+   ```swift
+   // Simple localization
+   let message = NSLocalizedString("your.key.name", comment: "Description")
+   
+   // Using LocalizationHelper
+   let message = LocalizationHelper.localized("your.key.name", 
+                                             comment: "Description")
+   
+   // Common UI strings
+   let cancelButton = LocalizationHelper.Button.cancel
+   ```
+
+3. **Formatted Strings**:
+   ```swift
+   let format = NSLocalizedString("progress.format.percent", comment: "Progress")
+   let text = String(format: format, 75)
+   ```
+
+### Testing Localization
+
+1. **Run LocalizationTests**:
+   ```bash
+   xcodebuild test -only-testing:cutter2Tests/LocalizationTests
+   ```
+
+2. **Test in Different Languages**:
+   - System Preferences → Language & Region
+   - Change preferred language
+   - Relaunch cutter2
+
+3. **Verify Translations**:
+   - Check all error messages
+   - Test all menu items
+   - Verify inspector labels
+   - Test progress dialogs
+
+### Adding New Languages
+
+1. **Add Language in Xcode**:
+   - Select project → Info tab
+   - Under "Localizations", click "+"
+   - Select language
+
+2. **Translate Strings**:
+   - Open Localizable.xcstrings
+   - Add translations for new language
+
+3. **Test**:
+   - Build and test in new language
+   - Verify layout with different string lengths
+
+For detailed localization information, see [LOCALIZATION_PLAN.md](LOCALIZATION_PLAN.md) and [LOCALIZATION_COMPLETE.md](LOCALIZATION_COMPLETE.md).
+
+---
+
 ## Additional Resources
 
 ### Documentation
@@ -696,6 +774,8 @@ deinit {
 - [TESTING_GUIDE.md](TESTING_GUIDE.md) - Testing guide
 - [REFACTORING_PLAN.md](REFACTORING_PLAN.md) - Code organization
 - [CODEBASE_REVIEW.md](CODEBASE_REVIEW.md) - Codebase analysis
+- [LOCALIZATION_PLAN.md](LOCALIZATION_PLAN.md) - Localization implementation ✨ NEW
+- [LOCALIZATION_COMPLETE.md](LOCALIZATION_COMPLETE.md) - Localization summary ✨ NEW
 
 ### Apple Documentation
 
@@ -703,6 +783,7 @@ deinit {
 - [Document-Based Apps](https://developer.apple.com/documentation/appkit/documents_data_and_pasteboard)
 - [Swift Concurrency](https://docs.swift.org/swift-book/LanguageGuide/Concurrency.html)
 - [App Sandbox](https://developer.apple.com/documentation/security/app_sandbox)
+- [String Catalogs](https://developer.apple.com/documentation/xcode/localizing-and-varying-text-with-a-string-catalog) ✨ NEW
 
 ### Tools
 
@@ -725,5 +806,5 @@ If you encounter issues:
 ---
 
 **Document Status**: ✅ Active  
-**Last Updated**: October 13, 2025  
+**Last Updated**: October 15, 2025  
 **Maintained By**: cutter2 development team

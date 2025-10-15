@@ -1,13 +1,14 @@
 # Testing Guide for cutter2
 
-**Status**: ✅ **Active - Test Infrastructure Operational** *(Updated: October 13, 2025)*
+**Status**: ✅ **Active - Test Infrastructure Operational** *(Updated: October 15, 2025)*
 
 This guide provides instructions for running and writing tests for the cutter2 application.
 
 ## Quick Start
 
 The test infrastructure is fully configured and operational:
-- ✅ 6 test files covering Models, ViewControllers, and Utilities
+- ✅ 7 test files covering Models, ViewControllers, Utilities, and Localization
+- ✅ 60 tests passing (49 functional + 11 localization)
 - ✅ XCTest framework integrated
 - ✅ Code coverage enabled
 - ✅ CI/CD pipeline active (GitHub Actions)
@@ -29,7 +30,7 @@ To run tests: Press `⌘U` in Xcode or run `xcodebuild test` from command line.
 
 ### Prerequisites
 
-- Xcode 15.0 or later
+- Xcode 15.0 or later (currently using 26.0.1)
 - macOS 14.0 (Sonoma) or later
 - Swift 6.0
 
@@ -56,14 +57,24 @@ To run tests: Press `⌘U` in Xcode or run `xcodebuild test` from command line.
 cutter2Tests/
 ├── cutter2Tests.swift              # Base test class and setup ✅
 ├── MovieMutatorTests.swift         # Model layer tests ✅
+├── ModelTests.swift                # Additional model tests ✅
+├── DocumentTests.swift             # Document tests ✅
 ├── UtilitiesTests.swift            # Utility class tests ✅
-├── ActorUtilitiesTests.swift       # Actor isolation tests ✅
-├── ErrorUtilitiesTests.swift       # Error handling tests ✅
 ├── ViewControllerTests.swift       # ViewController tests ✅
-└── [Additional test files as needed]
+└── LocalizationTests.swift         # Localization tests ✅ (NEW)
 ```
 
-**Current Status**: Initial test suite implemented covering core functionality.
+**Current Status**: 
+- **60 tests** total (49 functional + 11 localization)
+- **100% pass rate** ✅
+- Full test suite implemented covering core functionality and internationalization
+
+**New in Phase 2.1**:
+- ✅ LocalizationTests.swift - 11 comprehensive localization tests
+- Tests all error messages (DocumentError, MovieWriterError)
+- Tests UI strings (buttons, menus, inspector labels)
+- Tests LocalizationHelper utility methods
+- Tests formatted string localization
 
 ---
 

@@ -223,11 +223,45 @@ protocol ViewControllerDelegate: AnyObject {
    - User defaults keys
    - Notification names
 
-4. **Document+Utilities.swift** (811 lines)
+4. **LocalizationHelper.swift** ✨ **NEW (Phase 2.1)**
+   - String localization utilities
+   - Formatting helpers (percentage, file size, time)
+   - Common UI string constants
+   - String Catalog integration
+
+5. **Document+Utilities.swift** (811 lines)
    - Actor isolation helpers
    - Sheet control (progress, alerts)
    - Observer management
    - Position control utilities
+
+### Layer 7: Localization Layer ✨ **NEW (Phase 2.1)**
+
+**Purpose**: Internationalization and multi-language support
+
+**Components**:
+
+1. **Localizable.xcstrings** (String Catalog)
+   - 55 localized keys (en/ja)
+   - Error messages (17 items)
+   - UI labels (33 items)
+   - Menu items, inspector labels, progress messages
+
+2. **LocalizationHelper.swift**
+   - Centralized localization API
+   - Type-safe string access
+   - Formatting utilities
+
+**Supported Languages**:
+- English (base language)
+- Japanese (日本語)
+
+**Coverage**:
+- All error messages
+- All UI buttons and labels
+- All menu items
+- Inspector labels
+- Progress and alert messages
 
 ---
 

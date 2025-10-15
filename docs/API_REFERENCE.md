@@ -1,9 +1,14 @@
 # API Reference for cutter2
 
-**Last Updated**: October 13, 2025  
+**Last Updated**: October 15, 2025  
 **Status**: 🚧 Work in Progress
 
 > **Note**: This is a living document. Full API documentation will be generated automatically using tools like jazzy or DocC in the future. This document provides an overview of key APIs and their usage.
+
+**Recent Updates**:
+- ✅ Added LocalizationHelper utility (Phase 2.1)
+- ✅ All error messages now localized
+- ✅ String Catalog integration
 
 ---
 
@@ -13,7 +18,8 @@
 2. [Model Layer](#model-layer)
 3. [ViewController Layer](#viewcontroller-layer)
 4. [Utilities](#utilities)
-5. [Protocols](#protocols)
+5. [Localization](#localization)
+6. [Protocols](#protocols)
 
 ---
 
@@ -308,6 +314,127 @@ class UndoManagerWrapper {
     func setActionName(_ name: String)
 }
 ```
+
+---
+
+## Localization
+
+### LocalizationHelper
+
+**New in Phase 2.1**: Utility for localization support with String Catalog integration.
+
+```swift
+enum LocalizationHelper {
+    // MARK: - String Localization
+    
+    /// Localize a string with the given key and comment
+    /// - Parameters:
+    ///   - key: The localization key
+    ///   - comment: Description for translators
+    /// - Returns: Localized string
+    static func localized(_ key: String, comment: String = "") -> String
+    
+    /// Localize a string with format arguments
+    /// - Parameters:
+    ///   - key: The localization key
+    ///   - comment: Description for translators
+    ///   - arguments: Format arguments
+    /// - Returns: Formatted localized string
+    static func localizedFormat(_ key: String, comment: String = "", _ arguments: CVarArg...) -> String
+    
+    // MARK: - Common UI Strings
+    
+    /// Common button labels
+    enum Button {
+        static let ok: String
+        static let cancel: String
+        static let save: String
+        static let export: String
+        static let `continue`: String
+        static let stop: String
+    }
+    
+    // MARK: - Number and Date Formatting
+    
+    /// Format a percentage value for display
+    /// - Parameter value: The percentage value (0.0 to 1.0)
+    /// - Returns: Formatted percentage string
+    static func formatPercentage(_ value: Double) -> String
+    
+    /// Format a time interval for display
+    /// - Parameter interval: Time interval in seconds
+    /// - Returns: Formatted time string (e.g., "1:23" or "1:23:45")
+    static func formatTimeInterval(_ interval: TimeInterval) -> String
+    
+    /// Format file size for display
+    /// - Parameter bytes: Size in bytes
+    /// - Returns: Formatted size string with appropriate unit
+    static func formatFileSize(_ bytes: Int64) -> String
+}
+```
+
+#### Usage Examples
+
+```swift
+// Simple string localization
+let errorMessage = LocalizationHelper.localized("error.document.incompatible_file_type",
+                                               comment: "File type error")
+
+// Formatted string
+let progress = LocalizationHelper.localizedFormat("progress.format.percent",
+                                                  comment: "Progress with percentage",
+                                                  75)
+
+// Using button constants
+let cancelButton = LocalizationHelper.Button.cancel
+
+// Formatting helpers
+let percentage = LocalizationHelper.formatPercentage(0.75)  // "75%"
+let fileSize = LocalizationHelper.formatFileSize(1024 * 1024)  // "1 MB"
+let time = LocalizationHelper.formatTimeInterval(125.5)  // "2:05"
+```
+
+### String Extension
+
+Convenience extension for localization.
+
+```swift
+extension String {
+    /// Convenience method to get localized string
+    /// - Parameter comment: Description for translators
+    /// - Returns: Localized string
+    func localized(comment: String = "") -> String
+    
+    /// Convenience method to get localized string with format arguments
+    /// - Parameters:
+    ///   - comment: Description for translators
+    ///   - arguments: Format arguments
+    /// - Returns: Formatted localized string
+    func localizedFormat(comment: String = "", _ arguments: CVarArg...) -> String
+}
+```
+
+#### Usage Example
+
+```swift
+// Using string extension
+let localized = "error.document.empty_movie".localized(comment: "Empty movie error")
+```
+
+### String Catalog Structure
+
+**Localizable.xcstrings** - 55 localized keys covering:
+- Error messages (17 items)
+- UI buttons (4 items)
+- Progress messages (5 items)
+- Accessory view labels (4 items)
+- Menu items (19 items)
+- Inspector labels (5 items)
+- Error reasons (1 item)
+
+Supported languages:
+- English (base language)
+- Japanese (日本語)
 
 ---
 

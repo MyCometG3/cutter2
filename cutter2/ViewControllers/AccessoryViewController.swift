@@ -118,10 +118,15 @@ class AccessoryViewController: NSViewController {
         let audioSize: Int64 = size.audioSize, audioCount: Int64 = size.audioCount
         let otherSize: Int64 = size.otherSize, otherCount: Int64 = size.otherCount
         
-        let text = "Movie header size: \(format(headerSize/1000)) KB\n"
-            + "Video tracks (\(format(videoCount))): \(format(videoSize/1000)) KB\n"
-            + "Audio tracks (\(format(audioCount))): \(format(audioSize/1000)) KB\n"
-            + "Other tracks (\(format(otherCount))): \(format(otherSize/1000)) KB"
+        let headerFormat = NSLocalizedString("ui.accessory.movie_header_size", comment: "Movie header size label")
+        let videoFormat = NSLocalizedString("ui.accessory.video_tracks", comment: "Video tracks label")
+        let audioFormat = NSLocalizedString("ui.accessory.audio_tracks", comment: "Audio tracks label")
+        let otherFormat = NSLocalizedString("ui.accessory.other_tracks", comment: "Other tracks label")
+        
+        let text = String(format: headerFormat, format(headerSize/1000)) + "\n"
+            + String(format: videoFormat, format(videoCount), format(videoSize/1000)) + "\n"
+            + String(format: audioFormat, format(audioCount), format(audioSize/1000)) + "\n"
+            + String(format: otherFormat, format(otherCount), format(otherSize/1000))
         
         dataSizeTextField.stringValue = text
     }

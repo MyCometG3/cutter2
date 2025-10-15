@@ -468,6 +468,78 @@
           }
         }
       }
+    },
+    "ui.accessory.movie_header_size" : {
+      "comment" : "Label for movie header size in accessory view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Movie header size: %@ KB"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ムービーヘッダサイズ: %@ KB"
+          }
+        }
+      }
+    },
+    "ui.accessory.video_tracks" : {
+      "comment" : "Label for video tracks info in accessory view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video tracks (%@): %@ KB"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ビデオトラック (%@): %@ KB"
+          }
+        }
+      }
+    },
+    "ui.accessory.audio_tracks" : {
+      "comment" : "Label for audio tracks info in accessory view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio tracks (%@): %@ KB"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オーディオトラック (%@): %@ KB"
+          }
+        }
+      }
+    },
+    "ui.accessory.other_tracks" : {
+      "comment" : "Label for other tracks info in accessory view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other tracks (%@): %@ KB"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "その他のトラック (%@): %@ KB"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

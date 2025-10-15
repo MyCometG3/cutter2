@@ -21,14 +21,16 @@ This document outlines the implementation plan for adding comprehensive localiza
 
 ---
 
-## Current Status (Updated: October 15, 2025)
+## Current Status (Updated: October 15, 2025 - Week 2 Day 2)
 
-### ✅ Completed (Week 1)
+### ✅ Completed (Week 1 + Week 2 Progress)
 
 **Infrastructure:**
 - ✅ Created Localizable.xcstrings with English and Japanese support
 - ✅ Created LocalizationHelper.swift utility
 - ✅ Established string key naming conventions
+- ✅ Created ja.lproj directory structure
+- ✅ Created comprehensive LocalizationTests
 
 **Localized Components:**
 - ✅ DocumentError (9 error cases) - All localized
@@ -36,20 +38,34 @@ This document outlines the implementation plan for adding comprehensive localiza
 - ✅ Document layer progress messages - All localized
 - ✅ AccessoryViewController track info labels - All localized
 - ✅ Common UI buttons (Cancel, OK, Save, Export)
+- ✅ Menu items (19 items) - All main menus localized
+- ✅ Inspector labels (5 items) - All localized
 
 **String Catalog Statistics:**
-- Total strings: 30 keys
+- Total strings: 55 keys (was 30, +25 in Week 2)
 - Error messages: 17 items (en/ja)
-- UI labels: 8 items (en/ja)
+- UI buttons: 4 items (en/ja)
 - Progress messages: 5 items (en/ja)
-- Coverage: Document layer 100%, Models layer (errors) 100%
+- Accessory labels: 4 items (en/ja)
+- Menu items: 19 items (en/ja)
+- Inspector labels: 5 items (en/ja)
+- Coverage: Document layer 100%, Models layer (errors) 100%, Main menus 100%, Inspector 100%
 
-### 🔄 In Progress (Week 2)
+**Test Coverage:**
+- ✅ LocalizationTests.swift created with 16 test methods
+- ✅ Tests all error messages
+- ✅ Tests all UI strings
+- ✅ Tests formatted strings
+- ✅ Tests LocalizationHelper methods
 
-- [ ] Main.storyboard localization
-- [ ] Remaining ViewController strings
-- [ ] Inspector view labels
-- [ ] Menu items and tooltips
+### 🔄 Remaining (Week 2 Day 3-5)
+
+- [ ] Add LocalizationTests to test target
+- [ ] Run localization tests to verify
+- [ ] Storyboard string extraction (if needed)
+- [ ] Additional ViewController strings (if any)
+- [ ] Final testing in both languages
+- [ ] Documentation updates
 
 ### String Categories Identified
 
@@ -59,12 +75,12 @@ This document outlines the implementation plan for adding comprehensive localiza
    - File I/O errors ✅
    - Export/save errors ✅
 
-2. **UI Labels** (High Priority) 🔄 **IN PROGRESS**
-   - Window titles
+2. **UI Labels** (High Priority) ✅ **MOSTLY COMPLETE**
+   - Window titles (handled by WindowController)
    - Button labels ✅
-   - Menu items
-   - Inspector labels
-   - Timeline markers
+   - Menu items ✅ (19 main menu items)
+   - Inspector labels ✅ (5 labels)
+   - Timeline markers (no hardcoded strings found)
    - Track info labels ✅
 
 3. **Alert Messages** (High Priority) ✅ **COMPLETE**
@@ -73,11 +89,11 @@ This document outlines the implementation plan for adding comprehensive localiza
    - Progress indicators ✅
 
 4. **Status Messages** (Medium Priority) ✅ **COMPLETE**
-   - Export progress messages
-   - Operation status updates
-   - Debug/log messages (consider keeping in English)
+   - Export progress messages ✅
+   - Operation status updates ✅
+   - Debug/log messages (keeping in English)
 
-5. **File Type Names** (Low Priority)
+5. **File Type Names** (Low Priority) ⏭️ **DEFERRED**
    - File format descriptions
    - Codec names
 
@@ -559,8 +575,8 @@ final class LocalizationTests: XCTestCase {
 
 ## Completed Work Summary
 
-### Files Modified (Week 1)
-1. ✅ `cutter2/Resources/Localizable.xcstrings` - Created with 30 keys
+### Files Modified (Week 1 + Week 2)
+1. ✅ `cutter2/Resources/Localizable.xcstrings` - 55 keys (en/ja)
 2. ✅ `cutter2/Utilities/LocalizationHelper.swift` - Created helper utility
 3. ✅ `cutter2/Document/Document.swift` - DocumentError localized
 4. ✅ `cutter2/Models/MovieWriter.swift` - MovieWriterError localized
@@ -568,12 +584,36 @@ final class LocalizationTests: XCTestCase {
 6. ✅ `cutter2/Document/Document+Export.swift` - Export messages localized
 7. ✅ `cutter2/Document/Document+FileIO.swift` - Error reasons localized
 8. ✅ `cutter2/ViewControllers/AccessoryViewController.swift` - Track labels localized
+9. ✅ `cutter2Tests/LocalizationTests.swift` - Created comprehensive tests
+10. ✅ `cutter2/Resources/ja.lproj/` - Created Japanese resources directory
 
-### Commits (Week 1)
+### Commits (Week 1 + Week 2)
+**Week 1:**
 1. `655e03e` - docs: Update localization approach to modern String Catalog
 2. `58761e9` - feat: Add localization infrastructure (Phase 2.1 Week 1 Day 1-3)
 3. `58df9d4` - feat: Localize Document layer progress and alert messages
 4. `6cb21a2` - feat: Localize AccessoryViewController track info labels
+5. `7864314` - docs: Update localization documentation with Week 1 completion status
+
+**Week 2:**
+6. `befe3e9` - feat: Add menu items and inspector labels localization (Week 2 Day 1)
+7. `36abdf2` - test: Add comprehensive localization tests (Week 2 Day 1-2)
+
+### Progress Summary
+
+**Completed:** 90% of planned localization
+- ✅ All error messages (17 items)
+- ✅ All UI components with hardcoded strings
+- ✅ All menu items (19 items)
+- ✅ All inspector labels (5 items)
+- ✅ All progress messages (5 items)
+- ✅ Comprehensive test suite (16 tests)
+
+**Remaining:** 10%
+- ⏳ Add LocalizationTests to test target
+- ⏳ Run and verify all tests pass
+- ⏳ Final documentation updates
+- ⏳ Language switching verification
 
 ---
 
@@ -609,6 +649,6 @@ final class LocalizationTests: XCTestCase {
 
 ---
 
-**Document Status**: Draft  
-**Last Updated**: October 14, 2025  
-**Next Review**: After Week 1 completion
+**Document Status**: In Progress (Week 2)  
+**Last Updated**: October 15, 2025  
+**Next Review**: After Week 2 completion (Phase 2.1 done)

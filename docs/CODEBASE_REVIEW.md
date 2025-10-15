@@ -1025,45 +1025,60 @@ func validateFileSize(_ url: URL) throws {
 
 #### 2.1 Internationalization Support
 
-**Status**: 🔄 **IN PROGRESS** - Week 1 Complete (October 15, 2025)
+**Status**: 🔄 **IN PROGRESS** - Week 2 Day 2 (90% Complete, October 15, 2025)
 
-**Week 1-2: Modern Localization Setup with String Catalogs** ✅ **Week 1 COMPLETE**
+**Week 1-2: Modern Localization Setup with String Catalogs** ✅ **MOSTLY COMPLETE**
 - ✅ Create String Catalog (Localizable.xcstrings) using modern Xcode approach
 - ✅ Add language support: English (base), Japanese
-- ✅ Convert all hardcoded strings to localized strings (Document & Models layers)
+- ✅ Convert all hardcoded strings to localized strings (90% complete)
 - ✅ Extract strings from code to String Catalog
 
-**Completed Components (Week 1):**
-- ✅ Localizable.xcstrings created with 30 localized keys (en/ja)
+**Completed Components (Week 1 + Week 2):**
+- ✅ Localizable.xcstrings with 55 localized keys (en/ja) - was 30, +25 new
 - ✅ LocalizationHelper.swift utility created
 - ✅ DocumentError (9 cases) fully localized
 - ✅ MovieWriterError (7 cases) fully localized
 - ✅ Document layer progress messages fully localized
 - ✅ AccessoryViewController track info labels localized
-- ✅ Common UI buttons (Cancel, OK, Save, Export)
+- ✅ Common UI buttons (4 items)
+- ✅ Menu items (19 items) - All main menus
+- ✅ Inspector labels (5 items)
+- ✅ LocalizationTests.swift - 16 comprehensive tests
+- ✅ ja.lproj directory structure created
 
-**Week 3-4: Localize All Components** ⏳ **NEXT**
-- [ ] Localize remaining ViewController strings
-- [ ] Localize error messages and alerts (Document layer complete ✅)
-- [ ] Localize Storyboard strings (integrated with String Catalog)
-- [ ] Localize export/save dialog strings (partially complete ✅)
-- [ ] Support dynamic string formatting (date/time, numbers)
+**Week 3-4: Localize All Components** ✅ **90% COMPLETE**
+- ✅ Localize ViewController strings (no hardcoded strings found)
+- ✅ Localize error messages and alerts (Document layer complete)
+- ⏳ Localize Storyboard strings (String Catalog auto-handles, 90% done)
+- ✅ Localize export/save dialog strings (complete)
+- ⏳ Support dynamic string formatting (partially done, needs testing)
 
-**Week 5-6: Testing and Quality Assurance**
-- [ ] Test in Japanese environment
-- [ ] Test in English environment
+**Week 5-6: Testing and Quality Assurance** ⏳ **IN PROGRESS**
+- ⏳ Test in Japanese environment (needs verification)
+- ⏳ Test in English environment (needs verification)
 - [ ] Verify layout with string length variations
 - [ ] Test pseudo-localization for edge cases
-- [ ] Validate all localizations in String Catalog
+- ✅ Validate all localizations in String Catalog
 
 **Deliverables**:
-- ✅ String Catalog infrastructure established (.xcstrings)
+- ✅ String Catalog infrastructure established (.xcstrings) - 55 keys
 - ✅ Document and Models layers fully localized
-- ⏳ Remaining ViewControllers and Storyboard (Week 2)
-- Localization test suite (Week 2)
-- Documentation for adding new localizations (Week 2)
+- ✅ ViewControllers localized (AccessoryViewController complete, others have no hardcoded strings)
+- ✅ Menu items fully localized (19 items)
+- ✅ Inspector labels fully localized (5 items)
+- ✅ Comprehensive test suite created (16 tests)
+- ⏳ Localization tests integrated into test target (Week 2 remaining)
+- ⏳ Language switching verification (Week 2 remaining)
+- ⏳ Documentation for adding new localizations (in progress)
 
-**Progress**: 60% complete (Week 1 of 2 complete)
+**Progress**: 90% complete (Week 1 complete + Week 2 90% complete)
+
+**Remaining Tasks (10%):**
+- Add LocalizationTests to Xcode test target
+- Run and verify all localization tests
+- Test language switching (System Preferences)
+- Final verification in both languages
+- Complete documentation updates
 
 #### 2.2 Performance Optimization
 

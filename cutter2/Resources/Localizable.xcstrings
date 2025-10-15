@@ -1,0 +1,366 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "error.document.incompatible_file_type" : {
+      "comment" : "Error message when file type is incompatible with the application",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incompatible file type detected."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "互換性のないファイル形式が検出されました。"
+          }
+        }
+      }
+    },
+    "error.document.unable_to_open_file" : {
+      "comment" : "Error when file cannot be opened as AVMovie",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to open specified file as AVMovie."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指定されたファイルをAVMovieとして開けませんでした。"
+          }
+        }
+      }
+    },
+    "error.document.empty_movie" : {
+      "comment" : "Error when trying to save an empty movie",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empty movie cannot be saved."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空のムービーは保存できません。"
+          }
+        }
+      }
+    },
+    "error.document.unsupported_save_operation" : {
+      "comment" : "Error when save operation type is not supported",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported SaveOperationType detected."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サポートされていない保存操作が検出されました。"
+          }
+        }
+      }
+    },
+    "error.document.unsupported_file_extension" : {
+      "comment" : "Error when file extension is not supported",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported file extension is detected."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サポートされていないファイル拡張子が検出されました。"
+          }
+        }
+      }
+    },
+    "error.document.file_type_extension_mismatch" : {
+      "comment" : "Error when file extension doesn't match file type",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mismatch between file extension and file type."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイル拡張子とファイルタイプが一致しません。"
+          }
+        }
+      }
+    },
+    "error.document.overwrite_self_contained_with_reference" : {
+      "comment" : "Error when trying to overwrite self-contained movie with reference movie",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please choose different file name."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "別のファイル名を選択してください。"
+          }
+        }
+      }
+    },
+    "error.document.internal_error" : {
+      "comment" : "Generic internal error message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Internal error occurred."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "内部エラーが発生しました。"
+          }
+        }
+      }
+    },
+    "error.document.modify_capar_failed" : {
+      "comment" : "Error when modifying Clean Aperture or Pixel Aspect Ratio extensions fails",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to modify CAPAR extensions."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CAPAR拡張の変更に失敗しました。"
+          }
+        }
+      }
+    },
+    "error.writer.compatibility" : {
+      "comment" : "Error when file type or preset is not compatible with movie",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected file type or preset is not compatible with the current movie."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択されたファイルタイプまたはプリセットは、現在のムービーと互換性がありません。"
+          }
+        }
+      }
+    },
+    "error.writer.reader_writer_unavailable" : {
+      "comment" : "Error when AVAssetReader or AVAssetWriter cannot be created",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AVAssetReader or AVAssetWriter could not be created or is unavailable."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AVAssetReaderまたはAVAssetWriterを作成できないか、利用できません。"
+          }
+        }
+      }
+    },
+    "error.writer.export_in_progress" : {
+      "comment" : "Error when trying to start export while another is running",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An export session is already in progress."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き出しセッションが既に実行中です。"
+          }
+        }
+      }
+    },
+    "error.writer.write_failed" : {
+      "comment" : "Error when movie writer encounters an error during writing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The movie writer encountered an error during the writing process."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ムービーライターが書き込み処理中にエラーに遭遇しました。"
+          }
+        }
+      }
+    },
+    "error.writer.reader_writer_failed" : {
+      "comment" : "Error when asset reader or writer encounters an error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The asset reader or writer encountered an error."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アセットリーダーまたはライターがエラーに遭遇しました。"
+          }
+        }
+      }
+    },
+    "error.writer.operation_cancelled" : {
+      "comment" : "Error when user cancels an operation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The operation was cancelled by the user."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作がユーザーによってキャンセルされました。"
+          }
+        }
+      }
+    },
+    "error.writer.unknown" : {
+      "comment" : "Unknown error message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An unknown error has occurred."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不明なエラーが発生しました。"
+          }
+        }
+      }
+    },
+    "ui.button.cancel" : {
+      "comment" : "Cancel button for canceling operations",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャンセル"
+          }
+        }
+      }
+    },
+    "ui.button.ok" : {
+      "comment" : "OK button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "ui.button.save" : {
+      "comment" : "Save button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
+    },
+    "ui.button.export" : {
+      "comment" : "Export button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き出し"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

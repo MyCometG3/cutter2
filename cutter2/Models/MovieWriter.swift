@@ -29,27 +29,41 @@ enum MovieWriterError: Error, NSErrorConvertible {
         let domain = MovieWriterError.errorDomain
         switch self {
         case .compatibilityError:
-            let info = [NSLocalizedDescriptionKey: "The selected file type or preset is not compatible with the current movie."]
+            let message = NSLocalizedString("error.writer.compatibility",
+                                          comment: "Error when file type or preset is not compatible")
+            let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: 1, userInfo: info)
         case .assetReaderWriterUnavailable:
-            let info = [NSLocalizedDescriptionKey: "AVAssetReader or AVAssetWriter could not be created or is unavailable."]
+            let message = NSLocalizedString("error.writer.reader_writer_unavailable",
+                                          comment: "Error when AVAssetReader or AVAssetWriter cannot be created")
+            let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: 2, userInfo: info)
         case .anotherExportSessionRunning:
-            let info = [NSLocalizedDescriptionKey: "An export session is already in progress."]
+            let message = NSLocalizedString("error.writer.export_in_progress",
+                                          comment: "Error when trying to start export while another is running")
+            let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: 3, userInfo: info)
         case .movieWriterFailed:
-            let info = [NSLocalizedDescriptionKey: "The movie writer encountered an error during the writing process."]
+            let message = NSLocalizedString("error.writer.write_failed",
+                                          comment: "Error when movie writer encounters an error")
+            let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: 4, userInfo: info)
         case .assetReaderWriterFailed:
-            let info = [NSLocalizedDescriptionKey: "The asset reader or writer encountered an error."]
+            let message = NSLocalizedString("error.writer.reader_writer_failed",
+                                          comment: "Error when asset reader or writer encounters an error")
+            let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: 5, userInfo: info)
         case .operationCancelled:
             // Note: This uses the custom domain internally. Document.write() converts it
             // to NSCocoaErrorDomain before rethrowing to conform to system conventions.
-            let info = [NSLocalizedDescriptionKey: "The operation was cancelled by the user."]
+            let message = NSLocalizedString("error.writer.operation_cancelled",
+                                          comment: "Error when user cancels an operation")
+            let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: NSUserCancelledError, userInfo: info)
         case .unknown:
-            let info = [NSLocalizedDescriptionKey: "An unknown error has occurred."]
+            let message = NSLocalizedString("error.writer.unknown",
+                                          comment: "Unknown error message")
+            let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: -1, userInfo: info)
         }
     }

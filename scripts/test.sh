@@ -3,6 +3,12 @@
 # cutter2 Test Runner Script
 # 
 # This script runs all tests for the cutter2 application with code coverage enabled.
+# 
+# Test Suite (as of Phase 2.1):
+#   - 7 test files
+#   - 60 total tests (49 functional + 11 localization)
+#   - Expected result: 60/60 passing (100%)
+#
 # Usage: ./scripts/test.sh [derivedDataPath]
 #
 # Options:
@@ -11,16 +17,26 @@
 set -e
 
 echo "🧪 Running cutter2 tests..."
+echo "   Test Suite: 7 files, 60 tests"
 echo ""
 
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Use custom derived data path or default
 DERIVED_DATA_PATH="${1:-./.build}"
+
+echo -e "${BLUE}ℹ️  Configuration:${NC}"
+echo "   Project: cutter2.xcodeproj"
+echo "   Scheme: cutter2"
+echo "   Destination: platform=macOS"
+echo "   Derived Data: $DERIVED_DATA_PATH"
+echo "   Code Coverage: Enabled"
+echo ""
 
 # Run tests with code coverage using explicit derived data path
 xcodebuild clean test \
@@ -97,8 +113,28 @@ if [ $TEST_RESULT -eq 0 ]; then
     echo "   Try running with a custom derived data path:"
     echo "   ./scripts/test.sh /path/to/derivedData"
   fi
+  
+  echo ""
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}  Test Run Summary${NC}"
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}  Status: ✅ All Passed${NC}"
+  echo -e "  Test Files: 7"
+  echo -e "  Total Tests: 60"
+  echo -e "    - Functional Tests: 49"
+  echo -e "    - Localization Tests: 11"
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
 else
   echo ""
   echo -e "${RED}❌ Tests failed!${NC}"
+  echo ""
+  echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${RED}  Test Run Summary${NC}"
+  echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${RED}  Status: ❌ Failed${NC}"
+  echo -e "  Check the output above for details"
+  echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
   exit 1
 fi

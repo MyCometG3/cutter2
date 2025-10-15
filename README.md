@@ -35,11 +35,13 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 - Xcode 26.0.1
 - Swift 6.2.0
 
-**Internationalization** ✨ **NEW (Phase 2.1 Complete)**:
-- String Catalog (.xcstrings) - 55 localized keys
-- Supported languages: English, Japanese (日本語)
-- LocalizationHelper utility for easy localization
-- All error messages, UI labels, menus localized
+**Internationalization** ✨ **COMPLETE (Phase 2.1)**:
+- **String Catalogs (.xcstrings)**: 229 localized keys (55 code + 174 storyboard)
+- **Supported languages**: English, Japanese (日本語)
+- **LocalizationHelper** utility for easy localization
+- **All user-facing strings localized**: Error messages, UI labels, menus, dialogs
+- **Storyboard localization**: All menu items and UI elements in Japanese ✨ **NEW**
+- **Comprehensive tests**: 11 localization tests (100% pass rate)
 - See [LOCALIZATION_COMPLETE.md](docs/LOCALIZATION_COMPLETE.md) for details
 
 #### Code Structure

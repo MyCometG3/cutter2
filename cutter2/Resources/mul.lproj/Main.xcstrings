@@ -1,0 +1,3138 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "0Da-2S-LK4.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Vertical:\"; ObjectID = \"0Da-2S-LK4\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Vertical:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "垂直:"
+          }
+        }
+      }
+    },
+    "0U4-iu-IPx.title": {
+      "comment": "Class = \"NSWindow\"; title = \"Inspector Window\"; ObjectID = \"0U4-iu-IPx\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Inspector Window"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "インスペクタウインドウ"
+          }
+        }
+      }
+    },
+    "1UK-8n-QPP.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Customize Toolbar…\"; ObjectID = \"1UK-8n-QPP\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Customize Toolbar…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ツールバーをカスタマイズ…"
+          }
+        }
+      }
+    },
+    "1Xt-HY-uBw.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"cutter2\"; ObjectID = \"1Xt-HY-uBw\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "cutter2"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cutter2"
+          }
+        }
+      }
+    },
+    "2wh-lA-ac8.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"clap / pasp\"; ObjectID = \"2wh-lA-ac8\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "clap / pasp"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリーンアパーチャ / ピクセルアスペクト比"
+          }
+        }
+      }
+    },
+    "3fp-UV-D2i.title": {
+      "comment": "Class = \"NSBox\"; title = \"Variable Quality\"; ObjectID = \"3fp-UV-D2i\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Variable Quality"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可変品質"
+          }
+        }
+      }
+    },
+    "3O0-Nr-h6F.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Dump ResponderChain\"; ObjectID = \"3O0-Nr-h6F\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Dump ResponderChain"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "レスポンダチェーンをダンプ"
+          }
+        }
+      }
+    },
+    "4gQ-PG-vJN.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"1920x1080 H264/AAC (mov/mp4/m4v)\"; ObjectID = \"4gQ-PG-vJN\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "1920x1080 H264/AAC (mov/mp4/m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1920x1080 H264/AAC (mov/mp4/m4v)"
+          }
+        }
+      }
+    },
+    "4J7-dP-txa.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Enter Full Screen\"; ObjectID = \"4J7-dP-txa\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Enter Full Screen"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フルスクリーンにする"
+          }
+        }
+      }
+    },
+    "4KS-Dh-CJs.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"wdith x height\"; ObjectID = \"4KS-Dh-CJs\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "wdith x height"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "幅 x 高さ"
+          }
+        }
+      }
+    },
+    "4sb-4s-VLi.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Quit cutter2\"; ObjectID = \"4sb-4s-VLi\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Quit cutter2"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cutter2を終了"
+          }
+        }
+      }
+    },
+    "5jA-k0-Rfw.label": {
+      "comment": "Class = \"NSTabViewItem\"; label = \"4\"; ObjectID = \"5jA-k0-Rfw\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "4"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4"
+          }
+        }
+      }
+    },
+    "5kV-Vb-QxS.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"About cutter2\"; ObjectID = \"5kV-Vb-QxS\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "About cutter2"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cutter2について"
+          }
+        }
+      }
+    },
+    "5Me-5J-Nbr.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"V-Offset:\"; ObjectID = \"5Me-5J-Nbr\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "V-Offset:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "垂直オフセット:"
+          }
+        }
+      }
+    },
+    "5QF-Oa-p0T.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Edit\"; ObjectID = \"5QF-Oa-p0T\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Edit"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "編集"
+          }
+        }
+      }
+    },
+    "5YC-fa-cf7.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Edit Values\"; ObjectID = \"5YC-fa-cf7\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Edit Values"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "値を編集"
+          }
+        }
+      }
+    },
+    "6dh-zS-Vam.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Redo\"; ObjectID = \"6dh-zS-Vam\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Redo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "やり直す"
+          }
+        }
+      }
+    },
+    "6oi-E8-up5.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"HEVC (hvc1)\"; ObjectID = \"6oi-E8-up5\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "HEVC (hvc1)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HEVC (hvc1)"
+          }
+        }
+      }
+    },
+    "6zE-gG-gct.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Fit to screen\"; ObjectID = \"6zE-gG-gct\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Fit to screen"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画面に合わせる"
+          }
+        }
+      }
+    },
+    "7mW-3j-2oX.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"H-Offset:\"; ObjectID = \"7mW-3j-2oX\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "H-Offset:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "水平オフセット:"
+          }
+        }
+      }
+    },
+    "9fM-AB-7X2.title": {
+      "comment": "Class = \"NSBox\"; title = \"Aperture\"; ObjectID = \"9fM-AB-7X2\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Aperture"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アパーチャ"
+          }
+        }
+      }
+    },
+    "34V-U9-YZL.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"1920x1080 HEVC/AAC (mov/mp4/m4v)\"; ObjectID = \"34V-U9-YZL\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "1920x1080 HEVC/AAC (mov/mp4/m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1920x1080 HEVC/AAC (mov/mp4/m4v)"
+          }
+        }
+      }
+    },
+    "39e-pL-wVI.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Authoring ProRes422/LPCM (mov)\"; ObjectID = \"39e-pL-wVI\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Authoring ProRes422/LPCM (mov)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーサリング ProRes422/LPCM (mov)"
+          }
+        }
+      }
+    },
+    "45l-T1-b0x.label": {
+      "comment": "Class = \"NSTabViewItem\"; label = \"0\"; ObjectID = \"45l-T1-b0x\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "0"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0"
+          }
+        }
+      }
+    },
+    "50Z-lA-gfQ.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"iPhone etc.\"; ObjectID = \"50Z-lA-gfQ\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "iPhone etc."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone等"
+          }
+        }
+      }
+    },
+    "76S-EU-ML5.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Resize +10%\"; ObjectID = \"76S-EU-ML5\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Resize +10%"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10%拡大"
+          }
+        }
+      }
+    },
+    "80X-Wv-NOT.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Multiline Label\"; ObjectID = \"80X-Wv-NOT\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Multiline Label"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数行ラベル"
+          }
+        }
+      }
+    },
+    "82U-Ym-gBq.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"640x480 H264/AAC (mov/mp4/m4v)\"; ObjectID = \"82U-Ym-gBq\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "640x480 H264/AAC (mov/mp4/m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "640x480 H264/AAC (mov/mp4/m4v)"
+          }
+        }
+      }
+    },
+    "95I-rb-w3h.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"H264 (avc1)\"; ObjectID = \"95I-rb-w3h\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "H264 (avc1)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "H264 (avc1)"
+          }
+        }
+      }
+    },
+    "a0v-bm-ixe.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"LPCM 24bit\"; ObjectID = \"a0v-bm-ixe\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "LPCM 24bit"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LPCM 24ビット"
+          }
+        }
+      }
+    },
+    "aaa-MY-jFR.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"m4a\"; ObjectID = \"aaa-MY-jFR\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "m4a"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "m4a"
+          }
+        }
+      }
+    },
+    "AEK-h5-xYI.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"ProRes422Proxy (apco)\"; ObjectID = \"AEK-h5-xYI\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "ProRes422Proxy (apco)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ProRes422Proxy (apco)"
+          }
+        }
+      }
+    },
+    "ahk-4X-hGu.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Authoring ProRes422/LPCM (mov)\"; ObjectID = \"ahk-4X-hGu\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Authoring ProRes422/LPCM (mov)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーサリング ProRes422/LPCM (mov)"
+          }
+        }
+      }
+    },
+    "ANY-zc-miw.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Medium Quality H264/AAC (mov/mp4/m4v)\"; ObjectID = \"ANY-zc-miw\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Medium Quality H264/AAC (mov/mp4/m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中品質 H264/AAC (mov/mp4/m4v)"
+          }
+        }
+      }
+    },
+    "AOV-RK-rZm.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Celuller H264/AAC (m4v)\"; ObjectID = \"AOV-RK-rZm\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Celuller H264/AAC (m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "携帯電話用 H264/AAC (m4v)"
+          }
+        }
+      }
+    },
+    "aUF-d1-5bR.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Window\"; ObjectID = \"aUF-d1-5bR\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Window"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ウインドウ"
+          }
+        }
+      }
+    },
+    "aYQ-9b-4KR.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Audio\"; ObjectID = \"aYQ-9b-4KR\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Audio"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーディオ"
+          }
+        }
+      }
+    },
+    "AYu-sK-qS6.title": {
+      "comment": "Class = \"NSMenu\"; title = \"Main Menu\"; ObjectID = \"AYu-sK-qS6\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Main Menu"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メインメニュー"
+          }
+        }
+      }
+    },
+    "BAc-Ug-Qkr.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"960x540 H264/AAC (mov/mp4/m4v)\"; ObjectID = \"BAc-Ug-Qkr\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "960x540 H264/AAC (mov/mp4/m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "960x540 H264/AAC (mov/mp4/m4v)"
+          }
+        }
+      }
+    },
+    "bD6-E8-c3O.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Reset to original\"; ObjectID = \"bD6-E8-c3O\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Reset to original"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "元に戻す"
+          }
+        }
+      }
+    },
+    "bfp-6a-teV.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Selection Duration:\"; ObjectID = \"bfp-6a-teV\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Selection Duration:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択時間:"
+          }
+        }
+      }
+    },
+    "bib-Uj-vzu.title": {
+      "comment": "Class = \"NSMenu\"; title = \"File\"; ObjectID = \"bib-Uj-vzu\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "File"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイル"
+          }
+        }
+      }
+    },
+    "bId-YB-0bn.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Audio Format:\"; ObjectID = \"bId-YB-0bn\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Audio Format:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーディオフォーマット:"
+          }
+        }
+      }
+    },
+    "bjr-UL-QSL.label": {
+      "comment": "Class = \"NSTabViewItem\"; label = \"1\"; ObjectID = \"bjr-UL-QSL\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "1"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1"
+          }
+        }
+      }
+    },
+    "BlS-7K-Sqf.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"ProRes422 (apcn)\"; ObjectID = \"BlS-7K-Sqf\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "ProRes422 (apcn)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ProRes422 (apcn)"
+          }
+        }
+      }
+    },
+    "boe-24-Ow1.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"mov (self-contained)\"; ObjectID = \"boe-24-Ow1\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "mov (self-contained)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mov (自己完結型)"
+          }
+        }
+      }
+    },
+    "BOF-NM-1cW.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Preferences…\"; ObjectID = \"BOF-NM-1cW\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Preferences…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "環境設定…"
+          }
+        }
+      }
+    },
+    "Bw7-FT-i3A.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Save As…\"; ObjectID = \"Bw7-FT-i3A\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Save As…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "別名で保存…"
+          }
+        }
+      }
+    },
+    "C9J-jt-Qc4.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"WiFi (m4v)\"; ObjectID = \"C9J-jt-Qc4\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "WiFi (m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WiFi (m4v)"
+          }
+        }
+      }
+    },
+    "C67-do-oIy.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Current Time:\"; ObjectID = \"C67-do-oIy\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Current Time:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在時刻:"
+          }
+        }
+      }
+    },
+    "Cc0-tk-8hN.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Source Path:\"; ObjectID = \"Cc0-tk-8hN\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Source Path:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ソースパス:"
+          }
+        }
+      }
+    },
+    "Cc7-nU-5Mv.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Your document contents here\"; ObjectID = \"Cc7-nU-5Mv\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Your document contents here"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ドキュメントの内容をここに"
+          }
+        }
+      }
+    },
+    "cg2-QH-QXK.title": {
+      "comment": "Class = \"NSBox\"; title = \"Transcode Audio/Video\"; ObjectID = \"cg2-QH-QXK\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Transcode Audio/Video"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーディオ/ビデオをトランスコード"
+          }
+        }
+      }
+    },
+    "CMP-LL-ZFN.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"3840x2160 H264/AAC (mov/mp4/m4v)\"; ObjectID = \"CMP-LL-ZFN\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "3840x2160 H264/AAC (mov/mp4/m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3840x2160 H264/AAC (mov/mp4/m4v)"
+          }
+        }
+      }
+    },
+    "CMz-7q-CWb.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Horizontal:\"; ObjectID = \"CMz-7q-CWb\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Horizontal:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "水平:"
+          }
+        }
+      }
+    },
+    "CzV-uY-P0Q.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Multiline Label\"; ObjectID = \"CzV-uY-P0Q\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Multiline Label"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数行ラベル"
+          }
+        }
+      }
+    },
+    "dDA-F1-8lI.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Resize 100%\"; ObjectID = \"dDA-F1-8lI\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Resize 100%"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100%にリサイズ"
+          }
+        }
+      }
+    },
+    "Dg0-gw-yjs.label": {
+      "comment": "Class = \"NSTabViewItem\"; label = \"3\"; ObjectID = \"Dg0-gw-yjs\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "3"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3"
+          }
+        }
+      }
+    },
+    "Dk7-4f-mfy.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"m4v\"; ObjectID = \"Dk7-4f-mfy\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "m4v"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "m4v"
+          }
+        }
+      }
+    },
+    "dlZ-ce-ere.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"mp4\"; ObjectID = \"dlZ-ce-ere\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "mp4"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mp4"
+          }
+        }
+      }
+    },
+    "dMs-cI-mzQ.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"File\"; ObjectID = \"dMs-cI-mzQ\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "File"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイル"
+          }
+        }
+      }
+    },
+    "dRJ-4n-Yzg.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Undo\"; ObjectID = \"dRJ-4n-Yzg\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Undo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取り消す"
+          }
+        }
+      }
+    },
+    "Dur-pN-kyE.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Cancel\"; ObjectID = \"Dur-pN-kyE\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Cancel"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセル"
+          }
+        }
+      }
+    },
+    "DVo-aG-piG.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Close\"; ObjectID = \"DVo-aG-piG\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Close"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閉じる"
+          }
+        }
+      }
+    },
+    "e14-77-cm5.title": {
+      "comment": "Class = \"NSMenu\"; title = \"Configure\"; ObjectID = \"e14-77-cm5\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Configure"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定"
+          }
+        }
+      }
+    },
+    "eWQ-T3-jgH.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"iPod H264/AAC (m4v)\"; ObjectID = \"eWQ-T3-jgH\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "iPod H264/AAC (m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPod H264/AAC (m4v)"
+          }
+        }
+      }
+    },
+    "Ez8-zT-Qcs.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Resize 200%\"; ObjectID = \"Ez8-zT-Qcs\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Resize 200%"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "200%にリサイズ"
+          }
+        }
+      }
+    },
+    "F2S-fz-NVQ.title": {
+      "comment": "Class = \"NSMenu\"; title = \"Help\"; ObjectID = \"F2S-fz-NVQ\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Help"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ヘルプ"
+          }
+        }
+      }
+    },
+    "fbQ-2Y-4V5.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"hSpacing:\"; ObjectID = \"fbQ-2Y-4V5\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "hSpacing:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "水平スペーシング:"
+          }
+        }
+      }
+    },
+    "FKE-Sm-Kum.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"cutter2 Help\"; ObjectID = \"FKE-Sm-Kum\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "cutter2 Help"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cutter2ヘルプ"
+          }
+        }
+      }
+    },
+    "fyo-tt-jb0.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Authoring\"; ObjectID = \"fyo-tt-jb0\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Authoring"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーサリング"
+          }
+        }
+      }
+    },
+    "glF-gE-PhL.title": {
+      "comment": "Class = \"NSBox\"; title = \"Clean Aperture (clap)\"; ObjectID = \"glF-gE-PhL\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Clean Aperture (clap)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリーンアパーチャ (clap)"
+          }
+        }
+      }
+    },
+    "grx-7Q-6dE.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"mov (reference movie)\"; ObjectID = \"grx-7Q-6dE\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "mov (reference movie)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mov (参照ムービー)"
+          }
+        }
+      }
+    },
+    "gVA-U4-sdL.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Paste\"; ObjectID = \"gVA-U4-sdL\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Paste"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ペースト"
+          }
+        }
+      }
+    },
+    "gxS-cP-xHA.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"720pHD (m4v)\"; ObjectID = \"gxS-cP-xHA\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "720pHD (m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "720p HD (m4v)"
+          }
+        }
+      }
+    },
+    "H3m-8v-5zh.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Multiline Label\"; ObjectID = \"H3m-8v-5zh\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Multiline Label"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数行ラベル"
+          }
+        }
+      }
+    },
+    "H3V-uS-BHd.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Resize -10%\"; ObjectID = \"H3V-uS-BHd\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Resize -10%"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10%縮小"
+          }
+        }
+      }
+    },
+    "H8h-7b-M4v.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"View\"; ObjectID = \"H8h-7b-M4v\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "View"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示"
+          }
+        }
+      }
+    },
+    "hB9-WY-i7P.ibShadowedIsNilPlaceholder": {
+      "comment": "Class = \"CocoaBindingsConnection\"; ibShadowedIsNilPlaceholder = \"not available\"; ObjectID = \"hB9-WY-i7P\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "not available"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用不可"
+          }
+        }
+      }
+    },
+    "hgP-a0-SBb.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Kbps\"; ObjectID = \"hgP-a0-SBb\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Kbps"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kbps"
+          }
+        }
+      }
+    },
+    "HIb-V2-O6H.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Radio\"; ObjectID = \"HIb-V2-O6H\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Radio"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ラジオ"
+          }
+        }
+      }
+    },
+    "HLw-0S-fq6.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Multiline Label\"; ObjectID = \"HLw-0S-fq6\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Multiline Label"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数行ラベル"
+          }
+        }
+      }
+    },
+    "hn7-ab-A2S.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Resize 50%\"; ObjectID = \"hn7-ab-A2S\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Resize 50%"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "50%にリサイズ"
+          }
+        }
+      }
+    },
+    "Ht5-9d-erA.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Export...\"; ObjectID = \"Ht5-9d-erA\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Export..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "書き出し..."
+          }
+        }
+      }
+    },
+    "hwV-G9-932.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Kbps\"; ObjectID = \"hwV-G9-932\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Kbps"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kbps"
+          }
+        }
+      }
+    },
+    "HyV-fh-RgO.title": {
+      "comment": "Class = \"NSMenu\"; title = \"View\"; ObjectID = \"HyV-fh-RgO\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "View"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示"
+          }
+        }
+      }
+    },
+    "hz9-B4-Xy5.title": {
+      "comment": "Class = \"NSMenu\"; title = \"Services\"; ObjectID = \"hz9-B4-Xy5\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Services"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サービス"
+          }
+        }
+      }
+    },
+    "IAo-SY-fd9.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Open…\"; ObjectID = \"IAo-SY-fd9\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Open…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開く…"
+          }
+        }
+      }
+    },
+    "IZv-c6-ao5.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"1080pHD (m4v)\"; ObjectID = \"IZv-c6-ao5\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "1080pHD (m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1080p HD (m4v)"
+          }
+        }
+      }
+    },
+    "J0B-3V-5Cy.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Variable\"; ObjectID = \"J0B-3V-5Cy\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Variable"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可変"
+          }
+        }
+      }
+    },
+    "Jl0-8M-U6y.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"wdith x height\"; ObjectID = \"Jl0-8M-U6y\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "wdith x height"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "幅 x 高さ"
+          }
+        }
+      }
+    },
+    "juF-8R-my1.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Step mode\"; ObjectID = \"juF-8R-my1\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Step mode"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ステップモード"
+          }
+        }
+      }
+    },
+    "JWE-PS-UlK.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"LPCM 32bit\"; ObjectID = \"JWE-PS-UlK\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "LPCM 32bit"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LPCM 32ビット"
+          }
+        }
+      }
+    },
+    "k9a-BV-ZbF.title": {
+      "comment": "Class = \"NSBox\"; title = \"Options\"; ObjectID = \"k9a-BV-ZbF\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Options"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オプション"
+          }
+        }
+      }
+    },
+    "KaW-ft-85H.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Revert to Saved\"; ObjectID = \"KaW-ft-85H\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Revert to Saved"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最後に保存した状態に戻す"
+          }
+        }
+      }
+    },
+    "Kd2-mp-pUS.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Show All\"; ObjectID = \"Kd2-mp-pUS\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Show All"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべてを表示"
+          }
+        }
+      }
+    },
+    "kIP-vf-haE.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Show Sidebar\"; ObjectID = \"kIP-vf-haE\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Show Sidebar"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サイドバーを表示"
+          }
+        }
+      }
+    },
+    "km5-me-mvr.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Selection Start:\"; ObjectID = \"km5-me-mvr\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Selection Start:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択開始:"
+          }
+        }
+      }
+    },
+    "ksv-Ef-eON.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Multiline Label\"; ObjectID = \"ksv-Ef-eON\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Multiline Label"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数行ラベル"
+          }
+        }
+      }
+    },
+    "LE2-aR-0XJ.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Bring All to Front\"; ObjectID = \"LE2-aR-0XJ\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Bring All to Front"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべてを手前に移動"
+          }
+        }
+      }
+    },
+    "lG2-6d-hIK.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"ProRes422LT (apcs)\"; ObjectID = \"lG2-6d-hIK\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "ProRes422LT (apcs)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ProRes422LT (apcs)"
+          }
+        }
+      }
+    },
+    "LqW-ph-fnu.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Multiline Label\"; ObjectID = \"LqW-ph-fnu\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Multiline Label"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数行ラベル"
+          }
+        }
+      }
+    },
+    "MFe-oz-9ZU.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Copy Video Field Count/Detail\"; ObjectID = \"MFe-oz-9ZU\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Copy Video Field Count/Detail"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ビデオフィールド数/詳細をコピー"
+          }
+        }
+      }
+    },
+    "NaM-aq-87i.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Encoded pixel:\"; ObjectID = \"NaM-aq-87i\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Encoded pixel:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エンコードピクセル:"
+          }
+        }
+      }
+    },
+    "NMo-om-nkz.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Services\"; ObjectID = \"NMo-om-nkz\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Services"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サービス"
+          }
+        }
+      }
+    },
+    "O3C-uZ-7gU.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Multiline Label\"; ObjectID = \"O3C-uZ-7gU\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Multiline Label"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数行ラベル"
+          }
+        }
+      }
+    },
+    "oa3-ZA-fMI.title": {
+      "comment": "Class = \"NSBox\"; title = \"Pixel Aspect Ratio (pasp)\"; ObjectID = \"oa3-ZA-fMI\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Pixel Aspect Ratio (pasp)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ピクセルアスペクト比 (pasp)"
+          }
+        }
+      }
+    },
+    "Oar-DC-K6q.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"960x540 H264/AAC (mov/mp4/m4v)\"; ObjectID = \"Oar-DC-K6q\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "960x540 H264/AAC (mov/mp4/m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "960x540 H264/AAC (mov/mp4/m4v)"
+          }
+        }
+      }
+    },
+    "oas-Oc-fiZ.title": {
+      "comment": "Class = \"NSMenu\"; title = \"Open Recent\"; ObjectID = \"oas-Oc-fiZ\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Open Recent"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近使った項目を開く"
+          }
+        }
+      }
+    },
+    "ocJ-FK-cWo.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Selection End:\"; ObjectID = \"ocJ-FK-cWo\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Selection End:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択終了:"
+          }
+        }
+      }
+    },
+    "Olw-nP-bQN.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Hide cutter2\"; ObjectID = \"Olw-nP-bQN\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Hide cutter2"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cutter2を隠す"
+          }
+        }
+      }
+    },
+    "OnJ-zY-VTA.title": {
+      "comment": "Class = \"NSBox\"; title = \"Authoring / Transient\"; ObjectID = \"OnJ-zY-VTA\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Authoring / Transient"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーサリング / 一時"
+          }
+        }
+      }
+    },
+    "OPx-sb-V6s.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"vSpacing:\"; ObjectID = \"OPx-sb-V6s\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "vSpacing:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "垂直スペーシング:"
+          }
+        }
+      }
+    },
+    "OUs-Xh-hCp.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"1280x720 H264/AAC (mov/mp4/m4v)\"; ObjectID = \"OUs-Xh-hCp\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "1280x720 H264/AAC (mov/mp4/m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1280x720 H264/AAC (mov/mp4/m4v)"
+          }
+        }
+      }
+    },
+    "OY7-WF-poV.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Minimize\"; ObjectID = \"OY7-WF-poV\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Minimize"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "しまう"
+          }
+        }
+      }
+    },
+    "oyg-gR-pI6.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Custom\"; ObjectID = \"oyg-gR-pI6\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Custom"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カスタム"
+          }
+        }
+      }
+    },
+    "p2Y-uC-jNq.title": {
+      "comment": "Class = \"NSBox\"; title = \"Transcode Type\"; ObjectID = \"p2Y-uC-jNq\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Transcode Type"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トランスコードタイプ"
+          }
+        }
+      }
+    },
+    "pa3-QI-u2k.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Delete\"; ObjectID = \"pa3-QI-u2k\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Delete"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "削除"
+          }
+        }
+      }
+    },
+    "pau-V1-1WM.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Inspector\"; ObjectID = \"pau-V1-1WM\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Inspector"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "インスペクタ"
+          }
+        }
+      }
+    },
+    "pxx-59-PXV.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Save…\"; ObjectID = \"pxx-59-PXV\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Save…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存…"
+          }
+        }
+      }
+    },
+    "QFA-kR-AjF.title": {
+      "comment": "Class = \"NSWindow\"; title = \"CleanAperture/PixelAspectRatio\"; ObjectID = \"QFA-kR-AjF\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "CleanAperture/PixelAspectRatio"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリーンアパーチャ/ピクセルアスペクト比"
+          }
+        }
+      }
+    },
+    "Qgk-st-v6Z.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"LPCM 16bit\"; ObjectID = \"Qgk-st-v6Z\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "LPCM 16bit"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LPCM 16ビット"
+          }
+        }
+      }
+    },
+    "qgt-JB-nK6.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Copy Video Color Properties\"; ObjectID = \"qgt-JB-nK6\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Copy Video Color Properties"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ビデオカラープロパティをコピー"
+          }
+        }
+      }
+    },
+    "qrf-ue-ioi.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Multiline Label\"; ObjectID = \"qrf-ue-ioi\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Multiline Label"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数行ラベル"
+          }
+        }
+      }
+    },
+    "R4o-n2-Eq4.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Zoom\"; ObjectID = \"R4o-n2-Eq4\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Zoom"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拡大/縮小"
+          }
+        }
+      }
+    },
+    "rrn-GZ-c3Z.title": {
+      "comment": "Class = \"NSBox\"; title = \"Shrink video (no expansion)\"; ObjectID = \"rrn-GZ-c3Z\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Shrink video (no expansion)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ビデオを縮小（拡大なし）"
+          }
+        }
+      }
+    },
+    "Ruw-6m-B2m.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Select All\"; ObjectID = \"Ruw-6m-B2m\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Select All"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべてを選択"
+          }
+        }
+      }
+    },
+    "rve-bq-OMm.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"HighestQuality HEVC/AAC (mov/mp4/m4v)\"; ObjectID = \"rve-bq-OMm\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "HighestQuality HEVC/AAC (mov/mp4/m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最高品質 HEVC/AAC (mov/mp4/m4v)"
+          }
+        }
+      }
+    },
+    "SE5-lD-diG.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Movie Duration:\"; ObjectID = \"SE5-lD-diG\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Movie Duration:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ムービーの長さ:"
+          }
+        }
+      }
+    },
+    "snW-S8-Cw5.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Show Toolbar\"; ObjectID = \"snW-S8-Cw5\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Show Toolbar"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ツールバーを表示"
+          }
+        }
+      }
+    },
+    "sVK-si-sV8.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Configure\"; ObjectID = \"sVK-si-sV8\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Configure"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定"
+          }
+        }
+      }
+    },
+    "T0Z-i9-qh5.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Header size = 0 KiB\\nVideo size = 0 KiB\\nAudio size = 0 KiB\\n\"; ObjectID = \"T0Z-i9-qh5\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Header size = 0 KiB\nVideo size = 0 KiB\nAudio size = 0 KiB\n"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ヘッダサイズ = 0 KiB\nビデオサイズ = 0 KiB\nオーディオサイズ = 0 KiB\n"
+          }
+        }
+      }
+    },
+    "t4A-ec-ztf.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"AppleTV H264/AAC (m4v)\"; ObjectID = \"t4A-ec-ztf\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "AppleTV H264/AAC (m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple TV H264/AAC (m4v)"
+          }
+        }
+      }
+    },
+    "tAm-V2-PYH.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Radio\"; ObjectID = \"tAm-V2-PYH\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Radio"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ラジオ"
+          }
+        }
+      }
+    },
+    "Td7-aD-5lo.title": {
+      "comment": "Class = \"NSMenu\"; title = \"Window\"; ObjectID = \"Td7-aD-5lo\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Window"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ウインドウ"
+          }
+        }
+      }
+    },
+    "Teb-37-coU.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Audio Data Size:\"; ObjectID = \"Teb-37-coU\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Audio Data Size:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オーディオデータサイズ:"
+          }
+        }
+      }
+    },
+    "tEZ-yE-jQV.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"3840x2160 HEVC/AAC (mov/mp4/m4v)\"; ObjectID = \"tEZ-yE-jQV\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "3840x2160 HEVC/AAC (mov/mp4/m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3840x2160 HEVC/AAC (mov/mp4/m4v)"
+          }
+        }
+      }
+    },
+    "toI-aN-gnD.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Next Document\"; ObjectID = \"toI-aN-gnD\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Next Document"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次のドキュメント"
+          }
+        }
+      }
+    },
+    "tXI-mr-wws.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Open Recent\"; ObjectID = \"tXI-mr-wws\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Open Recent"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近使った項目を開く"
+          }
+        }
+      }
+    },
+    "uFl-AH-6le.title": {
+      "comment": "Class = \"NSBox\"; title = \"iPhone/iPad/Others\"; ObjectID = \"uFl-AH-6le\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "iPhone/iPad/Others"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone/iPad/その他"
+          }
+        }
+      }
+    },
+    "uh3-5K-A44.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Video Format:\"; ObjectID = \"uh3-5K-A44\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Video Format:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ビデオフォーマット:"
+          }
+        }
+      }
+    },
+    "uiP-JA-3zq.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Multiline Label\"; ObjectID = \"uiP-JA-3zq\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Multiline Label"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数行ラベル"
+          }
+        }
+      }
+    },
+    "uMj-r2-3KC.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Production:\"; ObjectID = \"uMj-r2-3KC\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Production:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "制作:"
+          }
+        }
+      }
+    },
+    "umr-w3-9sM.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Multiline Label\"; ObjectID = \"umr-w3-9sM\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Multiline Label"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数行ラベル"
+          }
+        }
+      }
+    },
+    "Upm-bG-nTs.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Continue\"; ObjectID = \"Upm-bG-nTs\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Continue"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "続ける"
+          }
+        }
+      }
+    },
+    "uQy-DD-JDr.title": {
+      "comment": "Class = \"NSMenu\"; title = \"cutter2\"; ObjectID = \"uQy-DD-JDr\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "cutter2"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cutter2"
+          }
+        }
+      }
+    },
+    "uRl-iY-unG.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Cut\"; ObjectID = \"uRl-iY-unG\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Cut"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カット"
+          }
+        }
+      }
+    },
+    "UUq-2G-gaI.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Clean:\"; ObjectID = \"UUq-2G-gaI\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Clean:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリーン:"
+          }
+        }
+      }
+    },
+    "v9K-Om-dEP.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Video\"; ObjectID = \"v9K-Om-dEP\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Video"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ビデオ"
+          }
+        }
+      }
+    },
+    "V9u-AX-IWC.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Shrink\"; ObjectID = \"V9u-AX-IWC\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Shrink"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "縮小"
+          }
+        }
+      }
+    },
+    "Vdr-fp-XzO.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Hide Others\"; ObjectID = \"Vdr-fp-XzO\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Hide Others"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ほかを隠す"
+          }
+        }
+      }
+    },
+    "vNY-rz-j42.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Clear Menu\"; ObjectID = \"vNY-rz-j42\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Clear Menu"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メニューを消去"
+          }
+        }
+      }
+    },
+    "W48-6f-4Dl.title": {
+      "comment": "Class = \"NSMenu\"; title = \"Edit\"; ObjectID = \"W48-6f-4Dl\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Edit"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "編集"
+          }
+        }
+      }
+    },
+    "Was-JA-tGl.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"New\"; ObjectID = \"Was-JA-tGl\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "New"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新規"
+          }
+        }
+      }
+    },
+    "WeT-3V-zwk.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Paste and Match Style\"; ObjectID = \"WeT-3V-zwk\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Paste and Match Style"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ペーストしてスタイルを合わせる"
+          }
+        }
+      }
+    },
+    "wGm-68-8pZ.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Cancel\"; ObjectID = \"wGm-68-8pZ\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Cancel"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセル"
+          }
+        }
+      }
+    },
+    "WKP-8U-NRU.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"wdith x height\"; ObjectID = \"WKP-8U-NRU\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "wdith x height"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "幅 x 高さ"
+          }
+        }
+      }
+    },
+    "wPg-Af-nXo.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Video FPS:\"; ObjectID = \"wPg-Af-nXo\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Video FPS:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ビデオ FPS:"
+          }
+        }
+      }
+    },
+    "wpr-3q-Mcd.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Help\"; ObjectID = \"wpr-3q-Mcd\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Help"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ヘルプ"
+          }
+        }
+      }
+    },
+    "Wrf-6b-PvT.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Low Quality H264/AAC (mov/mp4/m4v)\"; ObjectID = \"Wrf-6b-PvT\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Low Quality H264/AAC (mov/mp4/m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低品質 H264/AAC (mov/mp4/m4v)"
+          }
+        }
+      }
+    },
+    "WvD-BG-P8s.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Radio\"; ObjectID = \"WvD-BG-P8s\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Radio"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ラジオ"
+          }
+        }
+      }
+    },
+    "x3v-GG-iWU.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Copy\"; ObjectID = \"x3v-GG-iWU\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Copy"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コピー"
+          }
+        }
+      }
+    },
+    "XhI-6H-6kD.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Multiline Label\"; ObjectID = \"XhI-6H-6kD\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Multiline Label"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数行ラベル"
+          }
+        }
+      }
+    },
+    "xtZ-Pk-Evw.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Copy Other media track\"; ObjectID = \"xtZ-Pk-Evw\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Copy Other media track"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その他のメディアトラックをコピー"
+          }
+        }
+      }
+    },
+    "xxh-Hp-zsv.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Radio\"; ObjectID = \"xxh-Hp-zsv\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Radio"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ラジオ"
+          }
+        }
+      }
+    },
+    "Y3C-BP-FMZ.title": {
+      "comment": "Class = \"NSWindow\"; title = \"TranscodeSheet\"; ObjectID = \"Y3C-BP-FMZ\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "TranscodeSheet"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トランスコードシート"
+          }
+        }
+      }
+    },
+    "Ye6-nb-HPc.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"AAC-LC\"; ObjectID = \"Ye6-nb-HPc\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "AAC-LC"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AAC-LC"
+          }
+        }
+      }
+    },
+    "YPj-LV-hFT.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Multiline Label\"; ObjectID = \"YPj-LV-hFT\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Multiline Label"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数行ラベル"
+          }
+        }
+      }
+    },
+    "YtH-aG-Sba.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"480pSD H264/AAC (m4v)\"; ObjectID = \"YtH-aG-Sba\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "480pSD H264/AAC (m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "480p SD H264/AAC (m4v)"
+          }
+        }
+      }
+    },
+    "zM1-2c-siu.label": {
+      "comment": "Class = \"NSTabViewItem\"; label = \"2\"; ObjectID = \"zM1-2c-siu\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "2"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2"
+          }
+        }
+      }
+    },
+    "znj-2Z-8eN.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Video Data Size:\"; ObjectID = \"znj-2Z-8eN\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Video Data Size:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ビデオデータサイズ:"
+          }
+        }
+      }
+    },
+    "zQj-h5-bSi.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"HighestQuality H264/AAC (mov/mp4/m4v)\"; ObjectID = \"zQj-h5-bSi\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "HighestQuality H264/AAC (mov/mp4/m4v)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最高品質 H264/AAC (mov/mp4/m4v)"
+          }
+        }
+      }
+    },
+    "zqj-Q8-myX.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Title:\"; ObjectID = \"zqj-Q8-myX\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Title:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タイトル:"
+          }
+        }
+      }
+    },
+    "ZuI-nQ-kvm.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Update\"; ObjectID = \"ZuI-nQ-kvm\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Update"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.1"
+}

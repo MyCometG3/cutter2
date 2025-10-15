@@ -613,47 +613,94 @@ final class DocumentIntegrationTests: XCTestCase {
 
 ❌ **Lacking**: NSLocalizedString is almost unused (only 1 instance)
 
-### 7.2 Recommended Implementation
+### 7.2 Recommended Implementation (Modern Approach)
 
-#### Localizable File Structure
+#### String Catalog Structure (Xcode 15+)
+
+Modern Xcode projects use String Catalogs (.xcstrings) which provide:
+- Unified localization in a single file
+- Built-in translation management
+- Automatic extraction from code and Interface Builder
+- Support for plural rules and string variations
+- Better collaboration with translators
 
 ```
 Resources/
-├── Base.lproj/
-│   └── Localizable.strings
-├── ja.lproj/
-│   └── Localizable.strings
-└── en.lproj/
-    └── Localizable.strings
+└── Localizable.xcstrings     # Single source for all localizations
 ```
 
-#### Localizing Strings
+#### Converting Strings to Localized Format
 
 ```swift
 // Before
 let info = [NSLocalizedDescriptionKey: "Incompatible file type detected."]
 
 // After
+let localizedMessage = String(localized: "error.incompatible_file_type",
+                               comment: "Error message when file type is incompatible")
+let info = [NSLocalizedDescriptionKey: localizedMessage]
+
+// Or using NSLocalizedString (still supported)
 let localizedMessage = NSLocalizedString(
     "error.incompatible_file_type",
     comment: "Error message when file type is incompatible"
 )
-let info = [NSLocalizedDescriptionKey: localizedMessage]
 ```
 
-#### Localizable.strings (en)
+#### String Catalog Example (Localizable.xcstrings)
 
+```json
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "error.incompatible_file_type" : {
+      "comment" : "Error message when file type is incompatible",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incompatible file type detected."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "互換性のないファイル形式が検出されました。"
+          }
+        }
+      }
+    },
+    "error.unable_to_open_file" : {
+      "comment" : "Error when file cannot be opened",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to open the specified file as AVMovie."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指定されたファイルをAVMovieとして開けませんでした。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
 ```
-/* Error Messages */
-"error.incompatible_file_type" = "Incompatible file type detected.";
-"error.unable_to_open_file" = "Unable to open the specified file as AVMovie.";
-"error.empty_movie" = "Cannot save an empty movie.";
 
-/* UI Labels */
-"timeline.current_marker" = "Current Position";
-"timeline.start_marker" = "Start Position";
-"timeline.end_marker" = "End Position";
-```
+#### Advantages of String Catalogs
+
+1. **Single Source of Truth**: All translations in one file
+2. **Automatic Extraction**: Xcode automatically finds localizable strings
+3. **Better Tooling**: Built-in editor with translation status
+4. **Plural Support**: Handles plural rules for different languages
+5. **Device Variations**: Support for different string lengths per device
+6. **Export/Import**: Easy to share with translators (XLIFF format)
 
 ---
 
@@ -978,25 +1025,30 @@ func validateFileSize(_ url: URL) throws {
 
 #### 2.1 Internationalization Support
 
-**Week 1-2: Extract Strings and Create Localizable Files**
-- [ ] Convert all strings to NSLocalizedString
-- [ ] Create Base.lproj/Localizable.strings
-- [ ] Create ja.lproj/Localizable.strings
-- [ ] Create en.lproj/Localizable.strings
+**Week 1-2: Modern Localization Setup with String Catalogs**
+- [ ] Create String Catalog (Localizable.xcstrings) using modern Xcode approach
+- [ ] Add language support: English (base), Japanese
+- [ ] Convert all hardcoded strings to localized strings
+- [ ] Extract strings from code to String Catalog
 
-**Week 3-4: Localize UI Elements**
-- [ ] Localize Storyboard strings
-- [ ] Localize error messages
-- [ ] Support dynamic string (date/time, numbers) formatting
+**Week 3-4: Localize All Components**
+- [ ] Localize UI strings in ViewControllers
+- [ ] Localize error messages and alerts
+- [ ] Localize Storyboard strings (integrated with String Catalog)
+- [ ] Localize export/save dialog strings
+- [ ] Support dynamic string formatting (date/time, numbers)
 
-**Week 5-6: Testing and Debugging**
+**Week 5-6: Testing and Quality Assurance**
 - [ ] Test in Japanese environment
 - [ ] Test in English environment
 - [ ] Verify layout with string length variations
+- [ ] Test pseudo-localization for edge cases
+- [ ] Validate all localizations in String Catalog
 
 **Deliverables**:
-- Fully localized application
+- Fully localized application using String Catalog (.xcstrings)
 - Localization test suite
+- Documentation for adding new localizations
 
 #### 2.2 Performance Optimization
 

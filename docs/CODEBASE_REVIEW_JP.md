@@ -613,47 +613,94 @@ final class DocumentIntegrationTests: XCTestCase {
 
 ❌ **不足**: NSLocalizedStringがほぼ未使用（1箇所のみ）
 
-### 7.2 推奨実装
+### 7.2 推奨実装（最新アプローチ）
 
-#### Localizableファイル構造
+#### String Catalog構造（Xcode 15以降）
+
+最新のXcodeプロジェクトでは、以下の利点を提供するString Catalogs (.xcstrings) を使用します：
+- 単一ファイルでの統一的なローカライゼーション
+- 組み込みの翻訳管理
+- コードとInterface Builderからの自動抽出
+- 複数形ルールと文字列バリエーションのサポート
+- 翻訳者とのより良いコラボレーション
 
 ```
 Resources/
-├── Base.lproj/
-│   └── Localizable.strings
-├── ja.lproj/
-│   └── Localizable.strings
-└── en.lproj/
-    └── Localizable.strings
+└── Localizable.xcstrings     # 全ローカライゼーションの単一ソース
 ```
 
-#### 文字列のローカライズ化
+#### ローカライズ形式への文字列変換
 
 ```swift
 // Before
 let info = [NSLocalizedDescriptionKey: "Incompatible file type detected."]
 
 // After
+let localizedMessage = String(localized: "error.incompatible_file_type",
+                               comment: "Error message when file type is incompatible")
+let info = [NSLocalizedDescriptionKey: localizedMessage]
+
+// またはNSLocalizedStringを使用（引き続きサポート）
 let localizedMessage = NSLocalizedString(
     "error.incompatible_file_type",
     comment: "Error message when file type is incompatible"
 )
-let info = [NSLocalizedDescriptionKey: localizedMessage]
 ```
 
-#### Localizable.strings (ja)
+#### String Catalogの例（Localizable.xcstrings）
 
+```json
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "error.incompatible_file_type" : {
+      "comment" : "Error message when file type is incompatible",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incompatible file type detected."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "互換性のないファイル形式が検出されました。"
+          }
+        }
+      }
+    },
+    "error.unable_to_open_file" : {
+      "comment" : "Error when file cannot be opened",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to open the specified file as AVMovie."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指定されたファイルをAVMovieとして開けませんでした。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
 ```
-/* Error Messages */
-"error.incompatible_file_type" = "互換性のないファイル形式が検出されました。";
-"error.unable_to_open_file" = "指定されたファイルをAVMovieとして開けませんでした。";
-"error.empty_movie" = "空のムービーは保存できません。";
 
-/* UI Labels */
-"timeline.current_marker" = "現在位置";
-"timeline.start_marker" = "開始位置";
-"timeline.end_marker" = "終了位置";
-```
+#### String Catalogの利点
+
+1. **単一の情報源**: 全翻訳が1つのファイルに
+2. **自動抽出**: Xcodeが自動的にローカライズ可能な文字列を検出
+3. **より良いツール**: 翻訳ステータス付き組み込みエディタ
+4. **複数形サポート**: 異なる言語の複数形ルールに対応
+5. **デバイスバリエーション**: デバイスごとに異なる文字列長をサポート
+6. **エクスポート/インポート**: 翻訳者との共有が容易（XLIFF形式）
 
 ---
 
@@ -910,34 +957,98 @@ func validateFileSize(_ url: URL) throws {
 
 #### 1.3 ドキュメンテーション
 
-- [ ] ARCHITECTURE.md の作成
-- [ ] API_REFERENCE.md の作成
-- [ ] DEVELOPMENT_GUIDE.md の作成
-- [ ] CONTRIBUTING.md の作成
+**ステータス**: ✅ **完了** (2025年10月13日)
+
+- [x] ARCHITECTURE.md の作成 (✅ 完了 - 16,619文字)
+- [x] API_REFERENCE.md の作成 (✅ 完了 - 14,166文字、拡張可能)
+- [x] DEVELOPMENT_GUIDE.md の作成 (✅ 完了 - 14,964文字)
+- [x] CONTRIBUTING.md の作成 (✅ 完了 - 12,083文字)
+
+**作成されたドキュメントファイル**:
+
+1. **ARCHITECTURE.md**
+   - システムアーキテクチャ概要
+   - レイヤーアーキテクチャの詳細
+   - コンポーネント説明
+   - データフロー図
+   - 並行性モデル
+   - ファイル構成
+   - 設計原則
+
+2. **API_REFERENCE.md**
+   - Document層API
+   - Model層API
+   - ViewController層API
+   - ユーティリティリファレンス
+   - プロトコル定義
+   - エラー型
+   - 使用例
+   - 作業進行中 - 自動ドキュメントツールで拡張予定
+
+3. **DEVELOPMENT_GUIDE.md**
+   - はじめに
+   - 開発環境のセットアップ
+   - ビルドとテスト実行
+   - コードスタイルと規約
+   - 変更作業のワークフロー
+   - デバッグ技術
+   - 一般的な開発タスク
+   - トラブルシューティングガイド
+
+4. **CONTRIBUTING.md**
+   - 行動規範
+   - コントリビューションガイドライン
+   - 開発ワークフロー
+   - コーディング標準
+   - テスト要件
+   - プルリクエストプロセス
+   - Issue報告ガイドライン
+   - コントリビューター表彰
+
+**既存ドキュメント**:
+- REFACTORING_PLAN.md (36KB) - コード構造とリファクタリング履歴
+- TESTING_GUIDE.md (9.1KB) - テストプラクティスと自動化
+- SETUP_TEST_TARGET.md (4.7KB) - テスト環境セットアップ（履歴）
+- CODEBASE_REVIEW.md (31KB) - 包括的なコードベース分析
+- CODEBASE_REVIEW_JP.md (34KB) - 日本語版
+
+**README.md の拡張**:
+- コード構造セクションを追加
+- すべてのテストファイルを含むテストセクションを拡張
+- すべてのガイドへのリンクを含むドキュメントセクションを追加
+
+**ドキュメント総数**: プロジェクトのすべての側面をカバーする9つの包括的なMarkdownファイル
+
+**成果物**: ✅ 開発者とコントリビューター向けの完全なドキュメントスイートの準備完了
 
 ### Phase 2: 品質向上（2-3ヶ月）
 
 #### 2.1 国際化対応
 
-**Week 1-2: 文字列の抽出とローカライズファイル作成**
-- [ ] 全ての文字列をNSLocalizedString化
-- [ ] Base.lproj/Localizable.strings 作成
-- [ ] ja.lproj/Localizable.strings 作成
-- [ ] en.lproj/Localizable.strings 作成
+**Week 1-2: String Catalogを使用した最新ローカライゼーションのセットアップ**
+- [ ] 最新のXcodeアプローチを使用してString Catalog (Localizable.xcstrings) を作成
+- [ ] 言語サポートの追加: 英語（ベース）、日本語
+- [ ] ハードコードされた全文字列をローカライズ文字列に変換
+- [ ] コードからString Catalogへ文字列を抽出
 
-**Week 3-4: UI要素のローカライズ**
-- [ ] Storyboard の文字列ローカライズ
-- [ ] エラーメッセージのローカライズ
-- [ ] 動的文字列（日時、数値）のフォーマット対応
+**Week 3-4: 全コンポーネントのローカライズ**
+- [ ] ViewControllersのUI文字列をローカライズ
+- [ ] エラーメッセージとアラートをローカライズ
+- [ ] Storyboardの文字列をローカライズ（String Catalogと統合）
+- [ ] エクスポート/保存ダイアログの文字列をローカライズ
+- [ ] 動的文字列フォーマット（日時、数値）のサポート
 
-**Week 5-6: テストとデバッグ**
+**Week 5-6: テストと品質保証**
 - [ ] 日本語環境でのテスト
 - [ ] 英語環境でのテスト
 - [ ] 文字列の長さによるレイアウト確認
+- [ ] エッジケース用の疑似ローカライゼーションテスト
+- [ ] String Catalog内の全ローカライゼーションを検証
 
 **成果物**:
-- 完全ローカライズされたアプリケーション
+- String Catalog (.xcstrings) を使用した完全ローカライズアプリケーション
 - ローカライゼーションテストスイート
+- 新しいローカライゼーション追加のためのドキュメント
 
 #### 2.2 パフォーマンス最適化
 

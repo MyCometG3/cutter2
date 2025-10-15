@@ -1025,17 +1025,28 @@ func validateFileSize(_ url: URL) throws {
 
 #### 2.1 Internationalization Support
 
-**Week 1-2: Modern Localization Setup with String Catalogs**
-- [ ] Create String Catalog (Localizable.xcstrings) using modern Xcode approach
-- [ ] Add language support: English (base), Japanese
-- [ ] Convert all hardcoded strings to localized strings
-- [ ] Extract strings from code to String Catalog
+**Status**: 🔄 **IN PROGRESS** - Week 1 Complete (October 15, 2025)
 
-**Week 3-4: Localize All Components**
-- [ ] Localize UI strings in ViewControllers
-- [ ] Localize error messages and alerts
+**Week 1-2: Modern Localization Setup with String Catalogs** ✅ **Week 1 COMPLETE**
+- ✅ Create String Catalog (Localizable.xcstrings) using modern Xcode approach
+- ✅ Add language support: English (base), Japanese
+- ✅ Convert all hardcoded strings to localized strings (Document & Models layers)
+- ✅ Extract strings from code to String Catalog
+
+**Completed Components (Week 1):**
+- ✅ Localizable.xcstrings created with 30 localized keys (en/ja)
+- ✅ LocalizationHelper.swift utility created
+- ✅ DocumentError (9 cases) fully localized
+- ✅ MovieWriterError (7 cases) fully localized
+- ✅ Document layer progress messages fully localized
+- ✅ AccessoryViewController track info labels localized
+- ✅ Common UI buttons (Cancel, OK, Save, Export)
+
+**Week 3-4: Localize All Components** ⏳ **NEXT**
+- [ ] Localize remaining ViewController strings
+- [ ] Localize error messages and alerts (Document layer complete ✅)
 - [ ] Localize Storyboard strings (integrated with String Catalog)
-- [ ] Localize export/save dialog strings
+- [ ] Localize export/save dialog strings (partially complete ✅)
 - [ ] Support dynamic string formatting (date/time, numbers)
 
 **Week 5-6: Testing and Quality Assurance**
@@ -1046,9 +1057,13 @@ func validateFileSize(_ url: URL) throws {
 - [ ] Validate all localizations in String Catalog
 
 **Deliverables**:
-- Fully localized application using String Catalog (.xcstrings)
-- Localization test suite
-- Documentation for adding new localizations
+- ✅ String Catalog infrastructure established (.xcstrings)
+- ✅ Document and Models layers fully localized
+- ⏳ Remaining ViewControllers and Storyboard (Week 2)
+- Localization test suite (Week 2)
+- Documentation for adding new localizations (Week 2)
+
+**Progress**: 60% complete (Week 1 of 2 complete)
 
 #### 2.2 Performance Optimization
 

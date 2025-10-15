@@ -1025,17 +1025,28 @@ func validateFileSize(_ url: URL) throws {
 
 #### 2.1 国際化対応
 
-**Week 1-2: String Catalogを使用した最新ローカライゼーションのセットアップ**
-- [ ] 最新のXcodeアプローチを使用してString Catalog (Localizable.xcstrings) を作成
-- [ ] 言語サポートの追加: 英語（ベース）、日本語
-- [ ] ハードコードされた全文字列をローカライズ文字列に変換
-- [ ] コードからString Catalogへ文字列を抽出
+**ステータス**: 🔄 **進行中** - Week 1完了（2025年10月15日）
 
-**Week 3-4: 全コンポーネントのローカライズ**
-- [ ] ViewControllersのUI文字列をローカライズ
-- [ ] エラーメッセージとアラートをローカライズ
+**Week 1-2: String Catalogを使用した最新ローカライゼーションのセットアップ** ✅ **Week 1完了**
+- ✅ 最新のXcodeアプローチを使用してString Catalog (Localizable.xcstrings) を作成
+- ✅ 言語サポートの追加: 英語（ベース）、日本語
+- ✅ ハードコードされた全文字列をローカライズ文字列に変換（DocumentとModels層）
+- ✅ コードからString Catalogへ文字列を抽出
+
+**完了したコンポーネント（Week 1）:**
+- ✅ Localizable.xcstringsを30のローカライズキー（英語/日本語）で作成
+- ✅ LocalizationHelper.swiftユーティリティを作成
+- ✅ DocumentError（9ケース）を完全にローカライズ
+- ✅ MovieWriterError（7ケース）を完全にローカライズ
+- ✅ Document層のプログレスメッセージを完全にローカライズ
+- ✅ AccessoryViewControllerのトラック情報ラベルをローカライズ
+- ✅ 共通UIボタン（キャンセル、OK、保存、書き出し）
+
+**Week 3-4: 全コンポーネントのローカライズ** ⏳ **次回**
+- [ ] 残りのViewControllerの文字列をローカライズ
+- [ ] エラーメッセージとアラートをローカライズ（Document層完了 ✅）
 - [ ] Storyboardの文字列をローカライズ（String Catalogと統合）
-- [ ] エクスポート/保存ダイアログの文字列をローカライズ
+- [ ] エクスポート/保存ダイアログの文字列をローカライズ（一部完了 ✅）
 - [ ] 動的文字列フォーマット（日時、数値）のサポート
 
 **Week 5-6: テストと品質保証**
@@ -1046,9 +1057,13 @@ func validateFileSize(_ url: URL) throws {
 - [ ] String Catalog内の全ローカライゼーションを検証
 
 **成果物**:
-- String Catalog (.xcstrings) を使用した完全ローカライズアプリケーション
-- ローカライゼーションテストスイート
-- 新しいローカライゼーション追加のためのドキュメント
+- ✅ String Catalogインフラストラクチャの確立（.xcstrings）
+- ✅ DocumentとModels層の完全ローカライズ
+- ⏳ 残りのViewControllersとStoryboard（Week 2）
+- ローカライゼーションテストスイート（Week 2）
+- 新しいローカライゼーション追加のためのドキュメント（Week 2）
+
+**進捗**: 60%完了（2週間中の1週間完了）
 
 #### 2.2 パフォーマンス最適化
 

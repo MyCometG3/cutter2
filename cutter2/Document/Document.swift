@@ -129,8 +129,11 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     // SavePanel with Accessory View support
     public weak var savePanel: NSSavePanel? = nil
     
-    //
+    /// Alert for progress dialog
     public var alert: NSAlert? = nil
+    
+    /// Progress indicator for visual feedback
+    public var progressIndicator: NSProgressIndicator? = nil
     
     /// Timestamp of last progress update (nanoseconds)
     public var lastUpdateAt: UInt64 = 0

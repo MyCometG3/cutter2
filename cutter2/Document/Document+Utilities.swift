@@ -114,16 +114,22 @@ extension Document {
 
 extension Document {
     
-    /// Update progress
+    /// Update progress with smooth animation
+    ///
+    /// This function implements exponential smoothing for smoother progress bar animation.
+    /// It also throttles UI updates to every 100ms to reduce unnecessary redraws.
+    ///
+    /// - Parameter progress: The raw progress value (0.0 to 1.0)
     public func updateProgress(_ progress: Float) {
         // Swift.print(#function, #line, #file)
         
-        // Use Low frequency update
+        // Use Low frequency update (throttle to 100ms)
         let unit = NSEC_PER_MSEC * 100 // 100ms
         let t: UInt64 = clock_gettime_nsec_np(CLOCK_REALTIME)
         if lastUpdateAt == 0 {
-            // First call: initialize timestamp
+            // First call: initialize timestamp and progress
             lastUpdateAt = t
+            lastReportedProgress = 0.0
         } else {
             if t > lastUpdateAt {
                 // Normal case: time moved forward
@@ -140,15 +146,22 @@ extension Document {
             }
         }
         
+        // Apply exponential smoothing for smoother animation
+        // Formula: smoothed = α * new + (1 - α) * old
+        // α = 0.3 provides good balance between responsiveness and smoothness
+        let smoothingFactor: Float = 0.3
+        let smoothedProgress = lastReportedProgress + smoothingFactor * (progress - lastReportedProgress)
+        lastReportedProgress = smoothedProgress
+        
         // Update UI in main queue
         Task { @MainActor in
             // Swift.print(#function, #line, #file)
             
             guard let alert = self.alert else { return }
-            guard progress.isNormal else { return }
+            guard smoothedProgress.isNormal else { return }
             
             let format = NSLocalizedString("progress.format.percent", comment: "Progress percentage format")
-            alert.informativeText = String(format: format, Int(progress * 100))
+            alert.informativeText = String(format: format, Int(smoothedProgress * 100))
         }
     }
     
@@ -162,6 +175,10 @@ extension Document {
     ///   - info: Additional information text (defaults to "Hold on seconds...")
     public func showBusySheet(_ message: String?, _ info: String?) {
         // Swift.print(#function, #line, #file)
+        
+        // Reset progress state for new operation
+        lastUpdateAt = 0
+        lastReportedProgress = 0.0
         
         Task { @MainActor in
             // Swift.print(#function, #line, #file)

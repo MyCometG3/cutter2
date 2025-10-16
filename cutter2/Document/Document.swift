@@ -132,8 +132,12 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     //
     public var alert: NSAlert? = nil
     
-    //
+    /// Timestamp of last progress update (nanoseconds)
     public var lastUpdateAt: UInt64 = 0
+    
+    /// Last reported progress value for smooth animation
+    /// Used for exponential smoothing to avoid jarring progress jumps
+    public var lastReportedProgress: Float = 0.0
     
     // NSProgress support for save/export operations
     public var saveProgress: Progress? = nil

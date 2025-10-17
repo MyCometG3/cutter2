@@ -394,17 +394,70 @@ e448cc8 docs: Add performance analysis
 
 ---
 
-## Week 2 Preview
+## Week 2 Plan (Future Work)
 
 ### Focus: Memory Optimization
 
-**Objectives**:
-1. Profile memory usage with large files
-2. Implement sample buffer pooling
-3. Add memory pressure monitoring
-4. Optimize buffer sizes
+**Status**: 📋 Planned (Not yet started)
 
-**Estimated Effort**: 10-12 hours  
+#### Day 1: Memory Management Analysis
+
+**Task 6.1: Memory Profiling with Instruments**
+- Profile memory usage with large files (500MB, 1GB, 2GB, 4K/8K video)
+- Identify peak memory allocations
+- Check for memory leaks with Instruments
+- **Effort**: 3 hours, **Risk**: Low
+
+**Task 6.2: Identify Memory Optimization Opportunities**
+- AVAssetReader/Writer buffer sizes
+- Sample buffer lifecycle
+- Image/texture caching
+- Temporary allocations
+- **Effort**: 2 hours, **Risk**: Low
+
+#### Day 2-3: Memory Optimizations Implementation
+
+**Task 7.1: Sample Buffer Pooling**
+- Create SampleBufferPool.swift actor for buffer reuse
+- Integrate with SampleBufferChannel.swift and MovieWriter.swift
+- Reduce allocations by pooling CVPixelBuffer and CMSampleBuffer
+- **Effort**: 6 hours, **Risk**: Medium
+
+**Task 7.2: Memory Pressure Monitoring**
+- Create MemoryMonitor.swift for memory pressure detection
+- Integrate with AppDelegate for app-wide monitoring
+- Implement cache clearing on memory warnings
+- **Effort**: 4 hours, **Risk**: Low
+
+#### Day 4: Advanced Optimizations
+
+**Task 8.1: AsyncStream for Progress Updates** (Optional)
+- Replace polling with AsyncStream for cleaner async code
+- More reactive progress reporting
+- **Effort**: 5 hours, **Risk**: Medium
+
+**Task 8.2: Optimize File I/O Operations**
+- Review bookmark management
+- Optimize file attribute reading
+- Improve temporary file handling
+- **Effort**: 3 hours, **Risk**: Low
+
+#### Day 5: Final Testing & Documentation
+
+**Task 9.1: Comprehensive Performance Testing**
+- Test all export presets
+- Large file handling (> 2GB)
+- Memory usage patterns
+- Multi-hour export sessions
+- **Effort**: 4 hours, **Risk**: Low
+
+**Task 9.2: Phase 2.2 Documentation**
+- Create PERFORMANCE_OPTIMIZATION_COMPLETE.md
+- Update README.md and ARCHITECTURE.md
+- Document performance improvements and limitations
+- **Effort**: 3 hours, **Risk**: Low
+
+**Estimated Total Effort**: 10-12 hours  
 **Expected Impact**: 20% memory reduction  
 **Risk**: Medium (requires careful testing)
 
@@ -423,7 +476,7 @@ Week 1 successfully established performance infrastructure and delivered tangibl
 Key success: **Knowing when NOT to optimize**. Timeline analysis prevented ~10 hours of unnecessary work on already-excellent code.
 
 **Status**: ✅ Week 1 Complete  
-**Next**: Week 2 - Memory Optimization  
+**Next**: Week 2 - Memory Optimization (Planned)  
 **Confidence**: High (strong foundation established)
 
 ---

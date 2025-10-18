@@ -272,7 +272,6 @@ class MovieMutatorBase: NSObject {
     ///   - time: new insertion time
     /// - Returns: true if success
     public func reloadAndNotify(from data: Data?, range: CMTimeRange, time: CMTime) -> Bool {
-        // Swift.print(ts(), #function, #line, #file)
         
         if reloadMovie(from: data) {
             // Update Marker
@@ -284,24 +283,23 @@ class MovieMutatorBase: NSObject {
     
     /// Debugging purpose - refresh internal movie object
     public func refreshMovie() {
-        // Swift.print(ts(), #function, #line, #file)
         
         // AVMovie.duration seems to be broken after edit operation
         guard let data: Data = internalMovie.movHeader else {
-            Swift.print(ts(), "ERROR: Failed to create Data from AVMovie")
+            LoggingSystem.video.error("\(self.ts()) Failed to create Data from AVMovie")
             preconditionFailure("ERROR: Failed to create Data from AVMovie")
         }
         guard self.reloadMovie(from: data) else {
-            Swift.print(ts(), "ERROR: Failed to create AVMovie from Data")
+            LoggingSystem.video.error("\(self.ts()) Failed to create AVMovie from Data")
             preconditionFailure("ERROR: Failed to create AVMovie from Data")
         }
         do {
             let prop: CMTime = internalMovie.duration
             let calc: CMTime = internalMovie.range.duration // extension
             if prop != calc {
-                Swift.print(ts(), "BUG: AVMovie.duration is buggy as:")
-                Swift.print(ts(), " prop: ",Int(prop.value),"/",Int(prop.timescale))
-                Swift.print(ts(), " calc: ",Int(calc.value),"/",Int(calc.timescale))
+                LoggingSystem.video.warning("\(self.ts()) AVMovie.duration discrepancy detected")
+                LoggingSystem.video.warning("\(self.ts())  Property: \(Int(prop.value))/\(Int(prop.timescale))")
+                LoggingSystem.video.warning("\(self.ts())  Calculated: \(Int(calc.value))/\(Int(calc.timescale))")
             }
         }
     }
@@ -313,7 +311,6 @@ class MovieMutatorBase: NSObject {
     ///   - range: original selection
     ///   - notify: trigger notification for GUI update
     public func resetMarker(_ time: CMTime, _ range: CMTimeRange, _ notify: Bool) {
-        // Swift.print(ts(), #function, #line, #file)
         
         precondition(validateRange(range, false), "ERROR: Invalid range: \(range)")
         precondition(validateTime(time), "ERROR: Invalid time: \(time)")
@@ -330,7 +327,6 @@ class MovieMutatorBase: NSObject {
     /// - Parameter data: MovieHeader data
     /// - Returns: true if success
     public func reloadMovie(from data: Data?) -> Bool {
-        // Swift.print(ts(), #function, #line, #file)
         
         if let data = data {
             let newMovie = AVMutableMovie(data: data)
@@ -351,7 +347,6 @@ class MovieMutatorBase: NSObject {
     ///   - time: Preferred cursor position in CMTime
     ///   - range: Preferred selection range in CMTimeRange
     private func internalMovieDidChange(_ time: CMTime, _ range: CMTimeRange) {
-        // Swift.print(ts(), #function, #line, #file)
         
         let timeValue: NSValue = NSValue(time: time)
         let timeRangeValue: NSValue = NSValue(timeRange: range)
@@ -364,7 +359,6 @@ class MovieMutatorBase: NSObject {
     
     /// Reset inspector properties cache (on movie edit)
     private func flushCachedValues() {
-        // Swift.print(ts(), #function, #line, #file)
         
         cachedMediaDataPaths = nil
         cachedVideoFPSs = nil
@@ -584,7 +578,6 @@ class MovieMutatorBase: NSObject {
     ///   - flag: includes 3rd decimals of second.
     /// - Returns: Format in "01:02:03" or "01:02:03.004"
     public func shortTimeString(_ time: CMTime, withDecimals flag: Bool) -> String {
-        // Swift.print(ts(), #function, #line, #file)
         var string: String = ""
         let timeInSec: Float64 = CMTimeGetSeconds(time)
         let timeInt: Int = Int(floor(timeInSec))

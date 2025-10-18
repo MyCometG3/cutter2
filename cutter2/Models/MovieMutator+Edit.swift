@@ -41,11 +41,9 @@ extension MovieMutator {
             // convert all into different timescale
             do {
                 let movieRange: CMTimeRange = self.movieRange()
-                // Swift.print(ts(), #function, #line, #file)
                 try clip.insertTimeRange(movieRange, of: internalMovie, at: CMTime.zero, copySampleData: false)
-                // Swift.print(ts(), #function, #line, #file)
             } catch {
-                Swift.print(ts(), error)
+                LoggingSystem.video.error("\(self.ts()) \(error)")
                 preconditionFailure("ERROR: invalid clip")
             }
         }
@@ -61,10 +59,9 @@ extension MovieMutator {
         }
         
         if range.duration != clip.range.duration {
-            Swift.print(ts(), "diff", CMTimeGetSeconds(range.duration),
-                        CMTimeGetSeconds(clip.range.duration), "at", #function, #line)
-            Swift.print(ts(), range.duration)
-            Swift.print(ts(), clip.range.duration)
+            LoggingSystem.video.debug("\(self.ts()) Duration diff: \(CMTimeGetSeconds(range.duration))s vs \(CMTimeGetSeconds(clip.range.duration))s")
+            LoggingSystem.video.debug("\(self.ts()) Range duration: \(range.duration.value)/\(range.duration.timescale)")
+            LoggingSystem.video.debug("\(self.ts()) Clip range duration: \(clip.range.duration.value)/\(clip.range.duration.timescale)")
             preconditionFailure("ERROR: invalid clip")
         }
         
@@ -86,9 +83,7 @@ extension MovieMutator {
         
         // perform delete selection
         do {
-            // Swift.print(ts(), #function, #line, #file)
             internalMovie.removeTimeRange(range)
-            // Swift.print(ts(), #function, #line, #file)
             
             // Update Marker
             let newTime: CMTime = (time <= range.start ? time
@@ -137,12 +132,10 @@ extension MovieMutator {
             }
             let beforeDuration = self.movieDuration()
             
-            // Swift.print(ts(), #function, #line, #file)
             try internalMovie.insertTimeRange(clipRange,
                                               of: clip,
                                               at: time,
                                               copySampleData: false)
-            // Swift.print(ts(), #function, #line, #file)
             
             // Update Marker
             let afterDuration = self.movieDuration()
@@ -151,7 +144,7 @@ extension MovieMutator {
             let newRange: CMTimeRange = CMTimeRangeMake(start: time, duration: actualDelta)
             resetMarker(newTime, newRange, true)
         } catch {
-            Swift.print("ERROR:", error)
+            LoggingSystem.video.error("ERROR: \(error)")
             preconditionFailure("ERROR: failed to insert clip")
         }
     }
@@ -180,7 +173,6 @@ extension MovieMutator {
     
     /// Copy selection of internalMovie
     public func copySelection() {
-        // Swift.print(ts(), #function, #line, #file)
         
         // perform copy selection
         let range = self.selectedTimeRange
@@ -194,7 +186,6 @@ extension MovieMutator {
     ///
     /// - Parameter undoManager: UndoManager for this operation
     public func cutSelection(using undoManager: UndoManagerWrapper) {
-        // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
         let range = self.selectedTimeRange
@@ -232,7 +223,6 @@ extension MovieMutator {
     ///
     /// - Parameter undoManager: UndoManager for this operation
     public func pasteAtInsertionTime(using undoManager: UndoManagerWrapper) {
-        // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
         let range = self.selectedTimeRange
@@ -269,7 +259,6 @@ extension MovieMutator {
     ///
     /// - Parameter undoManager: UndoManager for this operation
     public func deleteSelection(using undoManager: UndoManagerWrapper) {
-        // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
         let range = self.selectedTimeRange

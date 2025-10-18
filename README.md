@@ -151,7 +151,7 @@ See [TESTING_GUIDE.md](docs/TESTING_GUIDE.md) for detailed testing documentation
 - [WEEK2_SUMMARY.md](docs/WEEK2_SUMMARY.md) - Week 2 memory profiling and validation
 
 **Logging System** ✅ **Phase 2.3 Week 1 Complete**:
-- [PHASE_2.3_LOGGING_PLAN.md](docs/PHASE_2.3_LOGGING_PLAN.md) - Logging system implementation plan (5-week plan)
+- [PHASE_2.3_LOGGING_PLAN.md](docs/PHASE_2.3_LOGGING_PLAN.md) - Logging system implementation plan (1–2 week plan)
 
 **Phase 2.2 Achievements** ✅ **(Completed October 17, 2025)**:
 - **Week 1**: Performance testing infrastructure (PerformanceMetrics + 12 tests)

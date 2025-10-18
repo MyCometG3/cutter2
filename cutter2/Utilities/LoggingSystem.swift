@@ -35,8 +35,7 @@ import os.log
 ///
 /// - **debug**: Development debugging, detailed traces (DEBUG builds only)
 /// - **info**: Informational messages, operation tracking
-/// - **notice**: Significant but normal events
-/// - **warning**: Potential issues, non-fatal errors
+/// - **notice**: Significant but normal events, and warning-like events (use for potential issues, non-fatal errors)
 /// - **error**: Error conditions, operation failures
 /// - **fault**: Critical failures, app stability at risk
 ///

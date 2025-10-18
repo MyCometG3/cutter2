@@ -363,6 +363,46 @@ deinit {
 }
 ```
 
+#### Logging
+
+**Use LoggingSystem for all logging** (DO NOT use `print()`):
+
+```swift
+import os.log
+
+// Choose appropriate category
+LoggingSystem.document.info("Document saved to: \(url.lastPathComponent)")
+LoggingSystem.video.debug("Processing frame \(frameNumber)")
+LoggingSystem.export.error("Export failed: \(error.localizedDescription)")
+
+// Use privacy annotations
+LoggingSystem.performance.info("Processed \(count, privacy: .public) items")
+LoggingSystem.fileIO.debug("File path: \(path, privacy: .private)")
+
+// Debug-only logging
+#if DEBUG
+LoggingSystem.video.debug("Detailed state: \(complexObject)")
+#endif
+```
+
+**Available log categories**:
+- `LoggingSystem.document` - Document operations
+- `LoggingSystem.video` - Video processing
+- `LoggingSystem.ui` - UI events
+- `LoggingSystem.performance` - Performance metrics
+- `LoggingSystem.fileIO` - File I/O
+- `LoggingSystem.security` - Security/bookmarks
+- `LoggingSystem.export` - Export operations
+- `LoggingSystem.input` - Keyboard/input
+- `LoggingSystem.app` - Application lifecycle
+
+**Log levels**:
+- `debug()` - Development debugging (wrap in `#if DEBUG`)
+- `info()` - Informational messages
+- `notice()` - Significant events
+- `error()` - Error conditions
+- `fault()` - Critical failures
+
 ### File Organization
 
 - Place files in appropriate directories

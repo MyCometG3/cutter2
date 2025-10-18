@@ -53,6 +53,13 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 - **12 Performance Tests**: All passing (100% pass rate)
 - See [PHASE_2.2_COMPLETION.md](docs/PHASE_2.2_COMPLETION.md) for details
 
+**Logging System** 📋 **Phase 2.3 Planned**:
+- **Current State**: 320 print() statements across 25 files
+- **Target**: Migrate to os.Logger with 9 categories
+- **Benefits**: Structured logging, log levels, Console.app integration
+- **Timeline**: 2 weeks (33 hours estimated)
+- See [PHASE_2.3_LOGGING_PLAN.md](docs/PHASE_2.3_LOGGING_PLAN.md) for details
+
 #### Code Structure
 
 The codebase is organized into focused, maintainable modules:

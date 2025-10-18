@@ -8,6 +8,7 @@
 
 import Cocoa
 import AVFoundation
+import os.log
 
 /* ============================================ */
 // MARK: - ViewControllerDelegate Protocol
@@ -16,96 +17,76 @@ import AVFoundation
 extension Document: ViewControllerDelegate {
     
     public func hasSelection() -> Bool {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return false }
         return (mutator.selectedTimeRange.duration > CMTime.zero) ? true : false
     }
     
     public func hasDuration() -> Bool {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return false }
         return (mutator.movieDuration() > CMTime.zero) ? true : false
     }
     
     public func hasClipOnPBoard() -> Bool {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return false }
         return (mutator.validateClipFromPBoard()) ? true : false
     }
     
     public func debugInfo() {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         let player = self.player!
-        Swift.print("##### ", mutator.ts(), " #####")
-        #if true
+        
+        #if DEBUG
+        LoggingSystem.document.debug("===== Document State: \(mutator.ts()) =====")
+        
         do {
             let t = mutator.movieDuration()
-            Swift.print(" movie duration",
-                        mutator.shortTimeString(t, withDecimals: true),
-                        mutator.rawTimeString(t))
+            LoggingSystem.document.debug("Movie duration: \(mutator.shortTimeString(t, withDecimals: true)) [\(mutator.rawTimeString(t))]")
         }
         do {
             let t = mutator.insertionTime
-            Swift.print("movie insertion",
-                        mutator.shortTimeString(t, withDecimals: true),
-                        mutator.rawTimeString(t))
+            LoggingSystem.document.debug("Movie insertion: \(mutator.shortTimeString(t, withDecimals: true)) [\(mutator.rawTimeString(t))]")
         }
         do {
             let t = mutator.selectedTimeRange.start
-            Swift.print("      sel start",
-                        mutator.shortTimeString(t, withDecimals: true),
-                        mutator.rawTimeString(t))
+            LoggingSystem.document.debug("Selection start: \(mutator.shortTimeString(t, withDecimals: true)) [\(mutator.rawTimeString(t))]")
         }
         do {
             let t = mutator.selectedTimeRange.end
-            Swift.print("        sel end",
-                        mutator.shortTimeString(t, withDecimals: true),
-                        mutator.rawTimeString(t))
+            LoggingSystem.document.debug("Selection end: \(mutator.shortTimeString(t, withDecimals: true)) [\(mutator.rawTimeString(t))]")
         }
         do {
             let t = player.currentTime()
-            Swift.print("  movie current",
-                        mutator.shortTimeString(t, withDecimals: true),
-                        mutator.rawTimeString(t))
+            LoggingSystem.document.debug("Movie current: \(mutator.shortTimeString(t, withDecimals: true)) [\(mutator.rawTimeString(t))]")
         }
         do {
             guard let info = mutator.presentationInfoAtTime(mutator.insertionTime) else {
-                Swift.print("presentationInfo", "not available!!!")
+                LoggingSystem.document.debug("Presentation info: not available")
                 return
             }
             let s = info.timeRange.start
             let e = info.timeRange.end
-            Swift.print("   sample start",
-                        mutator.shortTimeString(s, withDecimals: true),
-                        mutator.rawTimeString(s))
-            Swift.print("     sample end",
-                        mutator.shortTimeString(e, withDecimals: true),
-                        mutator.rawTimeString(e))
+            LoggingSystem.document.debug("Sample start: \(mutator.shortTimeString(s, withDecimals: true)) [\(mutator.rawTimeString(s))]")
+            LoggingSystem.document.debug("Sample end: \(mutator.shortTimeString(e, withDecimals: true)) [\(mutator.rawTimeString(e))]")
         }
         
-        //
+        // Additional info when Option key is pressed
         guard modifier(.option) else { return }
         do {
             if let info = mutator.presentationInfoAtTime(mutator.insertionTime) {
                 if let prev = mutator.previousInfo(of: info.timeRange) {
                     let s = prev.timeRange.start
                     let e = prev.timeRange.end
-                    Swift.print(" p sample start",
-                                mutator.shortTimeString(s, withDecimals: true),
-                                mutator.rawTimeString(s))
-                    Swift.print(" prv sample end",
-                                mutator.shortTimeString(e, withDecimals: true),
-                                mutator.rawTimeString(e))
+                    LoggingSystem.document.debug("Previous sample start: \(mutator.shortTimeString(s, withDecimals: true)) [\(mutator.rawTimeString(s))]")
+                    LoggingSystem.document.debug("Previous sample end: \(mutator.shortTimeString(e, withDecimals: true)) [\(mutator.rawTimeString(e))]")
                 } else {
-                    Swift.print("prev presentationInfo", "not available!!!")
+                    LoggingSystem.document.debug("Previous presentation info: not available")
                 }
             } else {
-                Swift.print("presentationInfo", "not available!!!")
+                LoggingSystem.document.debug("Presentation info: not available")
             }
         }
         do {
@@ -113,55 +94,43 @@ extension Document: ViewControllerDelegate {
                 if let next = mutator.nextInfo(of: info.timeRange) {
                     let s = next.timeRange.start
                     let e = next.timeRange.end
-                    Swift.print(" n sample start",
-                                mutator.shortTimeString(s, withDecimals: true),
-                                mutator.rawTimeString(s))
-                    Swift.print(" nxt sample end",
-                                mutator.shortTimeString(e, withDecimals: true),
-                                mutator.rawTimeString(e))
+                    LoggingSystem.document.debug("Next sample start: \(mutator.shortTimeString(s, withDecimals: true)) [\(mutator.rawTimeString(s))]")
+                    LoggingSystem.document.debug("Next sample end: \(mutator.shortTimeString(e, withDecimals: true)) [\(mutator.rawTimeString(e))]")
                 } else {
-                    Swift.print("next presentationInfo", "not available!!!")
+                    LoggingSystem.document.debug("Next presentation info: not available")
                 }
             } else {
-                Swift.print("presentationInfo", "not available!!!")
+                LoggingSystem.document.debug("Presentation info: not available")
             }
         }
-        #endif
-        #if false
-        Swift.print(mutator.clappaspDictionary() as Any)
         #endif
     }
     
     public func timeOfPosition(_ position: Float64) -> CMTime {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return CMTime.zero }
         return mutator.timeOfPosition(position)
     }
     
     public func positionOfTime(_ time: CMTime) -> Float64 {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return 0.0 }
         return mutator.positionOfTime(time)
     }
     
     public func doCut() {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         mutator.cutSelection(using: self.undoManagerWrapper)
     }
     
     public func doCopy() {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         mutator.copySelection()
     }
     
     public func doPaste() {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         mutator.pasteAtInsertionTime(using: self.undoManagerWrapper)
@@ -169,7 +138,6 @@ extension Document: ViewControllerDelegate {
     
     /// Delete selection range
     public func doDelete() {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         mutator.deleteSelection(using: self.undoManagerWrapper)
@@ -177,7 +145,6 @@ extension Document: ViewControllerDelegate {
     
     /// Select all range of movie
     public func selectAll() {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         let time = mutator.insertionTime
@@ -187,7 +154,6 @@ extension Document: ViewControllerDelegate {
     
     /// offset current marker by specified step
     public func doStepByCount(_ count: Int64, _ resetStart: Bool, _ resetEnd: Bool) {
-        // Swift.print(#function, #line, #file)
         
         var target: CMTime? = nil
         doStepByCount(count, resetStart, resetEnd, &target)
@@ -195,7 +161,6 @@ extension Document: ViewControllerDelegate {
     
     /// offset current marker by specified step (private)
     private func doStepByCount(_ count: Int64, _ resetStart: Bool, _ resetEnd: Bool, _ target: inout CMTime?) {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         guard let player = player, let item = playerItem else { return }
@@ -249,7 +214,6 @@ extension Document: ViewControllerDelegate {
     
     /// offset current marker by specified seconds
     public func doStepBySecond(_ offset: Float64, _ resetStart: Bool, _ resetEnd: Bool) {
-        // Swift.print(#function, #line, #file)
         
         var target: CMTime? = nil
         doStepBySecond(offset, resetStart, resetEnd, &target)
@@ -257,7 +221,6 @@ extension Document: ViewControllerDelegate {
     
     /// offset current marker by specified seconds (private)
     private func doStepBySecond(_ offset: Float64, _ resetStart: Bool, _ resetEnd: Bool, _ target: inout CMTime?) {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         guard let player = self.player else { return }
@@ -297,7 +260,6 @@ extension Document: ViewControllerDelegate {
     
     /// offset current volume by specified percent
     public func doVolumeOffset(_ percent: Int) {
-        // Swift.print(#function, #line, #file)
         
         guard let player = self.player else { return }
         
@@ -315,7 +277,6 @@ extension Document: ViewControllerDelegate {
     
     /// move left current marker by key combination
     public func doMoveLeft(_ optionKey: Bool, _ shiftKey: Bool, _ resetStart: Bool, _ resetEnd: Bool) {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         var target: CMTime? = nil
@@ -342,7 +303,6 @@ extension Document: ViewControllerDelegate {
     
     /// move right current marker by key combination
     public func doMoveRight(_ optionKey: Bool, _ shiftKey: Bool, _ resetStart: Bool, _ resetEnd: Bool) {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         var target: CMTime? = nil
@@ -369,7 +329,6 @@ extension Document: ViewControllerDelegate {
     
     /// Perform slowmotion
     public func doSetSlow(_ ratio: Float) {
-        // Swift.print(#function, #line, #file)
         
         guard let player = self.player else { return }
         guard let item = self.playerItem else { return }
@@ -407,7 +366,6 @@ extension Document: ViewControllerDelegate {
     
     /// Set playback rate
     public func doSetRate(_ offset: Int) {
-        // Swift.print(#function, #line, #file)
         
         guard let player = self.player else { return }
         guard let item = self.playerItem else { return }
@@ -465,7 +423,6 @@ extension Document: ViewControllerDelegate {
     
     /// Toggle play
     public func doTogglePlay() {
-        // Swift.print(#function, #line, #file)
         
         guard let player = self.player else { return }
         let currentRate: Float = player.rate
@@ -489,7 +446,6 @@ extension Document: TimelineUpdateDelegate {
     
     /// called on mouse down/drag event
     public func didUpdateCursor(to position: Float64) {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         let time: CMTime = quantize(position)
@@ -498,7 +454,6 @@ extension Document: TimelineUpdateDelegate {
     
     /// called on mouse down/drag event
     public func didUpdateStart(to position: Float64) {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         let fromTime: CMTime = quantize(position)
@@ -509,7 +464,6 @@ extension Document: TimelineUpdateDelegate {
     
     /// called on mouse down/drag event
     public func didUpdateEnd(to position: Float64) {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         let fromTime: CMTime = mutator.selectedTimeRange.start
@@ -520,7 +474,6 @@ extension Document: TimelineUpdateDelegate {
     
     /// called on mouse down/drag event
     public func didUpdateSelection(from fromPos: Float64, to toPos: Float64) {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         let fromTime: CMTime = quantize(fromPos)
@@ -531,7 +484,6 @@ extension Document: TimelineUpdateDelegate {
     
     /// get PresentationInfo at specified position
     public func presentationInfo(at position: Float64) -> PresentationInfo? {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return nil }
         return mutator.presentationInfoAtPosition(position)
@@ -539,7 +491,6 @@ extension Document: TimelineUpdateDelegate {
     
     /// get PresentationInfo at prior to specified range
     public func previousInfo(of range: CMTimeRange) -> PresentationInfo? {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return nil }
         return mutator.previousInfo(of: range)
@@ -547,7 +498,6 @@ extension Document: TimelineUpdateDelegate {
     
     /// get PresentationInfo at next to specified range
     public func nextInfo(of range: CMTimeRange) -> PresentationInfo? {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return nil }
         return mutator.nextInfo(of: range)
@@ -555,7 +505,6 @@ extension Document: TimelineUpdateDelegate {
     
     /// Move current marker to specified anchor point
     public func doSetCurrent(to anchor: anchor) {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         let current: CMTime = mutator.insertionTime
@@ -612,7 +561,6 @@ extension Document: TimelineUpdateDelegate {
     
     /// Move selection start marker to specified anchor point
     public func doSetStart(to anchor: anchor) {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         let current: CMTime = mutator.insertionTime
@@ -650,7 +598,6 @@ extension Document: TimelineUpdateDelegate {
     
     /// Move selection end marker to specified anchor point
     public func doSetEnd(to anchor: anchor) {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         let current: CMTime = mutator.insertionTime

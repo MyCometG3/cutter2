@@ -9,6 +9,7 @@
 import Cocoa
 import AVFoundation
 import VideoToolbox
+import os.log
 
 /* ============================================ */
 // MARK: - MovieWriterError
@@ -214,7 +215,6 @@ extension MovieWriter {
     /// - Adaptive slowdown: Up to 500ms when progress stagnates
     /// - Automatic cancellation when export completes
     public func exportSessionPollingStart() {
-        // Swift.print(#function, #line, #file)
         exportSessionPollingStop()
         
         exportSessionPollingTask = Task<Void, Never> { @Sendable [weak self] in
@@ -248,7 +248,6 @@ extension MovieWriter {
     
     /// Uninstall status polling task
     public func exportSessionPollingStop() {
-        // Swift.print(#function, #line, #file)
         guard let currentTask = self.exportSessionPollingTask else { return }
         currentTask.cancel()
         self.exportSessionPollingTask = nil
@@ -290,7 +289,6 @@ extension MovieWriter {
     ///   - preset: AVAssetExportSessionPreset. Specify nil for pass-through
     /// - Throws: Raised by any internal error
     public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws {
-        // Swift.print(#function, #line, #file)
         
         guard writeInProgress == false else {
             let reason = "Please wait until the current export session finishes."
@@ -384,9 +382,9 @@ extension MovieWriter {
             let progressStr = String(format:"%.2f",progress * 100)
             let intervalStr = String(format:"%.2f",interval)
             if let error = self.writeError {
-                Swift.print("#####", "result:", statusStr, "progress:", progressStr, "elapsed:", intervalStr, "error", error)
+                LoggingSystem.export.error("Export result: \(statusStr), progress: \(progressStr), elapsed: \(intervalStr), error: \(error)")
             } else {
-                Swift.print("#####", "result:", statusStr, "progress:", progressStr, "elapsed:", intervalStr)
+                LoggingSystem.export.notice("Export result: \(statusStr), progress: \(progressStr), elapsed: \(intervalStr)")
             }
         }
         
@@ -666,7 +664,6 @@ extension MovieWriter {
                         prev = item
                     }
                     awInputSetting[AVEncoderBitRateKey] = prev
-                    // Swift.print("#####", "Bitrate adjustment to", prev, "from", targetBitRate)
                 }
             }
             
@@ -727,13 +724,11 @@ extension MovieWriter {
             var decompressionProperties: NSDictionary? = nil
             if copyField {
                 // Keep both fields
-                // Swift.print("#####", "Decoder: FieldMode_BothFields")
                 let dict: NSMutableDictionary = NSMutableDictionary()
                 dict[kVTDecompressionPropertyKey_FieldMode] = kVTDecompressionProperty_FieldMode_BothFields
                 decompressionProperties = (dict.copy() as! NSDictionary)
             } else {
                 // Allow deinterlace - only DV decoder works...?
-                // Swift.print("#####", "Decoder: FieldMode_DeinterlaceFields")
                 let dict: NSMutableDictionary = NSMutableDictionary()
                 dict[kVTDecompressionPropertyKey_FieldMode] = kVTDecompressionProperty_FieldMode_DeinterlaceFields
                 dict[kVTDecompressionPropertyKey_DeinterlaceMode] = kVTDecompressionProperty_DeinterlaceMode_VerticalFilter
@@ -980,14 +975,13 @@ extension MovieWriter {
         let progressStr = String(format: "%.2f", progress * 100)
         let intervalStr = String(format: "%.2f", interval)
         if let error = self.writeError {
-            Swift.print("##### result:", statusStr, "progress:", progressStr, "elapsed:", intervalStr, "error", error)
+            LoggingSystem.export.error("Result: \(statusStr), progress: \(progressStr), elapsed: \(intervalStr), error: \(error)")
         } else {
-            Swift.print("##### result:", statusStr, "progress:", progressStr, "elapsed:", intervalStr)
+            LoggingSystem.export.notice("Result: \(statusStr), progress: \(progressStr), elapsed: \(intervalStr)")
         }
     }
     
     public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String:Any]) async throws {
-        // Swift.print(#function, #line, #file)
         
         // Check that no export is already running.
         guard writeInProgress == false else {
@@ -1132,7 +1126,6 @@ extension MovieWriter {
         if let updateProgress = updateProgress {
             let progress: Float = Float(calcProgress(of: buffer))
             updateProgress(progress)
-            // Swift.print("#####", "Progress:", progress)
         }
         
         //if let imageBuffer: CVImageBuffer = CMSampleBufferGetImageBuffer(buffer) {
@@ -1201,7 +1194,6 @@ extension MovieWriter {
     ///   - selfContained: Other than AVFileType.mov should be true.
     /// - Throws: Misc Error while exporting AVMovie
     public func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) async throws {
-        // Swift.print(#function, #line, #file, url.lastPathComponent, type.rawValue,
         //     selfContained ? "selfContained movie" : "reference movie")
         
         if type == .mov {
@@ -1221,7 +1213,6 @@ extension MovieWriter {
     ///   - url: destination to write
     ///   - mode: FlattenMode
     private func flattenMovie(to url: URL, with mode: FlattenMode) async throws {
-        // Swift.print(#function, #line, #file)
         
         guard writeInProgress == false else {
             let reason = "Please wait until the current export session finishes."
@@ -1327,9 +1318,9 @@ extension MovieWriter {
             let progressStr = String(format:"%.2f",progress * 100)
             let intervalStr = String(format:"%.2f",interval)
             if let error = self.writeError {
-                Swift.print("#####", "result:", status, "progress:", progressStr, "elapsed:", intervalStr, "error", error)
+                LoggingSystem.export.error("Result: \(status), progress: \(progressStr), elapsed: \(intervalStr), error: \(error)")
             } else {
-                Swift.print("#####", "result:", status, "progress:", progressStr, "elapsed:", intervalStr)
+                LoggingSystem.export.notice("Result: \(status), progress: \(progressStr), elapsed: \(intervalStr)")
             }
         } catch {
             let reason = "Failed to write movie: \(option)."

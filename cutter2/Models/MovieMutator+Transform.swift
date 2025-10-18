@@ -25,9 +25,7 @@ extension MovieMutator {
         
         // perform replacement
         do {
-            // Swift.print(ts(), #function, #line, #file)
             precondition(reloadMovie(from: movie), "ERROR: reloadMovie failed")
-            // Swift.print(ts(), #function, #line, #file)
             
             // Update Marker
             let movie = internalMovie
@@ -45,7 +43,6 @@ extension MovieMutator {
     
     //
     private func updateFormat(_ movie: Data, using undoManager: UndoManagerWrapper) {
-        // Swift.print(ts(), #function, #line, #file)
         
         let time = self.insertionTime
         let range = self.selectedTimeRange
@@ -156,12 +153,12 @@ extension MovieMutator {
                 }
             }
             guard valid else {
-                Swift.print("     encodedPixelsDimensions:", track.encodedPixelsDimensions)
-                Swift.print("productionApertureDimensions:", track.productionApertureDimensions)
-                Swift.print("     cleanApertureDimensions:", track.cleanApertureDimensions)
-                Swift.print("           track naturalSize:", track.naturalSize)
-                Swift.print("         required dimension :", dimensions)
-                Swift.print(ts(), "Different dimension:", track.trackID, track.naturalSize)
+                LoggingSystem.video.debug("Encoded pixels dimensions: \(track.encodedPixelsDimensions.width)x\(track.encodedPixelsDimensions.height)")
+                LoggingSystem.video.debug("Production aperture dimensions: \(track.productionApertureDimensions.width)x\(track.productionApertureDimensions.height)")
+                LoggingSystem.video.debug("Clean aperture dimensions: \(track.cleanApertureDimensions.width)x\(track.cleanApertureDimensions.height)")
+                LoggingSystem.video.debug("Track natural size: \(track.naturalSize.width)x\(track.naturalSize.height)")
+                LoggingSystem.video.debug("Required dimension: \(dimensions.width)x\(dimensions.height)")
+                LoggingSystem.video.info("\(self.ts()) Different dimension for track \(track.trackID): \(track.naturalSize.width)x\(track.naturalSize.height)")
                 continue
             }
             
@@ -225,10 +222,9 @@ extension MovieMutator {
         if count > 0, let movie = movie.movHeader {
             // Replace movie object with undo record
             self.updateFormat(movie, using: undoManager)
-            // Swift.print(ts(), self.clappaspDictionary()! as! [String:Any])
             return true
         } else {
-            Swift.print(ts(), "ERROR: Failed to modify CAPAR extensions.")
+            LoggingSystem.video.error("\(self.ts()) Failed to modify CAPAR extensions")
             return false
         }
     }

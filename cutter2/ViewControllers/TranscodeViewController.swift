@@ -49,14 +49,12 @@ class TranscodeViewController: NSViewController {
     }
     
     @IBAction func start(_ sender: Any?) {
-        // Swift.print(#function, #line, #file)
         
         endSheet(.continue)
         updateUserDefaults()
     }
     
     @IBAction func cancel(_ sender: Any?) {
-        // Swift.print(#function, #line, #file)
         
         endSheet(.cancel)
     }
@@ -77,7 +75,6 @@ class TranscodeViewController: NSViewController {
     }
     
     private func updateUserDefaults() {
-        // Swift.print(#function, #line, #file)
         
         let type: Int = UserDefaults.standard.integer(forKey: kTranscodeTypeKey)
         var preset: String = AVAssetExportPresetPassthrough

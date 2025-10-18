@@ -9,6 +9,7 @@
 import Cocoa
 import AVFoundation
 import AVKit
+import os.log
 
 /* ============================================ */
 // MARK: - DocumentError
@@ -218,7 +219,6 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     }
     
     override func makeWindowControllers() {
-        // Swift.print(#function, #line, #file)
         
         if self.fileURL == nil {
             // Prepare null AVMutableMovie
@@ -268,7 +268,6 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     
     override func canClose(withDelegate delegate: Any, shouldClose shouldCloseSelector: Selector?,
                            contextInfo: UnsafeMutableRawPointer?) {
-        // Swift.print(#function, #line, #file)
         
         // Prepare C function and closingBlock()
         let obj: AnyObject = delegate as AnyObject
@@ -278,7 +277,6 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         let function = unsafeBitCast(method, to: signature.self)
         
         self.closingBlock = {[obj, shouldCloseSelector, contextInfo, weak self] (flag) -> Void in // @escaping
-            // Swift.print(#function, #line, #file, "shouldClose =", flag)
             
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             function(obj, shouldCloseSelector!, self, flag, contextInfo)
@@ -291,7 +289,6 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     }
     
     @objc func document(_ document: NSDocument, shouldClose flag: Bool, contextInfo: UnsafeMutableRawPointer?) {
-        // Swift.print(#function, #line, #file, "shouldClose =", flag)
         
         if flag {
             self.cleanup() // my cleanup method
@@ -304,13 +301,11 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     }
     
     override func close() {
-        // Swift.print(#function, #line, #file)
         
         super.close()
     }
     
     deinit {
-        // Swift.print(#function, #line, #file)
     }
     
     /* ============================================ */

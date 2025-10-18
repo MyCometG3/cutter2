@@ -8,6 +8,7 @@
 
 import Cocoa
 import AVFoundation
+import os.log
 
 /* ============================================ */
 // MARK: - File I/O Operations
@@ -20,7 +21,7 @@ extension Document {
     /* ============================================ */
     
     override func revert(toContentsOf url: URL, ofType typeName: String) throws {
-        // Swift.print(#function, #line, #file)
+        LoggingSystem.document.debug("\(#function) called for \(url.lastPathComponent)")
         
         try super.revert(toContentsOf: url, ofType: typeName)
         
@@ -38,16 +39,15 @@ extension Document {
     ///   - url: The location from which the document contents are read.
     ///   - typeName: The string that identifies the document type.
     func readAsync(from url: URL, ofType typeName: String) async throws {
-        // Swift.print(#function, #line, #file)
+        LoggingSystem.fileIO.info("Reading document from \(url.lastPathComponent, privacy: .public)")
         
         // Check UTI for AVMovie fileType
         let fileType = AVFileType.init(rawValue: typeName)
         if AVMovie.movieTypes().contains(fileType) == false {
             let reason = "(UTI: \(typeName))"
+            LoggingSystem.fileIO.error("Incompatible file type: \(typeName)")
             try throwError(.incompatibleFileType, reason: reason)
         }
-        
-        // Swift.print("##### READ STARTED #####")
         
         // Extract movie header from URL
         let header = await Task.detached {
@@ -71,18 +71,18 @@ extension Document {
             self.removeAllUndoRecords()
             self.movieMutator = MovieMutator(with: movie)
             self.addMutationObserver()
+            
+            LoggingSystem.fileIO.notice("Document opened successfully: \(url.lastPathComponent)")
         } else {
             let reason = url.lastPathComponent + " at " + url.deletingLastPathComponent().path
+            LoggingSystem.fileIO.error("Failed to open file: \(url.lastPathComponent)")
             try throwError(.unableToOpenFile, reason: reason)
         }
-        
-        // Swift.print("##### READ FINISHED #####")
     }
     
     override func read(from url: URL, ofType typeName: String) throws {
-        // Swift.print(#function, #line, #file)
-        
         let reason = "read(from:ofType:) should never be called"
+        LoggingSystem.document.fault("Unexpected read(from:ofType:) called - internal error")
         try throwError(.internalError, reason: reason)
     }
     
@@ -103,13 +103,14 @@ extension Document {
     /* ============================================ */
     
     override func save(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) async throws {
-        // Swift.print(#function, #line, #file)
+        LoggingSystem.document.info("Saving document to \(url.lastPathComponent)")
         
         //
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         guard mutator.movieDuration() > CMTime.zero else {
             let reason = NSLocalizedString("error.reason.zero_duration_movie",
                                          comment: "Error reason when movie has zero duration")
+            LoggingSystem.document.error("Cannot save: movie has zero duration")
             try throwError(.emptyMovie, reason: reason)
         }
         
@@ -117,7 +118,6 @@ extension Document {
     }
     
     private func preparation(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
-        // Swift.print(#function, #line, #file)
         
         do {
             // Check if current AVMovie reference URL = write target URL
@@ -144,13 +144,9 @@ extension Document {
                 copyData = selfcontainedFlag
             }
             
-            #if true
-            Swift.print("NOTE: source file:", self.displayName ?? "n/a")
-            Swift.print("NOTE: target file:", url.lastPathComponent)
-            Swift.print("NOTE: selfcontainedFlag:", selfcontainedFlag)
-            Swift.print("NOTE: overwriteFlag:", overwriteFlag)
-            Swift.print("NOTE: useAccessory:", useAccessory)
-            Swift.print("NOTE: copyData:", copyData)
+            #if DEBUG
+            LoggingSystem.fileIO.debug("Save operation - source: \(self.displayName ?? "n/a", privacy: .public), target: \(url.lastPathComponent)")
+            LoggingSystem.fileIO.debug("Save flags - selfContained: \(self.selfcontainedFlag), overwrite: \(self.overwriteFlag), useAccessory: \(self.useAccessory), copyData: \(self.copyData)")
             #endif
         }
         
@@ -175,7 +171,6 @@ extension Document {
         // Sandbox support - keep source document security scope bookmark
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
             Task { @Sendable @MainActor [typeName, srcURL, weak self] in // @escaping
-                // Swift.print(#function, #line, #file)
                 
                 guard let self else { preconditionFailure("Unexpected nil self detected.") }
                 let fileType: AVFileType = AVFileType.init(rawValue: typeName)
@@ -193,7 +188,6 @@ extension Document {
     }
     
     override nonisolated func writeSafely(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
-        // Swift.print(#function, #line, #file)
         
         // Unblock main thread first to work w/ MainActor
         self.unblockUserInteraction()
@@ -241,7 +235,6 @@ extension Document {
     /// - SeeAlso: `performAsync(_:)` - async-to-sync bridge implementation
     override nonisolated func write(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType,
                         originalContentsURL absoluteOriginalContentsURL: URL?) throws {
-        // Swift.print(#function, #line, #file)
         
         // Trigger long running task via global dispatch queue
         do {
@@ -278,7 +271,6 @@ extension Document {
     }
     
     private func writeAsync(to url: URL, ofType typeName: String) async throws {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
@@ -316,7 +308,6 @@ extension Document {
             mutator.updateProgress = nil
         }
         
-        // Swift.print("##### WRITE STARTED #####")
         
         // Check fileType (mov or other)
         let fileType: AVFileType = AVFileType.init(rawValue: typeName)
@@ -328,7 +319,6 @@ extension Document {
             try await mutator.exportMovie(to: url, fileType: fileType, presetName: nil)
         }
         
-        // Swift.print("##### WRITE FINISHED #####")
     }
     
     /// Indicates that this document can perform write operations asynchronously.
@@ -353,11 +343,9 @@ extension Document {
     }
     
     private func refreshMutator() {
-        // Swift.print(#function, #line, #file)
         
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
         Task { @MainActor [weak self] in
-            // Swift.print(#function, #line, #file)
             
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             guard let url: URL = self.fileURL else { preconditionFailure("Unexpected nil fileURL detected.") }

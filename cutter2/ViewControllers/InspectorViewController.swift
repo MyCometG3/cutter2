@@ -80,7 +80,7 @@ class InspectorViewController: NSViewController {
         }
         
         guard let document: Document = NSApp.orderedDocuments.first as? Document else { return }
-        let dict: [String:Any] = document.inspecterDictionary()
+        let dict: [String:Any] = document.inspectorDictionary()
         guard let content: NSMutableDictionary = objectController.content as? NSMutableDictionary else { return }
         for key in dict.keys {
             guard let dictValue: String = dict[key] as? String else { continue }

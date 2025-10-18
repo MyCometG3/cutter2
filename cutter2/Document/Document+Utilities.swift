@@ -284,7 +284,7 @@ extension Document {
 /* ============================================ */
 
 extension Document {
-    public func inspecterDictionary() -> [String:Any] {
+    public func inspectorDictionary() -> [String:Any] {
         
         var dict: [String:Any] = [:]
         guard let mutator = self.movieMutator else { return dict }

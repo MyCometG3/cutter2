@@ -1,11 +1,13 @@
 # Development Guide for cutter2
 
-**Last Updated**: October 15, 2025  
+**Last Updated**: October 18, 2025  
 **Status**: ✅ Active and Maintained
 
 **Recent Updates**:
 - ✅ Phase 2.1: Internationalization Support (Complete)
+- ✅ Phase 2.2: Performance Optimization (Complete)
 - ✅ LocalizationTests added (11 tests)
+- ✅ PerformanceTests added (12 tests)
 - ✅ String Catalog integration
 
 ---
@@ -29,9 +31,9 @@
 
 ### Prerequisites
 
-- **macOS**: 14.0 (Sonoma) or later
+- **macOS**: 11.0 or later (currently using 26.0.1)
 - **Xcode**: 15.0 or later (currently using 26.0.1)
-- **Swift**: 6.0 or later (currently using 6.2.0)
+- **Swift**: 6.0 or later
 - **Git**: For version control
 - **Command Line Tools**: Install via `xcode-select --install`
 
@@ -806,5 +808,5 @@ If you encounter issues:
 ---
 
 **Document Status**: ✅ Active  
-**Last Updated**: October 15, 2025  
+**Last Updated**: October 18, 2025  
 **Maintained By**: cutter2 development team

@@ -1,6 +1,6 @@
 # API Reference for cutter2
 
-**Last Updated**: October 15, 2025  
+**Last Updated**: October 18, 2025  
 **Status**: 🚧 Work in Progress
 
 > **Note**: This is a living document. Full API documentation will be generated automatically using tools like jazzy or DocC in the future. This document provides an overview of key APIs and their usage.
@@ -687,7 +687,7 @@ public func method(param1: Type1, param2: Type2) throws -> ReturnType {
 ---
 
 **Document Status**: 🚧 Work in Progress  
-**Last Updated**: October 13, 2025  
+**Last Updated**: October 18, 2025  
 **Next Review**: After major API changes or releases
 
 **Note**: Full API documentation generation using DocC or jazzy is planned for future releases.

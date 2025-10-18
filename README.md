@@ -31,18 +31,27 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 - Custom export keeps customized CleanAperture/PixelAspectRatio.
 
 **Development environment**
-- macOS 26.0.1 Tahoe
+- macOS 26.0.1
 - Xcode 26.0.1
-- Swift 6.2.0
+- Swift 6.0
 
-**Internationalization** ✨ **COMPLETE (Phase 2.1)**:
+**Internationalization** ✅ **Phase 2.1 Complete**:
 - **String Catalogs (.xcstrings)**: 229 localized keys (55 code + 174 storyboard)
 - **Supported languages**: English, Japanese (日本語)
 - **LocalizationHelper** utility for easy localization
 - **All user-facing strings localized**: Error messages, UI labels, menus, dialogs
-- **Storyboard localization**: All menu items and UI elements in Japanese ✨ **NEW**
+- **Storyboard localization**: All menu items and UI elements in Japanese
 - **Comprehensive tests**: 11 localization tests (100% pass rate)
 - See [LOCALIZATION_COMPLETE.md](docs/LOCALIZATION_COMPLETE.md) for details
+
+**Performance Optimization** ✅ **Phase 2.2 Complete**:
+- **PerformanceMetrics Framework**: Comprehensive performance testing infrastructure
+- **Export Progress**: 10x faster updates (1000ms→100ms) with visual progress bar
+- **Memory Efficiency**: 74-260 MB usage (91% reduction vs file size, 48-87% better than industry)
+- **Adaptive Polling**: Smart progress update frequency based on export duration
+- **Zero Memory Leaks**: Comprehensive leak detection passed
+- **12 Performance Tests**: All passing (100% pass rate)
+- See [PHASE_2.2_COMPLETION.md](docs/PHASE_2.2_COMPLETION.md) for details
 
 #### Code Structure
 
@@ -72,14 +81,15 @@ See [docs/REFACTORING_PLAN.md](docs/REFACTORING_PLAN.md) for detailed architectu
 
 #### Testing
 
-The project includes comprehensive test coverage with 7 test files and 60 tests:
+The project includes comprehensive test coverage with 8 test files and 60 tests:
 - `cutter2Tests.swift` - Base test class
 - `MovieMutatorTests.swift` - Model layer tests
 - `ModelTests.swift` - Additional model tests
 - `DocumentTests.swift` - Document tests
 - `UtilitiesTests.swift` - Utility tests
 - `ViewControllerTests.swift` - ViewController tests
-- `LocalizationTests.swift` - Localization tests (11 tests) ✨ **NEW**
+- `LocalizationTests.swift` - Localization tests (11 tests) ✨ **Phase 2.1**
+- `PerformanceTests.swift` - Performance tests (12 tests) ✨ **Phase 2.2**
 
 **Test Results**: ✅ 60/60 tests passing (100%)
 
@@ -124,24 +134,22 @@ See [TESTING_GUIDE.md](docs/TESTING_GUIDE.md) for detailed testing documentation
 **Performance** ✅ **Phase 2.2 Complete**:
 - [PERFORMANCE_ANALYSIS.md](docs/PERFORMANCE_ANALYSIS.md) - Performance analysis and optimization opportunities
 - [PERFORMANCE_OPTIMIZATION_PLAN.md](docs/PERFORMANCE_OPTIMIZATION_PLAN.md) - Detailed implementation plan for Phase 2.2
+- [PHASE_2.2_COMPLETION.md](docs/PHASE_2.2_COMPLETION.md) - Phase 2.2 completion summary ✨ **NEW**
 - [TIMELINE_PERFORMANCE_ANALYSIS.md](docs/TIMELINE_PERFORMANCE_ANALYSIS.md) - Timeline analysis (optimization not needed)
 - [WEEK1_SUMMARY.md](docs/WEEK1_SUMMARY.md) - Week 1 completion summary and achievements
-- [WEEK2_SUMMARY.md](docs/WEEK2_SUMMARY.md) - Week 2 memory profiling and validation ✨ **NEW**
+- [WEEK2_SUMMARY.md](docs/WEEK2_SUMMARY.md) - Week 2 memory profiling and validation
 
-**Week 1 Achievements** ✅:
-- Performance testing infrastructure (PerformanceMetrics + 12 tests)
-- Export progress optimization (10x faster updates, visual progress bar)
-- Timeline analysis (determined already well-optimized)
-- Efficiency: 47% faster than estimated
-
-**Week 2 Achievements** ✅:
-- Comprehensive memory profiling (playback + export operations)
-- Memory efficiency validated: 74-260 MB for 825MB ProRes files
-- Zero memory leaks confirmed (comprehensive leak detection)
-- Better than industry standards (48-87% more efficient)
-- Data-driven analysis confirmed no optimization needed
+**Phase 2.2 Achievements** ✅:
+- **Week 1**: Performance testing infrastructure (PerformanceMetrics + 12 tests)
+- **Week 1**: Export progress optimization (10x faster updates, visual progress bar)
+- **Week 1**: Timeline analysis (determined already well-optimized)
+- **Week 2**: Comprehensive memory profiling (playback + export operations)
+- **Week 2**: Memory efficiency validated: 74-260 MB for 825MB ProRes files
+- **Week 2**: Zero memory leaks confirmed (comprehensive leak detection)
+- **Week 2**: Better than industry standards (48-87% more efficient)
+- **Overall**: Data-driven analysis confirmed production-ready performance
 
 #### License
 - The MIT License
 
-Copyright © 2018-2025年 MyCometG3. All rights reserved.
+Copyright © 2018-2025 MyCometG3. All rights reserved.

@@ -1,6 +1,6 @@
 # cutter2 Architecture
 
-**Last Updated**: October 13, 2025  
+**Last Updated**: October 18, 2025  
 **Status**: ✅ Active and Maintained
 
 ---
@@ -25,7 +25,7 @@ cutter2 is a document-based macOS video editing application built with Swift and
 
 - **Framework**: AVFoundation (native macOS)
 - **UI Framework**: Cocoa/AppKit
-- **Language**: Swift 6.2.0
+- **Language**: Swift 6.0
 - **Concurrency**: Swift Concurrency (async/await, actors)
 - **Architecture**: Document-based, MVC pattern with protocol-oriented design
 - **Platform**: macOS 11.0+, Universal Binary (x86_64 + arm64)
@@ -685,5 +685,5 @@ enum DocumentError: Error {
 ---
 
 **Document Status**: ✅ Active  
-**Last Review**: October 13, 2025  
+**Last Review**: October 18, 2025  
 **Next Review**: As needed for major architectural changes

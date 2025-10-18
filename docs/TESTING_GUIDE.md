@@ -1,14 +1,14 @@
 # Testing Guide for cutter2
 
-**Status**: ✅ **Active - Test Infrastructure Operational** *(Updated: October 15, 2025)*
+**Status**: ✅ **Active - Test Infrastructure Operational** *(Updated: October 18, 2025)*
 
 This guide provides instructions for running and writing tests for the cutter2 application.
 
 ## Quick Start
 
 The test infrastructure is fully configured and operational:
-- ✅ 7 test files covering Models, ViewControllers, Utilities, and Localization
-- ✅ 60 tests passing (49 functional + 11 localization)
+- ✅ 8 test files covering Models, ViewControllers, Utilities, Localization, and Performance
+- ✅ 60 tests passing (37 functional + 11 localization + 12 performance)
 - ✅ XCTest framework integrated
 - ✅ Code coverage enabled
 - ✅ CI/CD pipeline active (GitHub Actions)
@@ -31,7 +31,7 @@ To run tests: Press `⌘U` in Xcode or run `xcodebuild test` from command line.
 ### Prerequisites
 
 - Xcode 15.0 or later (currently using 26.0.1)
-- macOS 14.0 (Sonoma) or later
+- macOS 11.0 or later (currently using 26.0.1)
 - Swift 6.0
 
 ### Initial Setup
@@ -61,20 +61,28 @@ cutter2Tests/
 ├── DocumentTests.swift             # Document tests ✅
 ├── UtilitiesTests.swift            # Utility class tests ✅
 ├── ViewControllerTests.swift       # ViewController tests ✅
-└── LocalizationTests.swift         # Localization tests ✅ (NEW)
+├── LocalizationTests.swift         # Localization tests ✅ (Phase 2.1)
+└── PerformanceTests.swift          # Performance tests ✅ (Phase 2.2)
 ```
 
 **Current Status**: 
-- **60 tests** total (49 functional + 11 localization)
+- **60 tests** total (37 functional + 11 localization + 12 performance)
 - **100% pass rate** ✅
-- Full test suite implemented covering core functionality and internationalization
+- Full test suite implemented covering core functionality, internationalization, and performance
 
-**New in Phase 2.1**:
+**Phase 2.1 - Localization**:
 - ✅ LocalizationTests.swift - 11 comprehensive localization tests
 - Tests all error messages (DocumentError, MovieWriterError)
 - Tests UI strings (buttons, menus, inspector labels)
 - Tests LocalizationHelper utility methods
 - Tests formatted string localization
+
+**Phase 2.2 - Performance**:
+- ✅ PerformanceTests.swift - 12 comprehensive performance tests
+- Tests CMTime operations performance
+- Tests movie loading and preparation
+- Tests export progress reporting
+- Baseline performance measurements for regression detection
 
 ---
 
@@ -422,6 +430,6 @@ Based on Phase 2-3 of the improvement plan:
 
 ---
 
-**Last Updated**: October 13, 2025  
-**Version**: 1.1  
-**Status**: ✅ Test Infrastructure Operational - Expanding Coverage
+**Last Updated**: October 18, 2025  
+**Version**: 1.2  
+**Status**: ✅ Test Infrastructure Operational - Phase 2.1 & 2.2 Complete

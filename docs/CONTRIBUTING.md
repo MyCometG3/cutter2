@@ -1,13 +1,15 @@
 # Contributing to cutter2
 
-**Last Updated**: October 15, 2025
+**Last Updated**: October 18, 2025
 
 Thank you for your interest in contributing to cutter2! This document provides guidelines and instructions for contributing to the project.
 
 **Recent Updates**:
 - ✅ Phase 2.1 complete: Full internationalization support
-- ✅ LocalizationTests added
-- ✅ String Catalog integration (55 localized keys)
+- ✅ Phase 2.2 complete: Performance optimization infrastructure
+- ✅ LocalizationTests added (11 tests)
+- ✅ PerformanceTests added (12 tests)
+- ✅ String Catalog integration (229 localized keys)
 
 ---
 
@@ -52,8 +54,8 @@ We are committed to providing a welcoming and inspiring community for all. Pleas
 
 Before contributing, ensure you have:
 
-1. **macOS** 14.0 (Sonoma) or later
-2. **Xcode** 15.0 or later
+1. **macOS** 11.0 or later
+2. **Xcode** 15.0 or later (currently 26.0.1)
 3. **Git** installed and configured
 4. **GitHub account** for submitting contributions
 
@@ -608,5 +610,5 @@ Your contributions help make video editing on macOS better for everyone.
 ---
 
 **Document Status**: ✅ Active  
-**Last Updated**: October 13, 2025  
+**Last Updated**: October 18, 2025  
 **Maintained By**: cutter2 project maintainers

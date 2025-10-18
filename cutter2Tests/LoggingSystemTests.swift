@@ -236,7 +236,7 @@ final class LoggingSystemTests: XCTestCase {
         LoggingSystem.fileIO.error("Operation failed: \(errorMessage)")
         
         // Simulate recovery
-        LoggingSystem.fileIO.warning("Attempting recovery")
+        LoggingSystem.fileIO.notice("Attempting recovery")
         LoggingSystem.fileIO.info("Recovery successful")
         
         // Should complete without issues

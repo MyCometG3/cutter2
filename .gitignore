@@ -43,3 +43,6 @@ coverage.lcov
 
 # Test Results
 *.xcresult
+
+# Sample Media
+scripts/sampleMedia/

@@ -13,6 +13,9 @@
 #
 # Options:
 #   derivedDataPath - Optional custom derived data path (default: ./.build)
+#
+# Required Test Media:
+#   - scripts/sampleMedia/DL-1115173527.mov (sample movie file for tests)
 
 set -e
 
@@ -26,6 +29,15 @@ RED='\033[0;31m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
+
+# Check for required test media
+SAMPLE_MEDIA="./scripts/sampleMedia/DL-1115173527.mov"
+if [ ! -f "$SAMPLE_MEDIA" ]; then
+  echo -e "${YELLOW}⚠️  Warning: Sample media file not found${NC}"
+  echo "   Expected: $SAMPLE_MEDIA"
+  echo "   Some tests may be skipped or fail without this file."
+  echo ""
+fi
 
 # Use custom derived data path or default
 DERIVED_DATA_PATH="${1:-./.build}"

@@ -264,12 +264,10 @@ extension LoggingSystem {
     /// Example:
     /// ```swift
     /// LoggingSystem.logWithTimestamp(LoggingSystem.document, "Document opened")
-    /// // Logs: "2025-10-18 12:34:56.789 - Document opened"
+    /// // Logs: "12:34:56.789 - Document opened"
     /// ```
     public static func logWithTimestamp(_ logger: Logger, _ message: String) {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm:ss.SSS"
-        let timestamp = formatter.string(from: Date())
+        let timestamp = timestampFormatter.string(from: Date())
         logger.info("\(timestamp) - \(message)")
     }
     

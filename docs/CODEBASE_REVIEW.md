@@ -684,17 +684,6 @@ LocalizationHelper.formatPercentage(0.75)  // "75%"
 LocalizationHelper.formatFileSize(1024000)  // "1.0 MB"
 LocalizationHelper.formatDuration(3661.5)   // "01:01:01.500"
 ```
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "指定されたファイルをAVMovieとして開けませんでした。"
-          }
-        }
-      }
-    }
-  },
-  "version" : "1.0"
-}
-```
 
 #### Advantages of String Catalogs
 

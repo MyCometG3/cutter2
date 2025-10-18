@@ -83,7 +83,6 @@ class CAPARViewController: NSViewController {
     
     //
     public func beginSheetModal(for parent: NSWindow, handler: @escaping (NSApplication.ModalResponse) -> Void) {
-        // Swift.print(#function, #line, #file)
         
         guard initialContent.count > 0 else { NSSound.beep(); return }
         
@@ -95,7 +94,6 @@ class CAPARViewController: NSViewController {
         parent.beginSheet(sheet, completionHandler: handler)
         
         let textHandler: @Sendable (Notification) -> Void = { [weak self] notification in
-            // Swift.print(#function, #line, #file)
             
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             guard
@@ -123,7 +121,6 @@ class CAPARViewController: NSViewController {
     
     //
     public func endSheet(_ response: NSApplication.ModalResponse) {
-        // Swift.print(#function, #line, #file)
         
         guard let parent = self.parentWindow else { return }
         guard let sheet = self.view.window else { return }
@@ -145,7 +142,6 @@ class CAPARViewController: NSViewController {
     
     // Button handler - OK
     @IBAction func ok(_ sender: Any) {
-        // Swift.print(#function, #line, #file)
         
         updateUserDefaults()
         endSheet(.continue)
@@ -153,21 +149,18 @@ class CAPARViewController: NSViewController {
     
     // Button handler - Cancel
     @IBAction func cancel(_ sender: Any) {
-        // Swift.print(#function, #line, #file)
         
         endSheet(.cancel)
     }
     
     // update ObjectController.content using initialContent
     @IBAction func resetValues(_ sender: Any) {
-        // Swift.print(#function, #line, #file)
         
         loadSourceSettings()
     }
     
     // update ObjectController.content according to checkBox state
     @IBAction func modifyClapPasp(_ sender: Any) {
-        // Swift.print(#function, #line, #file)
         
         let def: UserDefaults = UserDefaults.standard
         let customFlag = def.bool(forKey: modClapPaspKey)
@@ -190,7 +183,6 @@ class CAPARViewController: NSViewController {
     
     // Validate ObjectController.content values
     private func validate() -> Bool {
-        // Swift.print(#function, #line, #file)
         
         let content: NSMutableDictionary = objectController.content as! NSMutableDictionary
         var valid: Bool = true
@@ -239,7 +231,6 @@ class CAPARViewController: NSViewController {
     
     // Update CGFloat Values according to Struct Values
     private func updateFloat() {
-        // Swift.print(#function, #line, #file)
         
         let content: NSMutableDictionary = objectController.content as! NSMutableDictionary
         
@@ -263,7 +254,6 @@ class CAPARViewController: NSViewController {
     
     // Update label strings according to Struct values
     private func updateLabels(_ sender: Any) {
-        // Swift.print(#function, #line, #file)
         
         // NSSize/NSPoint -> label string
         let content: NSMutableDictionary = objectController.content as! NSMutableDictionary
@@ -295,7 +285,6 @@ class CAPARViewController: NSViewController {
     
     // Update struct values according to CGFloat values
     private func updateStruct() {
-        // Swift.print(#function, #line, #file)
         
         // CGFloat values -> NSSize/NSPoint
         let content: NSMutableDictionary = objectController.content as! NSMutableDictionary
@@ -326,7 +315,6 @@ class CAPARViewController: NSViewController {
     
     // Refresh movie source settings - Should be called prior to beginSheet()
     public func applySource(_ dict: [AnyHashable:Any]) -> Bool {
-        // Swift.print(#function, #line, #file)
         
         guard checkDict(dict) else { NSSound.beep(); return false}
         
@@ -354,7 +342,6 @@ class CAPARViewController: NSViewController {
     
     // Update ObjectController's content using initialContent
     private func loadSourceSettings() {
-        // Swift.print(#function, #line, #file)
         
         guard checkDict(initialContent) else { NSSound.beep(); return }
         
@@ -368,7 +355,6 @@ class CAPARViewController: NSViewController {
     
     // update ObjectController.content using UserDefaults
     private func loadLastSettings() {
-        // Swift.print(#function, #line, #file)
         
         //
         let def: UserDefaults = UserDefaults.standard
@@ -394,7 +380,6 @@ class CAPARViewController: NSViewController {
     
     // update UserDefaults using ObjectController.content
     private func updateUserDefaults() {
-        // Swift.print(#function, #line, #file)
         
         let def: UserDefaults = UserDefaults.standard
         let customFlag = def.bool(forKey: modClapPaspKey)

@@ -45,13 +45,11 @@ class InspectorViewController: NSViewController {
     }
     
     override func viewWillAppear() {
-        // Swift.print(#function, #line, #file)
         
         startTimer()
     }
     
     override func viewWillDisappear() {
-        // Swift.print(#function, #line, #file)
         
         stopTimer()
     }
@@ -61,7 +59,6 @@ class InspectorViewController: NSViewController {
     /* ============================================ */
     
     private func startTimer() {
-        // Swift.print(#function, #line, #file)
         
         stopTimer()
         timer = Timer.scheduledTimer(timeInterval: refreshInterval,
@@ -70,14 +67,12 @@ class InspectorViewController: NSViewController {
     }
     
     private func stopTimer() {
-        // Swift.print(#function, #line, #file)
         
         timer?.invalidate()
         timer = nil
     }
     
     @objc dynamic func timerFireMethod(_ timer: Timer) {
-        // Swift.print(#function, #line, #file)
         
         guard self.visible else {
             stopTimer()

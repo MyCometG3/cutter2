@@ -8,6 +8,7 @@
 
 import Cocoa
 import AVFoundation
+import os.log
 
 /* ============================================ */
 // MARK: - Export/Transcode Operations
@@ -20,7 +21,6 @@ extension Document {
     /* ============================================ */
     
     @IBAction func transcode(_ sender: Any?) {
-        // Swift.print(#function, #line, #file)
         
         // Prepare Transcode SheetController
         let storyboard: NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
@@ -34,7 +34,6 @@ extension Document {
         
         // Show Transcode Sheet
         transcodeVC.beginSheetModal(for: self.window!) { @Sendable @MainActor [weak self] (response) in // @escaping
-            // Swift.print(#function, #line, #file)
             
             guard response == NSApplication.ModalResponse.continue else { return }
             
@@ -48,7 +47,6 @@ extension Document {
     }
     
     internal func export(to url: URL, ofType typeName: String, preset: String) async throws {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
@@ -88,7 +86,6 @@ extension Document {
             mutator.updateProgress = nil
         }
         
-        // Swift.print("##### EXPORT STARTED #####")
         
         let fileType: AVFileType = AVFileType.init(rawValue: typeName)
         do {
@@ -96,11 +93,9 @@ extension Document {
             try await mutator.exportMovie(to: url, fileType: fileType, presetName: preset)
         }
         
-        // Swift.print("##### EXPORT FINISHED #####")
     }
     
     internal func exportCustom(to url: URL, ofType typeName: String) async throws {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
@@ -140,7 +135,6 @@ extension Document {
             mutator.updateProgress = nil
         }
         
-        // Swift.print("##### EXPORT STARTED #####")
         
         let fileType: AVFileType = AVFileType.init(rawValue: typeName)
         do {
@@ -176,6 +170,5 @@ extension Document {
             try await mutator.exportCustomMovie(to: url, fileType: fileType, settings: param)
         }
         
-        // Swift.print("##### EXPORT FINISHED #####")
     }
 }

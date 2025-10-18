@@ -9,6 +9,7 @@
 import Cocoa
 import AVFoundation
 import UniformTypeIdentifiers
+import os.log
 
 /* ============================================ */
 // MARK: - Save Panel Operations
@@ -21,7 +22,6 @@ extension Document {
     /* ============================================ */
     
     override func prepareSavePanel(_ savePanel: NSSavePanel) -> Bool {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
         
@@ -79,7 +79,6 @@ extension Document {
     }
     
     override nonisolated var fileTypeFromLastRunSavePanel: String? {
-        // Swift.print(#function, #line, #file)
         
         return performSyncOnMainActor {
             if let accessoryVC = self.accessoryVC {
@@ -97,7 +96,6 @@ extension Document {
     
     // NSOpenSavePanelDelegate protocol
     public func panel(_ sender: Any, validate url: URL) throws {
-        // Swift.print(#function, #line, #file)
         
         guard let accessoryVC = self.accessoryVC else {
             let reason = "Unexpected nil accessoryVC detected."
@@ -120,14 +118,12 @@ extension Document {
     
     // NSOpenSavePanelDelegate protocol
     public func panel(_ sender: Any, userEnteredFilename filename: String, confirmed okFlag: Bool) -> String? {
-        // Swift.print(#function, #line, #file, (okFlag ? "confirmed" : "not yet"))
         
         return filename
     }
     
     /// Get AVFileType from specified URL
     private func fileTypeForURL(_ url: URL) -> AVFileType? {
-        // Swift.print(#function, #line, #file)
         
         let pathExt: String = url.pathExtension.lowercased()
         let dict: [String:AVFileType] = [
@@ -148,7 +144,6 @@ extension Document {
     
     // AccessoryViewDelegate protocol
     public func didUpdateFileType(_ fileType: AVFileType, selfContained: Bool) {
-        // Swift.print(#function, #line, #file)
         
         guard let savePanel = self.savePanel else { preconditionFailure("Unexpected nil savePanel detected.") }
         savePanel.allowedContentTypes = [UTType(fileType.rawValue)!]

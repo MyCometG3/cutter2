@@ -382,7 +382,7 @@ extension MovieWriter {
             let progressStr = String(format:"%.2f",progress * 100)
             let intervalStr = String(format:"%.2f",interval)
             if let error = self.writeError {
-                LoggingSystem.export.info("Export result: \(statusStr), progress: \(progressStr), elapsed: \(intervalStr), error: \(error)")
+                LoggingSystem.export.error("Export result: \(statusStr), progress: \(progressStr), elapsed: \(intervalStr), error: \(error)")
             } else {
                 LoggingSystem.export.notice("Export result: \(statusStr), progress: \(progressStr), elapsed: \(intervalStr)")
             }
@@ -975,7 +975,7 @@ extension MovieWriter {
         let progressStr = String(format: "%.2f", progress * 100)
         let intervalStr = String(format: "%.2f", interval)
         if let error = self.writeError {
-            LoggingSystem.export.info("Result: \(statusStr), progress: \(progressStr), elapsed: \(intervalStr), error: \(error)")
+            LoggingSystem.export.error("Result: \(statusStr), progress: \(progressStr), elapsed: \(intervalStr), error: \(error)")
         } else {
             LoggingSystem.export.notice("Result: \(statusStr), progress: \(progressStr), elapsed: \(intervalStr)")
         }
@@ -1318,7 +1318,7 @@ extension MovieWriter {
             let progressStr = String(format:"%.2f",progress * 100)
             let intervalStr = String(format:"%.2f",interval)
             if let error = self.writeError {
-                LoggingSystem.export.info("Result: \(status), progress: \(progressStr), elapsed: \(intervalStr), error: \(error)")
+                LoggingSystem.export.error("Result: \(status), progress: \(progressStr), elapsed: \(intervalStr), error: \(error)")
             } else {
                 LoggingSystem.export.notice("Result: \(status), progress: \(progressStr), elapsed: \(intervalStr)")
             }

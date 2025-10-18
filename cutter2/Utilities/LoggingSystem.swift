@@ -328,3 +328,14 @@ extension LoggingSystem {
         #endif
     }
 }
+
+// MARK: - Private Helpers
+
+extension LoggingSystem {
+    /// Cached DateFormatter for timestamp generation
+    private static let timestampFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss.SSS"
+        return formatter
+    }()
+}

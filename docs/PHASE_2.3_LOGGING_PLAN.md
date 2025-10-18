@@ -133,7 +133,8 @@ Define separate loggers for different subsystems:
 import os.log
 
 /// Centralized logging system for cutter2
-@MainActor
+///
+/// Note: Not marked as @MainActor to allow usage from nonisolated contexts
 enum LoggingSystem {
     // MARK: - Subsystem
     private static let subsystem = Bundle.main.bundleIdentifier ?? "com.mycometg3.cutter2"

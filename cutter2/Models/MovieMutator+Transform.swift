@@ -224,7 +224,7 @@ extension MovieMutator {
             self.updateFormat(movie, using: undoManager)
             return true
         } else {
-            Swift.print(ts(), "ERROR: Failed to modify CAPAR extensions.")
+            LoggingSystem.video.error("\(self.ts()) Failed to modify CAPAR extensions")
             return false
         }
     }

@@ -110,7 +110,7 @@ public enum LoggingSystem {
     /// ```swift
     /// LoggingSystem.video.info("Starting video edit operation")
     /// LoggingSystem.video.debug("Processing frame at \(time)")
-    /// LoggingSystem.video.warning("Codec not available, using fallback")
+    /// LoggingSystem.video.notice("Codec not available, using fallback")
     /// ```
     public static let video = Logger(subsystem: subsystemIdentifier, category: "video")
     
@@ -155,7 +155,7 @@ public enum LoggingSystem {
     /// ```swift
     /// LoggingSystem.security.info("Bookmark created for file")
     /// LoggingSystem.security.debug("Security-scoped resource accessed")
-    /// LoggingSystem.security.warning("Bookmark validation failed")
+    /// LoggingSystem.security.notice("Bookmark validation failed")
     /// ```
     public static let security = Logger(subsystem: subsystemIdentifier, category: "security")
     
@@ -190,7 +190,7 @@ public enum LoggingSystem {
     /// ```swift
     /// LoggingSystem.app.info("Application launched")
     /// LoggingSystem.app.notice("Application entering background")
-    /// LoggingSystem.app.warning("Low memory warning received")
+    /// LoggingSystem.app.notice("Low memory warning received")
     /// ```
     public static let app = Logger(subsystem: subsystemIdentifier, category: "app")
     
@@ -330,10 +330,18 @@ extension LoggingSystem {
 // MARK: - Private Helpers
 
 extension LoggingSystem {
-    /// Cached DateFormatter for timestamp generation
-    private static let timestampFormatter: DateFormatter = {
+    /// Thread-local DateFormatter for timestamp generation
+    /// 
+    /// Thread-safety: Uses Thread.threadDictionary to maintain one formatter per thread,
+    /// avoiding data races from concurrent access to a shared DateFormatter instance.
+    private static var timestampFormatter: DateFormatter {
+        let key = "LoggingSystem.timestampFormatter"
+        if let formatter = Thread.current.threadDictionary[key] as? DateFormatter {
+            return formatter
+        }
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss.SSS"
+        Thread.current.threadDictionary[key] = formatter
         return formatter
-    }()
+    }
 }

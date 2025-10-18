@@ -39,7 +39,7 @@ extension Document {
     ///   - url: The location from which the document contents are read.
     ///   - typeName: The string that identifies the document type.
     func readAsync(from url: URL, ofType typeName: String) async throws {
-        LoggingSystem.fileIO.info("Reading document from \(url.lastPathComponent)")
+        LoggingSystem.fileIO.info("Reading document from \(url.lastPathComponent, privacy: .public)")
         
         // Check UTI for AVMovie fileType
         let fileType = AVFileType.init(rawValue: typeName)

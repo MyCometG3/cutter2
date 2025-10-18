@@ -144,7 +144,7 @@ extension MovieMutator {
             let newRange: CMTimeRange = CMTimeRangeMake(start: time, duration: actualDelta)
             resetMarker(newTime, newRange, true)
         } catch {
-            LoggingSystem.video.error("ERROR: \(error)")
+            LoggingSystem.video.error("Failed to insert clip: \(error.localizedDescription)")
             preconditionFailure("ERROR: failed to insert clip")
         }
     }

@@ -600,7 +600,7 @@ extension Document {
                 LoggingSystem.ui.debug("Movie playback started (backward)")
             }
             if oldRate.floatValue == newRate.floatValue {
-                LoggingSystem.ui.warning("No rate change detected - needs investigation")
+                LoggingSystem.ui.notice("No rate change detected - needs investigation")
             }
             return
         } else {

@@ -178,10 +178,11 @@ Use appropriate log levels for different scenarios:
 |-------|----------|---------|
 | **debug** | Development debugging, detailed traces | Function entry/exit, variable values |
 | **info** | Informational messages | Operation started, file opened |
-| **notice** | Significant but normal events | Export completed, document saved |
-| **warning** | Potential issues, non-fatal errors | Deprecated API used, fallback activated |
+| **notice** | Significant events, non-critical warnings | Export completed, fallback activated, deprecated API |
 | **error** | Error conditions | File I/O error, invalid input |
 | **fault** | Critical failures | Unrecoverable errors, app state corruption |
+
+**Note**: os.Logger does not provide a `warning()` method. Use `notice()` for warning-like events that are significant but non-critical.
 
 ### 2.3 Logging Conventions
 
@@ -578,8 +579,8 @@ LoggingSystem.document.info("Document saved successfully")
 // notice: Significant events
 LoggingSystem.export.notice("Export completed: \(filename)")
 
-// warning: Potential issues, recoverable
-LoggingSystem.video.warning("Codec not available, using fallback")
+// notice: Non-critical warnings (os.Logger has no warning() method)
+LoggingSystem.video.notice("Codec not available, using fallback")
 
 // error: Error conditions, operation failed
 LoggingSystem.fileIO.error("Failed to read file: \(error)")
@@ -705,7 +706,7 @@ subsystem:com.mycometg3.cutter2 AND category:export
 **By log level**:
 ```
 subsystem:com.mycometg3.cutter2 AND level:error
-subsystem:com.mycometg3.cutter2 AND level:>=warning
+subsystem:com.mycometg3.cutter2 AND level:>=notice
 ```
 
 **By message content**:

@@ -78,7 +78,6 @@ final class LoggingSystemTests: XCTestCase {
         LoggingSystem.document.debug("Test debug message")
         LoggingSystem.document.info("Test info message")
         LoggingSystem.document.notice("Test notice message")
-        LoggingSystem.document.warning("Test warning message")
         LoggingSystem.document.error("Test error message")
         
         // Test video logger

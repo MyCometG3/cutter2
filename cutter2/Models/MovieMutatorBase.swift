@@ -297,9 +297,9 @@ class MovieMutatorBase: NSObject {
             let prop: CMTime = internalMovie.duration
             let calc: CMTime = internalMovie.range.duration // extension
             if prop != calc {
-                LoggingSystem.video.warning("\(self.ts()) AVMovie.duration discrepancy detected")
-                LoggingSystem.video.warning("\(self.ts())  Property: \(Int(prop.value))/\(Int(prop.timescale))")
-                LoggingSystem.video.warning("\(self.ts())  Calculated: \(Int(calc.value))/\(Int(calc.timescale))")
+                LoggingSystem.video.notice("\(self.ts()) AVMovie.duration discrepancy detected")
+                LoggingSystem.video.notice("\(self.ts())  Property: \(Int(prop.value))/\(Int(prop.timescale))")
+                LoggingSystem.video.notice("\(self.ts())  Calculated: \(Int(calc.value))/\(Int(calc.timescale))")
             }
         }
     }

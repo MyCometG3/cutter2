@@ -6,9 +6,12 @@
 **Recent Updates**:
 - ✅ Phase 2.1: Internationalization Support (Complete)
 - ✅ Phase 2.2: Performance Optimization (Complete)
+- ✅ Phase 2.3: Logging System (Complete)
 - ✅ LocalizationTests added (11 tests)
 - ✅ PerformanceTests added (12 tests)
+- ✅ LoggingSystemTests added (17 tests)
 - ✅ String Catalog integration
+- ✅ Console.app integration for logging
 
 ---
 
@@ -21,9 +24,10 @@
 5. [Code Style and Conventions](#code-style-and-conventions)
 6. [Making Changes](#making-changes)
 7. [Debugging](#debugging)
-8. [Common Tasks](#common-tasks)
-9. [Localization](#localization)
-10. [Troubleshooting](#troubleshooting)
+8. [Logging](#logging)
+9. [Common Tasks](#common-tasks)
+10. [Localization](#localization)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -488,9 +492,21 @@ git push origin feature/your-feature-name
 
 ### Console Debugging
 
-**Print Debugging**:
+**Structured Logging** (Preferred):
 ```swift
-print("Current time: \(currentTime)")
+// Use LoggingSystem for production-ready logging
+LoggingSystem.document.debug("Current time: \(currentTime)")
+LoggingSystem.video.info("Processing frame: \(frameNumber)")
+
+// For complex objects in debug builds
+#if DEBUG
+LoggingSystem.debug.debug("Object state: \(String(describing: object))")
+#endif
+```
+
+**Quick Debug Prints** (Development only):
+```swift
+// For quick debugging only - use LoggingSystem in committed code
 debugPrint(someObject)
 dump(complexObject)
 ```
@@ -574,7 +590,150 @@ deinit {
    git push origin feature/my-new-feature
    ```
 
-### Fixing a Bug
+---
+
+## Logging
+
+cutter2 uses Apple's unified logging system (`os.Logger`) for structured logging with Console.app integration.
+
+### Using LoggingSystem
+
+**Available Categories**:
+```swift
+LoggingSystem.document     // Document operations (open, save, export)
+LoggingSystem.video        // Video processing and editing
+LoggingSystem.ui           // User interface events
+LoggingSystem.performance  // Performance measurements
+LoggingSystem.fileIO       // File I/O operations
+LoggingSystem.security     // Bookmark and security-scoped resources
+LoggingSystem.export       // Export and transcode operations
+LoggingSystem.input        // Keyboard and input handling
+LoggingSystem.app          // Application lifecycle
+```
+
+### Log Levels
+
+**Use appropriate log levels**:
+
+```swift
+// Debug: Development debugging (DEBUG builds only)
+#if DEBUG
+LoggingSystem.video.debug("Processing frame \(frameNumber)")
+#endif
+
+// Info: Informational messages
+LoggingSystem.document.info("Document saved successfully")
+
+// Notice: Significant events
+LoggingSystem.export.notice("Export completed in \(duration)s")
+
+// Error: Error conditions
+LoggingSystem.fileIO.error("Failed to read file: \(error.localizedDescription)")
+
+// Fault: Critical failures
+LoggingSystem.document.fault("Document state corrupted")
+```
+
+### Privacy Annotations
+
+**Protect sensitive data**:
+
+```swift
+// Public: Safe for production logs
+LoggingSystem.performance.info("Processing \(count, privacy: .public) items")
+
+// Private: Redacted in production (default)
+LoggingSystem.fileIO.debug("Opening file: \(url.path)")
+
+// Sensitive: Always redacted
+LoggingSystem.security.debug("Bookmark data: \(data, privacy: .sensitive)")
+```
+
+### Best Practices
+
+**DO**:
+- ✅ Use appropriate log categories
+- ✅ Choose correct log levels
+- ✅ Add context to log messages
+- ✅ Use privacy annotations for sensitive data
+- ✅ Wrap debug-only logs in `#if DEBUG`
+
+**DON'T**:
+- ❌ Use `print()` statements (use Logger instead)
+- ❌ Log in tight loops (performance impact)
+- ❌ Log sensitive user data without privacy control
+- ❌ Over-log (keep it meaningful)
+
+### Viewing Logs in Console.app
+
+**Open Console.app**:
+1. Applications → Utilities → Console.app
+2. Select your Mac in sidebar
+3. Click "Start" to stream logs
+
+**Filter by subsystem**:
+```
+subsystem:com.mycometg3.cutter2
+```
+
+**Filter by category**:
+```
+subsystem:com.mycometg3.cutter2 AND category:export
+subsystem:com.mycometg3.cutter2 AND category:performance
+```
+
+**Filter by log level**:
+```
+subsystem:com.mycometg3.cutter2 AND level:error
+subsystem:com.mycometg3.cutter2 AND level:>=notice
+```
+
+**Command line monitoring**:
+```bash
+# Stream logs
+log stream --predicate 'subsystem == "com.mycometg3.cutter2"'
+
+# Export recent logs
+log show --predicate 'subsystem == "com.mycometg3.cutter2"' --last 1h > cutter2.log
+```
+
+### Examples
+
+**Document operation**:
+```swift
+func saveDocument(to url: URL) async throws {
+    LoggingSystem.document.info("Saving document to: \(url.lastPathComponent)")
+    
+    do {
+        try await performSave(to: url)
+        LoggingSystem.document.info("Document saved successfully")
+    } catch {
+        LoggingSystem.fileIO.error("Save failed: \(error.localizedDescription)")
+        throw error
+    }
+}
+```
+
+**Performance measurement**:
+```swift
+let startTime = CFAbsoluteTimeGetCurrent()
+// ... operation ...
+let duration = CFAbsoluteTimeGetCurrent() - startTime
+LoggingSystem.performance.notice("Export completed in \(String(format: "%.2f", duration))s")
+```
+
+**Debug tracing**:
+```swift
+#if DEBUG
+LoggingSystem.video.debug("Frame timing: \(time.seconds)s, valid: \(CMTIME_IS_VALID(time))")
+#endif
+```
+
+For more details, see [PHASE_2.3_LOGGING_PLAN.md](PHASE_2.3_LOGGING_PLAN.md).
+
+---
+
+## Common Tasks
 
 1. **Create bug fix branch**
    ```bash

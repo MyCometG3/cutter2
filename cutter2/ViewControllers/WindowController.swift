@@ -64,15 +64,18 @@ class WindowController: NSWindowController, NSWindowDelegate {
     }
     
     @IBAction public func dumpResponderChain(_ sender: Any) {
+        #if DEBUG
         guard let window = self.window else { return }
         var responder = window.firstResponder
+        LoggingSystem.ui.debug("=== Responder Chain ===")
         while let r = responder {
-            print(r)
+            LoggingSystem.ui.debug("  \(String(describing: r))")
             responder = r.nextResponder
         }
         let vc = self.contentViewController as? ViewController
-        print(">vc.delegate:", vc?.delegate ?? "n/a")
-        print(">window.nextResponder:", window.nextResponder ?? "n/a")
-        print(">windowController.nextResponder:", self.nextResponder ?? "n/a")
+        LoggingSystem.ui.debug("vc.delegate: \(String(describing: vc?.delegate))")
+        LoggingSystem.ui.debug("window.nextResponder: \(String(describing: window.nextResponder))")
+        LoggingSystem.ui.debug("windowController.nextResponder: \(String(describing: self.nextResponder))")
+        #endif
     }
 }

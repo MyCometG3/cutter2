@@ -20,7 +20,6 @@ extension Document {
     /* ============================================ */
     
     public func displayRatio(_ baseSize: CGSize?) -> CGFloat {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return 1.0 }
         
@@ -36,7 +35,6 @@ extension Document {
     }
     
     @IBAction func resizeWindow(_ sender: Any?) {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { return }
         
@@ -132,7 +130,6 @@ extension Document {
     /* ============================================ */
     
     @IBAction func modifyClapPasp(_ sender: Any?) {
-        // Swift.print(#function, #line, #file)
         
         guard let mutator = self.movieMutator else { NSSound.beep(); return }
         guard let dict: [AnyHashable:Any] = mutator.clappaspDictionary() else { NSSound.beep(); return }
@@ -150,7 +147,6 @@ extension Document {
         
         // Show CAPAR Sheet
         caparVC.beginSheetModal(for: self.window!) {[caparVC, mutator, weak self] (response) in // @escaping
-            // Swift.print(#function, #line, #file)
             
             guard let self else { preconditionFailure("Unexpected nil self detected.") }
             guard response == .continue else { return }

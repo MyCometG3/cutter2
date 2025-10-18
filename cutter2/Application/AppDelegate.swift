@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import os.log
 
 @main @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -16,8 +17,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /* ============================================ */
     
     private let bookmarksKey: String = "bookmarks"
-    
-    private var useLog: Bool = true
     
     /* ============================================ */
     // MARK: - NSApplicationDelegate protocol
@@ -44,7 +43,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     ///
     /// - Parameter sender: Any
     @IBAction func nextDocument(_ sender: Any) {
-        // Swift.print(#function, #line, #file)
         
         let docList: [Document] = NSApp.orderedDocuments.compactMap { $0 as? Document }
         if docList.count > 0 {
@@ -60,14 +58,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     /// Remove all bookmarks on startup
     public func clearBookmarks(_ force: Bool) {
-        // Swift.print(#function, #line, #file)
-        
         let needClear: Bool = force ? true : NSEvent.modifierFlags.contains(.option)
         if needClear {
             let defaults = UserDefaults.standard
             defaults.set(nil, forKey: bookmarksKey)
             
-            log("NOTE: All bookmarks are removed.")
+            LoggingSystem.security.notice("All bookmarks removed")
         }
     }
     
@@ -75,8 +71,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     ///
     /// - Parameter newURL: url to register as bookmark
     public func addBookmark(for newURL: URL) {
-        // Swift.print(#function, #line, #file)
-        
         // Check duplicate
         var found: Bool = false
         validateBookmarks(false, using: {(url) in
@@ -90,7 +84,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Register new bookmark
         if let data = createBookmark(for: newURL) {
-            log("NOTE: Register bookmark -", newURL.path)
+            LoggingSystem.security.info("Registered bookmark: \(newURL.lastPathComponent)")
             
             let defaults = UserDefaults.standard
             var bookmarks: [Data] = []
@@ -100,13 +94,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             bookmarks.append(data)
             defaults.set(bookmarks, forKey: bookmarksKey)
         } else {
-            log("NOTE: Invalid url -", newURL.path)
+            LoggingSystem.security.error("Failed to create bookmark for: \(newURL.lastPathComponent)")
         }
     }
     
     /// Start access bookmarks in sandbox
     private func startBookmarkAccess() {
-        // Swift.print(#function, #line, #file)
         
         validateBookmarks(true, using: {(url) in
             _ = url.startAccessingSecurityScopedResource()
@@ -115,7 +108,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     /// Stop access bookmarks in sandbox
     private func stopBookmarkAccess() {
-        // Swift.print(#function, #line, #file)
         
         validateBookmarks(true, using: {(url) in
             url.stopAccessingSecurityScopedResource()
@@ -126,10 +118,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     ///
     /// - Parameter block: block to process bookmark url
     private func validateBookmarks(_ verbose: Bool, using block: ((URL) -> Void)) {
-        // Swift.print(#function, #line, #file)
-        
-        let useLogOriginal: Bool = useLog
-        useLog = verbose
         var validItems: [Data] = []
         let defaults = UserDefaults.standard
         if let bookmarks = defaults.array(forKey: bookmarksKey) as? [Data] {
@@ -141,7 +129,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                  Different from legacy QuickTime framework, AVMovie does not use bookmark/alias for
                  sample reference. It depends on filepath string and doesn't follow file path change.
                  */
-                let (validated, url): (Data?, URL?) = refreshBookmarkIfRequired(item, acceptStale: false)
+                let (validated, url): (Data?, URL?) = refreshBookmarkIfRequired(item, acceptStale: false, verbose: verbose)
                 if let validated = validated, let url = url {
                     validItems.append(validated)
                     block(url)
@@ -149,18 +137,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         defaults.set(validItems, forKey: bookmarksKey)
-        useLog = useLogOriginal
     }
     
     /// Validate bookmark data and refresh if required.
     /// - Parameters:
     ///   - item: bookmark data to be validated
-    ///   - urlOut: resolved url from the bookmark
     ///   - acceptStale: accept stale bookmark or not
-    /// - Returns: resulted bookmark data
-    private func refreshBookmarkIfRequired(_ item: Data, acceptStale: Bool) -> (data: Data?, url: URL?) {
-        // Swift.print(#function, #line, #file)
-        
+    ///   - verbose: enable verbose logging
+    /// - Returns: resulted bookmark data and resolved URL
+    private func refreshBookmarkIfRequired(_ item: Data, acceptStale: Bool, verbose: Bool = false) -> (data: Data?, url: URL?) {
         // Validate bookmark item
         do {
             var stale: Bool = false
@@ -169,26 +154,36 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                                    relativeTo: nil,
                                    bookmarkDataIsStale: &stale)
             if !stale {
-                log("NOTE: Valid bookmark -", url.path)
+                if verbose {
+                    LoggingSystem.security.info("Valid bookmark: \(url.lastPathComponent)")
+                }
                 return (item, url) // Valid bookmark - No change
             } else {
                 // Try renewing bookmark item
                 if let newItem = createBookmark(for: url) {
-                    log("NOTE: Valid bookmark -", url.path, "(renewed)")
+                    if verbose {
+                        LoggingSystem.security.info("Valid bookmark (renewed): \(url.lastPathComponent)")
+                    }
                     return (newItem, url) // Renewed bookmark
                 }
             }
             
             // Failed to create new bookmark for the url
             if acceptStale {
-                log("NOTE: Valid bookmark -", url.path, "(stale)")
+                if verbose {
+                    LoggingSystem.security.notice("Valid bookmark (stale): \(url.lastPathComponent)")
+                }
                 return (item, url) // Staled bookmark - No change
             } else {
-                log("NOTE: Invalidate bookmark -", url.path, "(stale)")
+                if verbose {
+                    LoggingSystem.security.notice("Invalidate bookmark (stale): \(url.lastPathComponent)")
+                }
                 return (nil, url) // Staled => Invalidate
             }
         } catch {
-            log("NOTE: Invalid bookmark -", error.localizedDescription)
+            if verbose {
+                LoggingSystem.security.error("Invalid bookmark: \(error.localizedDescription)")
+            }
             return (nil, nil) // Invalid bookmark - nil returned
         }
     }
@@ -197,22 +192,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// - Parameter url: source url
     /// - Returns: resulted bookmark data
     private func createBookmark(for url: URL) -> Data? {
-        // Swift.print(#function, #line, #file)
-        
         let data: Data? = try? url.bookmarkData(options: .withSecurityScope,
                                                 includingResourceValuesForKeys: nil,
                                                 relativeTo: nil)
         return data
-    }
-    
-    /// Debug logging bookmark validation activity when useLog == true.
-    /// - Parameter items: bookmark validation strings to be logged
-    private func log(_ items: Any...) {
-        // Swift.print(#function, #line, #file)
-        
-        if useLog {
-            let output = items.map { String(describing: $0) }.joined(separator: " ")
-            Swift.print(output)
-        }
     }
 }

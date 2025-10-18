@@ -374,7 +374,7 @@ extension ViewController {
     /* ============================================ */
     
     private func keyDump(with event: NSEvent) {
-        
+        #if DEBUG
         let code: UInt = UInt(event.keyCode)
         let char = event.charactersIgnoringModifiers
         let option: Bool = event.modifierFlags.contains(.option)
@@ -390,6 +390,7 @@ extension ViewController {
                                     control ? "ctr" : "---",
                                     command ? "cmd" : "---",
                                     mod)
-        Swift.print("#####", "keyDown =", string)
+        LoggingSystem.input.debug("keyDown: \(string)")
+        #endif
     }
 }

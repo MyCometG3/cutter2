@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import os.log
 
 /* ============================================ */
 // MARK: - Performance Measurement Utility
@@ -111,7 +112,7 @@ class PerformanceMetrics {
         if loggingEnabled {
             let formatted = String(format: "%.3f", duration)
             if verboseLogging {
-                print("📊 Performance [\(name)]: \(formatted)s")
+                LoggingSystem.performance.info("[\(name)] completed in \(formatted)s")
             }
         }
     }
@@ -205,7 +206,7 @@ class PerformanceMetrics {
     func reset() {
         measurements.removeAll()
         if loggingEnabled {
-            print("📊 Performance metrics reset")
+            LoggingSystem.performance.info("Performance metrics reset")
         }
     }
     
@@ -215,7 +216,7 @@ class PerformanceMetrics {
     func reset(for name: String) {
         measurements.removeValue(forKey: name)
         if loggingEnabled {
-            print("📊 Performance metrics reset for: \(name)")
+            LoggingSystem.performance.info("Performance metrics reset for: \(name)")
         }
     }
     
@@ -243,7 +244,7 @@ class PerformanceMetrics {
         try reportText.write(to: url, atomically: true, encoding: .utf8)
         
         if loggingEnabled {
-            print("📊 Performance report written to: \(url.path)")
+            LoggingSystem.performance.notice("Performance report written to: \(url.lastPathComponent)")
         }
     }
 }
@@ -277,21 +278,21 @@ extension PerformanceMetrics {
     
     /// Print a summary of all measurements to console
     func printReport() {
-        print(report())
+        LoggingSystem.performance.info("Performance Report:\n\(self.report())")
     }
     
     /// Print statistics for a specific operation
     ///
     /// - Parameter name: The operation name
     func printStatistics(for name: String) {
-        if let stats = statistics(for: name) {
-            print("📊 Statistics for \(name):")
-            print("  Average: \(String(format: "%.3f", stats["average"]!))s")
-            print("  Min: \(String(format: "%.3f", stats["min"]!))s")
-            print("  Max: \(String(format: "%.3f", stats["max"]!))s")
-            print("  Samples: \(Int(stats["count"]!))")
+        if let stats = self.statistics(for: name) {
+            let avg = String(format: "%.3f", stats["average"]!)
+            let min = String(format: "%.3f", stats["min"]!)
+            let max = String(format: "%.3f", stats["max"]!)
+            let count = Int(stats["count"]!)
+            LoggingSystem.performance.info("Statistics for \(name): avg=\(avg)s, min=\(min)s, max=\(max)s, samples=\(count)")
         } else {
-            print("📊 No statistics available for: \(name)")
+            LoggingSystem.performance.notice("No statistics available for: \(name)")
         }
     }
 }

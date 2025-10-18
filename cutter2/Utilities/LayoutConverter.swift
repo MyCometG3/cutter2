@@ -8,6 +8,7 @@
 
 import Cocoa
 import AVFoundation
+import os.log
 
 public typealias AudioChannelLayoutData = Data
 
@@ -97,12 +98,16 @@ class LayoutConverter {
                 acDescPtr[index] = array[index]
             }
             
-            // Debug print
-            acDescPtr.forEach { (desc) in print(desc) }
+            #if DEBUG
+            // Debug: Log channel descriptions
+            LoggingSystem.video.debug("AudioChannelLayout - Input count: \(acDescCount, privacy: .public)")
+            acDescPtr.forEach { desc in
+                LoggingSystem.video.debug("  Channel: label=\(desc.mChannelLabel, privacy: .public), flags=\(desc.mChannelFlags.rawValue, privacy: .public)")
+            }
             let srcPos: [AudioChannelLabel] = array.map { $0.mChannelLabel }
             let dstPos: [AudioChannelLabel] = (0..<acDescCount).map { acDescPtr[$0].mChannelLabel }
-            print("       AudioChannelCount: Input:\(acDescCount)")
-            print("Array<AudioChannelLabel>: Input:\(srcPos), Output:\(dstPos)")
+            LoggingSystem.video.debug("AudioChannelLabel mapping - Input: \(srcPos), Output: \(dstPos)")
+            #endif
         }
         return aclData
     }
@@ -264,11 +269,14 @@ class LayoutConverter {
             // Make Set<AudioChannelLabel>
             pos = Set(dstPos)
             
-            // Debug print
-            acDescPtr.forEach { (desc) in print(desc) }
-            print("       AudioChannelCount: Input:\(acDescCount), Output:\(dstPos.count)")
-            print("Array<AudioChannelLabel>: Input:\(srcPos), Output:\(dstPos)")
-            print("  Set<AudioChannelLabel>: Output:\(pos)")
+            #if DEBUG
+            // Debug: Log channel validation
+            LoggingSystem.video.debug("Channel validation - Input count: \(acDescCount, privacy: .public), Output count: \(dstPos.count, privacy: .public)")
+            acDescPtr.forEach { desc in
+                LoggingSystem.video.debug("  Channel: label=\(desc.mChannelLabel, privacy: .public), flags=\(desc.mChannelFlags.rawValue, privacy: .public)")
+            }
+            LoggingSystem.video.debug("AudioChannelLabel validation - Input: \(srcPos), Output: \(dstPos), Set: \(pos)")
+            #endif
         default:
             // translate Channel Layout Tag to AudioChannelLabel Set
             switch layout.mChannelLayoutTag {

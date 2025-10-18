@@ -16,7 +16,6 @@ class DocumentController: NSDocumentController {
     /* ============================================ */
     
     override func beginOpenPanel(_ openPanel: NSOpenPanel, forTypes inTypes: [String]?, completionHandler: @escaping (Int) -> Void) {
-        // Swift.print(#function, #line, #file)
         
         // Add extensionHidden button on OpenPanel
         openPanel.canSelectHiddenExtension = true
@@ -27,7 +26,6 @@ class DocumentController: NSDocumentController {
     }
     
     private func makeDocumentAsync(withContentsOf url: URL, ofType typeName: String) async throws -> NSDocument {
-        // Swift.print(#function, #line, #file)
         
         // Create a new document
         let document = Document()
@@ -47,7 +45,6 @@ class DocumentController: NSDocumentController {
     }
     
     override func openDocument(withContentsOf url: URL, display displayDocument: Bool) async throws -> (NSDocument, Bool) {
-        // Swift.print(#function, #line, #file)
         
         // Check if the document is already open
         if let existingDocument = document(for: url) {
@@ -73,7 +70,6 @@ class DocumentController: NSDocumentController {
     }
     
     private func makeDocumentAsync(for urlOrNil: URL?, withContentsOf contentsURL: URL, ofType typeName: String) async throws -> NSDocument {
-        // Swift.print(#function, #line, #file)
         
         // Create a new document
         let document = Document()
@@ -93,7 +89,6 @@ class DocumentController: NSDocumentController {
     }
     
     override func reopenDocument(for urlOrNil: URL?, withContentsOf contentsURL: URL, display displayDocument: Bool) async throws -> (NSDocument, Bool) {
-        // Swift.print(#function, #line, #file)
         
         // Check if the document is already open
         if let url = urlOrNil, let existingDocument = document(for: url) {

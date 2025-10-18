@@ -430,18 +430,18 @@ extension MovieWriter {
             }
         }
         guard compatible else {
-            Swift.print("ERROR: Incompatible presetName detected with AVAsset.")
+            LoggingSystem.export.error("Incompatible preset '\(preset)' detected with AVAsset")
             return false
         }
         
         guard let exportSession: AVAssetExportSession = AVAssetExportSession(asset: movie, presetName: preset) else {
-            Swift.print("ERROR: Failed to create AVAssetExportSession.")
+            LoggingSystem.export.error("Failed to create AVAssetExportSession with preset '\(preset)'")
             return false
         }
         
         let compatibleFileTypes: [AVFileType] = exportSession.supportedFileTypes
         guard compatibleFileTypes.contains(type) else {
-            Swift.print("ERROR: Incompatible AVFileType detected.")
+            LoggingSystem.export.error("Incompatible AVFileType '\(type.rawValue)' for current export session")
             return false
         }
         

@@ -352,10 +352,8 @@ extension Document {
     public func resumeAfterSeek(to time: CMTime, with rate: Float) {
         
         guard let mutator = self.movieMutator else { return }
-        #if false
-        Swift.print("#####", "resumeAfterSeek",
-                    mutator.shortTimeString(time, withDecimals: true),
-                    mutator.rawTimeString(time))
+        #if DEBUG
+        LoggingSystem.video.debug("resumeAfterSeek: time=\(mutator.shortTimeString(time, withDecimals: true)) raw=\(mutator.rawTimeString(time))")
         #endif
         
         guard let player = self.player else { return }
@@ -553,7 +551,6 @@ extension Document {
         }
         
         if objectIsPlayer && keyPathIsAVPlayerStatus {
-            // Swift.print("#####", "#keyPath(AVPlayer.status)")
             
             // Force redraw when AVPlayer.status is updated
             let newStatus = change[.newKey] as! NSNumber
@@ -571,7 +568,6 @@ extension Document {
             }
             return
         } else if objectIsPlayer && keyPathIsAVPlayerRate {
-            // Swift.print("#####", "#keyPath(AVPlayer.rate)")
             
             // Check special case: movie play reached at end of movie
             let oldRate = change[.oldKey] as! NSNumber
@@ -623,9 +619,8 @@ extension Document {
                 mutator == object
             else { return }
             
-            #if false
-            Swift.print("#####", "========================",
-                        "Received: .movieWasMutated :", self.displayName!)
+            #if DEBUG
+            LoggingSystem.document.debug("Received .movieWasMutated notification: \(self.displayName ?? "unknown")")
             #endif
             
             // extract CMTime/CMTimeRange from userInfo
@@ -731,17 +726,18 @@ extension Document {
     }
     
     private func debugTrackRange(_ range: CMTimeRange, _ current: CMTime, _ endOfRange: Bool) {
+        #if DEBUG
         guard let mutator = self.movieMutator else { return }
-        Swift.print("#  range:",
-                    String(format: "%4.3f", range.start.seconds),
-                    String(format: "%4.3f", range.end.seconds))
-        Swift.print("#cur/ins:",
-                    String(format: "%4.3f", current.seconds),
-                    String(format: "%4.3f", mutator.insertionTime.seconds),
-                    current == mutator.insertionTime ? "" : "diff")
-        Swift.print("#containsTime():",
-                    (range.start <= current && current <= range.end),
-                    endOfRange ? ": End of Movie detected" : "")
+        let rangeStart = String(format: "%4.3f", range.start.seconds)
+        let rangeEnd = String(format: "%4.3f", range.end.seconds)
+        let currentStr = String(format: "%4.3f", current.seconds)
+        let insertionStr = String(format: "%4.3f", mutator.insertionTime.seconds)
+        let timeDiff = current == mutator.insertionTime ? "" : " (diff)"
+        let contains = (range.start <= current && current <= range.end)
+        let endNote = endOfRange ? " - End of Movie" : ""
+        
+        LoggingSystem.video.debug("Track range: [\(rangeStart), \(rangeEnd)], current: \(currentStr), insertion: \(insertionStr)\(timeDiff), containsTime: \(contains)\(endNote)")
+        #endif
     }
     
     /// Check if it is tail of movie

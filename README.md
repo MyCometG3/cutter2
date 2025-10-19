@@ -37,7 +37,7 @@ For detailed information about architecture, development, testing, and project h
 #### Development environment
 - macOS 26.0.1
 - Xcode 26.0.1
-- Swift 6.0
+- Swift 6.2.0
 
 #### License
 - The MIT License

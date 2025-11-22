@@ -620,7 +620,8 @@ extension Document {
             else { return }
             
             #if DEBUG
-            LoggingSystem.document.debug("Received .movieWasMutated notification: \(self.displayName ?? "unknown")")
+            let displayName = performSyncOnMainActor({ self.displayName ?? "unknown" })
+            LoggingSystem.document.debug("Received .movieWasMutated notification: \(displayName)")
             #endif
             
             // extract CMTime/CMTimeRange from userInfo

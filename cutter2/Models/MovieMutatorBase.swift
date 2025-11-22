@@ -283,11 +283,18 @@ class MovieMutatorBase: NSObject {
     /// ```
     public func progressStream() -> AsyncStream<Float> {
         AsyncStream { continuation in
-            Task { @MainActor [weak self] in
-                self?.progressContinuation = continuation
+            // Set continuation immediately (synchronously) if on MainActor
+            if Thread.isMainThread {
+                self.progressContinuation = continuation
+            } else {
+                // If not on main thread, dispatch synchronously to main
+                DispatchQueue.main.sync {
+                    self.progressContinuation = continuation
+                }
             }
-            continuation.onTermination = { @Sendable _ in
-                Task { @MainActor [weak self] in
+            
+            continuation.onTermination = { @Sendable [weak self] _ in
+                Task { @MainActor in
                     self?.progressContinuation = nil
                 }
             }

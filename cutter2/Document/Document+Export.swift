@@ -80,10 +80,10 @@ extension Document {
         let stream = mutator.progressStream()
         let progressTask = Task { @MainActor [weak self, weak progress] in
             for await progressValue in stream {
-                guard let self else { break }
+                guard let self, let progress else { break }
                 updateProgress(progressValue)
                 // Update NSProgress (thread-safe with weak capture)
-                progress?.completedUnitCount = Int64(progressValue * 100)
+                progress.completedUnitCount = Int64(progressValue * 100)
             }
         }
         defer {
@@ -133,10 +133,10 @@ extension Document {
         let stream = mutator.progressStream()
         let progressTask = Task { @MainActor [weak self, weak progress] in
             for await progressValue in stream {
-                guard let self else { break }
+                guard let self, let progress else { break }
                 updateProgress(progressValue)
                 // Update NSProgress (thread-safe with weak capture)
-                progress?.completedUnitCount = Int64(progressValue * 100)
+                progress.completedUnitCount = Int64(progressValue * 100)
             }
         }
         defer {

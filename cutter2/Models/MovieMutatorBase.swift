@@ -273,13 +273,37 @@ class MovieMutatorBase: NSObject {
     ///
     /// - Returns: An AsyncStream that yields Float progress values
     ///
+    /// ## Important: Timing Requirement
+    /// The stream **MUST** be created **BEFORE** starting the export/write operation.
+    /// This ensures the progress continuation is set synchronously before the operation
+    /// begins yielding progress values.
+    ///
     /// ## Usage Example
     /// ```swift
-    /// Task { @MainActor in
-    ///     for await progress in mutator.progressStream() {
+    /// // Create stream BEFORE starting the operation
+    /// let stream = mutator.progressStream()
+    ///
+    /// // Then start consuming progress updates
+    /// let progressTask = Task { @MainActor in
+    ///     for await progress in stream {
     ///         updateProgressUI(progress)
     ///     }
     /// }
+    /// defer { progressTask.cancel() }
+    ///
+    /// // Now start the operation (continuation is already set)
+    /// try await mutator.exportMovie(to: url, fileType: .mov, presetName: nil)
+    /// ```
+    ///
+    /// ## Incorrect Usage (will lose progress updates)
+    /// ```swift
+    /// // ❌ DON'T: Creating stream inside Task delays initialization
+    /// let task = Task {
+    ///     for await progress in mutator.progressStream() {  // Too late!
+    ///         updateProgressUI(progress)
+    ///     }
+    /// }
+    /// try await mutator.exportMovie(...)  // Starts before continuation is set
     /// ```
     public func progressStream() -> AsyncStream<Float> {
         AsyncStream { [weak self] continuation in

@@ -88,19 +88,6 @@ extension Document {
             progressTask.cancel()
         }
         
-        // Legacy callback support (for backward compatibility during transition)
-        mutator.updateProgress = { @Sendable [weak self, weak progress] (progressValue) in
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
-            performSyncOnMainActor {
-                updateProgress(progressValue)
-                // Update NSProgress (thread-safe with weak capture)
-                progress?.completedUnitCount = Int64(progressValue * 100)
-            }
-        }
-        defer {
-            mutator.updateProgress = nil
-        }
-        
         
         let fileType: AVFileType = AVFileType.init(rawValue: typeName)
         do {
@@ -150,19 +137,6 @@ extension Document {
         }
         defer {
             progressTask.cancel()
-        }
-        
-        // Legacy callback support (for backward compatibility during transition)
-        mutator.updateProgress = { @Sendable [weak self, weak progress] (progressValue) in
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
-            performSyncOnMainActor {
-                updateProgress(progressValue)
-                // Update NSProgress (thread-safe with weak capture)
-                progress?.completedUnitCount = Int64(progressValue * 100)
-            }
-        }
-        defer {
-            mutator.updateProgress = nil
         }
         
         

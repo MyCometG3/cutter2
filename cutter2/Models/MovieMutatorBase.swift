@@ -191,7 +191,6 @@ class MovieMutatorBase: NSObject {
     public var timestampFormatter: DateFormatter
     
     public var unblockUserInteraction: (@Sendable () -> Void)? = nil
-    public var updateProgress: (@Sendable (Float) -> Void)? = nil
     
     /// Progress stream continuation for async progress reporting
     internal var progressContinuation: AsyncStream<Float>.Continuation?
@@ -293,28 +292,6 @@ class MovieMutatorBase: NSObject {
                 }
             }
         }
-    }
-    
-    /// Sends progress update to the stream if active
-    ///
-    /// This method is called internally during export/write operations.
-    /// It supports both the legacy callback (`updateProgress`) and the new stream.
-    ///
-    /// - Parameter progress: Progress value between 0.0 and 1.0
-    internal func sendProgressUpdate(_ progress: Float) {
-        // Legacy callback support (for backward compatibility)
-        updateProgress?(progress)
-        
-        // New async stream support
-        progressContinuation?.yield(progress)
-    }
-    
-    /// Completes the progress stream
-    ///
-    /// Call this when the operation finishes (successfully or with error)
-    internal func finishProgressStream() {
-        progressContinuation?.finish()
-        progressContinuation = nil
     }
     
     /* ============================================ */

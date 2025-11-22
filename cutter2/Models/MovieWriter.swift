@@ -111,7 +111,6 @@ extension Notification.Name {
 struct MovieWriterParams: @unchecked Sendable {
     let movie: AVMutableMovie
     let unblockUserInteraction: (@Sendable () -> Void)?
-    let updateProgress: (@Sendable (Float) -> Void)?
     let progressContinuation: AsyncStream<Float>.Continuation?
 }
 
@@ -124,7 +123,6 @@ actor MovieWriter: SampleBufferChannelDelegate {
     public init(params: MovieWriterParams) {
         self.internalMovie = params.movie
         self.unblockUserInteraction = params.unblockUserInteraction
-        self.updateProgress = params.updateProgress
         self.progressContinuation = params.progressContinuation
     }
     
@@ -136,9 +134,6 @@ actor MovieWriter: SampleBufferChannelDelegate {
     
     /// callback for NSDocument.unblockUserInteraction()
     private var unblockUserInteraction: (@Sendable () -> Void)? = nil
-    
-    /// Progress update block
-    private var updateProgress: (@Sendable (Float) -> Void)? = nil
     
     /// Progress stream continuation
     private var progressContinuation: AsyncStream<Float>.Continuation?
@@ -229,7 +224,7 @@ extension MovieWriter {
             var stagnantCount = 0
             
             while let progress = await self.currentProgressIfExporting() {
-                await self.updateProgress?(progress)
+                await self.progressContinuation?.yield(progress)
                 
                 // Adaptive polling: slow down if no progress change
                 let interval: TimeInterval
@@ -1130,12 +1125,7 @@ extension MovieWriter {
         let buffer = params.buffer
         let progress: Float = Float(calcProgress(of: buffer))
         
-        // Legacy callback support
-        if let updateProgress = updateProgress {
-            updateProgress(progress)
-        }
-        
-        // New async stream support
+        // Send progress to AsyncStream
         progressContinuation?.yield(progress)
         
         //if let imageBuffer: CVImageBuffer = CMSampleBufferGetImageBuffer(buffer) {

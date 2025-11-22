@@ -111,7 +111,7 @@ extension Notification.Name {
 struct MovieWriterParams: @unchecked Sendable {
     let movie: AVMutableMovie
     let unblockUserInteraction: (@Sendable () -> Void)?
-    let updateProgress: (@Sendable (Float) -> Void)?
+    let progressContinuation: AsyncStream<Float>.Continuation?
 }
 
 /* ============================================ */
@@ -123,7 +123,7 @@ actor MovieWriter: SampleBufferChannelDelegate {
     public init(params: MovieWriterParams) {
         self.internalMovie = params.movie
         self.unblockUserInteraction = params.unblockUserInteraction
-        self.updateProgress = params.updateProgress
+        self.progressContinuation = params.progressContinuation
     }
     
     /* ============================================ */
@@ -135,8 +135,8 @@ actor MovieWriter: SampleBufferChannelDelegate {
     /// callback for NSDocument.unblockUserInteraction()
     private var unblockUserInteraction: (@Sendable () -> Void)? = nil
     
-    /// Progress update block
-    private var updateProgress: (@Sendable (Float) -> Void)? = nil
+    /// Progress stream continuation
+    private var progressContinuation: AsyncStream<Float>.Continuation?
     
     /// Flag if writer is running
     public private(set) var writeInProgress: Bool = false
@@ -224,7 +224,7 @@ extension MovieWriter {
             var stagnantCount = 0
             
             while let progress = await self.currentProgressIfExporting() {
-                await self.updateProgress?(progress)
+                await self.progressContinuation?.yield(progress)
                 
                 // Adaptive polling: slow down if no progress change
                 let interval: TimeInterval
@@ -1123,10 +1123,10 @@ extension MovieWriter {
     
     private func didReadCore(_ params: didReadParams) {
         let buffer = params.buffer
-        if let updateProgress = updateProgress {
-            let progress: Float = Float(calcProgress(of: buffer))
-            updateProgress(progress)
-        }
+        let progress: Float = Float(calcProgress(of: buffer))
+        
+        // Send progress to AsyncStream
+        progressContinuation?.yield(progress)
         
         //if let imageBuffer: CVImageBuffer = CMSampleBufferGetImageBuffer(buffer) {
         //    if let pixelBuffer: CVPixelBuffer = imageBuffer as? CVPixelBuffer {

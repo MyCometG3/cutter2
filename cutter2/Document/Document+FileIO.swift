@@ -296,16 +296,28 @@ extension Document {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-        mutator.updateProgress = { @Sendable [weak self, weak progress] (progressValue) in
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
-            performSyncOnMainActor {
+        
+        // Create progress stream and start monitoring BEFORE write/export begins
+        // This ensures progressContinuation is set before MovieWriter tries to use it
+        let stream = mutator.progressStream()
+        let progressTask = Task { @MainActor [weak self, weak progress] in
+            for await progressValue in stream {
+                // Separate guards for better debuggability
+                guard let self else {
+                    LoggingSystem.document.warning("Progress monitoring stopped: Document was deallocated during write")
+                    break
+                }
+                guard let progress else {
+                    LoggingSystem.document.warning("Progress monitoring stopped: NSProgress was deallocated during write")
+                    break
+                }
                 updateProgress(progressValue)
                 // Update NSProgress (thread-safe with weak capture)
-                progress?.completedUnitCount = Int64(progressValue * 100)
+                progress.completedUnitCount = Int64(progressValue * 100)
             }
         }
         defer {
-            mutator.updateProgress = nil
+            progressTask.cancel()
         }
         
         

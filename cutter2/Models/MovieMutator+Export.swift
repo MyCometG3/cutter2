@@ -17,7 +17,7 @@ extension MovieMutator {
     internal func prepareMovieWriterParams() -> MovieWriterParams {
         return MovieWriterParams(movie: self.internalMovie,
                                  unblockUserInteraction: self.unblockUserInteraction,
-                                 updateProgress: self.updateProgress)
+                                 progressContinuation: self.progressContinuation)
     }
     
     public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws {

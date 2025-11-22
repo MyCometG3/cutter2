@@ -1,39 +1,44 @@
 # cutter2 Codebase Review
 
 **Original Review Date**: October 13, 2025  
-**Last Updated**: October 18, 2025  
-**Target Version**: 0.8.13 (Phase 2.3 Week 1 Complete)  
-**Total Lines of Code**: Approximately 10,500+ lines (Swift)
+**Last Updated**: November 22, 2025  
+**Target Version**: 0.8.13+ (AsyncStream Migration Complete)  
+**Total Lines of Code**: Approximately 10,600+ lines (Swift)
 
 ---
 
 ## Executive Summary
 
-cutter2 is a high-quality macOS video editor application based on AVFoundation. It leverages the latest Swift 6 features including async/await, Actor isolation, and strict Sendable checking, resulting in a modern and highly maintainable codebase.
+cutter2 is a high-quality macOS video editor application based on AVFoundation. It leverages the latest Swift 6 features including async/await, Actor isolation, strict Sendable checking, and AsyncStream for progress reporting, resulting in a modern and highly maintainable codebase.
 
 ### Key Strengths
 
-- **Latest Swift 6 Compliance**: Comprehensive adoption of async/await and Actor isolation
+- **Latest Swift 6 Compliance**: Comprehensive adoption of async/await, Actor isolation, and AsyncStream
+- **Modern Concurrency**: AsyncStream-based progress reporting with proper timing control
+- **Strict Concurrency Checking**: NONISOLATED_NONSENDING_BY_DEFAULT enabled
 - **Robust Architecture**: Clear MVC + Document-based design
 - **Proper Memory Management**: Appropriate use of weak references and cleanup in deinit
 - **Comprehensive Error Handling**: Custom error types and unified error processing
-- **High-Quality Documentation**: 615 lines of detailed comments
+- **High-Quality Documentation**: 650+ lines of detailed comments with timing requirements
 - **✅ Full Internationalization**: English/Japanese support with String Catalogs (229 keys) - Phase 2.1 Complete
 - **✅ Comprehensive Testing**: 77+ tests (98.7% passing) including localization, performance, and logging tests
 - **✅ Performance Infrastructure**: PerformanceMetrics and adaptive progress polling - Phase 2.2 Complete
 - **✅ Memory Efficiency**: Validated 48-87% better than industry standards
 - **✅ Structured Logging**: LoggingSystem with os.Logger (9 categories, 320+ statements migrated) - Phase 2.3 Complete
 
-### Recent Improvements (Phase 2.1, 2.2 & 2.3)
+### Recent Improvements (Phases 2.1, 2.2, 2.3 & AsyncStream)
 
 - **✅ Phase 2.1 Complete (Oct 15, 2025)**: Full internationalization with 229 localized strings
 - **✅ Phase 2.2 Complete (Oct 17, 2025)**: Performance testing, export optimization, and memory profiling
 - **✅ Phase 2.3 Complete (Oct 18, 2025)**: LoggingSystem infrastructure and complete print() migration
+- **✅ NNBD Feature (Nov 22, 2025)**: Swift 6 strict concurrency checking enabled
+- **✅ AsyncStream Migration (Nov 22, 2025)**: Modern progress reporting with complete legacy callback removal
 - **Test Coverage**: 77+ tests passing (17 logging tests + 12 performance tests + 11 localization tests added)
 - **Documentation**: 16+ comprehensive markdown documents
 - **Memory Efficiency**: 74-260 MB usage (48-87% better than industry standards)
-- **Export Progress**: 10x faster updates with adaptive polling
-- **Structured Logging**: 320+ print() statements migrated to os.Logger with 9 categories, useLog flag removed
+- **Export Progress**: 10x faster updates with adaptive polling + AsyncStream
+- **Structured Logging**: 320+ print() statements migrated to os.Logger with 9 categories, diagnostic logging added
+- **Code Quality**: 75 lines of legacy code removed, MainActor isolation properly enforced
 
 ### Areas for Continued Improvement
 

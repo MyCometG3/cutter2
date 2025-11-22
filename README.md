@@ -35,9 +35,9 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 For detailed information about architecture, development, testing, and project history, see the [docs](docs/) directory.
 
 #### Development environment
-- macOS 26.0.1
-- Xcode 26.0.1
-- Swift 6.2.0
+- macOS 26.1
+- Xcode 26.1.1
+- Swift 6.2.1
 
 #### License
 - The MIT License

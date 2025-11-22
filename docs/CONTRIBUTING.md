@@ -55,7 +55,8 @@ We are committed to providing a welcoming and inspiring community for all. Pleas
 Before contributing, ensure you have:
 
 1. **macOS** 11.0 or later
-2. **Xcode** 15.0 or later (currently 26.0.1)
+2. **Xcode** 15.0 or later (currently 26.1.1)
+3. **Swift** 6.0 or later (currently 6.2.1)
 3. **Git** installed and configured
 4. **GitHub account** for submitting contributions
 
@@ -579,8 +580,9 @@ What should happen
 What actually happens
 
 ## Environment
-- macOS version: 14.0
-- Xcode version: 15.0
+- macOS version: 26.1
+- Xcode version: 26.1.1
+- Swift version: 6.2.1
 - App version: 1.0.0
 
 ## Additional Context

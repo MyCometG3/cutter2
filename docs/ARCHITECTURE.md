@@ -25,8 +25,8 @@ cutter2 is a document-based macOS video editing application built with Swift and
 
 - **Framework**: AVFoundation (native macOS)
 - **UI Framework**: Cocoa/AppKit
-- **Language**: Swift 6.0
-- **Concurrency**: Swift Concurrency (async/await, actors)
+- **Language**: Swift 6.2.1
+- **Concurrency**: Swift Concurrency (async/await, actors, AsyncStream)
 - **Architecture**: Document-based, MVC pattern with protocol-oriented design
 - **Platform**: macOS 11.0+, Universal Binary (x86_64 + arm64)
 
@@ -480,14 +480,31 @@ func performSyncOnMainActor(_ block: @Sendable @escaping () -> Void) {
 }
 ```
 
-**Progress Callbacks**:
+### Progress Reporting with AsyncStream ✨ **NEW (Nov 2025)**
+
+**Modern AsyncStream Pattern**:
 ```swift
-mutator.updateProgress = { progress in
-    performSyncOnMainActor {
+// Create stream BEFORE starting operation (critical timing requirement)
+let stream = mutator.progressStream()
+
+// Start consuming progress updates
+let progressTask = Task { @MainActor in
+    for await progress in stream {
         updateProgressIndicator(progress)
     }
 }
+defer { progressTask.cancel() }
+
+// Now start the operation (continuation already set)
+try await mutator.exportMovie(to: url, fileType: .mov, presetName: nil)
 ```
+
+**Key Implementation Details**:
+- ✅ Stream must be created **before** export/write operation begins
+- ✅ `progressContinuation` set synchronously on MainActor
+- ✅ Proper weak captures prevent memory leaks
+- ✅ Diagnostic logging for lifecycle debugging
+- ✅ Legacy callback API completely removed (75 lines cleaned up)
 
 ---
 

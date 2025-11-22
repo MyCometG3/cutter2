@@ -112,6 +112,7 @@ struct MovieWriterParams: @unchecked Sendable {
     let movie: AVMutableMovie
     let unblockUserInteraction: (@Sendable () -> Void)?
     let updateProgress: (@Sendable (Float) -> Void)?
+    let progressContinuation: AsyncStream<Float>.Continuation?
 }
 
 /* ============================================ */
@@ -124,6 +125,7 @@ actor MovieWriter: SampleBufferChannelDelegate {
         self.internalMovie = params.movie
         self.unblockUserInteraction = params.unblockUserInteraction
         self.updateProgress = params.updateProgress
+        self.progressContinuation = params.progressContinuation
     }
     
     /* ============================================ */
@@ -137,6 +139,9 @@ actor MovieWriter: SampleBufferChannelDelegate {
     
     /// Progress update block
     private var updateProgress: (@Sendable (Float) -> Void)? = nil
+    
+    /// Progress stream continuation
+    private var progressContinuation: AsyncStream<Float>.Continuation?
     
     /// Flag if writer is running
     public private(set) var writeInProgress: Bool = false
@@ -1123,10 +1128,15 @@ extension MovieWriter {
     
     private func didReadCore(_ params: didReadParams) {
         let buffer = params.buffer
+        let progress: Float = Float(calcProgress(of: buffer))
+        
+        // Legacy callback support
         if let updateProgress = updateProgress {
-            let progress: Float = Float(calcProgress(of: buffer))
             updateProgress(progress)
         }
+        
+        // New async stream support
+        progressContinuation?.yield(progress)
         
         //if let imageBuffer: CVImageBuffer = CMSampleBufferGetImageBuffer(buffer) {
         //    if let pixelBuffer: CVPixelBuffer = imageBuffer as? CVPixelBuffer {

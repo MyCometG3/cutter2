@@ -193,6 +193,9 @@ class MovieMutatorBase: NSObject {
     public var unblockUserInteraction: (@Sendable () -> Void)? = nil
     public var updateProgress: (@Sendable (Float) -> Void)? = nil
     
+    /// Progress stream continuation for async progress reporting
+    internal var progressContinuation: AsyncStream<Float>.Continuation?
+    
     /// Current MovieWriter instance (for cancellation support)
     public var currentMovieWriter: MovieWriter? = nil
     
@@ -258,6 +261,60 @@ class MovieMutatorBase: NSObject {
     @inline(__always) public func validPoint(_ point: NSPoint) -> Bool {
         if point.x.isNaN || point.y.isNaN { return false }
         return true
+    }
+    
+    /* ============================================ */
+    // MARK: - public method - async progress reporting
+    /* ============================================ */
+    
+    /// Creates an async stream for progress updates
+    ///
+    /// This stream emits progress values (0.0 to 1.0) during long-running operations
+    /// like export or write. The stream completes when the operation finishes.
+    ///
+    /// - Returns: An AsyncStream that yields Float progress values
+    ///
+    /// ## Usage Example
+    /// ```swift
+    /// Task { @MainActor in
+    ///     for await progress in mutator.progressStream() {
+    ///         updateProgressUI(progress)
+    ///     }
+    /// }
+    /// ```
+    public func progressStream() -> AsyncStream<Float> {
+        AsyncStream { continuation in
+            Task { @MainActor [weak self] in
+                self?.progressContinuation = continuation
+            }
+            continuation.onTermination = { @Sendable _ in
+                Task { @MainActor [weak self] in
+                    self?.progressContinuation = nil
+                }
+            }
+        }
+    }
+    
+    /// Sends progress update to the stream if active
+    ///
+    /// This method is called internally during export/write operations.
+    /// It supports both the legacy callback (`updateProgress`) and the new stream.
+    ///
+    /// - Parameter progress: Progress value between 0.0 and 1.0
+    internal func sendProgressUpdate(_ progress: Float) {
+        // Legacy callback support (for backward compatibility)
+        updateProgress?(progress)
+        
+        // New async stream support
+        progressContinuation?.yield(progress)
+    }
+    
+    /// Completes the progress stream
+    ///
+    /// Call this when the operation finishes (successfully or with error)
+    internal func finishProgressStream() {
+        progressContinuation?.finish()
+        progressContinuation = nil
     }
     
     /* ============================================ */

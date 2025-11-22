@@ -297,9 +297,11 @@ extension Document {
             hideBusySheet()
         }
         
-        // Start progress monitoring task using AsyncStream
+        // Create progress stream and start monitoring BEFORE write/export begins
+        // This ensures progressContinuation is set before MovieWriter tries to use it
+        let stream = mutator.progressStream()
         let progressTask = Task { @MainActor [weak self, weak progress] in
-            for await progressValue in mutator.progressStream() {
+            for await progressValue in stream {
                 guard let self else { break }
                 updateProgress(progressValue)
                 // Update NSProgress (thread-safe with weak capture)

@@ -283,8 +283,18 @@ class MovieMutatorBase: NSObject {
     /// ```
     public func progressStream() -> AsyncStream<Float> {
         AsyncStream { [weak self] continuation in
-            // AsyncStream.Continuation is thread-safe, no need for synchronization
-            self?.progressContinuation = continuation
+            // IMPORTANT: progressContinuation is a @MainActor-isolated property
+            // (via MovieMutator subclass). We must assign it synchronously on
+            // MainActor to ensure it's set BEFORE export operations begin.
+            // While AsyncStream.Continuation.yield() is thread-safe, the property
+            // assignment itself requires MainActor isolation.
+            if Thread.isMainThread {
+                self?.progressContinuation = continuation
+            } else {
+                DispatchQueue.main.sync {
+                    self?.progressContinuation = continuation
+                }
+            }
             
             continuation.onTermination = { @Sendable [weak self] _ in
                 Task { @MainActor in

@@ -302,7 +302,15 @@ extension Document {
         let stream = mutator.progressStream()
         let progressTask = Task { @MainActor [weak self, weak progress] in
             for await progressValue in stream {
-                guard let self, let progress else { break }
+                // Separate guards for better debuggability
+                guard let self else {
+                    LoggingSystem.document.warning("Progress monitoring stopped: Document was deallocated during write")
+                    break
+                }
+                guard let progress else {
+                    LoggingSystem.document.warning("Progress monitoring stopped: NSProgress was deallocated during write")
+                    break
+                }
                 updateProgress(progressValue)
                 // Update NSProgress (thread-safe with weak capture)
                 progress.completedUnitCount = Int64(progressValue * 100)

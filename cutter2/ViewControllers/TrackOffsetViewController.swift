@@ -14,6 +14,7 @@ import AVFoundation
 /* ============================================ */
 
 /// Data model for a table row representing a track
+@MainActor
 class TrackOffsetRow: NSObject {
     @objc dynamic var trackID: String
     @objc dynamic var mediaType: String

@@ -97,16 +97,6 @@ struct CMTimeParser {
 }
 
 /* ============================================ */
-// MARK: - DocumentError extension
-/* ============================================ */
-
-extension DocumentError {
-    static let invalidTimeFormat = DocumentError.internalError
-    static let trackOffsetValidationFailed = DocumentError.internalError
-    static let trackOffsetExceedsDuration = DocumentError.internalError
-}
-
-/* ============================================ */
 // MARK: - Track Offset Operations
 /* ============================================ */
 

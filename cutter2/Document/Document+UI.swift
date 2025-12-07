@@ -164,4 +164,34 @@ extension Document {
             }
         }
     }
+    
+    /* ============================================ */
+    // MARK: - Track Offset
+    /* ============================================ */
+    
+    @IBAction func showTrackOffsetPanel(_ sender: Any?) {
+        
+        guard let mutator = self.movieMutator else { NSSound.beep(); return }
+        
+        // Prepare Track Offset SheetController
+        let storyboard: NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
+        let sid: NSStoryboard.SceneIdentifier = "TrackOffsetSheet Controller"
+        let trackOffsetWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController
+        
+        // Prepare Track Offset ViewController
+        guard let contVC = trackOffsetWC.contentViewController else { 
+            preconditionFailure("Unexpected nil contentViewController detected.") 
+        }
+        guard let trackOffsetVC = contVC as? TrackOffsetViewController else { 
+            preconditionFailure("Unexpected nil TrackOffsetViewController detected.") 
+        }
+        
+        // Show Track Offset Sheet
+        trackOffsetVC.beginSheetModal(for: self.window!, document: self) { [weak self] (response) in
+            guard let self else { preconditionFailure("Unexpected nil self detected.") }
+            guard response == .continue else { return }
+            
+            // Offsets applied successfully - refresh UI is handled by notification
+        }
+    }
 }

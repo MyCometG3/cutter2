@@ -990,6 +990,240 @@
           }
         }
       }
+    },
+    "track.offset.title" : {
+      "comment" : "Track Offset sheet title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track Offset"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トラックオフセット"
+          }
+        }
+      }
+    },
+    "track.offset.column.trackID" : {
+      "comment" : "Track Offset table column header for track ID",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track ID"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トラックID"
+          }
+        }
+      }
+    },
+    "track.offset.column.mediaType" : {
+      "comment" : "Track Offset table column header for media type",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media Type"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メディアタイプ"
+          }
+        }
+      }
+    },
+    "track.offset.column.duration" : {
+      "comment" : "Track Offset table column header for duration",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duration"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "長さ"
+          }
+        }
+      }
+    },
+    "track.offset.column.current" : {
+      "comment" : "Track Offset table column header for current offset",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current Offset"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在のオフセット"
+          }
+        }
+      }
+    },
+    "track.offset.column.new" : {
+      "comment" : "Track Offset table column header for new offset",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Offset"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいオフセット"
+          }
+        }
+      }
+    },
+    "track.offset.column.reference" : {
+      "comment" : "Track Offset table column header for reference/self-contained indicator",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タイプ"
+          }
+        }
+      }
+    },
+    "track.offset.apply" : {
+      "comment" : "Track Offset apply button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "適用"
+          }
+        }
+      }
+    },
+    "track.offset.cancel" : {
+      "comment" : "Track Offset cancel button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャンセル"
+          }
+        }
+      }
+    },
+    "track.offset.reset" : {
+      "comment" : "Track Offset reset button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リセット"
+          }
+        }
+      }
+    },
+    "track.offset.applying" : {
+      "comment" : "Track Offset applying status message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Applying offsets..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフセットを適用中..."
+          }
+        }
+      }
+    },
+    "track.offset.invalid" : {
+      "comment" : "Track Offset invalid format error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid time format. Use HH:MM:SS.mmm, <number>f, or plain seconds."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無効な時間形式です。HH:MM:SS.mmm、<数値>f、または秒数を使用してください。"
+          }
+        }
+      }
+    },
+    "track.offset.exceedsDuration" : {
+      "comment" : "Track Offset exceeds duration error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offset exceeds track duration."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフセットがトラックの長さを超えています。"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

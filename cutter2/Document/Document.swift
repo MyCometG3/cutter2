@@ -25,6 +25,9 @@ enum DocumentError: Error, NSErrorConvertible {
     case overwriteSelfContainedWithReference
     case internalError
     case modifyCaparFailed
+    case invalidTimeFormat
+    case trackOffsetValidationFailed
+    case trackOffsetExceedsDuration
     
     var nsError: NSError {
         let domain = NSOSStatusErrorDomain
@@ -74,6 +77,21 @@ enum DocumentError: Error, NSErrorConvertible {
                                           comment: "Error when modifying CAPAR extensions fails")
             let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: unimpErr, userInfo: info)
+        case .invalidTimeFormat:
+            let message = NSLocalizedString("track.offset.invalid",
+                                          comment: "Track Offset invalid format error")
+            let info = [NSLocalizedDescriptionKey: message]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
+        case .trackOffsetValidationFailed:
+            let message = NSLocalizedString("error.document.internal_error",
+                                          comment: "Generic internal error message")
+            let info = [NSLocalizedDescriptionKey: message]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
+        case .trackOffsetExceedsDuration:
+            let message = NSLocalizedString("track.offset.exceedsDuration",
+                                          comment: "Track Offset exceeds duration error")
+            let info = [NSLocalizedDescriptionKey: message]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
         }
     }
 }

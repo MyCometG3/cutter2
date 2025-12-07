@@ -66,7 +66,7 @@
                                                                 <color key="gridColor" name="separatorColor" catalog="System" colorSpace="catalog"/>
                                                                 <tableColumns>
                                                                     <tableColumn identifier="trackID" editable="NO" width="80" minWidth="40" maxWidth="1000" id="Plc-SI-03h">
-                                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="track.offset.column.trackID">
+                                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Track ID">
                                                                             <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                             <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                                         </tableHeaderCell>
@@ -102,7 +102,7 @@
                                                                         </prototypeCellViews>
                                                                     </tableColumn>
                                                                     <tableColumn identifier="mediaType" editable="NO" width="100" minWidth="40" maxWidth="1000" id="S6R-PF-hh6">
-                                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="track.offset.column.mediaType">
+                                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Media Type">
                                                                             <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                             <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                                         </tableHeaderCell>
@@ -138,7 +138,7 @@
                                                                         </prototypeCellViews>
                                                                     </tableColumn>
                                                                     <tableColumn identifier="duration" editable="NO" width="100" minWidth="10" maxWidth="3.4028234663852886e+38" id="mwf-YI-mGv">
-                                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="track.offset.column.duration">
+                                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Duration">
                                                                             <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                         </tableHeaderCell>
@@ -174,7 +174,7 @@
                                                                         </prototypeCellViews>
                                                                     </tableColumn>
                                                                     <tableColumn identifier="currentOffset" editable="NO" width="120" minWidth="10" maxWidth="3.4028234663852886e+38" id="eQK-wG-iPv">
-                                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="track.offset.column.current">
+                                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Current Offset">
                                                                             <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                         </tableHeaderCell>
@@ -210,7 +210,7 @@
                                                                         </prototypeCellViews>
                                                                     </tableColumn>
                                                                     <tableColumn identifier="newOffset" width="120" minWidth="10" maxWidth="3.4028234663852886e+38" id="Beu-Q4-riT">
-                                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="track.offset.column.new">
+                                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="New Offset">
                                                                             <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                         </tableHeaderCell>
@@ -246,7 +246,7 @@
                                                                         </prototypeCellViews>
                                                                     </tableColumn>
                                                                     <tableColumn identifier="reference" editable="NO" width="60" minWidth="10" maxWidth="3.4028234663852886e+38" id="H7B-M9-DgN">
-                                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="track.offset.column.reference">
+                                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Type">
                                                                             <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                         </tableHeaderCell>
@@ -304,7 +304,7 @@
                                                 </scrollView>
                                             </subviews>
                                         </clipView>
-                                        <scroller key="horizontalScroller" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="0.02" horizontal="YES" id="Bob-U4-GeX">
+                                        <scroller key="horizontalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="Bob-U4-GeX">
                                             <rect key="frame" x="1" y="394" width="661" height="17"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
@@ -340,7 +340,7 @@
                                             </customView>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="y9R-8z-Lgp">
                                                 <rect key="frame" x="224" y="0.0" width="137" height="24"/>
-                                                <buttonCell key="cell" type="push" title="track.offset.reset" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="xgj-9x-wTa">
+                                                <buttonCell key="cell" type="push" title="Reset" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="xgj-9x-wTa">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="system"/>
                                                 </buttonCell>
@@ -350,7 +350,7 @@
                                             </button>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hti-sN-U4M">
                                                 <rect key="frame" x="383" y="0.0" width="138" height="24"/>
-                                                <buttonCell key="cell" type="push" title="track.offset.cancel" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="AMo-v8-P8e">
+                                                <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="AMo-v8-P8e">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="system"/>
                                                     <string key="keyEquivalent" base64-UTF8="YES">
@@ -363,7 +363,7 @@ Gw
                                             </button>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="tlt-1q-h8h">
                                                 <rect key="frame" x="543" y="0.0" width="137" height="24"/>
-                                                <buttonCell key="cell" type="push" title="track.offset.apply" bezelStyle="rounded" alignment="center" enabled="NO" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="TGo-DJ-rxC">
+                                                <buttonCell key="cell" type="push" title="Apply" bezelStyle="rounded" alignment="center" enabled="NO" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="TGo-DJ-rxC">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="system"/>
                                                     <string key="keyEquivalent" base64-UTF8="YES">

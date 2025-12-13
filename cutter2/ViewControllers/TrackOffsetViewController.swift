@@ -279,7 +279,8 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
     /// - Parameters:
     ///   - text: Input text
     ///   - row: Row index
-    private func validateAndParseOffset(_ text: String, for row: Int) {
+    ///   - shouldReload: Whether to reload the table view after validation
+    private func validateAndParseOffset(_ text: String, for row: Int, shouldReload: Bool = true) {
         guard row < rows.count else { return }
         guard let mutator = self.mutator else { return }
         
@@ -320,8 +321,10 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
             applyButton.isEnabled = false
         }
         
-        // Reload the row to update highlighting
-        tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integersIn: 0..<tableView.numberOfColumns))
+        // Reload the row to update highlighting (only if requested)
+        if shouldReload {
+            tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integersIn: 0..<tableView.numberOfColumns))
+        }
     }
     
     /// Check if any rows have changes
@@ -350,16 +353,15 @@ extension TrackOffsetViewController: NSTextFieldDelegate {
         let row = textField.tag
         let text = textField.stringValue
         
-        validateAndParseOffset(text, for: row)
+        // Validate and reload to update highlighting
+        validateAndParseOffset(text, for: row, shouldReload: true)
     }
     
     func controlTextDidChange(_ notification: Notification) {
         guard let textField = notification.object as? NSTextField else { return }
         
-        let row = textField.tag
-        let text = textField.stringValue
-        
-        // Real-time validation
-        validateAndParseOffset(text, for: row)
+        // Don't validate during typing - only validate when editing ends
+        // This prevents errors for incomplete input like "0:" or "1."
+        // The apply button state will be updated when editing completes
     }
 }

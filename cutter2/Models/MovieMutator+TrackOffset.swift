@@ -176,7 +176,7 @@ extension MovieMutator {
         return descriptors
     }
     
-    /// Calculate current offset for a track by scanning leading zero-duration segments
+    /// Calculate current offset for a track by scanning leading empty/zero-duration segments
     ///
     /// - Parameter track: Track to analyze
     /// - Returns: Total offset as CMTime
@@ -184,12 +184,24 @@ extension MovieMutator {
         var offset = CMTime.zero
         
         for segment in track.segments {
-            // Stop when we hit a non-zero duration segment
-            if segment.timeMapping.source.duration > CMTime.zero {
+            let sourceStart = segment.timeMapping.source.start
+            let sourceDuration = segment.timeMapping.source.duration
+            let targetDuration = segment.timeMapping.target.duration
+            
+            // Check if this is an empty segment (inserted via insertEmptyTimeRange)
+            // Empty segments have CMTIME_IS_INVALID or have zero timescale
+            let isEmpty = !CMTIME_IS_VALID(sourceStart) || sourceStart.timescale == 0
+            
+            // Also check for traditional zero-duration segments
+            let isZeroDuration = sourceDuration == CMTime.zero
+            
+            if isEmpty || isZeroDuration {
+                // Accumulate target duration
+                offset = offset + targetDuration
+            } else {
+                // Hit actual content - stop accumulating
                 break
             }
-            // Accumulate target duration for zero-duration source segments
-            offset = offset + segment.timeMapping.target.duration
         }
         
         return offset
@@ -304,22 +316,8 @@ extension MovieMutator {
     ///   - track: Track to modify
     /// - Throws: Error if insertion fails
     private func insertSilence(duration: CMTime, at time: CMTime, in track: AVMutableMovieTrack) throws {
-        // Create empty clip with matching media type
-        let emptyClip = AVMutableMovie()
-        emptyClip.timescale = internalMovie.timescale
-        
-        // Add a track with same media type
-        guard let emptyTrack = emptyClip.addMutableTrack(
-            withMediaType: track.mediaType,
-            copySettingsFrom: track,
-            options: nil
-        ) else {
-            throw DocumentError.internalError
-        }
-        
-        // Insert empty time range (creates silence/blank)
-        let emptyRange = CMTimeRange(start: CMTime.zero, duration: duration)
-        try track.insertTimeRange(emptyRange, of: emptyTrack, at: time, copySampleData: true)
+        // Insert an empty time range (gap/silence)
+        track.insertEmptyTimeRange(CMTimeRange(start: time, duration: duration))
     }
     
     /// Extract and remove a time range from a track

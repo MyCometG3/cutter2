@@ -91,21 +91,28 @@ All major functionality tests have been completed successfully. The Track Offset
 
 #### Priority: Medium
 
-1. **Undo/Redo Menu Localization Mixed**
+1. ✅ **Undo/Redo Menu Localization Mixed** (Fixed in 5f3f186)
    - **Current**: "取り消す - Apply Track Offsets"
    - **Expected**: "取り消す - トラックオフセット適用" or "トラックオフセット適用を取り消す"
    - **Impact**: Cosmetic - functionality works correctly
    - **Fix**: Add action name localization
 
-2. **Technical Error Messages**
+2. ✅ **Technical Error Messages** (Fixed in 3694f46)
    - **Current**: "Invalid offset for track X: ... (cutter2.DocumentError 11)"
    - **Expected**: "Invalid offset for track X: オフセットが範囲を超えています"
    - **Impact**: User experience - error is detected correctly but message is not user-friendly
    - **Fix**: Use localized description from DocumentError.nsError
 
+3. **Inconsistent Validation for Positive vs Negative Offsets**
+   - **Current**: Negative offset validated (cannot exceed track duration), positive offset has no upper limit
+   - **Example**: 17-second video rejects -20s but accepts +20s (extends to 37s)
+   - **Expected**: Both directions should have consistent validation limits
+   - **Impact**: User experience - unexpected behavior and potentially large file sizes
+   - **Fix**: Add upper limit validation for positive offsets (e.g., max = track duration)
+
 #### Priority: Low
 
-3. **Cell Red Highlighting Not Working**
+4. **Cell Red Highlighting Not Working**
    - **Current**: Error cells don't show red background
    - **Expected**: Red background when validation fails
    - **Impact**: Minor - error message is displayed in status label
@@ -113,7 +120,7 @@ All major functionality tests have been completed successfully. The Track Offset
 
 ### Pre-existing Issues (Not related to this branch)
 
-4. **Self/Ref Display Incorrect**
+5. **Self/Ref Display Incorrect**
    - **Issue**: Self-contained movies show "Ref" instead of "Self"
    - **Status**: Pre-existing bug in master branch (Info Window also affected)
    - **Action**: Separate issue - not related to Track Offset implementation
@@ -175,10 +182,11 @@ The discovered issues are minor UI/UX improvements that don't affect core functi
 ## Next Steps
 
 1. ✅ Complete Part 4 testing (DONE)
-2. ⏳ Fix minor UI issues in separate commits:
-   - Undo/Redo menu localization
-   - Error message improvement
-   - Cell highlighting (low priority)
+2. 🔄 Fix minor UI issues in separate commits:
+   - ✅ Undo/Redo menu localization (5f3f186)
+   - ✅ Error message improvement (3694f46)
+   - ⏳ Positive offset validation consistency
+   - ⏳ Cell highlighting (low priority)
 3. ⏳ Merge to master after review
 4. ⏳ Address pre-existing Self/Ref issue (separate branch)
 

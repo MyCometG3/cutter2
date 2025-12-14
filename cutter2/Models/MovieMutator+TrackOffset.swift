@@ -49,7 +49,8 @@ struct CMTimeParser {
     /// Supports:
     /// - Timecode format: HH:MM:SS.mmm (e.g., "00:01:23.456")
     /// - Frames with frame rate: <number>f@<fps> (e.g., "30f@29.97")
-    /// - Frames with default timescale: <number>f (e.g., "30f" - uses movie timescale, not recommended)
+    /// - Frames with default timescale: <number>f (e.g., "30f" - not recommended because it uses movie timescale
+    ///   instead of actual video frame rate, resulting in incorrect time calculations)
     /// - Seconds: plain float (e.g., "1.5" or "-2.3")
     ///
     /// - Parameters:

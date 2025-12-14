@@ -282,7 +282,7 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
             }
             
             if fps > 0 {
-                cellView.textField?.placeholderString = String(format: "e.g., 30f@%.2f", fps)
+                cellView.textField?.placeholderString = String(format: "30f@%.2f", fps)
             } else {
                 cellView.textField?.placeholderString = nil
             }

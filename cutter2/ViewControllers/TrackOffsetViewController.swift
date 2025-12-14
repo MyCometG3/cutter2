@@ -48,8 +48,8 @@ class TrackOffsetRow: NSObject {
                 let externalURLs = urls.filter { $0.absoluteString != movieURL.absoluteString }
                 isSelfContained = externalURLs.isEmpty
             } else {
-                // New/unsaved document: always self-contained
-                isSelfContained = true
+                // New/unsaved document: not saved as file, cannot be self-contained
+                isSelfContained = false
             }
             
             self.isReference = isSelfContained ? "Self" : "Ref"

@@ -300,13 +300,14 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
         statusLabel.stringValue = text
     }
     
-    /// Validate and parse new offset for a row
+    /// Validate input text in real-time (during typing)
+    /// Shows error but doesn't modify values
     ///
     /// - Parameters:
     ///   - text: Input text
     ///   - row: Row index
-    ///   - shouldReload: Whether to reload the table view after validation
-    private func validateAndParseOffset(_ text: String, for row: Int, shouldReload: Bool = true) {
+    ///   - textField: The text field being edited
+    private func validateInputRealtime(_ text: String, for row: Int, textField: NSTextField) {
         guard row < rows.count else { return }
         guard let mutator = self.mutator else { return }
         
@@ -332,16 +333,13 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
                 throw DocumentError.trackOffsetExceedsDuration
             }
             
-            // Valid
-            rowData.newOffset = parsedTime
-            rowData.newOffsetString = text
+            // Valid - clear error and reset text color to default
             rowData.validationError = nil
-            
+            textField.textColor = nil  // Reset to default (allows system to handle selection color)
             updateStatusLabel("")
-            applyButton.isEnabled = hasChanges()
             
         } catch {
-            // Invalid
+            // Invalid - set error and change text color
             let errorMessage: String
             if let docError = error as? DocumentError {
                 errorMessage = docError.nsError.localizedDescription
@@ -350,17 +348,82 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
             }
             
             rowData.validationError = errorMessage
+            textField.textColor = NSColor.systemRed
             
             let format = NSLocalizedString("track.offset.validation_error_format",
                                           comment: "Track offset validation error message format")
             updateStatusLabel(String(format: format, rowData.trackID, errorMessage))
-            applyButton.isEnabled = false
+        }
+    }
+    
+    /// Validate and commit new offset for a row (when editing ends)
+    ///
+    /// - Parameters:
+    ///   - text: Input text
+    ///   - row: Row index
+    private func validateAndCommitOffset(_ text: String, for row: Int) {
+        guard row < rows.count else { return }
+        guard let mutator = self.mutator else { return }
+        
+        let rowData = rows[row]
+        
+        do {
+            // Parse the offset
+            let parsedTime = try mutator.parseTimeOffset(text)
+            
+            // Validate the offset
+            guard CMTIME_IS_VALID(parsedTime) else {
+                throw DocumentError.invalidTimeFormat
+            }
+            
+            // Calculate delta
+            let delta = parsedTime - rowData.trackDescriptor.currentOffset
+            
+            // Validate offset magnitude doesn't exceed track duration
+            let absOffset = abs(delta.seconds)
+            let trackDuration = rowData.trackDescriptor.duration.seconds
+            
+            if absOffset > trackDuration {
+                throw DocumentError.trackOffsetExceedsDuration
+            }
+            
+            // Valid - commit the value
+            rowData.newOffset = parsedTime
+            rowData.newOffsetString = text
+            rowData.validationError = nil
+            
+            updateStatusLabel("")
+            applyButton.isEnabled = hasChanges()
+            
+        } catch {
+            // Invalid - reset to current offset
+            let errorMessage: String
+            if let docError = error as? DocumentError {
+                errorMessage = docError.nsError.localizedDescription
+            } else {
+                errorMessage = error.localizedDescription
+            }
+            
+            // Reset to original value
+            rowData.newOffsetString = mutator.shortTimeString(rowData.trackDescriptor.currentOffset, withDecimals: true)
+            rowData.newOffset = rowData.trackDescriptor.currentOffset
+            rowData.validationError = nil
+            
+            let format = NSLocalizedString("track.offset.validation_error_format",
+                                          comment: "Track offset validation error message format")
+            updateStatusLabel(String(format: format, rowData.trackID, errorMessage))
+            applyButton.isEnabled = hasChanges()
         }
         
-        // Reload the row to update highlighting (only if requested)
-        if shouldReload {
-            tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integersIn: 0..<tableView.numberOfColumns))
+        // Reset text color before reloading
+        if let cellView = tableView.view(atColumn: tableView.column(withIdentifier: NSUserInterfaceItemIdentifier("newOffset")), 
+                                          row: row, 
+                                          makeIfNecessary: false) as? NSTableCellView {
+            cellView.textField?.textColor = nil
         }
+        
+        // Reload to update display
+        tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integersIn: 0..<tableView.numberOfColumns))
     }
     
     /// Check if any rows have changes
@@ -389,15 +452,17 @@ extension TrackOffsetViewController: NSTextFieldDelegate {
         let row = textField.tag
         let text = textField.stringValue
         
-        // Validate and reload to update highlighting
-        validateAndParseOffset(text, for: row, shouldReload: true)
+        // Validate and commit (reset to original if invalid)
+        validateAndCommitOffset(text, for: row)
     }
     
     func controlTextDidChange(_ notification: Notification) {
-        guard notification.object is NSTextField else { return }
+        guard let textField = notification.object as? NSTextField else { return }
         
-        // Don't validate during typing - only validate when editing ends
-        // This prevents errors for incomplete input like "0:" or "1."
-        // The apply button state will be updated when editing completes
+        let row = textField.tag
+        let text = textField.stringValue
+        
+        // Real-time validation for visual feedback (don't reload to avoid interrupting input)
+        validateInputRealtime(text, for: row, textField: textField)
     }
 }

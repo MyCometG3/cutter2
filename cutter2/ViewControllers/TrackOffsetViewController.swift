@@ -316,8 +316,18 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
             
         } catch {
             // Invalid
-            rowData.validationError = error.localizedDescription
-            updateStatusLabel("Invalid offset for track \(rowData.trackID): \(error.localizedDescription)")
+            let errorMessage: String
+            if let docError = error as? DocumentError {
+                errorMessage = docError.nsError.localizedDescription
+            } else {
+                errorMessage = error.localizedDescription
+            }
+            
+            rowData.validationError = errorMessage
+            
+            let format = NSLocalizedString("track.offset.validation_error_format",
+                                          comment: "Track offset validation error message format")
+            updateStatusLabel(String(format: format, rowData.trackID, errorMessage))
             applyButton.isEnabled = false
         }
         
@@ -358,7 +368,7 @@ extension TrackOffsetViewController: NSTextFieldDelegate {
     }
     
     func controlTextDidChange(_ notification: Notification) {
-        guard let textField = notification.object as? NSTextField else { return }
+        guard notification.object is NSTextField else { return }
         
         // Don't validate during typing - only validate when editing ends
         // This prevents errors for incomplete input like "0:" or "1."

@@ -1225,6 +1225,24 @@
         }
       }
     },
+    "track.offset.validation_error_format" : {
+      "comment" : "Format string for track offset validation error message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid offset for track %@: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トラック%@の無効なオフセット：%@"
+          }
+        }
+      }
+    },
     "undo.apply_track_offsets" : {
       "comment" : "Undo action name for applying track offsets",
       "extractionState" : "manual",

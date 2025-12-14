@@ -107,13 +107,12 @@ extension MovieMutatorBase {
             return cached.result
         }
         
-        // Check if movie is self-contained by filtering self-references from URLs
-        // (track.isSelfContained appears broken since 0.8.8)
-        let urls = self.queryMediaDataURLs()
-        
         let result: Bool
         if let documentURL = documentURL {
-            // File-based movie: filter out self-references
+            // File-based movie: check for external reference URLs
+            // (track.isSelfContained appears broken since 0.8.8)
+            let urls = self.queryMediaDataURLs()
+            
             if let urls = urls {
                 let externalURLs = urls.filter { $0.absoluteString != documentURL.absoluteString }
                 result = externalURLs.isEmpty
@@ -123,6 +122,7 @@ extension MovieMutatorBase {
             }
         } else {
             // New/unsaved document: not saved as file, cannot be self-contained
+            // Skip expensive queryMediaDataURLs() call
             result = false
         }
         

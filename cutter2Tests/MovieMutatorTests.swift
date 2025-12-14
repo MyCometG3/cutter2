@@ -336,6 +336,7 @@ final class MovieMutatorTests: XCTestCase {
         XCTAssertThrowsError(try CMTimeParser.parse("1:2:3:4", timescale: timescale))
     }
     
+    @MainActor
     func testTrackDescriptors() throws {
         let movie = AVMutableMovie()
         movie.timescale = 600
@@ -364,6 +365,7 @@ final class MovieMutatorTests: XCTestCase {
         }
     }
     
+    @MainActor
     func testTrackDescriptorCaching() throws {
         let movie = AVMutableMovie()
         movie.timescale = 600

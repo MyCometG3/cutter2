@@ -342,7 +342,7 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
             
             // Valid - clear error and reset text color to default
             rowData.validationError = nil
-            textField.textColor = nil  // Reset to default (allows system to handle selection color)
+            textField.textColor = nil  // Reset to system default text color (allows proper handling of selection highlighting)
             updateStatusLabel("")
             
         } catch {

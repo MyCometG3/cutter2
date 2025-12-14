@@ -26,6 +26,9 @@ public struct TrackDescriptor {
     
     /// Current offset (calculated from leading zero-duration segments)
     public var currentOffset: CMTime
+    
+    /// Nominal frame rate for video tracks (0 for non-video tracks)
+    public let nominalFrameRate: Float
 }
 
 /// Undo payload for track offset operations
@@ -45,12 +48,13 @@ struct CMTimeParser {
     /// Parse time offset string into CMTime
     /// Supports:
     /// - Timecode format: HH:MM:SS.mmm (e.g., "00:01:23.456")
-    /// - Frames: <number>f (e.g., "30f" or "-15f")
+    /// - Frames with frame rate: <number>f@<fps> (e.g., "30f@29.97")
+    /// - Frames with default timescale: <number>f (e.g., "30f" - uses movie timescale, not recommended)
     /// - Seconds: plain float (e.g., "1.5" or "-2.3")
     ///
     /// - Parameters:
     ///   - string: Input string to parse
-    ///   - timescale: Timescale to use for the resulting CMTime
+    ///   - timescale: Default timescale to use for the resulting CMTime
     /// - Returns: Parsed CMTime, or nil if parsing failed
     /// - Throws: DocumentError if input is invalid
     static func parse(_ string: String, timescale: CMTimeScale) throws -> CMTime {
@@ -82,7 +86,28 @@ struct CMTimeParser {
             return result
         }
         
-        // Try frames format: <number>f
+        // Try frames format with explicit frame rate: <number>f@<fps>
+        let framesWithFpsPattern = "^(-?\\d+)f@([0-9.]+)$"
+        if let regex = try? NSRegularExpression(pattern: framesWithFpsPattern),
+           let match = regex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)) {
+            
+            let framesString = (trimmed as NSString).substring(with: match.range(at: 1))
+            let fpsString = (trimmed as NSString).substring(with: match.range(at: 2))
+            
+            if let frames = Int64(framesString), let fps = Double(fpsString), fps > 0 {
+                let seconds = Double(frames) / fps
+                let result = CMTime(seconds: seconds, preferredTimescale: timescale)
+                
+                // Check for negative values
+                if result < CMTime.zero {
+                    throw DocumentError.negativeOffsetNotAllowed
+                }
+                
+                return result
+            }
+        }
+        
+        // Try frames format: <number>f (uses default timescale)
         let framesPattern = "^(-?\\d+)f$"
         if let regex = try? NSRegularExpression(pattern: framesPattern),
            let match = regex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)) {
@@ -183,11 +208,13 @@ extension MovieMutator {
         
         for track in orderedTracks {
             let offset = calculateCurrentOffset(for: track)
+            let frameRate = track.mediaType == .video ? track.nominalFrameRate : 0.0
             let descriptor = TrackDescriptor(
                 id: track.trackID,
                 mediaType: track.mediaType,
                 duration: track.timeRange.duration,
-                currentOffset: offset
+                currentOffset: offset,
+                nominalFrameRate: frameRate
             )
             descriptors.append(descriptor)
         }

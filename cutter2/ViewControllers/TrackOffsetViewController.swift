@@ -72,6 +72,7 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
     private weak var document: Document?
     private weak var mutator: MovieMutator?
     private var rows: [TrackOffsetRow] = []
+    private var referenceFrameRate: Float = 0.0
     
     /* ============================================ */
     // MARK: - Lifecycle
@@ -110,6 +111,9 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
         // Load track descriptors
         let descriptors = mutator.trackDescriptors()
         rows = descriptors.map { TrackOffsetRow(descriptor: $0, mutator: mutator) }
+        
+        // Find reference frame rate from first video track
+        referenceFrameRate = descriptors.first(where: { $0.mediaType == .video && $0.nominalFrameRate > 0 })?.nominalFrameRate ?? 0.0
         
         tableView.reloadData()
         
@@ -253,6 +257,21 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
             cellView.textField?.isEditable = true
             cellView.textField?.delegate = self
             cellView.textField?.tag = row
+            
+            // Set placeholder hint for frame format
+            // Use track's own frame rate if video, or reference frame rate from first video track
+            let fps: Float
+            if rowData.trackDescriptor.mediaType == .video && rowData.trackDescriptor.nominalFrameRate > 0 {
+                fps = rowData.trackDescriptor.nominalFrameRate
+            } else {
+                fps = referenceFrameRate
+            }
+            
+            if fps > 0 {
+                cellView.textField?.placeholderString = String(format: "e.g., 30f@%.2f", fps)
+            } else {
+                cellView.textField?.placeholderString = nil
+            }
             
             // Highlight if there's a validation error
             if rowData.validationError != nil {

@@ -96,19 +96,45 @@ extension MovieMutatorBase {
         return cachedAudioDataSizes
     }
     
+    /// Determine if movie is self-contained
+    ///
+    /// - Parameter documentURL: Document's file URL
+    /// - Returns: true if self-contained, false if reference
+    public func isSelfContained(documentURL: URL?) -> Bool {
+        // Check if movie is self-contained by filtering self-references from URLs
+        // (track.isSelfContained appears broken since 0.8.8)
+        let urls = self.queryMediaDataURLs()
+        
+        if let documentURL = documentURL {
+            // File-based movie: filter out self-references
+            if let urls = urls {
+                let externalURLs = urls.filter { $0.absoluteString != documentURL.absoluteString }
+                return externalURLs.isEmpty
+            } else {
+                // No URLs found: self-contained
+                return true
+            }
+        } else {
+            // New/unsaved document: not saved as file, cannot be self-contained
+            return false
+        }
+    }
+    
     /// Inspector - VideoFormats Description
     ///
+    /// - Parameter isSelfContained: true if self-contained, false if reference
     /// - Returns: human readable description
-    public func videoFormats() -> [String]? {
+    public func videoFormats(isSelfContained: Bool) -> [String]? {
         if let cache = cachedVideoFormats {
             return cache
         }
         
         var trackStrings: [String] = []
+        
         for track in internalMovie.tracks(withMediaType: .video) {
             var trackString: [String] = []
             let trackID: Int = Int(track.trackID)
-            let reference: Bool = !(track.isSelfContained)
+            let reference: Bool = !isSelfContained
             for desc in track.formatDescriptions as! [CMVideoFormatDescription] {
                 var name: String = ""
                 do {
@@ -160,17 +186,19 @@ extension MovieMutatorBase {
     
     /// Inspector - AudioFormats Description
     ///
+    /// - Parameter isSelfContained: true if self-contained, false if reference
     /// - Returns: human readable description
-    public func audioFormats() -> [String]? {
+    public func audioFormats(isSelfContained: Bool) -> [String]? {
         if let cache = cachedAudioFormats {
             return cache
         }
         
         var trackStrings: [String] = []
+        
         for track in internalMovie.tracks(withMediaType: .audio) {
             var trackString: [String] = []
             let trackID: Int = Int(track.trackID)
-            let reference: Bool = !(track.isSelfContained)
+            let reference: Bool = !isSelfContained
             for desc in track.formatDescriptions as! [CMAudioFormatDescription] {
                 var rateString: String = ""
                 do {

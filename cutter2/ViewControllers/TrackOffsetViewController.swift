@@ -27,7 +27,7 @@ class TrackOffsetRow: NSObject {
     var newOffset: CMTime?
     var validationError: String?
     
-    init(descriptor: TrackDescriptor, mutator: MovieMutator) {
+    init(descriptor: TrackDescriptor, mutator: MovieMutator, documentURL: URL?) {
         self.trackDescriptor = descriptor
         self.trackID = "\(descriptor.id)"
         self.mediaType = descriptor.mediaType.rawValue
@@ -36,8 +36,23 @@ class TrackOffsetRow: NSObject {
         self.newOffsetString = mutator.shortTimeString(descriptor.currentOffset, withDecimals: true)
         
         // Check if track is reference or self-contained
-        if let track = mutator.internalMovie.track(withTrackID: descriptor.id) {
-            self.isReference = track.isSelfContained ? "Self" : "Ref"
+        // Note: AVMutableMovieTrack.isSelfContained is broken since 0.8.8
+        // Solution: Check for external reference URLs, excluding self-references
+        if let _ = mutator.internalMovie.track(withTrackID: descriptor.id) {
+            let urls = mutator.queryMediaDataURLs()
+            
+            // Determine if self-contained
+            let isSelfContained: Bool
+            if let movieURL = documentURL, let urls = urls {
+                // Filter out self-references
+                let externalURLs = urls.filter { $0.absoluteString != movieURL.absoluteString }
+                isSelfContained = externalURLs.isEmpty
+            } else {
+                // New/unsaved document: always self-contained
+                isSelfContained = true
+            }
+            
+            self.isReference = isSelfContained ? "Self" : "Ref"
         } else {
             self.isReference = "?"
         }
@@ -123,7 +138,8 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
         
         // Load track descriptors
         let descriptors = mutator.trackDescriptors()
-        rows = descriptors.map { TrackOffsetRow(descriptor: $0, mutator: mutator) }
+        let documentURL = document.fileURL
+        rows = descriptors.map { TrackOffsetRow(descriptor: $0, mutator: mutator, documentURL: documentURL) }
         
         // Find reference frame rate from first video track
         referenceFrameRate = descriptors.first(where: { $0.mediaType == .video && $0.nominalFrameRate > 0 })?.nominalFrameRate ?? 0.0

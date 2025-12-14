@@ -289,11 +289,16 @@ extension Document {
         var dict: [String:Any] = [:]
         guard let mutator = self.movieMutator else { return dict }
         
+        // Determine Self/Ref status once for efficiency
+        let isSelfContained = mutator.isSelfContained(documentURL: self.fileURL)
+        
         dict[titleInspectKey] = self.displayName
         dict[pathInspectKey] = mutator.mediaDataPaths()?.joined(separator: "\n")
-        dict[videoFormatInspectKey] = mutator.videoFormats()?.joined(separator: "\n")
+        // Pass documentURL for Self/Ref detection (for external use if needed)
+        dict[documentURLInspectKey] = self.fileURL?.absoluteString
+        dict[videoFormatInspectKey] = mutator.videoFormats(isSelfContained: isSelfContained)?.joined(separator: "\n")
         dict[videoFPSInspectKey] = mutator.videoFPSs()?.joined(separator: "\n")
-        dict[audioFormatInspectKey] = mutator.audioFormats()?.joined(separator: "\n")
+        dict[audioFormatInspectKey] = mutator.audioFormats(isSelfContained: isSelfContained)?.joined(separator: "\n")
         dict[videoDataSizeInspectKey] = mutator.videoDataSizes()?.joined(separator: "\n")
         dict[audioDataSizeInspectKey] = mutator.audioDataSizes()?.joined(separator: "\n")
         dict[currentTimeInspectKey] = mutator.shortTimeString(mutator.insertionTime, withDecimals: true)

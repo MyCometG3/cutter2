@@ -72,6 +72,7 @@ let durationInfoKey: String = "duration" // CMTime
 
 let titleInspectKey: String = "title" // String
 let pathInspectKey: String = "path" // String (numTracks)
+let documentURLInspectKey: String = "documentURL" // String - for Self/Ref detection
 let videoFormatInspectKey: String = "videoFormat" // String (numTracks)
 let videoFPSInspectKey: String = "videoFPS" // String (numTracks)
 let audioFormatInspectKey: String = "audioFormat" // String (numTracks)

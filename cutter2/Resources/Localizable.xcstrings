@@ -1225,6 +1225,24 @@
         }
       }
     },
+    "track.offset.negativeNotAllowed" : {
+      "comment" : "Error message when negative offset values are entered",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Negative offset values are not allowed. Use a value smaller than current offset to remove content."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "負のオフセット値は使用できません。コンテンツを削除するには、現在のオフセットより小さい値を入力してください。"
+          }
+        }
+      }
+    },
     "track.offset.validation_error_format" : {
       "comment" : "Format string for track offset validation error message",
       "extractionState" : "manual",

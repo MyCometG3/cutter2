@@ -72,7 +72,14 @@ struct CMTimeParser {
             }
             
             let totalSeconds = Double(hours * 3600 + minutes * 60 + seconds) + milliseconds
-            return CMTime(seconds: totalSeconds, preferredTimescale: timescale)
+            let result = CMTime(seconds: totalSeconds, preferredTimescale: timescale)
+            
+            // Check for negative values
+            if result < CMTime.zero {
+                throw DocumentError.negativeOffsetNotAllowed
+            }
+            
+            return result
         }
         
         // Try frames format: <number>f
@@ -82,13 +89,27 @@ struct CMTimeParser {
             
             let framesString = (trimmed as NSString).substring(with: match.range(at: 1))
             if let frames = Int64(framesString) {
-                return CMTime(value: frames, timescale: timescale)
+                let result = CMTime(value: frames, timescale: timescale)
+                
+                // Check for negative values
+                if result < CMTime.zero {
+                    throw DocumentError.negativeOffsetNotAllowed
+                }
+                
+                return result
             }
         }
         
         // Try plain seconds (fallback)
         if let seconds = Double(trimmed) {
-            return CMTime(seconds: seconds, preferredTimescale: timescale)
+            let result = CMTime(seconds: seconds, preferredTimescale: timescale)
+            
+            // Check for negative values
+            if result < CMTime.zero {
+                throw DocumentError.negativeOffsetNotAllowed
+            }
+            
+            return result
         }
         
         // Invalid format

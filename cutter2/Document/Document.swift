@@ -28,6 +28,7 @@ enum DocumentError: Error, NSErrorConvertible {
     case invalidTimeFormat
     case trackOffsetValidationFailed
     case trackOffsetExceedsDuration
+    case negativeOffsetNotAllowed
     
     var nsError: NSError {
         let domain = NSOSStatusErrorDomain
@@ -90,6 +91,11 @@ enum DocumentError: Error, NSErrorConvertible {
         case .trackOffsetExceedsDuration:
             let message = NSLocalizedString("track.offset.exceedsDuration",
                                           comment: "Track Offset exceeds duration error")
+            let info = [NSLocalizedDescriptionKey: message]
+            return NSError(domain: domain, code: paramErr, userInfo: info)
+        case .negativeOffsetNotAllowed:
+            let message = NSLocalizedString("track.offset.negativeNotAllowed",
+                                          comment: "Negative offset values not allowed error")
             let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: paramErr, userInfo: info)
         }

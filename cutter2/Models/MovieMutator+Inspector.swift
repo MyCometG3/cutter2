@@ -101,24 +101,34 @@ extension MovieMutatorBase {
     /// - Parameter documentURL: Document's file URL
     /// - Returns: true if self-contained, false if reference
     public func isSelfContained(documentURL: URL?) -> Bool {
+        // Check cache first (for performance in Inspector update loop)
+        let urlString = documentURL?.absoluteString
+        if let cached = cachedSelfContainedStatus, cached.url == urlString {
+            return cached.result
+        }
+        
         // Check if movie is self-contained by filtering self-references from URLs
         // (track.isSelfContained appears broken since 0.8.8)
         let urls = self.queryMediaDataURLs()
         
+        let result: Bool
         if let documentURL = documentURL {
             // File-based movie: filter out self-references
             if let urls = urls {
                 let externalURLs = urls.filter { $0.absoluteString != documentURL.absoluteString }
-                return externalURLs.isEmpty
+                result = externalURLs.isEmpty
             } else {
                 // No URLs found: self-contained
-                return true
+                result = true
             }
         } else {
-            // No file URL: detection logic treats as not self-contained for consistency,
-            // since documentURL is required for proper detection in this architecture.
-            return false
+            // New/unsaved document: not saved as file, cannot be self-contained
+            result = false
         }
+        
+        // Cache the result
+        cachedSelfContainedStatus = (url: urlString, result: result)
+        return result
     }
     
     /// Inspector - VideoFormats Description

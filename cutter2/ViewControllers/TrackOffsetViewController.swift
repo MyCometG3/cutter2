@@ -37,21 +37,9 @@ class TrackOffsetRow: NSObject {
         
         // Check if track is reference or self-contained
         // Note: AVMutableMovieTrack.isSelfContained is broken since 0.8.8
-        // Solution: Check for external reference URLs, excluding self-references
+        // Use MovieMutator's isSelfContained() method for consistent detection
         if let _ = mutator.internalMovie.track(withTrackID: descriptor.id) {
-            let urls = mutator.queryMediaDataURLs()
-            
-            // Determine if self-contained
-            let isSelfContained: Bool
-            if let movieURL = documentURL, let urls = urls {
-                // Filter out self-references
-                let externalURLs = urls.filter { $0.absoluteString != movieURL.absoluteString }
-                isSelfContained = externalURLs.isEmpty
-            } else {
-                // New/unsaved document: not saved as file, cannot be self-contained
-                isSelfContained = false
-            }
-            
+            let isSelfContained = mutator.isSelfContained(documentURL: documentURL)
             self.isReference = isSelfContained ? "Self" : "Ref"
         } else {
             self.isReference = "?"

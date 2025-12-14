@@ -212,6 +212,7 @@ class MovieMutatorBase: NSObject {
     internal var cachedAudioDataSizes: [String]? = nil
     internal var cachedVideoFormats: [String]? = nil
     internal var cachedAudioFormats: [String]? = nil
+    internal var cachedSelfContainedStatus: (url: String?, result: Bool)? = nil
     
     /* ============================================ */
     // MARK: - public method - validation and clamp
@@ -434,6 +435,7 @@ class MovieMutatorBase: NSObject {
         cachedAudioDataSizes = nil
         cachedVideoFormats = nil
         cachedAudioFormats = nil
+        cachedSelfContainedStatus = nil
     }
     
     /* ============================================ */

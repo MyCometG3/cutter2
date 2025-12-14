@@ -1,12 +1,12 @@
 # Track Offset Feature - Test Results
 
-**Test Date**: 2025-12-13  
+**Test Date**: 2025-12-13 to 2025-12-14  
 **Branch**: copilot/implement-track-offset-ui-feature  
-**Status**: ✅ Part 4 Testing Completed
+**Status**: ✅ **ALL TESTING COMPLETED - READY FOR MERGE**
 
 ## Test Summary
 
-All major functionality tests have been completed successfully. The Track Offset feature is working as intended with some minor UI improvements identified for future refinement.
+All functionality tests have been completed successfully. The Track Offset feature is working as intended. All identified issues have been resolved through iterative development and testing.
 
 ---
 
@@ -92,31 +92,41 @@ All major functionality tests have been completed successfully. The Track Offset
 #### Priority: Medium
 
 1. ✅ **Undo/Redo Menu Localization Mixed** (Fixed in 5f3f186)
-   - **Current**: "取り消す - Apply Track Offsets"
-   - **Expected**: "取り消す - トラックオフセット適用" or "トラックオフセット適用を取り消す"
-   - **Impact**: Cosmetic - functionality works correctly
-   - **Fix**: Add action name localization
+   - **Status**: RESOLVED
+   - **Fix**: Added `undo.apply_track_offsets` localization key
+   - **Result**: Menu shows "取り消す - トラックオフセット適用"
 
 2. ✅ **Technical Error Messages** (Fixed in 3694f46)
-   - **Current**: "Invalid offset for track X: ... (cutter2.DocumentError 11)"
-   - **Expected**: "Invalid offset for track X: オフセットが範囲を超えています"
-   - **Impact**: User experience - error is detected correctly but message is not user-friendly
-   - **Fix**: Use localized description from DocumentError.nsError
+   - **Status**: RESOLVED
+   - **Fix**: Use `DocumentError.nsError.localizedDescription` for proper localization
+   - **Result**: Error messages show "トラック1の無効なオフセット：オフセットが範囲を超えています"
 
-3. **Inconsistent Validation for Positive vs Negative Offsets**
-   - **Current**: Negative offset validated (cannot exceed track duration), positive offset has no upper limit
-   - **Example**: 17-second video rejects -20s but accepts +20s (extends to 37s)
-   - **Expected**: Both directions should have consistent validation limits
-   - **Impact**: User experience - unexpected behavior and potentially large file sizes
-   - **Fix**: Add upper limit validation for positive offsets (e.g., max = track duration)
+3. ✅ **Inconsistent Validation for Positive vs Negative Offsets** (Fixed in 4fa6470)
+   - **Status**: RESOLVED
+   - **Fix**: Added upper limit validation for positive offsets (max = track duration)
+   - **Result**: Both +20s and -20s rejected consistently for 17-second video
 
-#### Priority: Low
+4. ✅ **Negative Offset Values Allowed** (Fixed in 878da3d)
+   - **Status**: RESOLVED
+   - **Issue**: Negative absolute offset values (`-1`) were parsed but are logically impossible
+   - **Fix**: Added `DocumentError.negativeOffsetNotAllowed` with validation in parser
+   - **Result**: User-friendly error message guides correct usage
 
-4. **Cell Red Highlighting Not Working**
-   - **Current**: Error cells don't show red background
-   - **Expected**: Red background when validation fails
-   - **Impact**: Minor - error message is displayed in status label
-   - **Fix**: Investigate tableView reload timing issue
+5. ✅ **Frame Format Ambiguity** (Fixed in 58a82c2)
+   - **Status**: RESOLVED
+   - **Issue**: `30f` used movie timescale (600) instead of video frame rate (29.97fps)
+   - **Fix**: Added explicit frame rate format `30f@29.97`, placeholder hints in UI
+   - **Result**: Frame-based input now accurate and user-friendly
+
+6. ✅ **Real-time Validation Missing** (Fixed in 6f92ee6)
+   - **Status**: RESOLVED
+   - **Issue**: Cell highlighting didn't work, no visual feedback during typing
+   - **Fix**: Implemented two-phase validation with red text color for errors
+   - **Result**: Immediate visual feedback, proper selection color handling
+
+#### All Track Offset Issues Resolved ✅
+
+All UI/UX issues specific to the Track Offset feature have been addressed.
 
 ### Pre-existing Issues (Not related to this branch)
 
@@ -181,14 +191,17 @@ The discovered issues are minor UI/UX improvements that don't affect core functi
 
 ## Next Steps
 
-1. ✅ Complete Part 4 testing (DONE)
-2. 🔄 Fix minor UI issues in separate commits:
+1. ✅ Complete all testing (DONE)
+2. ✅ Fix all identified issues (DONE):
    - ✅ Undo/Redo menu localization (5f3f186)
    - ✅ Error message improvement (3694f46)
-   - ⏳ Positive offset validation consistency
-   - ⏳ Cell highlighting (low priority)
-3. ⏳ Merge to master after review
-4. ⏳ Address pre-existing Self/Ref issue (separate branch)
+   - ✅ Positive offset validation consistency (4fa6470)
+   - ✅ Negative offset value prevention (878da3d)
+   - ✅ Frame rate specification support (58a82c2)
+   - ✅ Real-time validation with text color (6f92ee6)
+3. ⏳ Final code review
+4. ⏳ Merge to main branch after approval
+5. ⏳ Address pre-existing Self/Ref issue (separate branch, Issue #5)
 
 ---
 
@@ -202,5 +215,35 @@ The discovered issues are minor UI/UX improvements that don't affect core functi
 
 ---
 
+## Final Status Summary
+
+### Completed Features ✅
+- Track offset UI with 6-column table display
+- Multiple input formats (seconds, timecode, frames with FPS)
+- Real-time validation with visual feedback (red text for errors)
+- Comprehensive error handling with localized messages
+- Undo/Redo support with localized action names
+- Frame rate hints for accurate frame-based input
+- Consistent validation for positive and negative offsets
+- Prevention of negative absolute offset values
+- Proper text color management for row selection
+
+### Commits in This Branch
+1. `5f3f186` - Localize Undo/Redo action name
+2. `3694f46` - Improve error message localization
+3. `4fa6470` - Add consistent validation for positive/negative offsets
+4. `878da3d` - Disallow negative offset values
+5. `58a82c2` - Add explicit frame rate support
+6. `6f92ee6` - Add real-time validation with text color feedback
+7. `607a3a8` - Update test results documentation
+
+### Ready for Merge ✅
+
+The Track Offset feature is complete, tested, and ready for integration into the main branch.
+
+---
+
 **Test conducted by**: User manual testing with AI assistance  
-**Documentation created**: 2025-12-13
+**Documentation created**: 2025-12-13  
+**Documentation updated**: 2025-12-14  
+**Final status**: ✅ COMPLETE AND READY FOR MERGE

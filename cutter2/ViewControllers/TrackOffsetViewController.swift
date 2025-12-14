@@ -178,12 +178,19 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
             endSheet(.continue)
         } catch {
             // Show error
-            updateStatusLabel("Error: \(error.localizedDescription)")
+            let errorToShow: NSError
+            if let docError = error as? DocumentError {
+                errorToShow = docError.nsError
+            } else {
+                errorToShow = error as NSError
+            }
+            
+            updateStatusLabel("Error: \(errorToShow.localizedDescription)")
             applyButton.isEnabled = true
             tableView.isEnabled = true
             
             // Show error sheet
-            document.showErrorSheet(error as NSError)
+            document.showErrorSheet(errorToShow)
         }
     }
     
@@ -298,12 +305,12 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
             // Calculate delta
             let delta = parsedTime - rowData.trackDescriptor.currentOffset
             
-            // For negative offsets, check against track duration
-            if delta < CMTime.zero {
-                let absOffset = CMTime.zero - delta
-                if absOffset > rowData.trackDescriptor.duration {
-                    throw DocumentError.trackOffsetExceedsDuration
-                }
+            // Validate offset magnitude doesn't exceed track duration
+            let absOffset = abs(delta.seconds)
+            let trackDuration = rowData.trackDescriptor.duration.seconds
+            
+            if absOffset > trackDuration {
+                throw DocumentError.trackOffsetExceedsDuration
             }
             
             // Valid

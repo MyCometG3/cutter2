@@ -242,13 +242,17 @@ extension MovieMutator {
                 throw DocumentError.trackOffsetValidationFailed
             }
             
-            // For negative offsets, ensure we don't remove more than track duration
-            if delta < CMTime.zero {
-                let absOffset = CMTime.zero - delta
-                if absOffset > track.timeRange.duration {
-                    LoggingSystem.video.error("Track \(descriptor.id) (\(descriptor.mediaType.rawValue)): Cannot remove \(CMTimeGetSeconds(absOffset))s from track with duration \(CMTimeGetSeconds(track.timeRange.duration))s")
-                    throw DocumentError.trackOffsetExceedsDuration
+            // Validate offset magnitude doesn't exceed track duration
+            let absOffset = abs(delta.seconds)
+            let trackDuration = track.timeRange.duration.seconds
+            
+            if absOffset > trackDuration {
+                if delta < CMTime.zero {
+                    LoggingSystem.video.error("Track \(descriptor.id) (\(descriptor.mediaType.rawValue)): Cannot remove \(absOffset)s from track with duration \(trackDuration)s")
+                } else {
+                    LoggingSystem.video.error("Track \(descriptor.id) (\(descriptor.mediaType.rawValue)): Cannot add \(absOffset)s offset to track with duration \(trackDuration)s")
                 }
+                throw DocumentError.trackOffsetExceedsDuration
             }
             
             validatedOffsets.append((track, delta))

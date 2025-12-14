@@ -18,6 +18,7 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 
 #### Advanced feature
 - Save as reference movie (AVFoundation based)
+- Track Offset adjustment for precise timeline synchronization ✨ **NEW**
 - Transcoding to ProRes422+LPCM.mov
 - Custom Export can preserve original audio's multi-channel layout.
 - Custom Export can preserve original video's colr/fiel/pasp/clap atom.
@@ -35,9 +36,9 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 For detailed information about architecture, development, testing, and project history, see the [docs](docs/) directory.
 
 #### Development environment
-- macOS 26.1
-- Xcode 26.1.1
-- Swift 6.2.1
+- macOS 15.2+ (Sequoia or later)
+- Xcode 16.2+
+- Swift 6.0+
 
 #### License
 - The MIT License

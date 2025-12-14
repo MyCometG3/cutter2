@@ -25,6 +25,14 @@ Each completed phase has its own subdirectory:
 
 - **PHASE_2.3_LOGGING_PLAN.md** - Implementation plan and completion report
 
+### track-offset/ - Track Offset UI Feature (Completed: December 14, 2025)
+
+- **TRACK_OFFSET_UI_PLAN.md** - Original feature specification and design document
+- **TRACK_OFFSET_STORYBOARD_GUIDE.md** - UI implementation guide for Xcode/Storyboard
+- **TRACK_OFFSET_IMPLEMENTATION_STATUS.md** - Complete implementation summary with metrics
+- **TRACK_OFFSET_TEST_RESULTS.md** - Comprehensive test results and issue resolution
+- **README.md** - Feature overview and archive summary
+
 ---
 
 **Note**: These documents are archived for historical reference. For current development information, see the main documentation in the parent directory.

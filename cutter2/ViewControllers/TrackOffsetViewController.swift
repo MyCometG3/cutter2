@@ -35,15 +35,11 @@ class TrackOffsetRow: NSObject {
         self.currentOffset = mutator.shortTimeString(descriptor.currentOffset, withDecimals: true)
         self.newOffsetString = mutator.shortTimeString(descriptor.currentOffset, withDecimals: true)
         
-        // Check if track is reference or self-contained
+        // Check if movie is reference or self-contained
         // Note: AVMutableMovieTrack.isSelfContained is broken since 0.8.8
         // Use MovieMutator's isSelfContained() method for consistent detection
-        if let _ = mutator.internalMovie.track(withTrackID: descriptor.id) {
-            let isSelfContained = mutator.isSelfContained(documentURL: documentURL)
-            self.isReference = isSelfContained ? "Self" : "Ref"
-        } else {
-            self.isReference = "?"
-        }
+        let isSelfContained = mutator.isSelfContained(documentURL: documentURL)
+        self.isReference = isSelfContained ? "Self" : "Ref"
         
         self.newOffset = descriptor.currentOffset
         self.validationError = nil

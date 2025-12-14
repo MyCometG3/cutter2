@@ -57,6 +57,19 @@ class TrackOffsetRow: NSObject {
 class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
     
     /* ============================================ */
+    // MARK: - Column Identifiers
+    /* ============================================ */
+    
+    private enum ColumnIdentifier {
+        static let trackID = "trackID"
+        static let mediaType = "mediaType"
+        static let duration = "duration"
+        static let currentOffset = "currentOffset"
+        static let newOffset = "newOffset"
+        static let reference = "reference"
+    }
+    
+    /* ============================================ */
     // MARK: - Outlets
     /* ============================================ */
     
@@ -241,19 +254,19 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
             ?? NSTableCellView()
         
         switch columnID {
-        case "trackID":
+        case ColumnIdentifier.trackID:
             cellView.textField?.stringValue = rowData.trackID
             cellView.textField?.isEditable = false
-        case "mediaType":
+        case ColumnIdentifier.mediaType:
             cellView.textField?.stringValue = rowData.mediaType
             cellView.textField?.isEditable = false
-        case "duration":
+        case ColumnIdentifier.duration:
             cellView.textField?.stringValue = rowData.duration
             cellView.textField?.isEditable = false
-        case "currentOffset":
+        case ColumnIdentifier.currentOffset:
             cellView.textField?.stringValue = rowData.currentOffset
             cellView.textField?.isEditable = false
-        case "newOffset":
+        case ColumnIdentifier.newOffset:
             cellView.textField?.stringValue = rowData.newOffsetString
             cellView.textField?.isEditable = true
             cellView.textField?.delegate = self
@@ -273,7 +286,7 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
             } else {
                 cellView.textField?.placeholderString = nil
             }
-        case "reference":
+        case ColumnIdentifier.reference:
             cellView.textField?.stringValue = rowData.isReference
             cellView.textField?.isEditable = false
         default:
@@ -410,7 +423,7 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
         }
         
         // Reset text color before reloading
-        if let cellView = tableView.view(atColumn: tableView.column(withIdentifier: NSUserInterfaceItemIdentifier("newOffset")), 
+        if let cellView = tableView.view(atColumn: tableView.column(withIdentifier: NSUserInterfaceItemIdentifier(ColumnIdentifier.newOffset)), 
                                           row: row, 
                                           makeIfNecessary: false) as? NSTableCellView {
             cellView.textField?.textColor = nil

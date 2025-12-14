@@ -115,7 +115,8 @@ extension MovieMutatorBase {
                 return true
             }
         } else {
-            // New/unsaved document: not saved as file, cannot be self-contained
+            // No file URL: detection logic treats as not self-contained for consistency,
+            // since documentURL is required for proper detection in this architecture.
             return false
         }
     }

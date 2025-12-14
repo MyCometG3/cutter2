@@ -15,7 +15,6 @@ This directory contains comprehensive documentation for the cutter2 project.
 
 - **[API_REFERENCE.md](API_REFERENCE.md)** - API documentation and reference
 - **[CODEBASE_REVIEW.md](CODEBASE_REVIEW.md)** - Codebase structure and review
-- **[REFACTORING_PLAN.md](REFACTORING_PLAN.md)** - Ongoing refactoring initiatives
 
 ## Archived Documentation
 
@@ -31,7 +30,7 @@ Historical documentation for completed features and development phases can be fo
 ### Development Phases
 
 - **[archive/phase-2.1/](archive/phase-2.1/)** - Internationalization (Oct 2025)
-- **[archive/phase-2.2/](archive/phase-2.2/)** - Performance Optimization (Oct 2025)
+- **[archive/phase-2.2/](archive/phase-2.2/)** - Performance Optimization & Refactoring (Oct 2025)
 - **[archive/phase-2.3/](archive/phase-2.3/)** - Logging System (Planned)
 
 ## Document Status
@@ -44,7 +43,6 @@ Historical documentation for completed features and development phases can be fo
 | CONTRIBUTING.md | ✅ Active | 2025-10 |
 | API_REFERENCE.md | ✅ Active | 2025-10 |
 | CODEBASE_REVIEW.md | ✅ Active | 2025-10 |
-| REFACTORING_PLAN.md | ✅ Active | 2025-10 |
 
 ## Quick Links
 
@@ -55,10 +53,9 @@ Historical documentation for completed features and development phases can be fo
 4. Review [TESTING_GUIDE.md](TESTING_GUIDE.md) for testing requirements
 
 ### For Feature Implementation
-1. Review [REFACTORING_PLAN.md](REFACTORING_PLAN.md) for ongoing initiatives
-2. Check [archive/track-offset/](archive/track-offset/) for recent implementation example
-3. Follow patterns documented in [ARCHITECTURE.md](ARCHITECTURE.md)
-4. Refer to [API_REFERENCE.md](API_REFERENCE.md) for API details
+1. Check [archive/track-offset/](archive/track-offset/) for recent implementation example
+2. Follow patterns documented in [ARCHITECTURE.md](ARCHITECTURE.md)
+3. Refer to [API_REFERENCE.md](API_REFERENCE.md) for API details
 
 ### For Code Review
 1. Use [CODEBASE_REVIEW.md](CODEBASE_REVIEW.md) for structure overview

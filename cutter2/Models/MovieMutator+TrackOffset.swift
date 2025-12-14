@@ -65,9 +65,15 @@ struct CMTimeParser {
         if let regex = try? NSRegularExpression(pattern: timecodePattern),
            let match = regex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)) {
             
-            let hours = Int((trimmed as NSString).substring(with: match.range(at: 1)))!
-            let minutes = Int((trimmed as NSString).substring(with: match.range(at: 2)))!
-            let seconds = Int((trimmed as NSString).substring(with: match.range(at: 3)))!
+            let hoursString = (trimmed as NSString).substring(with: match.range(at: 1))
+            let minutesString = (trimmed as NSString).substring(with: match.range(at: 2))
+            let secondsString = (trimmed as NSString).substring(with: match.range(at: 3))
+            
+            guard let hours = Int(hoursString),
+                  let minutes = Int(minutesString),
+                  let seconds = Int(secondsString) else {
+                throw DocumentError.invalidTimeFormat
+            }
             
             var milliseconds = 0.0
             if match.range(at: 4).location != NSNotFound {
@@ -385,7 +391,9 @@ extension MovieMutator {
         // For reference tracks or as a safety measure, extract the clip first
         if !track.isSelfContained {
             // Create a clip of the removal range
-            let clip = internalMovie.mutableCopy() as! AVMutableMovie
+            guard let clip = internalMovie.mutableCopy() as? AVMutableMovie else {
+                throw DocumentError.internalError
+            }
             
             // Remove everything after the range
             let rangeAfter = CMTimeRange(

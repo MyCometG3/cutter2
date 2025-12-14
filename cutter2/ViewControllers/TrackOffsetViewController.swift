@@ -231,12 +231,13 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
     
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         guard row < rows.count else { return nil }
+        guard let tableColumn = tableColumn else { return nil }
         
         let rowData = rows[row]
-        let columnID = tableColumn?.identifier.rawValue ?? ""
+        let columnID = tableColumn.identifier.rawValue
         
         // Get or create cell view
-        let cellView = tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as? NSTableCellView
+        let cellView = tableView.makeView(withIdentifier: tableColumn.identifier, owner: self) as? NSTableCellView
             ?? NSTableCellView()
         
         switch columnID {

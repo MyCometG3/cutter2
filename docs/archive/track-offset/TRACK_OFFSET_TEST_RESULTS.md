@@ -124,16 +124,16 @@ All functionality tests have been completed successfully. The Track Offset featu
    - **Fix**: Implemented two-phase validation with red text color for errors
    - **Result**: Immediate visual feedback, proper selection color handling
 
-#### All Track Offset Issues Resolved ✅
+7. ✅ **Self/Ref Display Incorrect** (Fixed in 4062d75)
+   - **Status**: RESOLVED
+   - **Issue**: AVMutableMovieTrack.isSelfContained broken since 0.8.8, showing incorrect Self/Ref status
+   - **Fix**: Implemented custom detection using queryMediaDataURLs(), filtering self-references
+   - **Architecture**: Pass documentURL via inspector dictionary, centralize detection logic
+   - **Result**: Correct Self/Ref display in both Inspector and Track Offset UI
 
-All UI/UX issues specific to the Track Offset feature have been addressed.
+#### All Issues Resolved ✅
 
-### Pre-existing Issues (Not related to this branch)
-
-5. **Self/Ref Display Incorrect**
-   - **Issue**: Self-contained movies show "Ref" instead of "Self"
-   - **Status**: Pre-existing bug in master branch (Info Window also affected)
-   - **Action**: Separate issue - not related to Track Offset implementation
+All identified issues have been addressed and resolved in this branch.
 
 ---
 
@@ -236,6 +236,7 @@ The discovered issues are minor UI/UX improvements that don't affect core functi
 5. `58a82c2` - Add explicit frame rate support
 6. `6f92ee6` - Add real-time validation with text color feedback
 7. `607a3a8` - Update test results documentation
+8. `4062d75` - Fix Self/Ref display in Inspector and Track Offset UI
 
 ### Ready for Merge ✅
 

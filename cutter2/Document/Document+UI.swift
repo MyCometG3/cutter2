@@ -171,24 +171,25 @@ extension Document {
     
     @IBAction func showTrackOffsetPanel(_ sender: Any?) {
         
-        guard let mutator = self.movieMutator else { NSSound.beep(); return }
+        guard let _ = self.movieMutator else { NSSound.beep(); return }
         
         // Prepare Track Offset SheetController
         let storyboard: NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
         let sid: NSStoryboard.SceneIdentifier = "TrackOffsetSheet Controller"
-        let trackOffsetWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController
+        guard let trackOffsetWC = storyboard.instantiateController(withIdentifier: sid) as? NSWindowController else {
+            NSSound.beep()
+            return
+        }
         
         // Prepare Track Offset ViewController
-        guard let contVC = trackOffsetWC.contentViewController else { 
-            preconditionFailure("Unexpected nil contentViewController detected.") 
-        }
-        guard let trackOffsetVC = contVC as? TrackOffsetViewController else { 
-            preconditionFailure("Unexpected nil TrackOffsetViewController detected.") 
+        guard let trackOffsetVC = trackOffsetWC.contentViewController as? TrackOffsetViewController else {
+            NSSound.beep()
+            return
         }
         
         // Show Track Offset Sheet
         trackOffsetVC.beginSheetModal(for: self.window!, document: self) { [weak self] (response) in
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
+            guard let _ = self else { return }
             guard response == .continue else { return }
             
             // Offsets applied successfully - refresh UI is handled by notification

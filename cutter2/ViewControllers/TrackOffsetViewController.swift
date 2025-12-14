@@ -272,13 +272,6 @@ class TrackOffsetViewController: NSViewController, NSTableViewDataSource, NSTabl
             } else {
                 cellView.textField?.placeholderString = nil
             }
-            
-            // Highlight if there's a validation error
-            if rowData.validationError != nil {
-                cellView.textField?.backgroundColor = NSColor.systemRed.withAlphaComponent(0.2)
-            } else {
-                cellView.textField?.backgroundColor = NSColor.controlBackgroundColor
-            }
         case "reference":
             cellView.textField?.stringValue = rowData.isReference
             cellView.textField?.isEditable = false

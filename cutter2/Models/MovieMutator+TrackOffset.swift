@@ -397,7 +397,7 @@ extension MovieMutator {
                     }
                 }
                 undoManager.registerUndo(withTarget: mutator, handler: redoHandler)
-                undoManager.setActionName("Apply Track Offsets")
+                undoManager.setActionName(NSLocalizedString("undo.apply_track_offsets", comment: ""))
                 
                 // Perform undo: restore original state
                 _ = mutator.reloadMovie(from: originalMovieData)
@@ -407,7 +407,7 @@ extension MovieMutator {
         }
         
         undoManager.registerUndo(withTarget: self, handler: undoHandler)
-        undoManager.setActionName("Apply Track Offsets")
+        undoManager.setActionName(NSLocalizedString("undo.apply_track_offsets", comment: ""))
     }
     
     /// Parse time offset string into CMTime

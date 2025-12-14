@@ -1224,6 +1224,24 @@
           }
         }
       }
+    },
+    "undo.apply_track_offsets" : {
+      "comment" : "Undo action name for applying track offsets",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply Track Offsets"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トラックオフセット適用"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

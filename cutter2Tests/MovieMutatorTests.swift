@@ -278,4 +278,106 @@ final class MovieMutatorTests: XCTestCase {
             _ = movie.movHeader
         }
     }
+    
+    // MARK: - Track Offset Tests
+    
+    func testCMTimeParserTimecode() throws {
+        let timescale: CMTimeScale = 600
+        
+        // Test HH:MM:SS format
+        let time1 = try CMTimeParser.parse("00:01:30", timescale: timescale)
+        XCTAssertEqual(time1.seconds, 90.0, accuracy: 0.001)
+        
+        // Test HH:MM:SS.mmm format
+        let time2 = try CMTimeParser.parse("00:01:30.500", timescale: timescale)
+        XCTAssertEqual(time2.seconds, 90.5, accuracy: 0.001)
+        
+        // Test H:MM:SS format (single digit hour)
+        let time3 = try CMTimeParser.parse("1:02:03", timescale: timescale)
+        XCTAssertEqual(time3.seconds, 3723.0, accuracy: 0.001)
+    }
+    
+    func testCMTimeParserFrames() throws {
+        let timescale: CMTimeScale = 600
+        
+        // Test positive frames
+        let time1 = try CMTimeParser.parse("30f", timescale: timescale)
+        XCTAssertEqual(time1.value, 30)
+        XCTAssertEqual(time1.timescale, timescale)
+        
+        // Test negative frames
+        let time2 = try CMTimeParser.parse("-15f", timescale: timescale)
+        XCTAssertEqual(time2.value, -15)
+        XCTAssertEqual(time2.timescale, timescale)
+    }
+    
+    func testCMTimeParserSeconds() throws {
+        let timescale: CMTimeScale = 600
+        
+        // Test positive seconds
+        let time1 = try CMTimeParser.parse("1.5", timescale: timescale)
+        XCTAssertEqual(time1.seconds, 1.5, accuracy: 0.001)
+        
+        // Test negative seconds
+        let time2 = try CMTimeParser.parse("-2.3", timescale: timescale)
+        XCTAssertEqual(time2.seconds, -2.3, accuracy: 0.001)
+        
+        // Test integer seconds
+        let time3 = try CMTimeParser.parse("10", timescale: timescale)
+        XCTAssertEqual(time3.seconds, 10.0, accuracy: 0.001)
+    }
+    
+    func testCMTimeParserInvalid() throws {
+        let timescale: CMTimeScale = 600
+        
+        // Test invalid formats
+        XCTAssertThrowsError(try CMTimeParser.parse("invalid", timescale: timescale))
+        XCTAssertThrowsError(try CMTimeParser.parse("", timescale: timescale))
+        XCTAssertThrowsError(try CMTimeParser.parse("1:2:3:4", timescale: timescale))
+    }
+    
+    func testTrackDescriptors() throws {
+        let movie = AVMutableMovie()
+        movie.timescale = 600
+        
+        // Add tracks in mixed order
+        _ = movie.addMutableTrack(withMediaType: .audio, copySettingsFrom: nil, options: nil)
+        _ = movie.addMutableTrack(withMediaType: .video, copySettingsFrom: nil, options: nil)
+        _ = movie.addMutableTrack(withMediaType: .audio, copySettingsFrom: nil, options: nil)
+        
+        let mutator = MovieMutator(with: movie)
+        let descriptors = mutator.trackDescriptors()
+        
+        // Should return 3 tracks
+        XCTAssertEqual(descriptors.count, 3)
+        
+        // First should be video (ordered video → audio → timecode → other)
+        XCTAssertEqual(descriptors[0].mediaType, .video)
+        
+        // Next two should be audio
+        XCTAssertEqual(descriptors[1].mediaType, .audio)
+        XCTAssertEqual(descriptors[2].mediaType, .audio)
+        
+        // All should have zero offset initially
+        for descriptor in descriptors {
+            XCTAssertEqual(descriptor.currentOffset, CMTime.zero)
+        }
+    }
+    
+    func testTrackDescriptorCaching() throws {
+        let movie = AVMutableMovie()
+        movie.timescale = 600
+        _ = movie.addMutableTrack(withMediaType: .video, copySettingsFrom: nil, options: nil)
+        
+        let mutator = MovieMutator(with: movie)
+        
+        // First call
+        let descriptors1 = mutator.trackDescriptors()
+        
+        // Second call should return cached result (same instance)
+        let descriptors2 = mutator.trackDescriptors()
+        
+        XCTAssertEqual(descriptors1.count, descriptors2.count)
+        XCTAssertEqual(descriptors1[0].id, descriptors2[0].id)
+    }
 }

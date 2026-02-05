@@ -10,6 +10,14 @@ import Cocoa
 import AVFoundation
 import os.log
 
+/// Prepared data for async document opening.
+///
+/// This separates background I/O from MainActor state application. `DocumentController.prepareOpen`
+/// collects:
+/// - `typeName`: Document type resolved on MainActor.
+/// - `modificationDate`: File modification date for metadata updates.
+/// - `movHeader`: Movie header used to initialize MovieMutator without extra I/O.
+/// The preparation is passed into `Document.readAsync(from:openPreparation:)` during open/reopen.
 struct OpenPreparation: Sendable {
     let typeName: String
     let modificationDate: Date?

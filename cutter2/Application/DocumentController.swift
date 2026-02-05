@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import AVFoundation
 
 @MainActor
 class DocumentController: NSDocumentController {
@@ -25,21 +26,31 @@ class DocumentController: NSDocumentController {
         super.beginOpenPanel(openPanel, forTypes: inTypes, completionHandler: completionHandler)
     }
     
-    private func makeDocumentAsync(withContentsOf url: URL, ofType typeName: String) async throws -> NSDocument {
+    private static func prepareOpen(for url: URL) async throws -> OpenPreparation {
+        let typeName: String = try NSDocumentController.shared.typeForContents(of: url)
+        return try await Task.detached(priority: .userInitiated) { @Sendable in
+            let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+            let modificationDate = attributes[.modificationDate] as? Date
+            let movie: AVMutableMovie = AVMutableMovie(url: url, options: nil)
+            return OpenPreparation(typeName: typeName,
+                                   modificationDate: modificationDate,
+                                   movHeader: movie.movHeader)
+        }.value
+    }
+    
+    private func makeDocumentAsync(withContentsOf url: URL) async throws -> NSDocument {
         
         // Create a new document
         let document = Document()
         
         // Read the document data
-        try await document.readAsync(from: url, ofType: typeName)
+        let openPreparation = try await Self.prepareOpen(for: url)
+        try await document.readAsync(from: url, openPreparation: openPreparation)
         
         // Set the document properties
         document.fileURL = url
-        document.fileType = typeName
-        let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
-        if let modificationDate = attributes[.modificationDate] as? Date {
-            document.fileModificationDate = modificationDate
-        }
+        document.fileType = openPreparation.typeName
+        document.fileModificationDate = openPreparation.modificationDate
         document.updateChangeCount(.changeCleared)
         return document
     }
@@ -54,11 +65,8 @@ class DocumentController: NSDocumentController {
             return (existingDocument, false)
         }
         
-        // Check file type
-        let typeName: String = try self.typeForContents(of: url)
-        
         // Open the document
-        let document = try await makeDocumentAsync(withContentsOf: url, ofType: typeName)
+        let document = try await makeDocumentAsync(withContentsOf: url)
         self.addDocument(document)
         
         // Display the document if requested
@@ -69,21 +77,19 @@ class DocumentController: NSDocumentController {
         return (document, true)
     }
     
-    private func makeDocumentAsync(for urlOrNil: URL?, withContentsOf contentsURL: URL, ofType typeName: String) async throws -> NSDocument {
+    private func makeDocumentAsync(for urlOrNil: URL?, withContentsOf contentsURL: URL) async throws -> NSDocument {
         
         // Create a new document
         let document = Document()
         
         // Read the document data
-        try await document.readAsync(from: contentsURL, ofType: typeName)
+        let openPreparation = try await Self.prepareOpen(for: contentsURL)
+        try await document.readAsync(from: contentsURL, openPreparation: openPreparation)
         
         // Set the document properties
         document.fileURL = urlOrNil
-        document.fileType = typeName
-        let attributes = try FileManager.default.attributesOfItem(atPath: contentsURL.path)
-        if let modificationDate = attributes[.modificationDate] as? Date {
-            document.fileModificationDate = modificationDate
-        }
+        document.fileType = openPreparation.typeName
+        document.fileModificationDate = openPreparation.modificationDate
         document.updateChangeCount(.changeReadOtherContents)
         return document
     }
@@ -98,11 +104,8 @@ class DocumentController: NSDocumentController {
             return (existingDocument, false)
         }
         
-        // Check file type
-        let typeName: String = try self.typeForContents(of: contentsURL)
-        
         // Open the document
-        let document = try await makeDocumentAsync(for: urlOrNil, withContentsOf: contentsURL, ofType: typeName)
+        let document = try await makeDocumentAsync(for: urlOrNil, withContentsOf: contentsURL)
         self.addDocument(document)
         
         // Display the document if requested

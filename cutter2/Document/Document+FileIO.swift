@@ -10,6 +10,20 @@ import Cocoa
 import AVFoundation
 import os.log
 
+/// Prepared data for async document opening.
+///
+/// This separates background I/O from MainActor state application. `DocumentController.prepareOpen`
+/// collects:
+/// - `typeName`: Document type resolved on MainActor.
+/// - `modificationDate`: File modification date for metadata updates.
+/// - `movHeader`: Movie header used to initialize MovieMutator without extra I/O.
+/// The preparation is passed into `Document.readAsync(from:openPreparation:)` during open/reopen.
+struct OpenPreparation: Sendable {
+    let typeName: String
+    let modificationDate: Date?
+    let movHeader: Data?
+}
+
 /* ============================================ */
 // MARK: - File I/O Operations
 /* ============================================ */
@@ -37,11 +51,12 @@ extension Document {
     /// Custom read(from:ofType:) throws w/ async
     /// - Parameters:
     ///   - url: The location from which the document contents are read.
-    ///   - typeName: The string that identifies the document type.
-    func readAsync(from url: URL, ofType typeName: String) async throws {
+    ///   - openPreparation: Precomputed open metadata for the URL.
+    func readAsync(from url: URL, openPreparation: OpenPreparation) async throws {
         LoggingSystem.fileIO.info("Reading document from \(url.lastPathComponent, privacy: .public)")
         
         // Check UTI for AVMovie fileType
+        let typeName = openPreparation.typeName
         let fileType = AVFileType.init(rawValue: typeName)
         if AVMovie.movieTypes().contains(fileType) == false {
             let reason = "(UTI: \(typeName))"
@@ -49,22 +64,8 @@ extension Document {
             try throwError(.incompatibleFileType, reason: reason)
         }
         
-        // Extract movie header from URL
-        let header = await Task.detached {
-            let movie: AVMutableMovie = AVMutableMovie(url: url, options: nil)
-            return movie.movHeader
-        }.value
-        
-        if let header = header {
+        if let header = openPreparation.movHeader {
             // File opened successfully
-            self.fileURL = url
-            self.fileType = typeName
-            let attribute = try FileManager.default.attributesOfItem(atPath: url.path)
-            if let modificationDate = attribute[.modificationDate] as? Date {
-                self.fileModificationDate = modificationDate
-            }
-            self.updateChangeCount(.changeCleared)
-            
             // Initialize movieMutator
             let movie = AVMutableMovie(data: header)
             self.removeMutationObserver()
@@ -93,7 +94,7 @@ extension Document {
          but that method is marked with `@MainActor`, so invoking it on a background thread crashes immediately.
          
          Instead, we override `NSDocumentController`'s `openDocument()` and `reopenDocument()` methods
-         and use a custom `readAsync()` implementation to support Swift Concurrency properly.
+         and use custom `OpenPreparation` + `readAsync()` implementations to support Swift Concurrency properly.
          */
         return true
     }

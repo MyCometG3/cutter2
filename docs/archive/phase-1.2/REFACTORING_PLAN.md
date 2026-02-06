@@ -5,6 +5,8 @@
 **Status**: ✅ **COMPLETED**  
 **Goal**: Split Document.swift into logical, maintainable extensions
 
+> Archived: Historical refactoring plan completed in 2025. For current development guidance, see docs/.
+
 ---
 
 ## Refactoring Completion Summary

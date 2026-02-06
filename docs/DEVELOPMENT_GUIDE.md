@@ -1,15 +1,15 @@
 # Development Guide for cutter2
 
-**Last Updated**: October 18, 2025  
+**Last Updated**: February 5, 2026  
 **Status**: ✅ Active and Maintained
 
 **Recent Updates**:
 - ✅ Phase 2.1: Internationalization Support (Complete)
 - ✅ Phase 2.2: Performance Optimization (Complete)
 - ✅ Phase 2.3: Logging System (Complete)
-- ✅ LocalizationTests added (11 tests)
-- ✅ PerformanceTests added (12 tests)
-- ✅ LoggingSystemTests added (17 tests)
+- ✅ LocalizationTests added
+- ✅ PerformanceTests added
+- ✅ LoggingSystemTests added
 - ✅ String Catalog integration
 - ✅ Console.app integration for logging
 
@@ -211,10 +211,13 @@ xcodebuild test \
 ```
 cutter2Tests/
 ├── cutter2Tests.swift              # Base test class
+├── DocumentTests.swift             # Document tests
+├── LocalizationTests.swift         # Localization tests
+├── LoggingSystemTests.swift        # Logging system tests
+├── ModelTests.swift                # Model layer tests
 ├── MovieMutatorTests.swift         # Model layer tests
+├── PerformanceTests.swift          # Performance tests
 ├── UtilitiesTests.swift            # Utility tests
-├── ActorUtilitiesTests.swift       # Actor isolation tests
-├── ErrorUtilitiesTests.swift       # Error handling tests
 └── ViewControllerTests.swift       # ViewController tests
 ```
 
@@ -729,7 +732,7 @@ LoggingSystem.video.debug("Frame timing: \(time.seconds)s, valid: \(CMTIME_IS_VA
 #endif
 ```
 
-For more details, see [PHASE_2.3_LOGGING_PLAN.md](PHASE_2.3_LOGGING_PLAN.md).
+For more details, see [PHASE_2.3_LOGGING_PLAN.md](archive/phase-2.3/PHASE_2.3_LOGGING_PLAN.md).
 
 ---
 
@@ -923,7 +926,7 @@ cutter2 supports internationalization using String Catalogs (.xcstrings format).
    - Build and test in new language
    - Verify layout with different string lengths
 
-For detailed localization information, see [LOCALIZATION_PLAN.md](LOCALIZATION_PLAN.md) and [LOCALIZATION_COMPLETE.md](LOCALIZATION_COMPLETE.md).
+For detailed localization information, see [LOCALIZATION_PLAN.md](archive/phase-2.1/LOCALIZATION_PLAN.md) and [LOCALIZATION_COMPLETE.md](archive/phase-2.1/LOCALIZATION_COMPLETE.md).
 
 ---
 
@@ -933,10 +936,10 @@ For detailed localization information, see [LOCALIZATION_PLAN.md](LOCALIZATION_P
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture
 - [TESTING_GUIDE.md](TESTING_GUIDE.md) - Testing guide
-- [REFACTORING_PLAN.md](REFACTORING_PLAN.md) - Code organization
-- [CODEBASE_REVIEW.md](CODEBASE_REVIEW.md) - Codebase analysis
-- [LOCALIZATION_PLAN.md](LOCALIZATION_PLAN.md) - Localization implementation ✨ NEW
-- [LOCALIZATION_COMPLETE.md](LOCALIZATION_COMPLETE.md) - Localization summary ✨ NEW
+- [REFACTORING_PLAN.md](archive/phase-1.2/REFACTORING_PLAN.md) - Code organization
+- [CODEBASE_REVIEW.md](archive/reviews/CODEBASE_REVIEW.md) - Codebase analysis
+- [LOCALIZATION_PLAN.md](archive/phase-2.1/LOCALIZATION_PLAN.md) - Localization implementation
+- [LOCALIZATION_COMPLETE.md](archive/phase-2.1/LOCALIZATION_COMPLETE.md) - Localization summary
 
 ### Apple Documentation
 
@@ -967,5 +970,5 @@ If you encounter issues:
 ---
 
 **Document Status**: ✅ Active  
-**Last Updated**: October 18, 2025  
+**Last Updated**: February 5, 2026  
 **Maintained By**: cutter2 development team

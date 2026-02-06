@@ -5,6 +5,8 @@
 **Target Version**: 0.8.13+ (AsyncStream Migration Complete)  
 **Total Lines of Code**: Approximately 10,600+ lines (Swift)
 
+> Archived: Historical codebase review snapshot. For current development guidance, see docs/.
+
 ---
 
 ## Executive Summary

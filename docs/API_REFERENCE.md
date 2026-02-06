@@ -1,6 +1,6 @@
 # API Reference for cutter2
 
-**Last Updated**: October 18, 2025  
+**Last Updated**: February 5, 2026  
 **Status**: 🚧 Work in Progress
 
 > **Note**: This is a living document. Full API documentation will be generated automatically using tools like jazzy or DocC in the future. This document provides an overview of key APIs and their usage.
@@ -54,12 +54,12 @@ class Document: NSDocument {
 #### File I/O Methods
 
 ```swift
-/// Reads a movie file asynchronously
+/// Reads a movie file asynchronously using prepared open metadata
 /// - Parameters:
 ///   - url: The URL of the file to read
-///   - typeName: The file type name
+///   - openPreparation: Prepared metadata from DocumentController.prepareOpen
 /// - Throws: DocumentError if read fails
-func readAsync(from url: URL, ofType typeName: String) async throws
+func readAsync(from url: URL, openPreparation: OpenPreparation) async throws
 
 /// Writes the movie file asynchronously
 /// - Parameters:
@@ -682,12 +682,12 @@ public func method(param1: Type1, param2: Type2) throws -> ReturnType {
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture overview
 - [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) - Development practices
-- [CODEBASE_REVIEW.md](CODEBASE_REVIEW.md) - Detailed code analysis
+- [CODEBASE_REVIEW.md](archive/reviews/CODEBASE_REVIEW.md) - Detailed code analysis
 
 ---
 
 **Document Status**: 🚧 Work in Progress  
-**Last Updated**: October 18, 2025  
+**Last Updated**: February 5, 2026  
 **Next Review**: After major API changes or releases
 
 **Note**: Full API documentation generation using DocC or jazzy is planned for future releases.

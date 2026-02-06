@@ -1,6 +1,6 @@
 # cutter2 Architecture
 
-**Last Updated**: October 18, 2025  
+**Last Updated**: February 5, 2026  
 **Status**: ✅ Active and Maintained
 
 ---
@@ -100,14 +100,14 @@ protocol ViewControllerDelegate: AnyObject {
 
 **Purpose**: Document lifecycle, file I/O, window management
 
-**Main File**: `Document.swift` (311 lines - core)
+**Main File**: `Document.swift` (core)
 
-**Extensions** (1,574 lines total):
-- `Document+FileIO.swift` (382 lines) - Read, write, revert operations
-- `Document+SavePanel.swift` (156 lines) - Save panel UI and configuration
-- `Document+Export.swift` (177 lines) - Export and transcode operations
-- `Document+UI.swift` (171 lines) - Window resizing and video transforms
-- `Document+Delegate.swift` (688 lines) - ViewControllerDelegate implementation
+**Extensions**:
+- `Document+FileIO.swift` - Read, write, revert operations
+- `Document+SavePanel.swift` - Save panel UI and configuration
+- `Document+Export.swift` - Export and transcode operations
+- `Document+UI.swift` - Window resizing and video transforms
+- `Document+Delegate.swift` - ViewControllerDelegate implementation
 
 **Responsibilities**:
 - File loading and saving (async operations)
@@ -242,10 +242,8 @@ protocol ViewControllerDelegate: AnyObject {
 **Components**:
 
 1. **Localizable.xcstrings** (String Catalog)
-   - 55 localized keys (en/ja)
-   - Error messages (17 items)
-   - UI labels (33 items)
-   - Menu items, inspector labels, progress messages
+   - Localized strings for English and Japanese
+   - Error messages, UI labels, menu items, inspector labels, progress messages
 
 2. **LocalizationHelper.swift**
    - Centralized localization API
@@ -271,25 +269,25 @@ protocol ViewControllerDelegate: AnyObject {
 
 **File Structure**:
 ```
-Document.swift                  311 lines  (Core)
+Document.swift                  (Core)
 ├── Error Definitions           (DocumentError enum)
 ├── Properties                  (movieMutator, player, etc.)
 └── NSDocument Overrides        (lifecycle methods)
 
-Document+FileIO.swift          382 lines
-├── readAsync()                 (async file loading)
+Document+FileIO.swift
+├── readAsync(from:openPreparation:) (async file loading)
 ├── writeAsync()                (async file saving)
 └── revert()                    (reload from disk)
 
-Document+SavePanel.swift       156 lines
+Document+SavePanel.swift
 ├── prepareSavePanel()          (save dialog setup)
 └── NSOpenSavePanelDelegate     (accessory view handling)
 
-Document+Export.swift          177 lines
+Document+Export.swift
 ├── exportMovie()               (export with progress)
 └── transcodeMovie()            (codec conversion)
 
-Document+UI.swift              171 lines
+Document+UI.swift
 ├── resizeWindow()              (window sizing)
 └── modifyTransform()           (clap/pasp adjustments)
 ```
@@ -382,9 +380,9 @@ ViewController                 179 lines (core)
    ↓
 2. NSDocumentController creates Document
    ↓
-3. Document.readAsync(from:ofType:)
+3. DocumentController.prepareOpen(for:) gathers metadata (type + header)
    ↓
-4. Task.detached { AVMutableMovie(url:) }
+4. Document.readAsync(from:openPreparation:)
    ↓
 5. MovieMutator.prepare(with:)
    ↓
@@ -696,11 +694,11 @@ enum DocumentError: Error {
 - [Apple Document-Based Apps Guide](https://developer.apple.com/documentation/appkit/documents_data_and_pasteboard)
 - [AVFoundation Programming Guide](https://developer.apple.com/av-foundation/)
 - [Swift Concurrency Documentation](https://docs.swift.org/swift-book/LanguageGuide/Concurrency.html)
-- [REFACTORING_PLAN.md](REFACTORING_PLAN.md) - Detailed refactoring history
-- [CODEBASE_REVIEW.md](CODEBASE_REVIEW.md) - Comprehensive codebase analysis
+- [REFACTORING_PLAN.md](archive/phase-1.2/REFACTORING_PLAN.md) - Detailed refactoring history
+- [CODEBASE_REVIEW.md](archive/reviews/CODEBASE_REVIEW.md) - Comprehensive codebase analysis
 
 ---
 
 **Document Status**: ✅ Active  
-**Last Review**: October 18, 2025  
+**Last Review**: February 5, 2026  
 **Next Review**: As needed for major architectural changes

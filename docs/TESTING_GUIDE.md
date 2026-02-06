@@ -1,14 +1,13 @@
 # Testing Guide for cutter2
 
-**Status**: ✅ **Active - Test Infrastructure Operational** *(Updated: October 18, 2025)*
+**Status**: ✅ **Active - Test Infrastructure Operational** *(Updated: February 5, 2026)*
 
 This guide provides instructions for running and writing tests for the cutter2 application.
 
 ## Quick Start
 
 The test infrastructure is fully configured and operational:
-- ✅ 8 test files covering Models, ViewControllers, Utilities, Localization, and Performance
-- ✅ 60 tests passing (37 functional + 11 localization + 12 performance)
+- ✅ Test suite covers Models, ViewControllers, Utilities, Localization, Performance, and Logging
 - ✅ XCTest framework integrated
 - ✅ Code coverage enabled
 - ✅ CI/CD pipeline active (GitHub Actions)
@@ -56,29 +55,29 @@ To run tests: Press `⌘U` in Xcode or run `xcodebuild test` from command line.
 ```
 cutter2Tests/
 ├── cutter2Tests.swift              # Base test class and setup ✅
-├── MovieMutatorTests.swift         # Model layer tests ✅
-├── ModelTests.swift                # Additional model tests ✅
 ├── DocumentTests.swift             # Document tests ✅
-├── UtilitiesTests.swift            # Utility class tests ✅
-├── ViewControllerTests.swift       # ViewController tests ✅
 ├── LocalizationTests.swift         # Localization tests ✅ (Phase 2.1)
-└── PerformanceTests.swift          # Performance tests ✅ (Phase 2.2)
+├── LoggingSystemTests.swift        # Logging tests ✅ (Phase 2.3)
+├── ModelTests.swift                # Additional model tests ✅
+├── MovieMutatorTests.swift         # Model layer tests ✅
+├── PerformanceTests.swift          # Performance tests ✅ (Phase 2.2)
+├── UtilitiesTests.swift            # Utility class tests ✅
+└── ViewControllerTests.swift       # ViewController tests ✅
 ```
 
-**Current Status**: 
-- **60 tests** total (37 functional + 11 localization + 12 performance)
-- **100% pass rate** ✅
-- Full test suite implemented covering core functionality, internationalization, and performance
+**Current Status**:
+- Full test suite implemented covering core functionality, localization, logging, and performance
+- Run `./scripts/test.sh` or `xcodebuild test` for current results
 
 **Phase 2.1 - Localization**:
-- ✅ LocalizationTests.swift - 11 comprehensive localization tests
+- ✅ LocalizationTests.swift - localization coverage
 - Tests all error messages (DocumentError, MovieWriterError)
 - Tests UI strings (buttons, menus, inspector labels)
 - Tests LocalizationHelper utility methods
 - Tests formatted string localization
 
 **Phase 2.2 - Performance**:
-- ✅ PerformanceTests.swift - 12 comprehensive performance tests
+- ✅ PerformanceTests.swift - performance coverage
 - Tests CMTime operations performance
 - Tests movie loading and preparation
 - Tests export progress reporting
@@ -130,16 +129,10 @@ cutter2Tests/
 
 ### Quick Test Script
 
-Create a shell script `scripts/test.sh`:
+Use the existing test script (includes coverage report):
 
 ```bash
-#!/bin/bash
-xcodebuild clean test \
-  -project cutter2.xcodeproj \
-  -scheme cutter2 \
-  -destination 'platform=macOS' \
-  -enableCodeCoverage YES \
-  | xcpretty
+./scripts/test.sh
 ```
 
 ---
@@ -268,13 +261,9 @@ func testPerformanceOfCriticalPath() { }
 
 ### Coverage Targets
 
-**Current Status**: Initial test suite implemented
-- **Utilities**: 90% coverage target *(In progress)*
-- **Model Layer**: 80% coverage target *(In progress)*
-- **ViewControllers**: 60% coverage target *(In progress)*
-- **Overall**: 70% coverage target *(Expanding)*
+**Current Status**: Coverage goals are tracked in CI and updated as the suite evolves.
 
-Run tests with coverage enabled to track progress toward these goals.
+Run tests with coverage enabled to track progress toward current goals.
 
 ### Generate Coverage Report (CLI)
 
@@ -430,6 +419,6 @@ Based on Phase 2-3 of the improvement plan:
 
 ---
 
-**Last Updated**: October 18, 2025  
+**Last Updated**: February 5, 2026  
 **Version**: 1.2  
 **Status**: ✅ Test Infrastructure Operational - Phase 2.1 & 2.2 Complete

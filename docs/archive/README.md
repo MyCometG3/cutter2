@@ -6,6 +6,14 @@ This directory contains completed phase documentation and historical records.
 
 Each completed phase has its own subdirectory:
 
+### phase-1.2/ - Refactoring (Completed: October 13, 2025)
+
+- **REFACTORING_PLAN.md** - Refactoring plan and completion details
+
+### reviews/ - Codebase Reviews
+
+- **CODEBASE_REVIEW.md** - Historical codebase review snapshot
+
 ### phase-2.1/ - Internationalization (Completed: October 15, 2025)
 
 - **LOCALIZATION_PLAN.md** - Implementation plan for Phase 2.1

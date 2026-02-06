@@ -67,18 +67,18 @@ extension AVMutableMovie {
                         let s3 = Int(ptr[n-3])
                         let s2 = Int(ptr[n-2])
                         let s1 = Int(ptr[n-1])
-                        let atomSize: Int = s4<<24 + s3<<16 + s2<<8 + s1
+                        let atomSize: Int = (s4 << 24) | (s3 << 16) | (s2 << 8) | s1
+                        guard atomSize >= 13 else { continue }
+                        let urlStart = n + 8
+                        let urlEnd = n + atomSize - 5
+                        guard urlEnd <= data.count, urlStart <= urlEnd else { continue }
                         // let atomPtr = ptr.advanced(by: n)
                         
                         // heading(8):0x75726C20,0x00000000; trailing(5):0x00????????
-                        let urlData: Data = data.subdata(in: (n+8)..<(n+atomSize-5))
-                        let urlPath: String = String(data: urlData, encoding: String.Encoding.ascii)!
-                        let url: URL? = URL(string: urlPath)
-                        
-                        if let url = url {
+                        let urlData: Data = data.subdata(in: urlStart..<urlEnd)
+                        guard let urlPath = String(data: urlData, encoding: String.Encoding.utf8) else { continue }
+                        if let url = URL(string: urlPath) {
                             set.insert(url)
-                        } else {
-                            preconditionFailure("ERROR: url string conversion failed.")
                         }
                     }
                 }

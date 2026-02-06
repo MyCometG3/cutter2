@@ -67,9 +67,12 @@ extension Document {
         if let header = openPreparation.movHeader {
             // File opened successfully
             // Initialize movieMutator
-            guard let movie = AVMutableMovie(data: header) else {
+            let movie = AVMutableMovie(data: header)
+            guard movie.tracks.isEmpty == false,
+                  CMTIME_IS_VALID(movie.duration),
+                  CMTIME_IS_NUMERIC(movie.duration) else {
                 let reason = "Invalid movie header for \(url.lastPathComponent)"
-                LoggingSystem.fileIO.error("Failed to create movie from header: \(url.lastPathComponent)")
+                LoggingSystem.fileIO.error("Failed to validate movie header: \(url.lastPathComponent)")
                 try throwError(.unableToOpenFile, reason: reason)
             }
             self.removeMutationObserver()

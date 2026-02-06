@@ -1165,7 +1165,7 @@ extension MovieWriter {
         let v1 = UInt32(code[1])
         let v2 = UInt32(code[2])
         let v3 = UInt32(code[3])
-        return v0 << 24 + v1 << 16 + v2 << 8 + v3
+        return (v0 << 24) | (v1 << 16) | (v2 << 8) | v3
     }
 }
 

@@ -21,7 +21,7 @@ extension Document {
         /*
          If a movie refers to one file path only and it is same as the movie's filePath,
          - the URL is the only one source of the movie
-         - movie file is self-containd - no referencing track is included
+         - movie file is self-contained - no referencing track is included
          
          In case of in-memory movie (no-file-backed) it should be a reference movie.
          In case of multiple url found it should be a reference movie.

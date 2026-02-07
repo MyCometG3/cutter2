@@ -92,7 +92,7 @@ extension LayoutConverter {
         }
         let descs: [AudioChannelDescription] = channelDescriptionsForChannelLabelSet(pos)
         if descs.count > 0 {
-            let data = dataFor(desciptions: descs)
+            let data = dataFor(descriptions: descs)
             return data
         } else {
             return nil

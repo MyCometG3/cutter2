@@ -35,12 +35,15 @@ extension MovieWriter {
         exportSessionPollingStop()
         
         exportSessionPollingTask = Task<Void, Never> { @Sendable [weak self] in
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
+            guard let self else { return }
             
             var lastProgress: Float = -1.0
             var stagnantCount = 0
             
             while let progress = await self.currentProgressIfExporting() {
+                if Task.isCancelled {
+                    break
+                }
                 await self.progressContinuation?.yield(progress)
                 
                 // Adaptive polling: slow down if no progress change
@@ -58,7 +61,11 @@ extension MovieWriter {
                 }
                 
                 lastProgress = progress
-                try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+                do {
+                    try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+                } catch {
+                    break
+                }
             }
         }
     }
@@ -283,10 +290,12 @@ extension MovieWriter {
                 let interval: TimeInterval = dateNow.timeIntervalSince(dateStart)
                 result[elapsedInfoKey] = interval // seconds: Double
                 
-                let estimatedTotal: TimeInterval = interval / Double(progress)
-                let estimatedRemaining: TimeInterval = estimatedTotal * Double(1.0 - progress)
-                result[estimatedRemainingInfoKey] = estimatedRemaining // seconds: Double
-                result[estimatedTotalInfoKey] = estimatedTotal // seconds: Double
+                if progress > 0.0 {
+                    let estimatedTotal: TimeInterval = interval / Double(progress)
+                    let estimatedRemaining: TimeInterval = estimatedTotal * Double(1.0 - progress)
+                    result[estimatedRemainingInfoKey] = estimatedRemaining // seconds: Double
+                    result[estimatedTotalInfoKey] = estimatedTotal // seconds: Double
+                }
             } else {
                 // exportSession is not running
                 let progress: Float = self.writeProgress

@@ -74,7 +74,7 @@ extension LayoutConverter {
         return aclData
     }
     
-    func dataFor(desciptions array: [AudioChannelDescription]) -> AudioChannelLayoutData {
+    func dataFor(descriptions array: [AudioChannelDescription]) -> AudioChannelLayoutData {
         let acDescCount = array.count
         precondition(acDescCount > 0, "ERROR: AudioChannelDescription array must not be empty")
         let count: Int = dataSize(descCount: acDescCount)

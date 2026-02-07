@@ -18,11 +18,11 @@ extension MovieWriter {
     
     /// Flatten mode
     ///
-    /// - writeSelfContaind: Flatten in SelfContained Movie
+    /// - writeSelfContained: Flatten in SelfContained Movie
     /// - writeReferenceMovie: Flatten in Reference Movie
     /// - refreshMovieHeader: Refresh Movie Header (keep data box)
     private enum FlattenMode {
-        case writeSelfContaind
+        case writeSelfContained
         case writeReferenceMovie
         case refreshMovieHeader
     }
@@ -39,7 +39,7 @@ extension MovieWriter {
         
         if type == .mov {
             if selfContained {
-                try await flattenMovie(to: url, with: .writeSelfContaind)
+                try await flattenMovie(to: url, with: .writeSelfContained)
             } else {
                 try await flattenMovie(to: url, with: .writeReferenceMovie)
             }
@@ -86,7 +86,7 @@ extension MovieWriter {
         var after: Notification.Name = .movieDidWriteHeaderOnly
         
         switch mode {
-        case .writeSelfContaind:
+        case .writeSelfContained:
             selfContained = true
             option = .addMovieHeaderToDestination
             before = .movieWillWriteWithData
@@ -115,7 +115,8 @@ extension MovieWriter {
         let movie: AVMutableMovie = internalMovie
         let range: CMTimeRange = movie.range
         guard let newMovie: AVMutableMovie = try? AVMutableMovie(settingsFrom: movie, options: nil) else {
-            preconditionFailure("ERROR: Failed to create proxy object.")
+            let reason = "Failed to create proxy movie for flattening."
+            try throwError(.movieWriterFailed, reason: reason)
         }
         newMovie.timescale = movie.timescale // workaround
         newMovie.defaultMediaDataStorage = selfContained ? AVMediaDataStorage(url: url, options: nil) : nil

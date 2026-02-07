@@ -3,6 +3,7 @@
 //  cutter2Tests
 //
 //  Created by GitHub Copilot on 2025/10/15.
+//  Copyright © 2025-2026 MyCometG3. All rights reserved.
 //
 
 import XCTest

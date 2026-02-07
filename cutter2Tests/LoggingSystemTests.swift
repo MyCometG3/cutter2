@@ -3,7 +3,7 @@
 //  cutter2Tests
 //
 //  Created by Takashi Mochizuki on 2025/10/18.
-//  Copyright © 2018-2025 MyCometG3. All rights reserved.
+//  Copyright © 2025-2026 MyCometG3. All rights reserved.
 //
 
 import XCTest

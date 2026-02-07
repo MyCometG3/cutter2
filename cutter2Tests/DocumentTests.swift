@@ -2,7 +2,8 @@
 //  DocumentTests.swift
 //  cutter2Tests
 //
-//  Created on 2025-10-13.
+//  Created by GitHub Copilot on 2025/10/13.
+//  Copyright © 2025-2026 MyCometG3. All rights reserved.
 //
 
 import XCTest

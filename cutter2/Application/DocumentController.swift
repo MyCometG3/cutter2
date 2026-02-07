@@ -32,9 +32,7 @@ class DocumentController: NSDocumentController {
             let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
             let modificationDate = attributes[.modificationDate] as? Date
             let movie: AVMutableMovie = AVMutableMovie(url: url, options: nil)
-            guard movie.tracks.isEmpty == false,
-                  CMTIME_IS_VALID(movie.duration),
-                  CMTIME_IS_NUMERIC(movie.duration) else {
+            guard MovieHeaderValidator.isValid(movie) else {
                 try ErrorUtilities.throwError(DocumentError.unableToOpenFile,
                                               reason: "Invalid movie header.")
             }

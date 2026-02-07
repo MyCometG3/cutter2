@@ -12,7 +12,7 @@ import AVFoundation
 extension TimelineView {
     
     /* ============================================ */
-    // MARK: - Mouse Event Private
+    // MARK: - Mouse Event
     /* ============================================ */
     
     // NSView Instance Property

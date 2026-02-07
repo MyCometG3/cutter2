@@ -44,7 +44,7 @@ extension LayoutConverter {
     }
     
     /* ============================================ */
-    // MARK: - private AudioChannelLayoutData
+    // MARK: - AudioChannelLayoutData helpers
     /* ============================================ */
     
     func dataFor(tag: AudioChannelLayoutTag) -> AudioChannelLayoutData {

@@ -13,7 +13,7 @@ import os.log
 extension LayoutConverter {
     
     /* ============================================ */
-    // MARK: - private Converter
+    // MARK: - Converter helpers
     /* ============================================ */
     
     func channelLabelSet(_ layoutPtr: LayoutPtr) -> Set<AudioChannelLabel> {

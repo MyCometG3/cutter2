@@ -83,7 +83,7 @@ extension TimelineView {
     }
     
     /* ============================================ */
-    // MARK: - Utilities Private
+    // MARK: - Utilities
     /* ============================================ */
     
     /// Quantize position to the sample timerange boundary

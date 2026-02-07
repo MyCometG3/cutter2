@@ -122,7 +122,7 @@ extension TimelineView: NSViewLayerContentScaleDelegate {
     }
     
     /* ============================================ */
-    // MARK: - Sublayer setup Private
+    // MARK: - Sublayer setup
     /* ============================================ */
     
     /// Prepare CATextLayer

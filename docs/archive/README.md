@@ -13,6 +13,8 @@ Each completed phase has its own subdirectory:
 ### reviews/ - Codebase Reviews
 
 - **CODEBASE_REVIEW.md** - Historical codebase review snapshot
+- **MAINTAINABILITY_REFACTORING_REVIEW.md** - Maintainability review snapshot
+- **MAINTAINABILITY_REFACTORING_PLAN.md** - Maintainability refactor plan
 
 ### phase-2.1/ - Internationalization (Completed: October 15, 2025)
 

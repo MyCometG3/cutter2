@@ -504,7 +504,7 @@ extension MovieWriter {
         }
     }
     
-    public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String:Any]) async throws {
+    public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String: any Sendable]) async throws {
         
         // Check that no export is already running.
         guard writeInProgress == false else {
@@ -617,8 +617,7 @@ extension MovieWriter {
     /// This method cancels a custom export operation if one is in progress.
     /// It is safe to call even if no custom export is active (customQueue will be nil).
     ///
-    /// - Parameter sender: The object requesting cancellation (unused)
-    public func cancelCustomMovie(_ sender: Any) {
+    public func cancelCustomMovie() {
         // Only proceed if a custom export is actually in progress
         guard let customQueue = customQueue else { return }
         if writeCancelled == false {

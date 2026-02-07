@@ -190,5 +190,5 @@ actor MovieWriter: SampleBufferChannelDelegate {
     var customSampleBufferChannels: [SampleBufferChannel] = []
     
     /// Parameter dictionary for custom exporting
-    var customParam: [String:Any] = [:]
+    var customParam: [String: any Sendable] = [:]
 }

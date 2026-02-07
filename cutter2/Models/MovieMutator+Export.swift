@@ -30,7 +30,7 @@ extension MovieMutator {
         }.value
     }
     
-    public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String:Sendable]) async throws {
+    public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String: any Sendable]) async throws {
         let movieWriterParams = prepareMovieWriterParams()
         try await Task { @MainActor in
             let movieWriter = MovieWriter(params: movieWriterParams)
@@ -71,6 +71,6 @@ extension MovieMutator {
         guard let writer = self.currentMovieWriter else { return }
         // Capture the writer reference to avoid race condition between check and use
         await writer.cancelExport()
-        await writer.cancelCustomMovie(())
+        await writer.cancelCustomMovie()
     }
 }

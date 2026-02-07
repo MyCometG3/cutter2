@@ -179,7 +179,7 @@ extension Document {
             let audioCodec = audioID[defaults.integer(forKey: kAudioCodecKey)]
             let lpcmDepth = lpcmBPC[defaults.integer(forKey: kAudioCodecKey)]
             
-            var param: [String:Sendable] = [:]
+            var param: [String: any Sendable] = [:]
             param[kAudioKbpsKey] = audioRate
             param[kVideoKbpsKey] = videoRate
             param[kCopyFieldKey] = copyField

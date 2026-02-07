@@ -50,6 +50,7 @@ extension Document {
     /// - Throws: An error thrown by the closure.
     /// - Warning: This blocks the current thread. Do not call from the main thread.
     nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async throws -> T) throws -> T {
+        precondition(!Thread.isMainThread, "performAsync must not be called from the main thread.")
         let semaphore = DispatchSemaphore(value: 0)
         let lock = DispatchQueue(label: "ResultLock")
         let resultBox = SendableBox<Result<T, Error>?>(nil)
@@ -77,6 +78,7 @@ extension Document {
     /// - Returns: The result produced by the closure.
     /// - Warning: This blocks the current thread. Do not call from the main thread.
     nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async -> T) -> T {
+        precondition(!Thread.isMainThread, "performAsync must not be called from the main thread.")
         let semaphore = DispatchSemaphore(value: 0)
         let lock = DispatchQueue(label: "ResultLock")
         let resultBox = SendableBox<T?>(nil)

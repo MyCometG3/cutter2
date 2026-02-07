@@ -6,9 +6,8 @@
 //  Copyright © 2018-2025 MyCometG3. All rights reserved.
 //
 
-import Cocoa
+import Foundation
 import AVFoundation
-import os.log
 
 /* ============================================ */
 // MARK: - exportSession methods
@@ -51,7 +50,7 @@ extension MovieWriter {
                 if abs(progress - lastProgress) < 0.001 {
                     stagnantCount += 1
                     // After 10 stagnant updates (1 second), slow down to 500ms
-                    interval = stagnantCount > 10 
+                    interval = stagnantCount >= 10
                         ? self.exportSessionTimerMaxInterval 
                         : self.exportSessionTimerRefreshInterval
                 } else {
@@ -97,12 +96,22 @@ extension MovieWriter {
     /// - Parameter status: AVAssetExportSessionStatus
     /// - Returns: String representation of status
     private func statusString(of status: AVAssetExportSession.Status) -> String {
-        let statusStrArray: [String] =
-            ["unknown(0)","waiting(1)","exporting(2)","completed(3)","failed(4)","cancelled(5)"]
-        
-        let statusRaw: Int = status.rawValue
-        let statusStr: String = statusStrArray[statusRaw]
-        return statusStr
+        switch status {
+        case .unknown:
+            return "unknown(0)"
+        case .waiting:
+            return "waiting(1)"
+        case .exporting:
+            return "exporting(2)"
+        case .completed:
+            return "completed(3)"
+        case .failed:
+            return "failed(4)"
+        case .cancelled:
+            return "cancelled(5)"
+        @unknown default:
+            return "unknown(\(status.rawValue))"
+        }
     }
     
     /// Export as specified file type using AVAssetExportSessionPreset

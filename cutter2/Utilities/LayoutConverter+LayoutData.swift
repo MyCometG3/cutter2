@@ -6,9 +6,7 @@
 //  Copyright © 2018-2025 MyCometG3. All rights reserved.
 //
 
-import Cocoa
 import AVFoundation
-import os.log
 
 extension LayoutConverter {
     

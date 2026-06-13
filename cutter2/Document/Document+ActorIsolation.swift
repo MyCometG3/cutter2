@@ -37,7 +37,11 @@ extension Document {
     /// Executes an asynchronous, non-throwing operation synchronously on a detached task.
     ///
     /// A `() async -> T` block satisfies `() async throws -> T`, so the throwing
-    /// variant of `AsyncBridge.perform` is reused. See the throwing version for design rationale.
+    /// variant of `AsyncBridge.perform` is reused. See the throwing version for
+    /// design rationale. The `catch` is intentionally fatal: a non-throwing
+    /// block cannot produce a `PerformAsyncError` (.timeout / .operationFailed)
+    /// under normal operation, so reaching it indicates an internal bridge bug
+    /// rather than a recoverable caller error.
     ///
     /// - Parameter block: A closure that performs asynchronous work.
     /// - Returns: The result produced by the closure.

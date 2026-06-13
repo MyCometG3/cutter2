@@ -195,11 +195,11 @@ extension MovieMutator {
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record
-        let undoCutHandler: @Sendable (MovieMutator) -> Void = {[data, clip, range, time, unowned undoManager, unowned self] (me1) in // @escaping
+        let undoCutHandler: @Sendable (MovieMutator) -> Void = {[data, clip, range, time, unowned undoManager] (me1) in // @escaping
             // register redo record
-            performSyncOnMainActor {
-                let redoCutHandler: @Sendable (MovieMutator) -> Void = {[range, time, unowned undoManager, unowned self] (me2) in // @escaping
-                    performSyncOnMainActor {
+            me1.performSyncOnMainActor {
+                let redoCutHandler: @Sendable (MovieMutator) -> Void = {[range, time, unowned undoManager] (me2) in // @escaping
+                    me2.performSyncOnMainActor {
                         me2.resetMarker(time, range, false)
                         me2.cutSelection(using: undoManager)
                     }
@@ -232,11 +232,11 @@ extension MovieMutator {
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record
-        let undoPasteHandler: @Sendable (MovieMutator) -> Void = {[data, clip, range, time, unowned undoManager, unowned self] (me1) in // @escaping
+        let undoPasteHandler: @Sendable (MovieMutator) -> Void = {[data, clip, range, time, unowned undoManager] (me1) in // @escaping
             // register redo record
-            performSyncOnMainActor {
-                let redoPasteHandler: @Sendable (MovieMutator) -> Void = {[unowned undoManager, unowned self] (me2) in // @escaping
-                    performSyncOnMainActor {
+            me1.performSyncOnMainActor {
+                let redoPasteHandler: @Sendable (MovieMutator) -> Void = {[unowned undoManager] (me2) in // @escaping
+                    me2.performSyncOnMainActor {
                         me2.pasteAtInsertionTime(using: undoManager)
                     }
                 }
@@ -268,11 +268,11 @@ extension MovieMutator {
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record
-        let undoDeleteHandler: @Sendable (MovieMutator) -> Void = {[data, clip, range, time, unowned undoManager, unowned self] (me1) in // @escaping
+        let undoDeleteHandler: @Sendable (MovieMutator) -> Void = {[data, clip, range, time, unowned undoManager] (me1) in // @escaping
             // register redo record
-            performSyncOnMainActor {
-                let redoDeleteHandler: @Sendable (MovieMutator) -> Void = {[range, time, unowned undoManager, unowned self] (me2) in // @escaping
-                    performSyncOnMainActor {
+            me1.performSyncOnMainActor {
+                let redoDeleteHandler: @Sendable (MovieMutator) -> Void = {[range, time, unowned undoManager] (me2) in // @escaping
+                    me2.performSyncOnMainActor {
                         me2.resetMarker(time, range, false)
                         me2.deleteSelection(using: undoManager)
                     }

@@ -38,7 +38,7 @@ extension Document {
             guard response == NSApplication.ModalResponse.continue else { return }
             
             Task { @MainActor in
-                guard let self else { preconditionFailure("Unexpected nil self detected.") }
+                guard let self else { return }
                 self.transcoding = true
                 self.saveTo(self)
                 self.transcoding = false
@@ -48,7 +48,7 @@ extension Document {
     
     internal func export(to url: URL, ofType typeName: String, preset: String) async throws {
         
-        guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
+        guard let mutator = self.movieMutator else { throw CocoaError(.fileWriteUnknown) }
         
         // Create NSProgress with proper lifecycle management
         let progress = Progress(totalUnitCount: 100)
@@ -109,7 +109,7 @@ extension Document {
     
     internal func exportCustom(to url: URL, ofType typeName: String) async throws {
         
-        guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
+        guard let mutator = self.movieMutator else { throw CocoaError(.fileWriteUnknown) }
         
         // Create NSProgress with proper lifecycle management
         let progress = Progress(totalUnitCount: 100)

@@ -278,7 +278,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         self.closingBlock = {[obj, shouldCloseSelector, contextInfo, weak self] (flag) -> Void in // @escaping
             
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
+            guard let self else { return }
             function(obj, shouldCloseSelector!, self, flag, contextInfo)
         }
         

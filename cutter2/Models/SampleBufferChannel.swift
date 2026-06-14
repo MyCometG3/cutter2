@@ -53,10 +53,18 @@ class SampleBufferChannel: @unchecked Sendable {
         self.completionHandler = completionHandler
         
         awInput.requestMediaDataWhenReady(on: queue) {[weak self] in // @escaping
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
+            guard let self else { return }
             if self.finished { return }
             
-            guard let delegate: SampleBufferChannelDelegate = self.delegate else { preconditionFailure("Unexpected nil delegate detected.") }
+            guard let delegate: SampleBufferChannelDelegate = self.delegate else {
+                // Delegate (typically MovieWriter actor) was deallocated mid-export.
+                // Terminate the channel by invoking the completion handler so the
+                // caller's withCheckedContinuation resumes and the task group does
+                // not deadlock. Matches the H-02(b) teardown-safety pattern
+                // applied to [weak delegate] references.
+                self.callCompletionHandlerIfNecessary()
+                return
+            }
             let arOutput: AVAssetReaderOutput = self.arOutput
             let awInput: AVAssetWriterInput = self.awInput
             
@@ -82,7 +90,7 @@ class SampleBufferChannel: @unchecked Sendable {
     public func cancel() {
         queue.async { [weak self] in
             do {
-                guard let self else { preconditionFailure("Unexpected nil self detected.") }
+                guard let self else { return }
                 self.callCompletionHandlerIfNecessary()
             }
         }

@@ -61,12 +61,11 @@ extension MovieMutator {
     /// - For custom exports, both cancelExport() and cancelCustomMovie() are called
     ///
     /// **Design Notes:**
-    /// - This method is asynchronous and should be awaited to ensure proper cancellation
+    /// - This method is async due to the actor hop to MovieWriter
     /// - The writer reference is captured to avoid race conditions
-    /// - Uses structured concurrency to ensure the cancellation does not outlive the parent instance
-    ///   - Actual cancellation happens asynchronously in MovieWriter
-    ///   - Cancellation state is tracked via writeCancelled flag
-    ///   - The ongoing operation will detect cancellation and throw appropriately
+    /// - On the MovieWriter actor, cancellation is synchronous: it sets the writeCancelled
+    ///   flag and cancels the export session
+    /// - The ongoing export/write operation checks writeCancelled flag and throws OperationCancelled
     public func cancel() async {
         guard let writer = self.currentMovieWriter else { return }
         // Capture the writer reference to avoid race condition between check and use

@@ -112,7 +112,7 @@ extension Document {
         LoggingSystem.document.info("Saving document to \(url.lastPathComponent)")
         
         //
-        guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
+        guard let mutator = self.movieMutator else { throw CocoaError(.fileWriteUnknown) }
         guard mutator.movieDuration() > CMTime.zero else {
             let reason = NSLocalizedString("error.reason.zero_duration_movie",
                                          comment: "Error reason when movie has zero duration")
@@ -178,7 +178,7 @@ extension Document {
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
             Task { @Sendable @MainActor [typeName, srcURL, weak self] in // @escaping
                 
-                guard let self else { preconditionFailure("Unexpected nil self detected.") }
+                guard let self else { return }
                 let fileType: AVFileType = AVFileType.init(rawValue: typeName)
                 guard fileType == .mov else { return }
                 
@@ -245,7 +245,7 @@ extension Document {
         // Trigger long running task via global dispatch queue
         do {
             try performAsync { @Sendable [weak self] in
-                guard let self else { preconditionFailure("Unexpected nil self detected.") }
+                guard let self else { throw CocoaError(.fileWriteUnknown) }
                 
                 switch saveOperation {
                 case .saveToOperation:
@@ -278,7 +278,7 @@ extension Document {
     
     private func writeAsync(to url: URL, ofType typeName: String) async throws {
         
-        guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
+        guard let mutator = self.movieMutator else { throw CocoaError(.fileWriteUnknown) }
         
         // Create NSProgress with proper lifecycle management
         let progress = Progress(totalUnitCount: 100)
@@ -365,11 +365,11 @@ extension Document {
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
         Task { @MainActor [weak self] in
             
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
+            guard let self else { return }
             guard let url: URL = self.fileURL else { preconditionFailure("Unexpected nil fileURL detected.") }
             let newMovie: AVMutableMovie? = AVMutableMovie(url: url, options: nil)
             if let newMovie = newMovie {
-                guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
+                guard let mutator = self.movieMutator else { return }
                 let time: CMTime = mutator.insertionTime
                 let range: CMTimeRange = mutator.selectedTimeRange
                 

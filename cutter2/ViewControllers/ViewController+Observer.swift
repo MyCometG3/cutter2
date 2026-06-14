@@ -58,7 +58,7 @@ extension ViewController {
     internal func addWindowResizeObserver() {
         let handler: @Sendable (Notification) -> Void = {[weak self] (notification) in // @escaping
             
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
+            guard let self else { return }
             guard
                 let vcWindow = performSyncOnMainActor({ self.view.window }),
                 let object = notification.object as? NSWindow,
@@ -104,7 +104,7 @@ extension ViewController {
     internal func addUpdateReqObserver() {
         let handler: @Sendable (Notification) -> Void = { [weak self] (notification) in // @escaping
             
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
+            guard let self else { return }
             guard
                 let delegate = performSyncOnMainActor({ self.delegate }),
                 let object = notification.object as? ViewControllerDelegate,

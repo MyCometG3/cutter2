@@ -148,7 +148,7 @@ extension Document {
         // Show CAPAR Sheet
         caparVC.beginSheetModal(for: self.window!) {[caparVC, mutator, weak self] (response) in // @escaping
             
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
+            guard let self else { return }
             guard response == .continue else { return }
             
             // Update Clap/Pasp settings
@@ -197,9 +197,9 @@ extension Document {
         
         updateRate(player, 0.0)
         let handler: @Sendable (Bool) -> Void = {[weak self, weak player, weak mutator] (finished) in // @escaping
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
-            guard let player = player else { preconditionFailure("Unexpected nil player detected.") }
-            guard let mutator = mutator else { preconditionFailure("Unexpected nil mutator detected.") }
+            guard let self else { return }
+            guard let player = player else { return }
+            guard let mutator = mutator else { return }
             performSyncOnMainActor {
                 updateRate(player, rate)
                 updateTimeline(time, range: mutator.selectedTimeRange)
@@ -248,8 +248,8 @@ extension Document {
             // seek
             let handler: @Sendable (Bool) -> Void = {[weak self, weak pv] (finished) in // @escaping
                 
-                guard let self else { preconditionFailure("Unexpected nil self detected.") }
-                guard let pv = pv else { preconditionFailure("Unexpected nil pv detected.") }
+                guard let self else { return }
+                guard let pv = pv else { return }
                 performSyncOnMainActor {
                     pv.needsDisplay = true
                 }

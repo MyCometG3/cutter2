@@ -38,7 +38,7 @@ extension Document {
             guard response == NSApplication.ModalResponse.continue else { return }
             
             Task { @MainActor in
-                guard let self else { preconditionFailure("Unexpected nil self detected.") }
+                guard let self else { return }
                 self.transcoding = true
                 self.saveTo(self)
                 self.transcoding = false

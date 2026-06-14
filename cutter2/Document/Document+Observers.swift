@@ -137,7 +137,7 @@ extension Document {
         
         let handler: @Sendable (Notification) -> Void = {[weak self] (notification) in // @escaping
             
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
+            guard let self else { return }
             guard
                 let mutator = performSyncOnMainActor({ self.movieMutator }),
                 let object = notification.object as? MovieMutator,

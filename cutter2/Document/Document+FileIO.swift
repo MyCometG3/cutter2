@@ -178,7 +178,7 @@ extension Document {
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
             Task { @Sendable @MainActor [typeName, srcURL, weak self] in // @escaping
                 
-                guard let self else { preconditionFailure("Unexpected nil self detected.") }
+                guard let self else { return }
                 let fileType: AVFileType = AVFileType.init(rawValue: typeName)
                 guard fileType == .mov else { return }
                 
@@ -245,7 +245,7 @@ extension Document {
         // Trigger long running task via global dispatch queue
         do {
             try performAsync { @Sendable [weak self] in
-                guard let self else { preconditionFailure("Unexpected nil self detected.") }
+                guard let self else { throw CocoaError(.fileWriteUnknown) }
                 
                 switch saveOperation {
                 case .saveToOperation:
@@ -365,7 +365,7 @@ extension Document {
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
         Task { @MainActor [weak self] in
             
-            guard let self else { preconditionFailure("Unexpected nil self detected.") }
+            guard let self else { return }
             guard let url: URL = self.fileURL else { preconditionFailure("Unexpected nil fileURL detected.") }
             let newMovie: AVMutableMovie? = AVMutableMovie(url: url, options: nil)
             if let newMovie = newMovie {

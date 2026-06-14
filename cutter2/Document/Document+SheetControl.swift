@@ -153,8 +153,9 @@ extension Document {
     public func showErrorSheet(_ error: Error) {
         
         // Don't use NSDocument default error handling
-        guard let window = self.window else { NSSound.beep(); return }
         Task { @MainActor in
+            
+            guard let window = self.window else { NSSound.beep(); return }
             
             let alert = NSAlert(error: error)
             let err :NSError = error as NSError

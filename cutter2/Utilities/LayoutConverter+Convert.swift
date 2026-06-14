@@ -25,7 +25,6 @@ extension LayoutConverter {
             // the helper adapts to struct definition changes (e.g. Apple adding
             // fields, changing padding, or redefining alignment on a future
             // platform).
-            let descArrayOffset = MemoryLayout<AudioChannelLayout>.offset(of: \.mChannelDescriptions) ?? 0
             let descSize = MemoryLayout<AudioChannelDescription>.size
             let structSize = MemoryLayout<AudioChannelLayout>.size
             // bindMemory with capacity 1 requires structSize contiguous bytes
@@ -36,11 +35,11 @@ extension LayoutConverter {
             let tag = headerPtr.pointee.mChannelLayoutTag
             let descCount = Int(headerPtr.pointee.mNumberChannelDescriptions)
             // For UseChannelDescriptions, channelLabelSet walks descCount
-            // AudioChannelDescription values starting at descArrayOffset. The
-            // first slot is already covered by structSize (the trailing
-            // mChannelDescriptions[1] inside AudioChannelLayout), so we only
-            // need to add (descCount - 1) more. For other tags, channelLabelSet
-            // only touches the header fields and structSize is sufficient.
+            // AudioChannelDescription values past the header. The first slot is
+            // already covered by structSize (the trailing mChannelDescriptions[1]
+            // inside AudioChannelLayout), so we only need to add (descCount - 1)
+            // more. For other tags, channelLabelSet only touches the header fields
+            // and structSize is sufficient.
             let requiredSize: Int
             if tag == kAudioChannelLayoutTag_UseChannelDescriptions {
                 // A UseChannelDescriptions tag with descCount == 0 is malformed

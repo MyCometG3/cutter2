@@ -621,14 +621,13 @@ extension MovieWriter {
     /// - writeCancelled is set BEFORE dispatching channel cancellations for two
     ///   reasons:
     ///     1. It suppresses duplicate dispatches: the `if writeCancelled == false`
-    ///        guard at the top of the function short-circuits repeated Cancel
+    ///        check inside cancelCustomMovie() short-circuits repeated Cancel
     ///        button presses, so the SampleBufferChannel queue only sees one
     ///        cancel pass.
-    ///     2. After the export's withTaskGroup completes
-    ///        (MovieWriter+CustomExport.swift:452), the value of writeCancelled
-    ///        selects between the cancel path (ar.cancelReading() +
-    ///        aw.cancelWriting()) and the normal completion path
-    ///        (aw.endSession + aw.finishWriting).
+    ///     2. After the export's withTaskGroup completes, the value of
+    ///        writeCancelled (read from the actor) selects between the cancel
+    ///        path (ar.cancelReading() + aw.cancelWriting()) and the normal
+    ///        completion path (aw.endSession + aw.finishWriting).
     /// - The async dispatch is intentionally retained (not sync) because sbc.cancel()
     ///   dispatches to SampleBufferChannel's own queue; sync would risk deadlock.
     ///

@@ -21,6 +21,10 @@ extension LayoutConverter {
         var pos: Set<AudioChannelLabel>?
         aclData.withUnsafeBytes { (p: UnsafeRawBufferPointer) in
             guard let baseAddress = p.baseAddress else { return }
+            // Defensive: ensure the buffer is at least one AudioChannelLayout
+            // (matches the L-04 intent of the commented-out precondition
+            // in LayoutConverter+LayoutData.swift:23).
+            guard p.count >= MemoryLayout<AudioChannelLayout>.size else { return }
             let ptr = baseAddress.bindMemory(to: AudioChannelLayout.self, capacity: 1)
             pos = channelLabelSet(ptr)
         }

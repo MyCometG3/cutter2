@@ -617,17 +617,31 @@ extension MovieWriter {
     /// This method cancels a custom export operation if one is in progress.
     /// It is safe to call even if no custom export is active (customQueue will be nil).
     ///
+    /// Design Notes:
+    /// - writeCancelled is set BEFORE dispatching channel cancellations for two
+    ///   reasons:
+    ///     1. It suppresses duplicate dispatches: the `if writeCancelled == false`
+    ///        check inside cancelCustomMovie() short-circuits repeated Cancel
+    ///        button presses, so the SampleBufferChannel queue only sees one
+    ///        cancel pass.
+    ///     2. After the export's withTaskGroup completes, the value of
+    ///        writeCancelled (read from the actor) selects between the cancel
+    ///        path (ar.cancelReading() + aw.cancelWriting()) and the normal
+    ///        completion path (aw.endSession + aw.finishWriting).
+    /// - The async dispatch is intentionally retained (not sync) because sbc.cancel()
+    ///   dispatches to SampleBufferChannel's own queue; sync would risk deadlock.
+    ///
     public func cancelCustomMovie() {
         // Only proceed if a custom export is actually in progress
         guard let customQueue = customQueue else { return }
         if writeCancelled == false {
+            writeCancelled = true
             let params = cancelParams(channels: customSampleBufferChannels)
             customQueue.async { @Sendable in // @escaping
                 for sbc in params.channels {
                     sbc.cancel()
                 }
             }
-            writeCancelled = true
         }
     }
     

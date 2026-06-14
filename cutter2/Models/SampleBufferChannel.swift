@@ -56,7 +56,15 @@ class SampleBufferChannel: @unchecked Sendable {
             guard let self else { return }
             if self.finished { return }
             
-            guard let delegate: SampleBufferChannelDelegate = self.delegate else { return }
+            guard let delegate: SampleBufferChannelDelegate = self.delegate else {
+                // Delegate (typically MovieWriter actor) was deallocated mid-export.
+                // Terminate the channel by invoking the completion handler so the
+                // caller's withCheckedContinuation resumes and the task group does
+                // not deadlock. Matches the H-02(b) teardown-safety pattern
+                // applied to [weak delegate] references.
+                self.callCompletionHandlerIfNecessary()
+                return
+            }
             let arOutput: AVAssetReaderOutput = self.arOutput
             let awInput: AVAssetWriterInput = self.awInput
             

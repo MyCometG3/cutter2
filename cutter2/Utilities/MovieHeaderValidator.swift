@@ -9,9 +9,32 @@
 import AVFoundation
 
 struct MovieHeaderValidator {
+
+    enum ValidationError: LocalizedError {
+        case noTracks
+        case invalidDuration
+
+        var errorDescription: String? {
+            switch self {
+            case .noTracks:
+                return "This file does not contain any movie tracks."
+            case .invalidDuration:
+                return "The movie file appears to be corrupted (invalid duration)."
+            }
+        }
+    }
+
+    static func validate(_ movie: AVMutableMovie) -> ValidationError? {
+        if movie.tracks.isEmpty {
+            return .noTracks
+        }
+        if !CMTIME_IS_VALID(movie.duration) || !CMTIME_IS_NUMERIC(movie.duration) {
+            return .invalidDuration
+        }
+        return nil
+    }
+
     static func isValid(_ movie: AVMutableMovie) -> Bool {
-        return movie.tracks.isEmpty == false
-            && CMTIME_IS_VALID(movie.duration)
-            && CMTIME_IS_NUMERIC(movie.duration)
+        return validate(movie) == nil
     }
 }

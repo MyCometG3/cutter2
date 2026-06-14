@@ -12,7 +12,7 @@ import AVFoundation
 public typealias AudioChannelLayoutData = Data
 
 /// LayoutConverter uses AudioChannelLabel as primary channel position.
-class LayoutConverter {
+struct LayoutConverter {
     
     typealias LayoutPtr = UnsafePointer<AudioChannelLayout>
     typealias MutableLayoutPtr = UnsafeMutablePointer<AudioChannelLayout>

@@ -23,7 +23,7 @@ extension Document {
     
     override func prepareSavePanel(_ savePanel: NSSavePanel) -> Bool {
         
-        guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
+        guard let mutator = self.movieMutator else { return false }
         
         // prepare accessory view controller
         if self.accessoryVC == nil {
@@ -145,7 +145,7 @@ extension Document {
     // AccessoryViewDelegate protocol
     public func didUpdateFileType(_ fileType: AVFileType, selfContained: Bool) {
         
-        guard let savePanel = self.savePanel else { preconditionFailure("Unexpected nil savePanel detected.") }
+        guard let savePanel = self.savePanel else { return }
         savePanel.allowedContentTypes = [UTType(fileType.rawValue)!]
     }
 }

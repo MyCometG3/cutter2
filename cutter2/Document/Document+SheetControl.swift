@@ -153,7 +153,7 @@ extension Document {
     public func showErrorSheet(_ error: Error) {
         
         // Don't use NSDocument default error handling
-        guard let window = self.window else { preconditionFailure("Unexpected nil window detected.") }
+        guard let window = self.window else { NSSound.beep(); return }
         Task { @MainActor in
             
             let alert = NSAlert(error: error)

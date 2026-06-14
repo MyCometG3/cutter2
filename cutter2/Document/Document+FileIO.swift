@@ -112,7 +112,7 @@ extension Document {
         LoggingSystem.document.info("Saving document to \(url.lastPathComponent)")
         
         //
-        guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
+        guard let mutator = self.movieMutator else { throw CocoaError(.fileWriteUnknown) }
         guard mutator.movieDuration() > CMTime.zero else {
             let reason = NSLocalizedString("error.reason.zero_duration_movie",
                                          comment: "Error reason when movie has zero duration")
@@ -278,7 +278,7 @@ extension Document {
     
     private func writeAsync(to url: URL, ofType typeName: String) async throws {
         
-        guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
+        guard let mutator = self.movieMutator else { throw CocoaError(.fileWriteUnknown) }
         
         // Create NSProgress with proper lifecycle management
         let progress = Progress(totalUnitCount: 100)
@@ -369,7 +369,7 @@ extension Document {
             guard let url: URL = self.fileURL else { preconditionFailure("Unexpected nil fileURL detected.") }
             let newMovie: AVMutableMovie? = AVMutableMovie(url: url, options: nil)
             if let newMovie = newMovie {
-                guard let mutator = self.movieMutator else { preconditionFailure("Unexpected nil mutator detected.") }
+                guard let mutator = self.movieMutator else { return }
                 let time: CMTime = mutator.insertionTime
                 let range: CMTimeRange = mutator.selectedTimeRange
                 

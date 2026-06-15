@@ -177,18 +177,17 @@ extension Document {
         // Sandbox support - keep source document security scope bookmark
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
             Task { @Sendable @MainActor [typeName, srcURL, weak self] in // @escaping
-                self?.withSelfOnMainActor { document in
-                    let fileType: AVFileType = AVFileType.init(rawValue: typeName)
-                    guard fileType == .mov else { return }
-                    
-                    guard let accessoryVC = document.accessoryVC else { preconditionFailure("Unexpected nil accessoryVC detected.") }
-                    let saveAsRefMov: Bool = (accessoryVC.selfContained == false)
-                    guard saveAsRefMov else { return }
-                    
-                    // SaveAs reference movie - Need to keep readonly access to original
-                    let app: AppDelegate = NSApp.delegate as! AppDelegate
-                    app.addBookmark(for: srcURL)
-                }
+                guard let self else { return }
+                let fileType: AVFileType = AVFileType.init(rawValue: typeName)
+                guard fileType == .mov else { return }
+                
+                guard let accessoryVC = self.accessoryVC else { preconditionFailure("Unexpected nil accessoryVC detected.") }
+                let saveAsRefMov: Bool = (accessoryVC.selfContained == false)
+                guard saveAsRefMov else { return }
+                
+                // SaveAs reference movie - Need to keep readonly access to original
+                let app: AppDelegate = NSApp.delegate as! AppDelegate
+                app.addBookmark(for: srcURL)
             }
         }
     }

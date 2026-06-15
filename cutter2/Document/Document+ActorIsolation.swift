@@ -101,18 +101,4 @@ extension Document {
         }
     }
     
-    /// Schedule a MainActor-isolated action if the document still exists.
-    ///
-    /// Use this for fire-and-forget callbacks (e.g. sandbox bookmark handling)
-    /// that need to touch MainActor-only document state after a possible
-    /// deallocation.
-    ///
-    /// - Parameter action: Closure receiving a strong reference to the document.
-    ///   Runs on MainActor only if the document still exists.
-    func withSelfOnMainActor(_ action: @MainActor @escaping (Document) -> Void) {
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            action(self)
-        }
-    }
 }

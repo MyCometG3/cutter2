@@ -92,6 +92,7 @@ extension MovieWriter {
             
             do {
                 let descArray: [Any] = track.formatDescriptions
+                guard descArray.count > 0 else { continue }
                 let desc: CMFormatDescription = descArray[0] as! CMFormatDescription // CF typealias
                 
                 let asbdPtr: ASBDPtr? = CMAudioFormatDescriptionGetStreamBasicDescription(desc)

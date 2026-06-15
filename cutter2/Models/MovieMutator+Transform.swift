@@ -86,8 +86,8 @@ extension MovieMutator {
         guard vTracks.count > 0 else { NSSound.beep(); return nil }
         
         let formats: [Any] = (vTracks[0]).formatDescriptions
-        let format: CMVideoFormatDescription? = (formats[0] as! CMVideoFormatDescription) // CF typealias of CMFormatDescription
-        guard let desc = format else { NSSound.beep(); return nil }
+        guard !formats.isEmpty else { NSSound.beep(); return nil }
+        let desc = formats[0] as! CMFormatDescription // CF typealias — first index safe after isEmpty check
         
         dict[dimensionsKey] =
             CMVideoFormatDescriptionGetPresentationDimensions(desc,
@@ -97,12 +97,11 @@ extension MovieMutator {
         let extCA: CFPropertyList? =
             CMFormatDescriptionGetExtension(desc,
                                             extensionKey: kCMFormatDescriptionExtension_CleanAperture)
-        if let extCA = extCA {
-            guard let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as? NSNumber else { return nil }
-            guard let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as? NSNumber else { return nil }
-            guard let wOffset = extCA[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] as? NSNumber else { return nil }
-            guard let hOffset = extCA[kCMFormatDescriptionKey_CleanApertureVerticalOffset] as? NSNumber else { return nil }
-            
+        if let extCA = extCA,
+           let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as? NSNumber,
+           let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as? NSNumber,
+           let wOffset = extCA[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] as? NSNumber,
+           let hOffset = extCA[kCMFormatDescriptionKey_CleanApertureVerticalOffset] as? NSNumber {
             dict[clapSizeKey] = NSSize(width: width.intValue, height: height.intValue)
             dict[clapOffsetKey] = NSPoint(x: wOffset.intValue, y: hOffset.intValue)
         } else {
@@ -113,10 +112,9 @@ extension MovieMutator {
         let extPA: CFPropertyList? =
             CMFormatDescriptionGetExtension(desc,
                                             extensionKey: kCMFormatDescriptionExtension_PixelAspectRatio)
-        if let extPA = extPA {
-            guard let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as? NSNumber else { return nil }
-            guard let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as? NSNumber else { return nil }
-            
+        if let extPA = extPA,
+           let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as? NSNumber,
+           let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as? NSNumber {
             dict[paspRatioKey] = NSSize(width: hSpacing.doubleValue, height: vSpacing.doubleValue)
         } else {
             dict[paspRatioKey] = NSSize(width: 1.0, height: 1.0)

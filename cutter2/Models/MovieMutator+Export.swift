@@ -20,34 +20,45 @@ extension MovieMutator {
                                  progressContinuation: self.progressContinuation)
     }
     
-    public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws {
+    /// Run a MovieWriter operation with consistent lifetime management.
+    ///
+    /// This helper centralizes the creation of `MovieWriter`, assignment to
+    /// `currentMovieWriter`, and cleanup in a single place. It eliminates the
+    /// copy-pasted `Task { @MainActor in ... defer { ... } }` pattern from
+    /// `exportMovie`, `exportCustomMovie`, and `writeMovie`.
+    ///
+    /// - Parameter operation: An async closure that receives the prepared
+    ///   `MovieWriter` and performs the actual export/write work.
+    /// - Returns: The value produced by `operation`.
+    /// - Throws: Any error thrown by `operation`.
+    private func withMovieWriter<T: Sendable>(
+        _ operation: @escaping (MovieWriter) async throws -> T
+    ) async throws -> T {
         let movieWriterParams = prepareMovieWriterParams()
-        try await Task { @MainActor in
+        return try await Task { @MainActor in
             let movieWriter = MovieWriter(params: movieWriterParams)
             self.currentMovieWriter = movieWriter
             defer { self.currentMovieWriter = nil }
-            try await movieWriter.exportMovie(to: url, fileType: type, presetName: preset)
+            return try await operation(movieWriter)
         }.value
+    }
+    
+    public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws {
+        try await withMovieWriter { movieWriter in
+            try await movieWriter.exportMovie(to: url, fileType: type, presetName: preset)
+        }
     }
     
     public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String: any Sendable]) async throws {
-        let movieWriterParams = prepareMovieWriterParams()
-        try await Task { @MainActor in
-            let movieWriter = MovieWriter(params: movieWriterParams)
-            self.currentMovieWriter = movieWriter
-            defer { self.currentMovieWriter = nil }
+        try await withMovieWriter { movieWriter in
             try await movieWriter.exportCustomMovie(to: url, fileType: type, settings: param)
-        }.value
+        }
     }
     
     public func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) async throws {
-        let movieWriterParams = prepareMovieWriterParams()
-        try await Task { @MainActor in
-            let movieWriter = MovieWriter(params: movieWriterParams)
-            self.currentMovieWriter = movieWriter
-            defer { self.currentMovieWriter = nil }
+        try await withMovieWriter { movieWriter in
             try await movieWriter.writeMovie(to: url, fileType: type, copySampleData: selfContained)
-        }.value
+        }
     }
     
     /// Cancel ongoing export or write operation

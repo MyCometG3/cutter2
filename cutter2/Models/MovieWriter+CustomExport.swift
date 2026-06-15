@@ -320,11 +320,11 @@ extension MovieWriter {
                 let extCA: CFPropertyList? =
                     CMFormatDescriptionGetExtension(desc,
                                                     extensionKey: kCMFormatDescriptionExtension_CleanAperture)
-                if let extCA = extCA {
-                    guard let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as? NSNumber,
-                        let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as? NSNumber,
-                        let wOffset = extCA[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] as? NSNumber,
-                        let hOffset = extCA[kCMFormatDescriptionKey_CleanApertureVerticalOffset] as? NSNumber else { continue }
+                if let extCA = extCA,
+                   let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as? NSNumber,
+                   let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as? NSNumber,
+                   let wOffset = extCA[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] as? NSNumber,
+                   let hOffset = extCA[kCMFormatDescriptionKey_CleanApertureVerticalOffset] as? NSNumber {
                     
                     let dict: NSMutableDictionary = NSMutableDictionary()
                     dict[AVVideoCleanApertureWidthKey] = width
@@ -338,9 +338,9 @@ extension MovieWriter {
                 let extPA: CFPropertyList? =
                     CMFormatDescriptionGetExtension(desc,
                                                     extensionKey: kCMFormatDescriptionExtension_PixelAspectRatio)
-                if let extPA = extPA {
-                    guard let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as? NSNumber,
-                        let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as? NSNumber else { continue }
+                if let extPA = extPA,
+                   let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as? NSNumber,
+                   let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as? NSNumber {
                     
                     let dict: NSMutableDictionary = NSMutableDictionary()
                     dict[AVVideoPixelAspectRatioHorizontalSpacingKey] = hSpacing
@@ -360,9 +360,9 @@ extension MovieWriter {
                         CMFormatDescriptionGetExtension(desc,
                                                         extensionKey: kCMFormatDescriptionExtension_YCbCrMatrix)
                     if let extCP  = extCP, let extTF = extTF, let extMX = extMX {
-                        guard let colorPrimaries = extCP as? NSString,
+                        if let colorPrimaries = extCP as? NSString,
                             let transferFunction = extTF as? NSString,
-                            let ycbcrMatrix = extMX as? NSString else { continue }
+                            let ycbcrMatrix = extMX as? NSString {
                         
                         let dict: NSMutableDictionary = NSMutableDictionary()
                         dict[AVVideoColorPrimariesKey] = colorPrimaries
@@ -370,6 +370,7 @@ extension MovieWriter {
                         dict[AVVideoYCbCrMatrixKey] = ycbcrMatrix
                         
                         nclc = dict
+                        }
                     }
                 }
                 

@@ -78,7 +78,7 @@ extension Document {
         if objectIsPlayer && keyPathIsAVPlayerStatus {
             
             // Force redraw when AVPlayer.status is updated
-            let newStatus = change[.newKey] as! NSNumber
+            guard let newStatus = change[.newKey] as? NSNumber else { return }
             if newStatus.intValue == AVPlayer.Status.readyToPlay.rawValue {
                 // Seek and refresh View
                 performSyncOnMainActor {
@@ -95,8 +95,8 @@ extension Document {
         } else if objectIsPlayer && keyPathIsAVPlayerRate {
             
             // Check special case: movie play reached at end of movie
-            let oldRate = change[.oldKey] as! NSNumber
-            let newRate = change[.newKey] as! NSNumber
+            guard let oldRate = change[.oldKey] as? NSNumber else { return }
+            guard let newRate = change[.newKey] as? NSNumber else { return }
             if oldRate.floatValue > 0.0 && newRate.floatValue == 0.0 {
                 // Movie stopped
                 performSyncOnMainActor {

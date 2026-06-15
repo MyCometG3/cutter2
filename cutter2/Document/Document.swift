@@ -247,7 +247,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         
         // Instantiate and Register Window Controller
         let sid: NSStoryboard.SceneIdentifier = "Document Window Controller"
-        let windowController = storyboard.instantiateController(withIdentifier: sid) as! WindowController
+        guard let windowController = storyboard.instantiateController(withIdentifier: sid) as? WindowController else {
+            preconditionFailure("Failed to instantiate WindowController")
+        }
         self.addWindowController(windowController)
         
         // Set viewController.delegate to self

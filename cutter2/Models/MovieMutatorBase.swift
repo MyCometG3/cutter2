@@ -161,12 +161,13 @@ class MovieMutatorBase: NSObject {
     /* ============================================ */
     
     init(with movie:AVMutableMovie) {
-        internalMovie = movie.mutableCopy() as! AVMutableMovie
+        guard let copy = movie.mutableCopy() as? AVMutableMovie else {
+            preconditionFailure("mutableCopy() of AVMutableMovie returned non-AVMutableMovie")
+        }
+        internalMovie = copy
         
         do {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy/MM/dd HH:mm:ss.SSS" // "yyyy-MM-dd HH:mm:ss.SSSSSSZ"
-            self.timestampFormatter = formatter
+            self.timestampFormatter = DateFormatter.logFormatter(format: "yyyy/MM/dd HH:mm:ss.SSS")
         }
     }
     
@@ -442,7 +443,7 @@ class MovieMutatorBase: NSObject {
         guard(track.mediaType == .video) else { return NSSize.zero }
         
         var size = NSZeroSize
-        let formats = track.formatDescriptions as! [CMFormatDescription]
+        let formats = track.formatDescriptions as! [CMFormatDescription] // CF typealias — as! always succeeds
         for format in formats {
             switch type {
             case .clean:

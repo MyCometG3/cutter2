@@ -19,7 +19,9 @@ extension MovieMutator {
     ///
     /// - Returns: AVPlayerItem
     public func makePlayerItem() -> AVPlayerItem {
-        let asset: AVAsset = internalMovie.copy() as! AVAsset
+        guard let asset = internalMovie.copy() as? AVAsset else {
+            preconditionFailure("copy() of AVMutableMovie returned non-AVAsset")
+        }
         let playerItem: AVPlayerItem = AVPlayerItem(asset: asset)
         if let comp = makeVideoComposition() {
             playerItem.videoComposition = comp

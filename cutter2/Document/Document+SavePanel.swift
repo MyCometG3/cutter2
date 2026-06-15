@@ -29,7 +29,9 @@ extension Document {
         if self.accessoryVC == nil {
             let storyboard: NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
             let sid: NSStoryboard.SceneIdentifier = "Accessory View Controller"
-            let accessoryVC = storyboard.instantiateController(withIdentifier: sid) as! AccessoryViewController
+            guard let accessoryVC = storyboard.instantiateController(withIdentifier: sid) as? AccessoryViewController else {
+                preconditionFailure("Failed to instantiate AccessoryViewController")
+            }
             self.accessoryVC = accessoryVC
             accessoryVC.loadView()
             accessoryVC.delegate = self

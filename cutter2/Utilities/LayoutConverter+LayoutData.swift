@@ -19,16 +19,24 @@ extension LayoutConverter {
     /// - Parameters:
     ///   - ptr: pointer to AudioChannelLayout
     ///   - size: length of AudioChannelLayout
-    /// - Returns: Data (copied) of AudioChannelLayout
-    public func dataFor(layoutBytes ptr: UnsafePointer<AudioChannelLayout>, size: Int) -> AudioChannelLayoutData {
-        // "Copy" struct into Data as backing store
-        //let acDescCount: Int = Int(ptr.pointee.mNumberChannelDescriptions)
-        //let acLayoutSize: Int = dataSize(descCount: acDescCount)
-        //precondition(size >= acLayoutSize, "Not enough space for AudioChannelLayout")
-        let aclData: Data = Data.init(bytes: ptr, count: size)
-        return aclData
+    /// - Returns: Data (copied) of AudioChannelLayout, or nil if `size` is
+    ///   smaller than the minimum required to hold the layout described by
+    ///   the pointed-to struct.
+    public func dataFor(layoutBytes ptr: UnsafePointer<AudioChannelLayout>, size: Int) -> AudioChannelLayoutData? {
+        // Revive the commented-out `precondition(size >= acLayoutSize, ...)`
+        // as a graceful nil return rather than a crash. H-02's teardown-safe
+        // pattern: an under-sized buffer is a runtime precondition violation
+        // (caller's layoutPtr.mNumberChannelDescriptions may have been tampered
+        // with, or a future API change may shift the desc count), not a
+        // programming error to be killed over. The dataSize() call uses the
+        // M-07-rewritten conditional (count >= 0 guard + header-only special
+        // case) so the size computation itself is reliable.
+        let acDescCount: Int = Int(ptr.pointee.mNumberChannelDescriptions)
+        let acLayoutSize: Int = dataSize(descCount: acDescCount)
+        guard size >= acLayoutSize else { return nil }
+        return Data.init(bytes: ptr, count: size)
     }
-    
+
     /// Create AudioChannelLayoutData (copied)
     ///
     /// - Parameter ptr: pointer to AudioChannelLayout

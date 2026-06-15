@@ -184,16 +184,16 @@ class CAPARViewController: NSViewController {
     // Validate ObjectController.content values
     private func validate() -> Bool {
         
-        let content: NSMutableDictionary = objectController.content as! NSMutableDictionary
+        guard let content = objectController.content as? NSMutableDictionary else { return false }
         var valid: Bool = true
-        let encSize: NSSize = content[dimensionsKey] as! NSSize
-        let clapSize: NSSize = content[clapSizeKey] as! NSSize
-        let clapOffset: NSPoint = content[clapOffsetKey] as! NSPoint
-        let pasp = content[paspRatioKey] as! NSSize
+        guard let encSize = content[dimensionsKey] as? NSSize else { content[validKey] = false; return false }
+        guard let clapSize = content[clapSizeKey] as? NSSize else { content[validKey] = false; return false }
+        guard let clapOffset = content[clapOffsetKey] as? NSPoint else { content[validKey] = false; return false }
+        guard let pasp = content[paspRatioKey] as? NSSize else { content[validKey] = false; return false }
         
         do {
             // Verify dimension is not changed
-            let encSizeSrc: NSSize = initialContent[dimensionsKey] as! NSSize
+            guard let encSizeSrc = initialContent[dimensionsKey] as? NSSize else { content[validKey] = false; return false }
             let encSizeNew: NSSize = encSize
             
             valid = encSizeSrc.equalTo(encSizeNew)
@@ -232,21 +232,21 @@ class CAPARViewController: NSViewController {
     // Update CGFloat Values according to Struct Values
     private func updateFloat() {
         
-        let content: NSMutableDictionary = objectController.content as! NSMutableDictionary
+        guard let content = objectController.content as? NSMutableDictionary else { return }
         
         // NSSize/NSPoint -> CGFloat values
         do {
-            let size = content[clapSizeKey] as! CGSize
+            guard let size = content[clapSizeKey] as? CGSize else { return }
             content[clapSizeWidthKey] = size.width
             content[clapSizeHeightKey] = size.height
         }
         do {
-            let point = content[clapOffsetKey] as! CGPoint
+            guard let point = content[clapOffsetKey] as? CGPoint else { return }
             content[clapOffsetXKey] = point.x
             content[clapOffsetYKey] = point.y
         }
         do {
-            let size = content[paspRatioKey] as! CGSize
+            guard let size = content[paspRatioKey] as? CGSize else { return }
             content[paspRatioWidthKey] = size.width
             content[paspRatioHeightKey] = size.height
         }
@@ -256,24 +256,25 @@ class CAPARViewController: NSViewController {
     private func updateLabels(_ sender: Any) {
         
         // NSSize/NSPoint -> label string
-        let content: NSMutableDictionary = objectController.content as! NSMutableDictionary
+        guard let content = objectController.content as? NSMutableDictionary else { return }
         
         let valid: Bool = validate()
-        let par = content[paspRatioKey] as! NSSize
+        guard let par = content[paspRatioKey] as? NSSize else { return }
         let ratio: CGFloat = (par.width / par.height)
         do {
-            let size: NSSize = content[dimensionsKey] as! NSSize
-            let str = String(format: "%.2f x %.2f", size.width, size.height)
-            content[labelEncodedKey] = str
+            if let size: NSSize = content[dimensionsKey] as? NSSize {
+                let str = String(format: "%.2f x %.2f", size.width, size.height)
+                content[labelEncodedKey] = str
+            }
         }
         if valid {
             do {
-                let size: NSSize = content[clapSizeKey] as! NSSize
+                guard let size = content[clapSizeKey] as? NSSize else { return }
                 let str = String(format: "%.2f x %.2f", size.width * ratio, size.height)
                 content[labelCleanKey] = str
             }
             do {
-                let size: NSSize = content[dimensionsKey] as! NSSize
+                guard let size = content[dimensionsKey] as? NSSize else { return }
                 let str = String(format: "%.2f x %.2f", size.width * ratio, size.height)
                 content[labelProductionKey] = str
             }
@@ -287,7 +288,7 @@ class CAPARViewController: NSViewController {
     private func updateStruct() {
         
         // CGFloat values -> NSSize/NSPoint
-        let content: NSMutableDictionary = objectController.content as! NSMutableDictionary
+        guard let content = objectController.content as? NSMutableDictionary else { return }
         
         do {
             let width = content[clapSizeWidthKey] as? CGFloat ?? CGFloat.nan
@@ -391,10 +392,10 @@ class CAPARViewController: NSViewController {
         //
         let dict = objectController.content as? [AnyHashable:Any]
         if let dict = dict, checkDict(dict) {
-            let clapOffset = dict[clapOffsetKey] as! NSPoint
-            let clapSize = dict[clapSizeKey] as! NSSize
-            let paspRatio = dict[paspRatioKey] as! NSSize
-            let dimensions = dict[dimensionsKey] as! NSSize
+            guard let clapOffset = dict[clapOffsetKey] as? NSPoint else { return }
+            guard let clapSize = dict[clapSizeKey] as? NSSize else { return }
+            guard let paspRatio = dict[paspRatioKey] as? NSSize else { return }
+            guard let dimensions = dict[dimensionsKey] as? NSSize else { return }
             
             def.set(NSStringFromSize(clapSize), forKey: clapSizeKey)
             def.set(NSStringFromPoint(clapOffset), forKey: clapOffsetKey)

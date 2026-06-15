@@ -109,14 +109,13 @@ extension MovieMutatorBase {
             var trackString: [String] = []
             let trackID: Int = Int(track.trackID)
             let reference: Bool = !(track.isSelfContained)
-            for desc in track.formatDescriptions as! [CMVideoFormatDescription] {
+            for desc in track.formatDescriptions as! [CMVideoFormatDescription] { // CF typealias of CMFormatDescription
                 var name: String = ""
                 do {
                     let ext: CFPropertyList? =
                         CMFormatDescriptionGetExtension(desc,
                                                         extensionKey: kCMFormatDescriptionExtension_FormatName)
-                    if let ext = ext {
-                        let nameStr = ext as! NSString
+                    if let nameStr = ext as? NSString {
                         name = String(nameStr)
                     } else {
                         let fcc: FourCharCode = CMFormatDescriptionGetMediaSubType(desc)
@@ -171,7 +170,7 @@ extension MovieMutatorBase {
             var trackString: [String] = []
             let trackID: Int = Int(track.trackID)
             let reference: Bool = !(track.isSelfContained)
-            for desc in track.formatDescriptions as! [CMAudioFormatDescription] {
+            for desc in track.formatDescriptions as! [CMAudioFormatDescription] { // CF typealias of CMFormatDescription
                 var rateString: String = ""
                 do {
                     let basic = CMAudioFormatDescriptionGetStreamBasicDescription(desc)

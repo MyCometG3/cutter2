@@ -8,6 +8,24 @@
 
 import AVFoundation
 
+// MARK: - Unsupported AudioChannelLayoutTag
+
+// The following CoreAudio channel layout tags exist as enumerator values but are intentionally
+// excluded from the mapping tables in this file because the required AudioChannelLabel constants
+// are either undefined or unconfirmed in the CoreAudio headers:
+//
+// | Tag                                    | Reason                                          |
+// |----------------------------------------|-------------------------------------------------|
+// | kAudioChannelLayoutTag_TMH_10_2_std    | LFELeft/LFERight/VI label values unconfirmed     |
+// | kAudioChannelLayoutTag_TMH_10_2_full   | Same as above                                    |
+//
+// Specifically:
+// - TMH_10_2_std requires label values for LFELeft (LFE1), LFERight (LFE2), and VI.
+// - TMH_10_2_full requires the same plus additional labels.
+// - These labels do not have obvious correspondents in the kAudioChannelLabel enumeration
+//   documented by Apple. Until these are confirmed, the tags are kept commented-out
+//   in both the forward (tag -> label set) and reverse (label set -> tag) mapping functions.
+
 extension LayoutConverter {
     
     /* ============================================ */
@@ -83,7 +101,7 @@ extension LayoutConverter {
         default:
             // translate Channel Layout Tag to AudioChannelLabel Set
             switch layout.mChannelLayoutTag {
-            case kAudioChannelLayoutTag_Mono:           pos = [3] // 42 is more better?
+            case kAudioChannelLayoutTag_Mono:           pos = [42] // kAudioChannelLabel_Mono
             case kAudioChannelLayoutTag_Stereo:         pos = [1,2]
             case kAudioChannelLayoutTag_StereoHeadphones:   pos = [301,302]
             case kAudioChannelLayoutTag_MatrixStereo:   pos = [38,39]
@@ -139,8 +157,7 @@ extension LayoutConverter {
                 
                 //case kAudioChannelLayoutTag_TMH_10_2_std:   pos = [1,2,3,14,10,11,5,6,13,15,35,36,44,9,??,37]
                 //case kAudioChannelLayoutTag_TMH_10_2_full:  pos = [1,2,3,14,10,11,5,6,13,15,35,36,44,9,??,37,7,8,40,??,45]
-                // NOTE: Missing value: LFE1. LFE1 is LFELeft, and LFE2 is LFERight
-                //       Missing value: VI.
+                // See unsupported tags table at the top of this file for rationale.
                 
             case kAudioChannelLayoutTag_AC3_1_0_1:      pos = [3,4]
             case kAudioChannelLayoutTag_AC3_3_0:        pos = [1,3,2]
@@ -334,10 +351,8 @@ extension LayoutConverter {
         case [3,1,2,5,6,4,13,15]:       return kAudioChannelLayoutTag_AAC_7_1_C
         case [3,1,2,5,6,33,34,9]:       return kAudioChannelLayoutTag_AAC_Octagonal
             
-            // kAudioChannelLayoutTag_TMH_10_2_std
-            // kAudioChannelLayoutTag_TMH_10_2_full
-            // NOTE: Missing value: LFE1. LFE1 is LFELeft, and LFE2 is LFERight
-            //       Missing value: VI.
+            // kAudioChannelLayoutTag_TMH_10_2_std — see unsupported tags table at top of file
+            // kAudioChannelLayoutTag_TMH_10_2_full — see unsupported tags table at top of file
             
         case [3,4]:                     return kAudioChannelLayoutTag_AC3_1_0_1
         case [1,3,2]:                   return kAudioChannelLayoutTag_AC3_3_0

@@ -137,7 +137,9 @@ extension Document {
         // Prepare CAPAR SheetController
         let storyboard: NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
         let sid: NSStoryboard.SceneIdentifier = "CAPARSheet Controller"
-        let caparWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController
+        guard let caparWC = storyboard.instantiateController(withIdentifier: sid) as? NSWindowController else {
+            preconditionFailure("Failed to instantiate CAPARSheet Controller")
+        }
         // caparWC.loadWindow()
         
         // Prepare CAPAR ViewController

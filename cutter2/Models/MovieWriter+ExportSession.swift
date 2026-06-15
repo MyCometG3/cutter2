@@ -255,7 +255,9 @@ extension MovieWriter {
     /// - Returns: True if compatible
     public func validateExportSession(fileType type: AVFileType, presetName preset: String?) async -> Bool {
         let preset: String = (preset ?? AVAssetExportPresetPassthrough)
-        let movie: AVAsset = internalMovie.copy() as! AVAsset
+        guard let movie = internalMovie.copy() as? AVAsset else {
+            preconditionFailure("copy() of AVMutableMovie returned non-AVAsset")
+        }
         
         let compatible = await withCheckedContinuation { continuation in
             AVAssetExportSession.determineCompatibility(ofExportPreset: preset, with: movie, outputFileType: type) { compatible in

@@ -65,7 +65,9 @@ extension MovieWriter {
             return
         }
         
-        let fourcc = customParam[kAudioCodecKey] as! NSString
+        guard let fourcc = customParam[kAudioCodecKey] as? NSString else {
+            preconditionFailure("kAudioCodecKey not set in customParam")
+        }
         
         let numAudioKbps = customParam[kAudioKbpsKey] as? NSNumber
         let targetKbps: Float = numAudioKbps?.floatValue ?? 128
@@ -90,7 +92,8 @@ extension MovieWriter {
             
             do {
                 let descArray: [Any] = track.formatDescriptions
-                let desc: CMFormatDescription = descArray[0] as! CMFormatDescription
+                guard descArray.count > 0 else { continue }
+                let desc: CMFormatDescription = descArray[0] as! CMFormatDescription // CF typealias
                 
                 let asbdPtr: ASBDPtr? = CMAudioFormatDescriptionGetStreamBasicDescription(desc)
                 if let asbd = asbdPtr?.pointee {
@@ -205,8 +208,7 @@ extension MovieWriter {
     private func hasFieldModeSupport(of track: AVMutableMovieTrack) -> Bool {
         let descArray: [Any] = track.formatDescriptions
         guard descArray.count > 0 else { return false }
-        
-        let desc: CMFormatDescription = descArray[0] as! CMFormatDescription
+        let desc: CMFormatDescription = descArray[0] as! CMFormatDescription // CF typealias
         var dict: CFDictionary? = nil
         do {
             var status: OSStatus = noErr
@@ -249,13 +251,13 @@ extension MovieWriter {
                 // Keep both fields
                 let dict: NSMutableDictionary = NSMutableDictionary()
                 dict[kVTDecompressionPropertyKey_FieldMode] = kVTDecompressionProperty_FieldMode_BothFields
-                decompressionProperties = (dict.copy() as! NSDictionary)
+                decompressionProperties = (dict.copy() as! NSDictionary) // NSMutableDictionary copy to NSDictionary
             } else {
                 // Allow deinterlace - only DV decoder works...?
                 let dict: NSMutableDictionary = NSMutableDictionary()
                 dict[kVTDecompressionPropertyKey_FieldMode] = kVTDecompressionProperty_FieldMode_DeinterlaceFields
                 dict[kVTDecompressionPropertyKey_DeinterlaceMode] = kVTDecompressionProperty_DeinterlaceMode_VerticalFilter
-                decompressionProperties = (dict.copy() as! NSDictionary)
+                decompressionProperties = (dict.copy() as! NSDictionary) // NSMutableDictionary copy to NSDictionary
             }
             
             arOutputSetting[AVVideoDecompressionPropertiesKey] = decompressionProperties
@@ -270,7 +272,9 @@ extension MovieWriter {
             return
         }
         
-        let fourcc = customParam[kVideoCodecKey] as! NSString
+        guard let fourcc = customParam[kVideoCodecKey] as? NSString else {
+            preconditionFailure("kVideoCodecKey not set in customParam")
+        }
         
         let numVideoKbps = customParam[kVideoKbpsKey] as? NSNumber
         let targetKbps: Float = numVideoKbps?.floatValue ?? 2500
@@ -305,7 +309,7 @@ extension MovieWriter {
             var trackDimensions = track.naturalSize
             let descArray: [Any] = track.formatDescriptions
             if descArray.count > 0 {
-                let desc: CMFormatDescription = descArray[0] as! CMFormatDescription
+                let desc: CMFormatDescription = descArray[0] as! CMFormatDescription // CF typealias
                 trackDimensions = CMVideoFormatDescriptionGetPresentationDimensions(desc,
                                                                                     usePixelAspectRatio: false,
                                                                                     useCleanAperture: false)
@@ -316,11 +320,11 @@ extension MovieWriter {
                 let extCA: CFPropertyList? =
                     CMFormatDescriptionGetExtension(desc,
                                                     extensionKey: kCMFormatDescriptionExtension_CleanAperture)
-                if let extCA = extCA {
-                    let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as! NSNumber
-                    let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as! NSNumber
-                    let wOffset = extCA[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] as! NSNumber
-                    let hOffset = extCA[kCMFormatDescriptionKey_CleanApertureVerticalOffset] as! NSNumber
+                if let extCA = extCA,
+                   let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as? NSNumber,
+                   let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as? NSNumber,
+                   let wOffset = extCA[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] as? NSNumber,
+                   let hOffset = extCA[kCMFormatDescriptionKey_CleanApertureVerticalOffset] as? NSNumber {
                     
                     let dict: NSMutableDictionary = NSMutableDictionary()
                     dict[AVVideoCleanApertureWidthKey] = width
@@ -334,9 +338,9 @@ extension MovieWriter {
                 let extPA: CFPropertyList? =
                     CMFormatDescriptionGetExtension(desc,
                                                     extensionKey: kCMFormatDescriptionExtension_PixelAspectRatio)
-                if let extPA = extPA {
-                    let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as! NSNumber
-                    let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as! NSNumber
+                if let extPA = extPA,
+                   let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as? NSNumber,
+                   let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as? NSNumber {
                     
                     let dict: NSMutableDictionary = NSMutableDictionary()
                     dict[AVVideoPixelAspectRatioHorizontalSpacingKey] = hSpacing
@@ -356,9 +360,9 @@ extension MovieWriter {
                         CMFormatDescriptionGetExtension(desc,
                                                         extensionKey: kCMFormatDescriptionExtension_YCbCrMatrix)
                     if let extCP  = extCP, let extTF = extTF, let extMX = extMX {
-                        let colorPrimaries = extCP as! NSString
-                        let transferFunction = extTF as! NSString
-                        let ycbcrMatrix = extMX as! NSString
+                        if let colorPrimaries = extCP as? NSString,
+                            let transferFunction = extTF as? NSString,
+                            let ycbcrMatrix = extMX as? NSString {
                         
                         let dict: NSMutableDictionary = NSMutableDictionary()
                         dict[AVVideoColorPrimariesKey] = colorPrimaries
@@ -366,6 +370,7 @@ extension MovieWriter {
                         dict[AVVideoYCbCrMatrixKey] = ycbcrMatrix
                         
                         nclc = dict
+                        }
                     }
                 }
                 
@@ -377,8 +382,8 @@ extension MovieWriter {
                         CMFormatDescriptionGetExtension(desc,
                                                         extensionKey: kCMFormatDescriptionExtension_FieldDetail)
                     if let extFC = extFC, let extFD = extFD {
-                        fieldCount = (extFC as! NSNumber)
-                        fieldDetail = (extFD as! NSString)
+                        fieldCount = (extFC as? NSNumber)
+                        fieldDetail = (extFD as? NSString)
                     }
                 }
                 
@@ -391,7 +396,9 @@ extension MovieWriter {
                     }
                     
                     if let compressionProperties = compressionProperties {
-                        dict.addEntries(from: compressionProperties as! [AnyHashable:Any])
+                        if let props = compressionProperties as? [AnyHashable:Any] {
+                            dict.addEntries(from: props)
+                        }
                     }
                     compressionProperties = dict
                 }

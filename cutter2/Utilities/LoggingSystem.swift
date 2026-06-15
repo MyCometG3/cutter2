@@ -338,8 +338,7 @@ extension LoggingSystem {
         if let formatter = Thread.current.threadDictionary[key] as? DateFormatter {
             return formatter
         }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm:ss.SSS"
+        let formatter = DateFormatter.logFormatter(format: "HH:mm:ss.SSS")
         Thread.current.threadDictionary[key] = formatter
         return formatter
     }

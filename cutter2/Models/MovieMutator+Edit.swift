@@ -27,7 +27,10 @@ extension MovieMutator {
         precondition(validateRange(range, true), "ERROR: Invalid range \(range)")
         
         // Prepare clip
-        var clip: AVMutableMovie = internalMovie.mutableCopy() as! AVMutableMovie
+        guard let aClip = internalMovie.mutableCopy() as? AVMutableMovie else {
+            preconditionFailure("mutableCopy() of AVMutableMovie returned non-AVMutableMovie")
+        }
+        var clip = aClip
         if clip.timescale != range.duration.timescale {
             // Create new Movie with exact timescale; it should match before operation
             clip = AVMutableMovie()

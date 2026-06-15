@@ -25,7 +25,9 @@ extension Document {
         // Prepare Transcode SheetController
         let storyboard: NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
         let sid: NSStoryboard.SceneIdentifier = "TranscodeSheet Controller"
-        let transcodeWC = storyboard.instantiateController(withIdentifier: sid) as! NSWindowController
+        guard let transcodeWC = storyboard.instantiateController(withIdentifier: sid) as? NSWindowController else {
+            preconditionFailure("Failed to instantiate TranscodeSheet Controller")
+        }
         // transcodeWC.loadWindow()
         
         // Prepare Transcode ViewController

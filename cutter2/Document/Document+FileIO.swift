@@ -186,7 +186,9 @@ extension Document {
                 guard saveAsRefMov else { return }
                 
                 // SaveAs reference movie - Need to keep readonly access to original
-                let app: AppDelegate = NSApp.delegate as! AppDelegate
+                guard let app = NSApp.delegate as? AppDelegate else {
+                    preconditionFailure("NSApp.delegate is not AppDelegate")
+                }
                 app.addBookmark(for: srcURL)
             }
         }

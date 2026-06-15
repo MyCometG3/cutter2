@@ -82,7 +82,9 @@ extension Document {
         }
         self.saveProgress = progress
         defer {
-            self.saveProgress = nil
+            if self.saveProgress === progress {
+                self.saveProgress = nil
+            }
         }
 
         // Show busy sheet

@@ -186,14 +186,14 @@ class CAPARViewController: NSViewController {
         
         guard let content = objectController.content as? NSMutableDictionary else { return false }
         var valid: Bool = true
-        guard let encSize = content[dimensionsKey] as? NSSize else { return false }
-        guard let clapSize = content[clapSizeKey] as? NSSize else { return false }
-        guard let clapOffset = content[clapOffsetKey] as? NSPoint else { return false }
-        guard let pasp = content[paspRatioKey] as? NSSize else { return false }
+        guard let encSize = content[dimensionsKey] as? NSSize else { content[validKey] = false; return false }
+        guard let clapSize = content[clapSizeKey] as? NSSize else { content[validKey] = false; return false }
+        guard let clapOffset = content[clapOffsetKey] as? NSPoint else { content[validKey] = false; return false }
+        guard let pasp = content[paspRatioKey] as? NSSize else { content[validKey] = false; return false }
         
         do {
             // Verify dimension is not changed
-            guard let encSizeSrc = initialContent[dimensionsKey] as? NSSize else { return false }
+            guard let encSizeSrc = initialContent[dimensionsKey] as? NSSize else { content[validKey] = false; return false }
             let encSizeNew: NSSize = encSize
             
             valid = encSizeSrc.equalTo(encSizeNew)

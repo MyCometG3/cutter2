@@ -101,7 +101,7 @@ extension LayoutConverter {
         default:
             // translate Channel Layout Tag to AudioChannelLabel Set
             switch layout.mChannelLayoutTag {
-            case kAudioChannelLayoutTag_Mono:           pos = [3] // kAudioChannelLabel_Mono
+            case kAudioChannelLayoutTag_Mono:           pos = [42] // kAudioChannelLabel_Mono
             case kAudioChannelLayoutTag_Stereo:         pos = [1,2]
             case kAudioChannelLayoutTag_StereoHeadphones:   pos = [301,302]
             case kAudioChannelLayoutTag_MatrixStereo:   pos = [38,39]

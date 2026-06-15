@@ -65,7 +65,9 @@ extension MovieWriter {
             return
         }
         
-        guard let fourcc = customParam[kAudioCodecKey] as? NSString else { return }
+        guard let fourcc = customParam[kAudioCodecKey] as? NSString else {
+            preconditionFailure("kAudioCodecKey not set in customParam")
+        }
         
         let numAudioKbps = customParam[kAudioKbpsKey] as? NSNumber
         let targetKbps: Float = numAudioKbps?.floatValue ?? 128
@@ -269,7 +271,9 @@ extension MovieWriter {
             return
         }
         
-        guard let fourcc = customParam[kVideoCodecKey] as? NSString else { return }
+        guard let fourcc = customParam[kVideoCodecKey] as? NSString else {
+            preconditionFailure("kVideoCodecKey not set in customParam")
+        }
         
         let numVideoKbps = customParam[kVideoKbpsKey] as? NSNumber
         let targetKbps: Float = numVideoKbps?.floatValue ?? 2500
@@ -319,7 +323,7 @@ extension MovieWriter {
                     guard let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as? NSNumber,
                         let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as? NSNumber,
                         let wOffset = extCA[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] as? NSNumber,
-                        let hOffset = extCA[kCMFormatDescriptionKey_CleanApertureVerticalOffset] as? NSNumber else { return }
+                        let hOffset = extCA[kCMFormatDescriptionKey_CleanApertureVerticalOffset] as? NSNumber else { continue }
                     
                     let dict: NSMutableDictionary = NSMutableDictionary()
                     dict[AVVideoCleanApertureWidthKey] = width
@@ -335,7 +339,7 @@ extension MovieWriter {
                                                     extensionKey: kCMFormatDescriptionExtension_PixelAspectRatio)
                 if let extPA = extPA {
                     guard let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as? NSNumber,
-                        let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as? NSNumber else { return }
+                        let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as? NSNumber else { continue }
                     
                     let dict: NSMutableDictionary = NSMutableDictionary()
                     dict[AVVideoPixelAspectRatioHorizontalSpacingKey] = hSpacing
@@ -357,7 +361,7 @@ extension MovieWriter {
                     if let extCP  = extCP, let extTF = extTF, let extMX = extMX {
                         guard let colorPrimaries = extCP as? NSString,
                             let transferFunction = extTF as? NSString,
-                            let ycbcrMatrix = extMX as? NSString else { return }
+                            let ycbcrMatrix = extMX as? NSString else { continue }
                         
                         let dict: NSMutableDictionary = NSMutableDictionary()
                         dict[AVVideoColorPrimariesKey] = colorPrimaries

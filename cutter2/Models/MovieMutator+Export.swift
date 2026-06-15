@@ -41,7 +41,11 @@ extension MovieMutator {
         let movieWriterParams = prepareMovieWriterParams()
         let movieWriter = MovieWriter(params: movieWriterParams)
         self.currentMovieWriter = movieWriter
-        defer { self.currentMovieWriter = nil }
+        defer {
+            if self.currentMovieWriter === movieWriter {
+                self.currentMovieWriter = nil
+            }
+        }
         return try await operation(movieWriter)
     }
     

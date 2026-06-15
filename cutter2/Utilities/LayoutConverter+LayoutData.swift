@@ -19,16 +19,37 @@ extension LayoutConverter {
     /// - Parameters:
     ///   - ptr: pointer to AudioChannelLayout
     ///   - size: length of AudioChannelLayout
-    /// - Returns: Data (copied) of AudioChannelLayout
-    public func dataFor(layoutBytes ptr: UnsafePointer<AudioChannelLayout>, size: Int) -> AudioChannelLayoutData {
-        // "Copy" struct into Data as backing store
-        //let acDescCount: Int = Int(ptr.pointee.mNumberChannelDescriptions)
-        //let acLayoutSize: Int = dataSize(descCount: acDescCount)
-        //precondition(size >= acLayoutSize, "Not enough space for AudioChannelLayout")
-        let aclData: Data = Data.init(bytes: ptr, count: size)
-        return aclData
+    /// - Returns: Data (copied) of AudioChannelLayout, or nil if `size` is
+    ///   smaller than the minimum required to hold the layout described by
+    ///   the pointed-to struct.
+    public func dataFor(layoutBytes ptr: UnsafePointer<AudioChannelLayout>, size: Int) -> AudioChannelLayoutData? {
+        // Two-stage size check.
+        //
+        // Stage 1: header-only minimum. The AudioChannelLayout struct is
+        // read field-by-field in stage 2 (mNumberChannelDescriptions at
+        // offset 8), and Swift's UnsafePointer.pointee has no built-in
+        // capacity check, so we need a guarantee that the buffer holds at
+        // least the 12-byte header before that deref. Use the M-07
+        // `dataSize(descCount: 0)` (which returns the header-only size
+        // 12 = structSize - descSize) as the single source of truth for
+        // what "header-only" means, so this guard stays in sync with
+        // dataSize()'s header calculation.
+        let headerSize: Int = dataSize(descCount: 0)
+        guard size >= headerSize else { return nil }
+
+        // Stage 2: full-size minimum. Now that the header is known to be
+        // in-bounds, read mNumberChannelDescriptions and ask dataSize() for
+        // the full struct + descriptions size. The M-07 `count >= 0` guard
+        // inside dataSize() defends against a corrupted header declaring a
+        // negative count. Returns nil rather than crashing (H-02 teardown-
+        // safe pattern): an under-sized buffer is a runtime precondition
+        // violation, not a programming error to be killed over.
+        let acDescCount: Int = Int(ptr.pointee.mNumberChannelDescriptions)
+        let acLayoutSize: Int = dataSize(descCount: acDescCount)
+        guard size >= acLayoutSize else { return nil }
+        return Data.init(bytes: ptr, count: size)
     }
-    
+
     /// Create AudioChannelLayoutData (copied)
     ///
     /// - Parameter ptr: pointer to AudioChannelLayout
@@ -103,9 +124,27 @@ extension LayoutConverter {
     }
     
     func dataSize(descCount count: Int) -> Int {
-        let acDescCount = count // (count > 1) ? count : 1 ; CoreMedia allows 0 length
+        // Negative counts have no valid interpretation here: mNumberChannelDescriptions
+        // is UInt32 in the Apple SDK, so the only way to get a negative Int is a bug
+        // upstream (or a future API change). The original `count > 1 ? count : 1 ;
+        // CoreMedia allows 0 length` comment captured this safety intent but never
+        // implemented it. Without this guard, `count = -1` returns -8 (32 + (-2) * 20)
+        // which propagates as a negative size into `dataFor` and `Data.init`. Return
+        // 0 so the L-04 `guard size >= acLayoutSize` rejects it gracefully and the
+        // existing `if let dataSrc = dataSrc` pattern absorbs the nil.
+        guard count >= 0 else { return 0 }
+
         let acDescSize: Int = MemoryLayout<AudioChannelDescription>.size
-        let acLayoutSize: Int = MemoryLayout<AudioChannelLayout>.size + (Int(acDescCount) - 1) * acDescSize
-        return acLayoutSize
+        if count == 0 {
+            // Header-only layout (no description array). Matches CoreMedia's
+            // header-only mNumberChannelDescriptions == 0 case. Without this
+            // early-return the expression below would underflow to 12 via
+            // `32 + (-1) * 20`, which is accidental.
+            return MemoryLayout<AudioChannelLayout>.size - acDescSize
+        } else {
+            // structSize (header + 1 trailing mChannelDescriptions[1]) plus any
+            // descriptions beyond the first.
+            return MemoryLayout<AudioChannelLayout>.size + (count - 1) * acDescSize
+        }
     }
 }

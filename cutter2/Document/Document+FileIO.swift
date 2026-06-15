@@ -177,7 +177,6 @@ extension Document {
         // Sandbox support - keep source document security scope bookmark
         if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
             Task { @Sendable @MainActor [typeName, srcURL, weak self] in // @escaping
-                
                 guard let self else { return }
                 let fileType: AVFileType = AVFileType.init(rawValue: typeName)
                 guard fileType == .mov else { return }
@@ -277,66 +276,16 @@ extension Document {
     }
     
     private func writeAsync(to url: URL, ofType typeName: String) async throws {
-        
-        guard let mutator = self.movieMutator else { throw CocoaError(.fileWriteUnknown) }
-        
-        // Create NSProgress with proper lifecycle management
-        let progress = Progress(totalUnitCount: 100)
-        progress.isCancellable = true
-        progress.cancellationHandler = { [weak mutator] in
-            Task { @MainActor [weak mutator] in
-                await mutator?.cancel()
+        try await withBusyProgress(title: "Writing...",
+                                   message: "Please hold on second(s)...",
+                                   operationName: "write") { mutator in
+            let fileType: AVFileType = AVFileType.init(rawValue: typeName)
+            if fileType == .mov {
+                try await mutator.writeMovie(to: url, fileType: fileType, copySampleData: self.copyData)
+            } else {
+                try await mutator.exportMovie(to: url, fileType: fileType, presetName: nil)
             }
         }
-        self.saveProgress = progress
-        defer {
-            self.saveProgress = nil
-        }
-        
-        // Show busy sheet
-        showBusySheet("Writing...", "Please hold on second(s)...")
-        mutator.unblockUserInteraction = { @Sendable [weak self] in
-            self?.unblockUserInteraction()
-        }
-        defer {
-            mutator.unblockUserInteraction = nil
-            hideBusySheet()
-        }
-        
-        // Create progress stream and start monitoring BEFORE write/export begins
-        // This ensures progressContinuation is set before MovieWriter tries to use it
-        let stream = mutator.progressStream()
-        let progressTask = Task { @MainActor [weak self, weak progress] in
-            for await progressValue in stream {
-                // Separate guards for better debuggability
-                guard let self else {
-                    LoggingSystem.document.warning("Progress monitoring stopped: Document was deallocated during write")
-                    break
-                }
-                guard let progress else {
-                    LoggingSystem.document.warning("Progress monitoring stopped: NSProgress was deallocated during write")
-                    break
-                }
-                updateProgress(progressValue)
-                // Update NSProgress (thread-safe with weak capture)
-                progress.completedUnitCount = Int64(progressValue * 100)
-            }
-        }
-        defer {
-            progressTask.cancel()
-        }
-        
-        
-        // Check fileType (mov or other)
-        let fileType: AVFileType = AVFileType.init(rawValue: typeName)
-        if fileType == .mov {
-            // Write mov file as either self-contained movie or reference movie
-            try await mutator.writeMovie(to: url, fileType: fileType, copySampleData: self.copyData)
-        } else {
-            // Export as specified file type with AVAssetExportPresetPassthrough
-            try await mutator.exportMovie(to: url, fileType: fileType, presetName: nil)
-        }
-        
     }
     
     /// Indicates that this document can perform write operations asynchronously.

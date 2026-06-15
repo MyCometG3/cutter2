@@ -70,4 +70,35 @@ extension Document {
     nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () -> T) -> T {
         return ActorUtilities.performSyncOnMainActor(block)
     }
+    
+    /* ============================================ */
+    // MARK: - Sheet / MainActor bridge helpers
+    /* ============================================ */
+    
+    /// Bridge a sheet modal response to a MainActor-isolated Document action.
+    ///
+    /// Use this from sheet completion handlers to replace the repeated pattern:
+    /// ```
+    /// Task { @MainActor in
+    ///     guard let self else { return }
+    ///     ...
+    /// }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - response: The sheet modal response.
+    ///   - action: Closure receiving a strong reference to the document.
+    ///     Runs on MainActor only if `response == .continue` and the document
+    ///     still exists.
+    func afterSheetContinue(
+        _ response: NSApplication.ModalResponse,
+        perform action: @MainActor @escaping (Document) -> Void
+    ) {
+        guard response == .continue else { return }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            action(self)
+        }
+    }
+    
 }

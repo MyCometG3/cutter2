@@ -34,139 +34,110 @@ extension Document {
         
         // Show Transcode Sheet
         transcodeVC.beginSheetModal(for: self.window!) { @Sendable @MainActor [weak self] (response) in // @escaping
-            
-            guard response == NSApplication.ModalResponse.continue else { return }
-            
-            Task { @MainActor in
-                guard let self else { return }
-                self.transcoding = true
-                self.saveTo(self)
-                self.transcoding = false
+            self?.afterSheetContinue(response) { document in
+                document.transcoding = true
+                document.saveTo(document)
+                document.transcoding = false
             }
         }
+    }
+    
+    /// Run an async operation with NSProgress, busy sheet, and progress stream monitoring.
+    ///
+    /// This helper encapsulates the common preamble shared by `writeAsync`, `export`,
+    /// and `exportCustom`. It sets up:
+    /// - Cancellable `NSProgress` assigned to `saveProgress`
+    /// - Busy sheet UI
+    /// - `unblockUserInteraction` callback on the mutator
+    /// - Progress stream monitoring task
+    ///
+    /// Cleanup (`progressTask.cancel()`, `hideBusySheet()`, `saveProgress = nil`)
+    /// runs in the same order as the original inline defers.
+    ///
+    /// - Parameters:
+    ///   - title: Busy sheet title.
+    ///   - message: Busy sheet message.
+    ///   - operationName: Name used in progress-monitoring log messages.
+    ///   - operation: Async closure that performs the actual write/export work.
+    /// - Returns: The value produced by `operation`.
+    /// - Throws: `CocoaError(.fileWriteUnknown)` if `movieMutator` is nil, or any
+    ///   error thrown by `operation`.
+    func withBusyProgress<T: Sendable>(
+        title: String,
+        message: String,
+        operationName: String,
+        operation: (MovieMutator) async throws -> T
+    ) async throws -> T {
+        guard let mutator = self.movieMutator else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+
+        // Create NSProgress with proper lifecycle management
+        let progress = Progress(totalUnitCount: 100)
+        progress.isCancellable = true
+        progress.cancellationHandler = { [weak mutator] in
+            Task { @MainActor [weak mutator] in
+                await mutator?.cancel()
+            }
+        }
+        self.saveProgress = progress
+        defer {
+            if self.saveProgress === progress {
+                self.saveProgress = nil
+            }
+        }
+
+        // Show busy sheet
+        showBusySheet(title, message)
+        mutator.unblockUserInteraction = { @Sendable [weak self] in
+            self?.unblockUserInteraction()
+        }
+        defer {
+            mutator.unblockUserInteraction = nil
+            hideBusySheet()
+        }
+
+        // Create progress stream and start monitoring BEFORE operation begins
+        let stream = mutator.progressStream()
+        let progressTask = Task { @MainActor [weak self, weak progress] in
+            for await progressValue in stream {
+                guard let self else {
+                    LoggingSystem.document.warning("Progress monitoring stopped: Document was deallocated during \(operationName)")
+                    break
+                }
+                guard let progress else {
+                    LoggingSystem.document.warning("Progress monitoring stopped: NSProgress was deallocated during \(operationName)")
+                    break
+                }
+                updateProgress(progressValue)
+                progress.completedUnitCount = Int64(progressValue * 100)
+            }
+        }
+        defer {
+            progressTask.cancel()
+        }
+
+        return try await operation(mutator)
     }
     
     internal func export(to url: URL, ofType typeName: String, preset: String) async throws {
-        
-        guard let mutator = self.movieMutator else { throw CocoaError(.fileWriteUnknown) }
-        
-        // Create NSProgress with proper lifecycle management
-        let progress = Progress(totalUnitCount: 100)
-        progress.isCancellable = true
-        progress.cancellationHandler = { [weak mutator] in
-            Task { @MainActor [weak mutator] in
-                await mutator?.cancel()
-            }
-        }
-        self.saveProgress = progress
-        defer {
-            self.saveProgress = nil
-        }
-        
-        // Show busy sheet
         let title = NSLocalizedString("progress.exporting.title", comment: "Title for export progress dialog")
         let message = NSLocalizedString("progress.exporting.message", comment: "Message for export progress dialog")
-        showBusySheet(title, message)
-        mutator.unblockUserInteraction = { @Sendable [weak self] in
-            self?.unblockUserInteraction()
-        }
-        defer {
-            mutator.unblockUserInteraction = nil
-            hideBusySheet()
-        }
-        
-        // Create progress stream and start monitoring BEFORE export begins
-        // This ensures progressContinuation is set before MovieWriter tries to use it
-        let stream = mutator.progressStream()
-        let progressTask = Task { @MainActor [weak self, weak progress] in
-            for await progressValue in stream {
-                // Separate guards for better debuggability
-                guard let self else {
-                    LoggingSystem.document.warning("Progress monitoring stopped: Document was deallocated during export")
-                    break
-                }
-                guard let progress else {
-                    LoggingSystem.document.warning("Progress monitoring stopped: NSProgress was deallocated during export")
-                    break
-                }
-                updateProgress(progressValue)
-                // Update NSProgress (thread-safe with weak capture)
-                progress.completedUnitCount = Int64(progressValue * 100)
-            }
-        }
-        defer {
-            progressTask.cancel()
-        }
-        
-        
-        let fileType: AVFileType = AVFileType.init(rawValue: typeName)
-        do {
-            // Export as specified file type with AVAssetExportPresetPassthrough
+        try await withBusyProgress(title: title, message: message, operationName: "export") { mutator in
+            let fileType: AVFileType = AVFileType.init(rawValue: typeName)
             try await mutator.exportMovie(to: url, fileType: fileType, presetName: preset)
         }
-        
     }
     
     internal func exportCustom(to url: URL, ofType typeName: String) async throws {
-        
-        guard let mutator = self.movieMutator else { throw CocoaError(.fileWriteUnknown) }
-        
-        // Create NSProgress with proper lifecycle management
-        let progress = Progress(totalUnitCount: 100)
-        progress.isCancellable = true
-        progress.cancellationHandler = { [weak mutator] in
-            Task { @MainActor [weak mutator] in
-                await mutator?.cancel()
-            }
-        }
-        self.saveProgress = progress
-        defer {
-            self.saveProgress = nil
-        }
-        
-        // Show busy sheet
         let title = NSLocalizedString("progress.exporting.title", comment: "Title for export progress dialog")
         let message = NSLocalizedString("progress.exporting.message", comment: "Message for export progress dialog")
-        showBusySheet(title, message)
-        mutator.unblockUserInteraction = { @Sendable [weak self] in
-            self?.unblockUserInteraction()
-        }
-        defer {
-            mutator.unblockUserInteraction = nil
-            hideBusySheet()
-        }
-        
-        // Create progress stream and start monitoring BEFORE export begins
-        // This ensures progressContinuation is set before MovieWriter tries to use it
-        let stream = mutator.progressStream()
-        let progressTask = Task { @MainActor [weak self, weak progress] in
-            for await progressValue in stream {
-                // Separate guards for better debuggability
-                guard let self else {
-                    LoggingSystem.document.warning("Progress monitoring stopped: Document was deallocated during custom export")
-                    break
-                }
-                guard let progress else {
-                    LoggingSystem.document.warning("Progress monitoring stopped: NSProgress was deallocated during custom export")
-                    break
-                }
-                updateProgress(progressValue)
-                // Update NSProgress (thread-safe with weak capture)
-                progress.completedUnitCount = Int64(progressValue * 100)
-            }
-        }
-        defer {
-            progressTask.cancel()
-        }
-        
-        
-        let fileType: AVFileType = AVFileType.init(rawValue: typeName)
-        do {
+        try await withBusyProgress(title: title, message: message, operationName: "custom export") { mutator in
+            let fileType: AVFileType = AVFileType.init(rawValue: typeName)
             let videoID: [String] = ["avc1","hvc1","apcn","apcs","apco"]
             let audioID: [String] = ["aac ","lpcm","lpcm","lpcm"]
             let lpcmBPC: [Int] = [0, 16, 24, 32]
             
-            // Export as specified file type using custom setting params
             let defaults = UserDefaults.standard
             let audioRate = defaults.integer(forKey: kAudioKbpsKey)
             let videoRate = defaults.integer(forKey: kVideoKbpsKey)
@@ -193,6 +164,5 @@ extension Document {
             
             try await mutator.exportCustomMovie(to: url, fileType: fileType, settings: param)
         }
-        
     }
 }

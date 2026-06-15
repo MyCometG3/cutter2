@@ -23,26 +23,27 @@ extension LayoutConverter {
     ///   smaller than the minimum required to hold the layout described by
     ///   the pointed-to struct.
     public func dataFor(layoutBytes ptr: UnsafePointer<AudioChannelLayout>, size: Int) -> AudioChannelLayoutData? {
-        // Minimum-size guard: must hold at least the AudioChannelLayout header
-        // (mChannelLayoutTag + mChannelBitmap + mNumberChannelDescriptions = 12 bytes)
-        // before we can safely deref `ptr.pointee` to read mNumberChannelDescriptions.
-        // Without this, `size < 12` would read past the buffer when accessing
-        // mNumberChannelDescriptions at offset 8 — undefined behavior in general
-        // and a Swift runtime trap under ASAN / on platforms with strict
-        // alignment enforcement. The full-size guard below (size >= acLayoutSize)
-        // is computed AFTER reading mNumberChannelDescriptions, so the size
-        // itself is only safe to compute once the header is known to be in-bounds.
-        let headerSize: Int = 3 * MemoryLayout<UInt32>.size
+        // Two-stage size check.
+        //
+        // Stage 1: header-only minimum. The AudioChannelLayout struct is
+        // read field-by-field in stage 2 (mNumberChannelDescriptions at
+        // offset 8), and Swift's UnsafePointer.pointee has no built-in
+        // capacity check, so we need a guarantee that the buffer holds at
+        // least the 12-byte header before that deref. Use the M-07
+        // `dataSize(descCount: 0)` (which returns the header-only size
+        // 12 = structSize - descSize) as the single source of truth for
+        // what "header-only" means, so this guard stays in sync with
+        // dataSize()'s header calculation.
+        let headerSize: Int = dataSize(descCount: 0)
         guard size >= headerSize else { return nil }
 
-        // Revive the commented-out `precondition(size >= acLayoutSize, ...)`
-        // as a graceful nil return rather than a crash. H-02's teardown-safe
-        // pattern: an under-sized buffer is a runtime precondition violation
-        // (caller's layoutPtr.mNumberChannelDescriptions may have been tampered
-        // with, or a future API change may shift the desc count), not a
-        // programming error to be killed over. The dataSize() call uses the
-        // M-07-rewritten conditional (count >= 0 guard + header-only special
-        // case) so the size computation itself is reliable.
+        // Stage 2: full-size minimum. Now that the header is known to be
+        // in-bounds, read mNumberChannelDescriptions and ask dataSize() for
+        // the full struct + descriptions size. The M-07 `count >= 0` guard
+        // inside dataSize() defends against a corrupted header declaring a
+        // negative count. Returns nil rather than crashing (H-02 teardown-
+        // safe pattern): an under-sized buffer is a runtime precondition
+        // violation, not a programming error to be killed over.
         let acDescCount: Int = Int(ptr.pointee.mNumberChannelDescriptions)
         let acLayoutSize: Int = dataSize(descCount: acDescCount)
         guard size >= acLayoutSize else { return nil }

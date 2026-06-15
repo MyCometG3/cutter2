@@ -27,20 +27,22 @@ extension MovieMutator {
     /// copy-pasted `Task { @MainActor in ... defer { ... } }` pattern from
     /// `exportMovie`, `exportCustomMovie`, and `writeMovie`.
     ///
+    /// `withMovieWriter` itself runs on the main actor because `MovieMutator` is
+    /// `@MainActor`, so the writer is created and the `currentMovieWriter` property
+    /// is mutated directly without an additional unstructured `Task` hop.
+    ///
     /// - Parameter operation: An async closure that receives the prepared
     ///   `MovieWriter` and performs the actual export/write work.
     /// - Returns: The value produced by `operation`.
     /// - Throws: Any error thrown by `operation`.
     private func withMovieWriter<T: Sendable>(
-        _ operation: @escaping (MovieWriter) async throws -> T
+        _ operation: (MovieWriter) async throws -> T
     ) async throws -> T {
         let movieWriterParams = prepareMovieWriterParams()
-        return try await Task { @MainActor in
-            let movieWriter = MovieWriter(params: movieWriterParams)
-            self.currentMovieWriter = movieWriter
-            defer { self.currentMovieWriter = nil }
-            return try await operation(movieWriter)
-        }.value
+        let movieWriter = MovieWriter(params: movieWriterParams)
+        self.currentMovieWriter = movieWriter
+        defer { self.currentMovieWriter = nil }
+        return try await operation(movieWriter)
     }
     
     public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws {

@@ -23,6 +23,18 @@ extension LayoutConverter {
     ///   smaller than the minimum required to hold the layout described by
     ///   the pointed-to struct.
     public func dataFor(layoutBytes ptr: UnsafePointer<AudioChannelLayout>, size: Int) -> AudioChannelLayoutData? {
+        // Minimum-size guard: must hold at least the AudioChannelLayout header
+        // (mChannelLayoutTag + mChannelBitmap + mNumberChannelDescriptions = 12 bytes)
+        // before we can safely deref `ptr.pointee` to read mNumberChannelDescriptions.
+        // Without this, `size < 12` would read past the buffer when accessing
+        // mNumberChannelDescriptions at offset 8 — undefined behavior in general
+        // and a Swift runtime trap under ASAN / on platforms with strict
+        // alignment enforcement. The full-size guard below (size >= acLayoutSize)
+        // is computed AFTER reading mNumberChannelDescriptions, so the size
+        // itself is only safe to compute once the header is known to be in-bounds.
+        let headerSize: Int = 3 * MemoryLayout<UInt32>.size
+        guard size >= headerSize else { return nil }
+
         // Revive the commented-out `precondition(size >= acLayoutSize, ...)`
         // as a graceful nil return rather than a crash. H-02's teardown-safe
         // pattern: an under-sized buffer is a runtime precondition violation

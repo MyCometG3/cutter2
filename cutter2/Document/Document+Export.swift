@@ -34,14 +34,10 @@ extension Document {
         
         // Show Transcode Sheet
         transcodeVC.beginSheetModal(for: self.window!) { @Sendable @MainActor [weak self] (response) in // @escaping
-            
-            guard response == NSApplication.ModalResponse.continue else { return }
-            
-            Task { @MainActor in
-                guard let self else { return }
-                self.transcoding = true
-                self.saveTo(self)
-                self.transcoding = false
+            self?.afterSheetContinue(response) { document in
+                document.transcoding = true
+                document.saveTo(document)
+                document.transcoding = false
             }
         }
     }

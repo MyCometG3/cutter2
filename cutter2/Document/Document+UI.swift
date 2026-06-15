@@ -147,20 +147,18 @@ extension Document {
         
         // Show CAPAR Sheet
         caparVC.beginSheetModal(for: self.window!) {[caparVC, mutator, weak self] (response) in // @escaping
-            
-            guard let self else { return }
-            guard response == .continue else { return }
-            
-            // Update Clap/Pasp settings
-            let result: [AnyHashable:Any] = caparVC.resultContent
-            let done: Bool = mutator.applyClapPasp(result, using: self.undoManagerWrapper)
-            if !done {
-                var info: [String:Any] = [:]
-                info[NSLocalizedDescriptionKey] = "Failed to modify CAPAR extensions."
-                info[NSLocalizedFailureReasonErrorKey] = "Check if video track has same dimensions."
-                let err = NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: info)
-                
-                self.showErrorSheet(err)
+            self?.afterSheetContinue(response) { document in
+                // Update Clap/Pasp settings
+                let result: [AnyHashable:Any] = caparVC.resultContent
+                let done: Bool = mutator.applyClapPasp(result, using: document.undoManagerWrapper)
+                if !done {
+                    var info: [String:Any] = [:]
+                    info[NSLocalizedDescriptionKey] = "Failed to modify CAPAR extensions."
+                    info[NSLocalizedFailureReasonErrorKey] = "Check if video track has same dimensions."
+                    let err = NSError(domain: NSOSStatusErrorDomain, code: unimpErr, userInfo: info)
+                    
+                    document.showErrorSheet(err)
+                }
             }
         }
     }

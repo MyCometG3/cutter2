@@ -57,7 +57,7 @@ extension MovieWriter {
         prepareCopyChannels(movie, ar, aw, .depthData)
     }
     
-    private func prepareAudioChannels(_ movie: AVMutableMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
+    private func prepareAudioChannels(_ movie: AVMutableMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) throws {
         let numAudioEncode = customParam[kAudioEncodeKey] as? NSNumber
         let audioEncode: Bool = numAudioEncode?.boolValue ?? true
         if audioEncode == false {
@@ -179,9 +179,13 @@ extension MovieWriter {
             if let _ = awInputSetting[AVEncoderBitRateKey] {
                 let inFormat = AVAudioFormat(standardFormatWithSampleRate: Double(sampleRate),
                                              channelLayout: avacSrcLayout)
-                let outFormat = AVAudioFormat(settings: awInputSetting)!
-                let converter = AVAudioConverter(from: inFormat, to: outFormat)!
-                let bitrateArray = converter.applicableEncodeBitRates!.map{($0).intValue}
+                guard let outFormat = AVAudioFormat(settings: awInputSetting),
+                      let converter = AVAudioConverter(from: inFormat, to: outFormat),
+                      let bitrates = converter.applicableEncodeBitRates
+                else {
+                    try throwError(.movieWriterFailed, reason: "Invalid audio format/converter settings")
+                }
+                let bitrateArray = bitrates.map { $0.intValue }
                 if bitrateArray.contains(targetBitRate) == false {
                     // bitrate adjustment
                     var prev = bitrateArray.first!
@@ -223,11 +227,11 @@ extension MovieWriter {
                                                   imageBufferAttributes: nil,
                                                   outputCallback: nil,
                                                   decompressionSessionOut: &decompSession)
-            guard status == noErr else { return false }
-            
-            defer { VTDecompressionSessionInvalidate(decompSession!) }
-            
-            status = VTSessionCopySupportedPropertyDictionary(decompSession!,
+            guard status == noErr, let session = decompSession else { return false }
+
+            defer { VTDecompressionSessionInvalidate(session) }
+
+            status = VTSessionCopySupportedPropertyDictionary(session,
                                                               supportedPropertyDictionaryOut: &dict)
             guard status == noErr else { return false }
         }
@@ -573,7 +577,7 @@ extension MovieWriter {
             aw.shouldOptimizeForNetworkUse = true
             
             // Prepare media channels.
-            prepareAudioChannels(movie, ar, aw)
+            try prepareAudioChannels(movie, ar, aw)
             prepareVideoChannels(movie, ar, aw)
             prepareOtherMediaChannels(movie, ar, aw)
             

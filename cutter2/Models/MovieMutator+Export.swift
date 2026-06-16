@@ -83,9 +83,13 @@ extension MovieMutator {
     /// - On the MovieWriter actor, cancellation is synchronous: it sets the writeCancelled
     ///   flag and cancels the export session
     /// - The ongoing export/write operation checks writeCancelled flag and throws OperationCancelled
+    /// - Once the writer reference is captured, `currentMovieWriter` is cleared so that
+    ///   subsequent calls are no-ops until a new export/write operation starts
     public func cancel() async {
         guard let writer = self.currentMovieWriter else { return }
-        // Capture the writer reference to avoid race condition between check and use
+        // Clear the reference before the actor hop so that any subsequent
+        // cancel() calls become no-ops while this cancellation is in flight.
+        self.currentMovieWriter = nil
         await writer.cancelExport()
         await writer.cancelCustomMovie()
     }

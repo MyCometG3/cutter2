@@ -181,7 +181,8 @@ extension MovieWriter {
                                              channelLayout: avacSrcLayout)
                 guard let outFormat = AVAudioFormat(settings: awInputSetting),
                       let converter = AVAudioConverter(from: inFormat, to: outFormat),
-                      let bitrates = converter.applicableEncodeBitRates
+                      let bitrates = converter.applicableEncodeBitRates,
+                      !bitrates.isEmpty
                 else {
                     try throwError(.movieWriterFailed, reason: "Invalid audio format/converter settings")
                 }

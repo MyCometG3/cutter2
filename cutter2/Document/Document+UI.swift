@@ -41,8 +41,10 @@ extension Document {
         guard let mutator = self.movieMutator else { return }
         // S-10: guard let for window and playerView
         guard let window = self.window, let playerView = self.playerView else { return }
+        // S-10 follow-up: NSWindow.screen is also Optional (nil when offscreen / teardown)
+        guard let screen = window.screen else { return }
         
-        let screenRect = window.screen!.visibleFrame
+        let screenRect = screen.visibleFrame
         let viewSize = playerView.frame.size
         let windowSize = window.frame.size
         let extraSize = NSSize(width: windowSize.width - viewSize.width,

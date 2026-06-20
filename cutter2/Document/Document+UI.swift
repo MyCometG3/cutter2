@@ -139,6 +139,8 @@ extension Document {
         
         guard let mutator = self.movieMutator else { NSSound.beep(); return }
         guard let dict: [AnyHashable:Any] = mutator.clappaspDictionary() else { NSSound.beep(); return }
+        // S-10: guard let for window (early-bail before storyboard instantiation)
+        guard let window = self.window else { NSSound.beep(); return }
         
         // Prepare CAPAR SheetController
         let storyboard: NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
@@ -154,8 +156,6 @@ extension Document {
         guard caparVC.applySource(dict) else { return }
         
         // Show CAPAR Sheet
-        // S-10: guard let for window
-        guard let window = self.window else { NSSound.beep(); return }
         caparVC.beginSheetModal(for: window) {[caparVC, mutator, weak self] (response) in // @escaping
             self?.afterSheetContinue(response) { document in
                 // Update Clap/Pasp settings

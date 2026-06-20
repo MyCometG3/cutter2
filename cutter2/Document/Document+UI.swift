@@ -22,11 +22,13 @@ extension Document {
     public func displayRatio(_ baseSize: CGSize?) -> CGFloat {
         
         guard let mutator = self.movieMutator else { return 1.0 }
+        // S-10: guard let for playerView (Optional AVPlayerView?)
+        guard let playerView = self.playerView else { return 1.0 }
         
         let size = baseSize ?? mutator.dimensions(of: self.dimensionsType)
         if size == NSZeroSize { return 1.0 }
         
-        let viewSize = playerView!.frame.size
+        let viewSize = playerView.frame.size
         let hRatio = viewSize.width / size.width
         let vRatio = viewSize.height / size.height
         let ratio = (hRatio < vRatio) ? hRatio: vRatio
@@ -37,10 +39,14 @@ extension Document {
     @IBAction func resizeWindow(_ sender: Any?) {
         
         guard let mutator = self.movieMutator else { return }
+        // S-10: guard let for window and playerView
+        guard let window = self.window, let playerView = self.playerView else { return }
+        // S-10 follow-up: NSWindow.screen is also Optional (nil when offscreen / teardown)
+        guard let screen = window.screen else { return }
         
-        let screenRect = window!.screen!.visibleFrame
-        let viewSize = playerView!.frame.size
-        let windowSize = window!.frame.size
+        let screenRect = screen.visibleFrame
+        let viewSize = playerView.frame.size
+        let windowSize = window.frame.size
         let extraSize = NSSize(width: windowSize.width - viewSize.width,
                                height: windowSize.height - viewSize.height)
         
@@ -87,7 +93,7 @@ extension Document {
         }
         
         // Transpose to anchor point
-        var origin = window!.frame.origin
+        var origin = window.frame.origin
         do {
             if keepTopLeft { // preserve top left corner
                 let newOrigin = NSPoint(x: origin.x,
@@ -122,7 +128,7 @@ extension Document {
         
         // Apply new Rect to window
         let newWindowRect = NSRect(origin: origin, size: newWindowSize)
-        window!.setFrame(newWindowRect, display: true, animate: false)
+        window.setFrame(newWindowRect, display: true, animate: false)
     }
     
     /* ============================================ */
@@ -133,6 +139,8 @@ extension Document {
         
         guard let mutator = self.movieMutator else { NSSound.beep(); return }
         guard let dict: [AnyHashable:Any] = mutator.clappaspDictionary() else { NSSound.beep(); return }
+        // S-10: guard let for window (early-bail before storyboard instantiation)
+        guard let window = self.window else { NSSound.beep(); return }
         
         // Prepare CAPAR SheetController
         let storyboard: NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
@@ -148,7 +156,7 @@ extension Document {
         guard caparVC.applySource(dict) else { return }
         
         // Show CAPAR Sheet
-        caparVC.beginSheetModal(for: self.window!) {[caparVC, mutator, weak self] (response) in // @escaping
+        caparVC.beginSheetModal(for: window) {[caparVC, mutator, weak self] (response) in // @escaping
             self?.afterSheetContinue(response) { document in
                 // Update Clap/Pasp settings
                 let result: [AnyHashable:Any] = caparVC.resultContent

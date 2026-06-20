@@ -200,7 +200,7 @@ extension Document {
             guard let self else { return }
             guard let player = player else { return }
             guard let mutator = mutator else { return }
-            performSyncOnMainActor {
+            ActorUtilities.performSyncOnMainActor {
                 updateRate(player, rate)
                 updateTimeline(time, range: mutator.selectedTimeRange)
             }
@@ -250,7 +250,7 @@ extension Document {
                 
                 guard let self else { return }
                 guard let pv = pv else { return }
-                performSyncOnMainActor {
+                ActorUtilities.performSyncOnMainActor {
                     pv.needsDisplay = true
                 }
             }

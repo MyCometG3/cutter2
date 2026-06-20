@@ -82,7 +82,7 @@ extension Document {
     
     override nonisolated var fileTypeFromLastRunSavePanel: String? {
         
-        return performSyncOnMainActor {
+        return ActorUtilities.performSyncOnMainActor {
             if let accessoryVC = self.accessoryVC {
                 let type: String = accessoryVC.fileType.rawValue
                 return type

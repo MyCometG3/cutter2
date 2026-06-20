@@ -67,7 +67,7 @@ extension Document {
         }
         
         let contextAddress = UInt(bitPattern: context) // Cast UnsafeMutableRawPointer to UInt for actor isolation
-        let (objectIsPlayer, keyPathIsAVPlayerStatus, keyPathIsAVPlayerRate) = performSyncOnMainActor {
+        let (objectIsPlayer, keyPathIsAVPlayerStatus, keyPathIsAVPlayerRate) = ActorUtilities.performSyncOnMainActor {
             let contextMatch: Bool = checkKVOContext(contextAddress)
             let objectIsPlayer: Bool = (object === self.player)
             let keyPathIsAVPlayerStatus: Bool = (keyPath == #keyPath(AVPlayer.status))
@@ -81,7 +81,7 @@ extension Document {
             guard let newStatus = change[.newKey] as? NSNumber else { return }
             if newStatus.intValue == AVPlayer.Status.readyToPlay.rawValue {
                 // Seek and refresh View
-                performSyncOnMainActor {
+                ActorUtilities.performSyncOnMainActor {
                     guard let mutator = self.movieMutator else { return }
                     let time = mutator.insertionTime
                     let range = mutator.selectedTimeRange
@@ -99,7 +99,7 @@ extension Document {
             guard let newRate = change[.newKey] as? NSNumber else { return }
             if oldRate.floatValue > 0.0 && newRate.floatValue == 0.0 {
                 // Movie stopped
-                performSyncOnMainActor {
+                ActorUtilities.performSyncOnMainActor {
                     guard let player = self.player else { return }
                     guard let mutator = self.movieMutator else { return }
                     
@@ -139,13 +139,13 @@ extension Document {
             
             guard let self else { return }
             guard
-                let mutator = performSyncOnMainActor({ self.movieMutator }),
+                let mutator = ActorUtilities.performSyncOnMainActor({ self.movieMutator }),
                 let object = notification.object as? MovieMutator,
                 mutator == object
             else { return }
             
             #if DEBUG
-            let displayName = performSyncOnMainActor({ self.displayName ?? "unknown" })
+            let displayName = ActorUtilities.performSyncOnMainActor({ self.displayName ?? "unknown" })
             LoggingSystem.document.debug("Received .movieWasMutated notification: \(displayName)")
             #endif
             
@@ -158,7 +158,7 @@ extension Document {
             
             let time: CMTime = timeValue.timeValue
             let timeRange: CMTimeRange = timeRangeValue.timeRangeValue
-            performSyncOnMainActor {
+            ActorUtilities.performSyncOnMainActor {
                 updateGUI(time, timeRange, true)
             }
         }

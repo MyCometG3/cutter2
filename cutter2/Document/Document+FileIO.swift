@@ -201,14 +201,14 @@ extension Document {
         
         do {
             // Prepare to save
-            try performSyncOnMainActor {
+            try ActorUtilities.performSyncOnMainActor {
                 try preparation(to: url, ofType: typeName, for: saveOperation)
             }
             
             // Trigger actual write operation (saveTo, save/saveAs)
             try super.writeSafely(to: url, ofType: typeName, for: saveOperation)
         } catch {
-            performSyncOnMainActor {
+            ActorUtilities.performSyncOnMainActor {
                 showErrorSheet(error)
             }
             throw error // rethrow to abort write operation
@@ -216,7 +216,7 @@ extension Document {
         
         // Refresh internal movie (to sync selfcontained <> referece movie change)
         if saveOperation == .saveAsOperation {
-            performSyncOnMainActor {
+            ActorUtilities.performSyncOnMainActor {
                 refreshMutator()
             }
         }

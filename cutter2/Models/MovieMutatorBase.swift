@@ -347,13 +347,17 @@ class MovieMutatorBase: NSObject {
     public func refreshMovie() {
         
         // AVMovie.duration seems to be broken after edit operation
+        // S-08: graceful return instead of preconditionFailure (user-reachable crash path)
         guard let data: Data = internalMovie.movHeader else {
             LoggingSystem.video.error("\(self.ts()) Failed to create Data from AVMovie")
-            preconditionFailure("ERROR: Failed to create Data from AVMovie")
+            NSSound.beep()
+            return
         }
+        // S-08: graceful return instead of preconditionFailure
         guard self.reloadMovie(from: data) else {
             LoggingSystem.video.error("\(self.ts()) Failed to create AVMovie from Data")
-            preconditionFailure("ERROR: Failed to create AVMovie from Data")
+            NSSound.beep()
+            return
         }
         do {
             let prop: CMTime = internalMovie.duration

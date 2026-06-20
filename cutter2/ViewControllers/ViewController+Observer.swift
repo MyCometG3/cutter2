@@ -68,7 +68,7 @@ extension ViewController {
             }
             
             // After Live resize we needs tracking area update
-            ActorUtilities.performSyncOnMainActor{
+            ActorUtilities.performSyncOnMainActor {
                 self.timelineView.needsUpdateTrackingArea = true
                 self.timelineView.needsLayout = true
             }

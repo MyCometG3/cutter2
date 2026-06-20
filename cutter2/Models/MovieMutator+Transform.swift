@@ -51,8 +51,8 @@ extension MovieMutator {
         guard let data = internalMovie.movHeader else { NSSound.beep(); return; }
         
         // register undo record
-        let undoPasteHandler: @MainActor (MovieMutator) -> Void = {[data, range, time, movie] (me1) in // @escaping
-            let redoPasteHandler: @MainActor (MovieMutator) -> Void = {[movie] (me2) in // @escaping
+        let undoPasteHandler: @MainActor (MovieMutator) -> Void = {[data, range, time, movie, unowned undoManager] (me1) in // @escaping
+            let redoPasteHandler: @MainActor (MovieMutator) -> Void = {[movie, unowned undoManager] (me2) in // @escaping
                 me2.updateFormat(movie, using: undoManager)
             }
             undoManager.registerUndo(withTarget: me1, handler: redoPasteHandler)

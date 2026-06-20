@@ -31,7 +31,7 @@ final class UndoManagerWrapper {
     
     func registerUndo<T: AnyObject>(
         withTarget target: T,
-        handler: @Sendable @escaping (T) -> Void
+        handler: @MainActor @escaping (T) -> Void
     ) {
         undoManager.registerUndo(withTarget: target, handler: handler)
     }
@@ -42,26 +42,6 @@ final class UndoManagerWrapper {
     
     func removeAllActions(withTarget target: AnyObject) {
         undoManager.removeAllActions(withTarget: target)
-    }
-}
-
-extension MovieMutator {
-    
-    /// Runs a throwing `@MainActor`-isolated closure synchronously.
-    /// - Parameter block: A closure isolated to the main actor that may throw an error.
-    /// - Returns: The result of the closure's operation.
-    /// - Throws: Any error thrown by the closure.
-    /// - Warning: Blocks the calling thread if not already on the main thread, potentially causing UI freezes.
-    nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () throws -> T) throws -> T {
-        return try ActorUtilities.performSyncOnMainActor(block)
-    }
-    
-    /// Runs a non-throwing `@MainActor`-isolated closure synchronously.
-    /// - Parameter block: A non-throwing closure isolated to the main actor.
-    /// - Returns: The result of the closure's operation.
-    /// - Warning: Blocks the calling thread if not already on the main thread, potentially causing UI freezes.
-    nonisolated func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () -> T) -> T {
-        return ActorUtilities.performSyncOnMainActor(block)
     }
 }
 

@@ -41,7 +41,7 @@ extension ViewController {
         
         if keyPath == keyPathStepMode, let newNumber = newAny as? NSNumber {
             let new: Bool = !newNumber.boolValue
-            performSyncOnMainActor {
+            ActorUtilities.performSyncOnMainActor {
                 if mimicJKLcombination != new {
                     mimicJKLcombination = new
                     
@@ -60,7 +60,7 @@ extension ViewController {
             
             guard let self else { return }
             guard
-                let vcWindow = performSyncOnMainActor({ self.view.window }),
+                let vcWindow = ActorUtilities.performSyncOnMainActor({ self.view.window }),
                 let object = notification.object as? NSWindow,
                 vcWindow == object
             else {
@@ -68,7 +68,7 @@ extension ViewController {
             }
             
             // After Live resize we needs tracking area update
-            performSyncOnMainActor{
+            ActorUtilities.performSyncOnMainActor {
                 self.timelineView.needsUpdateTrackingArea = true
                 self.timelineView.needsLayout = true
             }
@@ -106,7 +106,7 @@ extension ViewController {
             
             guard let self else { return }
             guard
-                let delegate = performSyncOnMainActor({ self.delegate }),
+                let delegate = ActorUtilities.performSyncOnMainActor({ self.delegate }),
                 let object = notification.object as? ViewControllerDelegate,
                 object === delegate // ViewControllerDelegate is not Equatable
             else { return }
@@ -120,7 +120,7 @@ extension ViewController {
                 let duration = (userInfo[durationInfoKey] as? NSNumber)?.doubleValue
             else { return }
             let valid = duration > 0.0
-            performSyncOnMainActor {
+            ActorUtilities.performSyncOnMainActor {
                 updateTimeline(current: Float64(curPosition),
                                from: Float64(startPosition),
                                to: Float64(endPosition),

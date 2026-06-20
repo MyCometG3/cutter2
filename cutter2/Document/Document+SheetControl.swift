@@ -121,7 +121,7 @@ extension Document {
                 guard let self else { return }
                 if response == .alertFirstButtonReturn {
                     // User clicked Cancel - the cancellationHandler will call mutator.cancel()
-                    performSyncOnMainActor {
+                    ActorUtilities.performSyncOnMainActor {
                         self.saveProgress?.cancel()
                     }
                 }

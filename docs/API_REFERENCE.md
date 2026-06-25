@@ -23,6 +23,17 @@
 
 ---
 
+## New in This Version (June 2026)
+
+- **AsyncBridge** — Async-to-sync bridge with timeout support
+- **LayoutConverter** — Audio channel layout analysis subsystem
+- **MovieHeaderValidator** — Typed movie validation errors
+- **ActorUtilities** — Updated with generic throwing/non-throwing variants
+- **UndoManagerWrapper** — Concurrency contract documented
+- **ConcurrencyGuidelines.md** — New standalone concurrency patterns guide
+
+---
+
 ## Document Layer
 
 ### Document
@@ -282,38 +293,196 @@ class ErrorUtilities {
 
 ### ActorUtilities
 
-Thread-safe UI update helpers.
+Main actor synchronization helpers. Provides synchronous execution of `@MainActor`-isolated closures from any thread.
 
 ```swift
-/// Executes a block synchronously on the main actor
-/// - Parameter block: The block to execute
-func performSyncOnMainActor(_ block: @Sendable @escaping () -> Void)
+public struct ActorUtilities {
+    
+    /// Runs a throwing `@MainActor`-isolated closure synchronously.
+    /// - Parameter block: A closure isolated to the main actor that may throw an error.
+    /// - Returns: The result of the closure's operation.
+    /// - Throws: Any error thrown by the closure.
+    /// - Warning: Blocks the calling thread if not already on the main thread.
+    public static func performSyncOnMainActor<T: Sendable>(
+        _ block: @MainActor () throws -> T
+    ) throws -> T
+    
+    /// Runs a non-throwing `@MainActor`-isolated closure synchronously.
+    /// - Parameter block: A non-throwing closure isolated to the main actor.
+    /// - Returns: The result of the closure's operation.
+    /// - Warning: Blocks the calling thread if not already on the main thread.
+    public static func performSyncOnMainActor<T: Sendable>(
+        _ block: @MainActor () -> T
+    ) -> T
+}
+```
 
-/// Executes a block asynchronously on the main actor
-/// - Parameter block: The block to execute
-func performAsyncOnMainActor(_ block: @Sendable @escaping () -> Void)
+**Implementation:** Uses `Thread.isMainThread` check + `MainActor.assumeIsolated` (Swift 6 idiom) with `DispatchQueue.main.sync` fallback for background callers.
+
+### AsyncBridge
+
+Async-to-sync bridge for running async work from non-async contexts (e.g., `NSDocument` overrides).
+
+```swift
+enum AsyncBridge {
+    /// Performs an async operation synchronously with timeout support.
+    /// - Parameters:
+    ///   - timeout: Optional timeout in seconds. Throws `PerformAsyncError.timeout` on expiry.
+    ///   - allowMainThread: If true, allows calling from main thread (deadlock risk).
+    ///   - block: The async operation to perform.
+    /// - Returns: The result of the async operation.
+    /// - Throws: `PerformAsyncError.timeout` or `PerformAsyncError.operationFailed`.
+    /// - Precondition: Must not be called from main thread unless `allowMainThread: true`.
+    static func perform<T: Sendable>(
+        timeout: TimeInterval? = nil,
+        allowMainThread: Bool = false,
+        _ block: @Sendable @escaping () async throws -> T
+    ) throws -> T
+}
+```
+
+**Error types:**
+```swift
+enum PerformAsyncError: Error {
+    case timeout(TimeInterval)
+    case operationFailed(String)
+}
+```
+
+**Usage in `Document+ActorIsolation.swift`:**
+```swift
+nonisolated func performAsync<T: Sendable>(
+    timeout: TimeInterval? = nil,
+    _ block: @Sendable @escaping () async throws -> T
+) throws -> T {
+    try AsyncBridge.perform(timeout: timeout, block)
+}
+```
+
+### LayoutConverter
+
+Audio channel layout analysis subsystem (4 files, ~770 lines). Pure functions, zero stored properties — automatically `Sendable` compliant.
+
+**Core type:**
+```swift
+public struct LayoutConverter: Sendable {
+    public init() {}
+    typealias LayoutPtr = UnsafePointer<AudioChannelLayout>
+    typealias MutableLayoutPtr = UnsafeMutablePointer<AudioChannelLayout>
+    typealias DescriptionsPtr = UnsafeBufferPointer<AudioChannelDescription>
+    typealias MutableDescriptionsPtr = UnsafeMutableBufferPointer<AudioChannelDescription>
+}
+```
+
+**Public API (`LayoutConverter+Convert.swift`):**
+```swift
+extension LayoutConverter {
+    /// Converts an AudioChannelLayout to AAC channel layout tag.
+    /// - Parameter layout: The audio channel layout data.
+    /// - Returns: The AAC channel layout tag, or nil if conversion fails.
+    public func convertAsAACTag(from layout: AudioChannelLayoutData) -> AudioChannelLayoutTag?
+    
+    /// Returns a standard channel layout for the given channel count.
+    /// - Parameter channelCount: Number of audio channels.
+    /// - Returns: AudioChannelLayoutData for the standard layout.
+    public func layoutForChannelCount(_ channelCount: Int) -> AudioChannelLayoutData?
+}
+```
+
+**Binary layout utilities (`LayoutConverter+LayoutData.swift`):**
+```swift
+extension LayoutConverter {
+    /// Calculates the byte size required for a layout with the given description count.
+    /// - Parameter descCount: Number of channel descriptions (0 = header only).
+    /// - Returns: Byte size (12 for header, 32 + (n-1)*20 for n descriptions).
+    public func dataSize(descCount: Int) -> Int
+    
+    /// Creates AudioChannelLayoutData from raw bytes with validation.
+    /// - Parameters:
+    ///   - layoutBytes: Raw audio channel layout bytes.
+    ///   - size: Expected size in bytes.
+    /// - Returns: Validated AudioChannelLayoutData, or nil if invalid.
+    public func dataFor(layoutBytes: UnsafeRawPointer, size: Int) -> AudioChannelLayoutData?
+}
+```
+
+**Tag↔Label mapping (`LayoutConverter+Mapping.swift`):**
+- 120+ `AudioChannelLayoutTag` cases mapped to `AudioChannelLabel` sets
+- `AudioChannelLabel` extensions for display names and localization
+- Used by `MovieWriter` (actor) for AAC/HE-AAC channel layout configuration during custom export
+
+### MovieHeaderValidator
+
+Movie file validation with typed errors.
+
+```swift
+public struct MovieHeaderValidator {
+    /// Validation error types.
+    public enum ValidationError: LocalizedError {
+        case noTracks       // Not a movie file (e.g., image, audio-only)
+        case invalidDuration // Corrupted movie with invalid duration
+        
+        public var errorDescription: String? { ... }
+    }
+    
+    /// Validates a movie and returns the specific error if invalid.
+    /// - Parameter movie: The movie to validate.
+    /// - Returns: ValidationError if invalid, nil if valid.
+    public static func validate(_ movie: AVMutableMovie) -> ValidationError?
+    
+    /// Quick validity check.
+    /// - Parameter movie: The movie to validate.
+    /// - Returns: true if movie has tracks and valid duration.
+    public static func isValid(_ movie: AVMutableMovie) -> Bool
+}
+```
+
+**Usage in `DocumentController.prepareOpen`:**
+```swift
+if let error = MovieHeaderValidator.validate(movie) {
+    // Present specific error: .noTracks or .invalidDuration
+}
 ```
 
 ### UndoManagerWrapper
 
-Wrapper for complex undo operations.
+Wrapper for complex undo operations with `@MainActor` isolation.
 
 ```swift
-class UndoManagerWrapper {
-    /// The underlying NSUndoManager
-    let undoManager: NSUndoManager?
+@MainActor
+final class UndoManagerWrapper {
+    /// The underlying NSUndoManager (weak reference to avoid retain cycles).
+    private unowned let undoManager: NSUndoManager
     
-    /// Registers an undo operation
+    public init(_ undoManager: NSUndoManager) {
+        self.undoManager = undoManager
+    }
+    
+    /// Registers an undo operation with a target and handler.
     /// - Parameters:
-    ///   - target: The target object
-    ///   - handler: The undo handler
-    func registerUndo<T>(withTarget target: T, handler: @escaping (T) -> Void)
+    ///   - target: The target object (typically `self` of the mutator).
+    ///   - handler: The undo handler called with the target.
+    /// - Note: Handler is executed on the main actor via `ActorUtilities.performSyncOnMainActor`.
+    public func registerUndo<T: AnyObject>(
+        withTarget target: T,
+        handler: @escaping @MainActor @Sendable (T) -> Void
+    )
     
-    /// Sets the action name for the current undo group
-    /// - Parameter name: The action name
-    func setActionName(_ name: String)
+    /// Sets the action name for the current undo group.
+    /// - Parameter name: The action name (e.g., "Cut", "Paste", "Format").
+    public func setActionName(_ name: String)
+    
+    /// Removes all actions registered for a specific target.
+    /// - Parameter target: The target object whose actions to remove.
+    public func removeAllActions(withTarget target: AnyObject)
 }
 ```
+
+**Concurrency contract:**
+- All methods are `@MainActor` isolated (class is `@MainActor`)
+- `registerUndo` handler is `@MainActor @Sendable` — safe to capture `self`
+- Internal implementation uses `ActorUtilities.performSyncOnMainActor` for thread safety
+- Suitable for use in `@Sendable` closures (e.g., `Task { @MainActor in ... }`)
 
 ---
 

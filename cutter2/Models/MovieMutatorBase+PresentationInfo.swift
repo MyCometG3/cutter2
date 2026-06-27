@@ -166,8 +166,8 @@ extension MovieMutatorBase {
             } else {
                 // Exact sample is invisible (zero length in track timescale)
                 let range: CMTimeRange = info.timeRange
-                let info: PresentationInfo? = nextInfo(of: range)
-                return info
+                let next: PresentationInfo? = nextInfo(of: range)
+                return next
             }
         }
         return nil
@@ -224,8 +224,11 @@ extension MovieMutatorBase {
         if let info = presentationInfoAtTime(testTime) {
             return info
         }
-        
-        preconditionFailure("ERROR: Cannot find previous sample's PresentationInfo")
+
+        // S-08 pattern: graceful return instead of preconditionFailure.
+        // public API must not crash user-reachable code paths.
+        LoggingSystem.video.error("\(self.ts()) Cannot find previous sample's PresentationInfo for range: \(self.shortTimeString(range.start, withDecimals: false))..\(self.shortTimeString(range.end, withDecimals: false))")
+        return nil
     }
     
     /// Query Next sample's PresentationInfo
@@ -279,7 +282,10 @@ extension MovieMutatorBase {
         if let info = presentationInfoAtTime(testTime) {
             return info
         }
-        
-        preconditionFailure("ERROR: Cannot find next sample's PresentationInfo")
+
+        // S-08 pattern: graceful return instead of preconditionFailure.
+        // public API must not crash user-reachable code paths.
+        LoggingSystem.video.error("\(self.ts()) Cannot find next sample's PresentationInfo for range: \(self.shortTimeString(range.start, withDecimals: false))..\(self.shortTimeString(range.end, withDecimals: false))")
+        return nil
     }
 }

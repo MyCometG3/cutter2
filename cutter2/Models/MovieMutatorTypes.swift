@@ -8,14 +8,16 @@ public struct boxSize {
 }
 
 /// type of dimensions - for use in dimensions(of:)
-enum dimensionsType {
+public enum dimensionsType {
     case clean
     case production
     case encoded
 }
 
-struct RefOrSelfCont: OptionSet {
-    let rawValue: Int
-    static let hasReferenceTrack = RefOrSelfCont(rawValue: 1<<0)
-    static let hasSelfContTrack = RefOrSelfCont(rawValue: 1<<1)
+public struct RefOrSelfCont: OptionSet, Sendable {
+    public let rawValue: Int
+    public static let hasReferenceTrack = RefOrSelfCont(rawValue: 1<<0)
+    public static let hasSelfContTrack = RefOrSelfCont(rawValue: 1<<1)
+
+    public init(rawValue: Int) { self.rawValue = rawValue }
 }

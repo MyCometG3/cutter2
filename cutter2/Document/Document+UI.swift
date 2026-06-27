@@ -254,9 +254,8 @@ extension Document {
             player.replaceCurrentItem(with: playerItem)
             
             // seek
-            let handler: @Sendable (Bool) -> Void = {[weak self, weak pv] (finished) in // @escaping
+            let handler: @Sendable (Bool) -> Void = {[weak pv] (finished) in // @escaping
                 
-                guard let self else { return }
                 guard let pv = pv else { return }
                 ActorUtilities.performSyncOnMainActor {
                     pv.needsDisplay = true

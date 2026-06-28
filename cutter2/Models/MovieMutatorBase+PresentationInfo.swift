@@ -5,14 +5,14 @@ import AVFoundation
 ///
 /// NOTE: At final sample of segment, end position could be after end of segment.
 public struct PresentationInfo {
-    var timeRange: CMTimeRange = CMTimeRange.zero
-    var startSecond: Float64 = 0.0
-    var endSecond: Float64 = 0.0
-    var movieDuration: Float64 = 0.0
-    var startPosition: Float64 = 0.0
-    var endPosition: Float64 = 0.0
+    public private(set) var timeRange: CMTimeRange = CMTimeRange.zero
+    public private(set) var startSecond: Float64 = 0.0
+    public private(set) var endSecond: Float64 = 0.0
+    public private(set) var movieDuration: Float64 = 0.0
+    public private(set) var startPosition: Float64 = 0.0
+    public private(set) var endPosition: Float64 = 0.0
     
-    init(range: CMTimeRange, of movie: AVMutableMovie) {
+    public init(range: CMTimeRange, of movie: AVMutableMovie) {
         timeRange = range
         startSecond = CMTimeGetSeconds(range.start)
         endSecond = CMTimeGetSeconds(range.end)

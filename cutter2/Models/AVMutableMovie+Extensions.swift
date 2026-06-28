@@ -24,7 +24,7 @@ extension AVMutableMovie {
         if let data = self.movHeader {
             let pattern: [UInt8] =
                 [0x75, 0x72, 0x6C, 0x20, 0x00, 0x00, 0x00, 0x00] // 'url ', 0x00 * 4
-            // Two-stage size guard (AGENTS.md §2.3):
+            // Two-stage size guard:
             //   Stage 1 (header): pattern match + atom-size header (4 bytes) needs data.count >= 12.
             //   Stage 2 (full):   url body needs data.count >= 8 + 5 + 0 (atomSize >= 13).
             let headerSize: Int = pattern.count + 4 // pattern(8) + atomSizeHeader(4)

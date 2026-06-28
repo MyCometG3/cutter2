@@ -204,7 +204,7 @@ extension Document {
         guard let player = self.player else { return }
         
         updateRate(player, 0.0)
-        let handler: @Sendable (Bool) -> Void = {[weak self, weak player, weak mutator] (finished) in // @escaping
+        let handler: @Sendable (Bool) -> Void = {[weak self, weak player, weak mutator] (_) in // @escaping
             guard let self else { return }
             guard let player = player else { return }
             guard let mutator = mutator else { return }

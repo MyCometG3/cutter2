@@ -8,7 +8,7 @@ extension MovieMutatorBase {
     ///   - type: dimensionsType
     ///   - track: AVMutableMovieTrack
     /// - Returns: visual size of media in a track
-    internal func mediaDimensionsFD(of type: dimensionsType, in track: AVMutableMovieTrack) -> NSSize {
+    private func mediaDimensionsFD(of type: dimensionsType, in track: AVMutableMovieTrack) -> NSSize {
         guard(track.mediaType == .video) else { return NSSize.zero }
         
         var size = NSZeroSize
@@ -40,7 +40,7 @@ extension MovieMutatorBase {
     ///   - type: dimensionsType
     ///   - track: AVMutableMovieTrack
     /// - Returns: visual size of media in a track
-    internal func mediaDimensionsTapt(of type: dimensionsType, in track: AVMutableMovieTrack) -> NSSize {
+    private func mediaDimensionsTapt(of type: dimensionsType, in track: AVMutableMovieTrack) -> NSSize {
         guard(track.mediaType == .video) else { return NSSize.zero }
         
         var size: NSSize

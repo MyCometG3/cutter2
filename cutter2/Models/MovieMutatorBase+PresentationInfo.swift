@@ -17,6 +17,7 @@ public struct PresentationInfo {
         startSecond = CMTimeGetSeconds(range.start)
         endSecond = CMTimeGetSeconds(range.end)
         movieDuration = CMTimeGetSeconds(movie.range.duration)
+        guard movieDuration > 0 else { return }
         startPosition = startSecond / movieDuration
         endPosition = endSecond / movieDuration
     }
@@ -27,7 +28,7 @@ extension MovieMutatorBase {
     /// Tracks ordered in video-timecode-audio
     ///
     /// - Returns: array of AVMutableMovieTrack
-    internal func orderedTracks() -> [AVMutableMovieTrack] {
+    private func orderedTracks() -> [AVMutableMovieTrack] {
         let videoTracks: [AVMutableMovieTrack] = internalMovie.tracks(withMediaType: .video)
         let timecodeTracks: [AVMutableMovieTrack] = internalMovie.tracks(withMediaType: .timecode)
         let audioTracks: [AVMutableMovieTrack] = internalMovie.tracks(withMediaType: .audio)
@@ -42,7 +43,7 @@ extension MovieMutatorBase {
     ///   - endPTS: endPTS (mediaTime)
     ///   - mapping: timeMapping
     /// - Returns: PresentationInfo (trackTime)
-    internal func samplePresentationInfo(_ startPTS: CMTime, _ endPTS: CMTime, from mapping: CMTimeMapping) -> PresentationInfo? {
+    private func samplePresentationInfo(_ startPTS: CMTime, _ endPTS: CMTime, from mapping: CMTimeMapping) -> PresentationInfo? {
         if (mapping.source.duration > CMTime.zero) == false {
             return nil
         }
@@ -61,7 +62,7 @@ extension MovieMutatorBase {
     ///   - samplePTS: mediaTime
     ///   - mapping: timeMapping
     /// - Returns: trackTime in Movie Timescale
-    internal func trackTime(of samplePTS: CMTime, from mapping: CMTimeMapping) -> CMTime {
+    private func trackTime(of samplePTS: CMTime, from mapping: CMTimeMapping) -> CMTime {
         let mediaSegment: CMTimeRange = mapping.source
         let trackSegment: CMTimeRange = mapping.target
         
@@ -78,7 +79,7 @@ extension MovieMutatorBase {
     ///   - trackTime: trackTime
     ///   - mapping: timeMapping
     /// - Returns: mediaTime
-    internal func mediaTime(of trackTime: CMTime, from mapping: CMTimeMapping) -> CMTime {
+    private func mediaTime(of trackTime: CMTime, from mapping: CMTimeMapping) -> CMTime {
         let mediaSegment: CMTimeRange = mapping.source
         let trackSegment: CMTimeRange = mapping.target
         

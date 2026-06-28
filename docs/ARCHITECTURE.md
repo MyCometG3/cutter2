@@ -552,13 +552,20 @@ let result = try ActorUtilities.performSyncOnMainActor {
 
 ### 4. Progress Reporting with `AsyncStream`
 
-Export/write operations expose progress via `AsyncStream<Float>`:
+Export/write operations expose progress via `AsyncStream<Float>` from `MovieMutatorBase`:
 
 ```swift
-// In MovieWriter (actor-isolated)
+// In MovieMutatorBase (MainActor-isolated)
 func progressStream() -> AsyncStream<Float> {
-    AsyncStream { continuation in
-        self.progressContinuation = continuation
+    AsyncStream { [weak self] continuation in
+        ActorUtilities.performSyncOnMainActor {
+            self?.progressContinuation = continuation
+        }
+        continuation.onTermination = { @Sendable [weak self] _ in
+            Task { @MainActor in
+                self?.progressContinuation = nil
+            }
+        }
     }
 }
 ```
@@ -566,7 +573,7 @@ func progressStream() -> AsyncStream<Float> {
 **Critical sequencing (caller side):**
 ```swift
 // 1. Create stream BEFORE starting operation
-let stream = await writer.progressStream()
+let stream = mutator.progressStream()
 
 // 2. Consume progress on MainActor
 let progressTask = Task { @MainActor in
@@ -577,7 +584,7 @@ let progressTask = Task { @MainActor in
 defer { progressTask.cancel() }
 
 // 3. NOW start the operation (continuation already set)
-try await writer.exportMovie(to: url, fileType: .mov, presetName: nil)
+try await mutator.exportMovie(to: url, fileType: .mov, presetName: nil)
 ```
 
 ### 5. Concurrency Pattern Summary

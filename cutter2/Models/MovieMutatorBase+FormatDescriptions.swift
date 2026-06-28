@@ -83,15 +83,25 @@ extension MovieMutatorBase {
         }
         
         var targetRect: NSRect = NSZeroRect
+        var foundValidTrack = false
         for track in tracks {
             let trackTransform: CGAffineTransform = track.preferredTransform
             let size: NSSize = mediaDimensions(of: type, in: track, useTapt: acceptTapt)
-            precondition(size != NSZeroSize, "ERROR: Failed to get presentation dimensions.")
+            guard size != NSZeroSize else {
+                LoggingSystem.video.error("\(self.ts()) Failed to get presentation dimensions for track \(track.trackID); skipping track")
+                continue
+            }
+            
+            foundValidTrack = true
             let point: NSPoint = NSPoint(x: -size.width/2, y: -size.height/2)
             let rect: NSRect = NSRect(origin: point, size: size)
             let resultedRect: NSRect = rect.applying(trackTransform)
             
             targetRect = NSUnionRect(targetRect, resultedRect)
+        }
+        
+        guard foundValidTrack else {
+            return NSSize.zero
         }
         
         let movieTransform: CGAffineTransform = movie.preferredTransform

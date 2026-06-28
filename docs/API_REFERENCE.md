@@ -23,6 +23,17 @@
 
 ---
 
+## New in This Version (June 2026)
+
+- **AsyncBridge** — Async-to-sync bridge with timeout support
+- **LayoutConverter** — Audio channel layout analysis subsystem
+- **MovieHeaderValidator** — Typed movie validation errors
+- **ActorUtilities** — Updated with generic throwing/non-throwing variants
+- **UndoManagerWrapper** — Concurrency contract documented
+- **ConcurrencyGuidelines.md** — New standalone concurrency patterns guide
+
+---
+
 ## Document Layer
 
 ### Document
@@ -282,38 +293,144 @@ class ErrorUtilities {
 
 ### ActorUtilities
 
-Thread-safe UI update helpers.
+Main actor synchronization helpers for code that needs to run `@MainActor`-isolated work from any thread.
 
 ```swift
-/// Executes a block synchronously on the main actor
-/// - Parameter block: The block to execute
-func performSyncOnMainActor(_ block: @Sendable @escaping () -> Void)
+public struct ActorUtilities {
+    public static func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () throws -> T) throws -> T {
+        if Thread.isMainThread {
+            return try MainActor.assumeIsolated { try block() }
+        } else {
+            return try DispatchQueue.main.sync {
+                try MainActor.assumeIsolated { try block() }
+            }
+        }
+    }
 
-/// Executes a block asynchronously on the main actor
-/// - Parameter block: The block to execute
-func performAsyncOnMainActor(_ block: @Sendable @escaping () -> Void)
+    public static func performSyncOnMainActor<T: Sendable>(_ block: @MainActor () -> T) -> T {
+        if Thread.isMainThread {
+            return MainActor.assumeIsolated { block() }
+        } else {
+            return DispatchQueue.main.sync {
+                MainActor.assumeIsolated { block() }
+            }
+        }
+    }
+}
+```
+
+**Implementation:** Uses `Thread.isMainThread` plus `MainActor.assumeIsolated`, falling back to `DispatchQueue.main.sync` when the caller is off the main thread.
+
+### AsyncBridge
+
+Async-to-sync bridge for invoking async work from non-async contexts such as document lifecycle overrides.
+
+```swift
+enum PerformAsyncError: Error {
+    case timeout(TimeInterval)
+    case operationFailed(String)
+}
+
+enum AsyncBridge {
+    static func perform<T: Sendable>(
+        timeout: TimeInterval? = nil,
+        allowMainThread: Bool = false,
+        _ block: @Sendable @escaping () async throws -> T
+    ) throws -> T {
+        precondition(
+            allowMainThread || !Thread.isMainThread,
+            "AsyncBridge.perform must not be called from the main thread."
+        )
+        // Runs the async block on a detached Task and waits for completion.
+    }
+}
+```
+
+**Behavior:** The implementation uses `Task.detached` and a semaphore-backed result box, and may throw `PerformAsyncError.timeout` or `PerformAsyncError.operationFailed`.
+
+### LayoutConverter
+
+Cross-cutting audio-layout helper used by export and media-processing code. The core type is a `Sendable` value type declared in `cutter2/Utilities/LayoutConverter.swift`, with additional conversion/layout helpers implemented in `LayoutConverter+*.swift` files.
+
+```swift
+public struct LayoutConverter: Sendable {
+    public init() {}
+
+    typealias LayoutPtr = UnsafePointer<AudioChannelLayout>
+    typealias MutableLayoutPtr = UnsafeMutablePointer<AudioChannelLayout>
+    typealias DescriptionsPtr = UnsafeBufferPointer<AudioChannelDescription>
+    typealias MutableDescriptionsPtr = UnsafeMutableBufferPointer<AudioChannelDescription>
+}
+```
+
+### MovieHeaderValidator
+
+Movie file validation helper used during document open/prepare flows.
+
+```swift
+struct MovieHeaderValidator {
+    enum ValidationError: LocalizedError {
+        case noTracks
+        case invalidDuration
+    }
+
+    static func validate(_ movie: AVMutableMovie) -> ValidationError? {
+        if movie.tracks.isEmpty {
+            return .noTracks
+        }
+        if !CMTIME_IS_VALID(movie.duration) || !CMTIME_IS_NUMERIC(movie.duration) {
+            return .invalidDuration
+        }
+        return nil
+    }
+
+    static func isValid(_ movie: AVMutableMovie) -> Bool {
+        validate(movie) == nil
+    }
+}
+```
+
+**Usage in `DocumentController.prepareOpen`:**
+```swift
+if let error = MovieHeaderValidator.validate(movie) {
+    // Present specific error: .noTracks or .invalidDuration
+}
 ```
 
 ### UndoManagerWrapper
 
-Wrapper for complex undo operations.
+Wrapper for undo registration that keeps undo handling on the main actor.
 
 ```swift
-class UndoManagerWrapper {
-    /// The underlying NSUndoManager
-    let undoManager: NSUndoManager?
-    
-    /// Registers an undo operation
-    /// - Parameters:
-    ///   - target: The target object
-    ///   - handler: The undo handler
-    func registerUndo<T>(withTarget target: T, handler: @escaping (T) -> Void)
-    
-    /// Sets the action name for the current undo group
-    /// - Parameter name: The action name
-    func setActionName(_ name: String)
+@MainActor
+final class UndoManagerWrapper {
+    private let undoManager: UndoManager
+
+    init(_ undoManager: UndoManager) {
+        self.undoManager = undoManager
+    }
+
+    func registerUndo<T: AnyObject>(
+        withTarget target: T,
+        handler: @MainActor @escaping (T) -> Void
+    ) {
+        undoManager.registerUndo(withTarget: target, handler: handler)
+    }
+
+    func setActionName(_ actionName: String) {
+        undoManager.setActionName(actionName)
+    }
+
+    func removeAllActions(withTarget target: AnyObject) {
+        undoManager.removeAllActions(withTarget: target)
+    }
 }
 ```
+
+**Concurrency contract:**
+- The wrapper itself is `@MainActor` isolated.
+- `registerUndo` takes a main-actor handler rather than a generic `@Sendable` closure.
+- The implementation delegates to `UndoManager` directly; it does not use `ActorUtilities.performSyncOnMainActor` internally.
 
 ---
 

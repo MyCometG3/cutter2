@@ -229,10 +229,29 @@ protocol ViewControllerDelegate: AnyObject {
    - Common UI string constants
    - String Catalog integration
 
-5. **Document+Utilities.swift** (811 lines)
-   - Actor isolation helpers
-   - Sheet control (progress, alerts)
-   - Observer management
+5. **LayoutConverter** (4 files, ~770 lines) ✨ **Audio Channel Layout Analysis Subsystem**
+   - `LayoutConverter.swift` — Core `Sendable` struct with type aliases
+   - `LayoutConverter+Convert.swift` — Public API: `convertAsAACTag(from:)`, `layoutForChannelCount(_:)`
+   - `LayoutConverter+LayoutData.swift` — Binary parsing: `dataSize()`, `dataFor()`, `AudioChannelLayoutData`
+   - `LayoutConverter+Mapping.swift` — Tag↔Label mapping tables (120+ cases), `AudioChannelLabel` extensions
+   - Used by `MovieWriter` (actor) for AAC/HE-AAC channel layout configuration during custom export
+   - Pure functions, zero stored properties — automatically `Sendable` compliant
+
+6. **AsyncBridge.swift** ✨ **Async-to-Sync Bridge**
+   - `AsyncBridge.perform(timeout:allowMainThread:block:)` — Runs async work synchronously from non-async contexts
+   - Uses `os_unfair_lock` + `DispatchSemaphore` for thread-safe result propagation
+   - Timeout support, `PerformAsyncError` error type
+   - Adopted by `Document+ActorIsolation.swift` for `NSDocument` async overrides
+
+7. **MovieHeaderValidator.swift** ✨ **Movie Validation**
+   - `ValidationError: LocalizedError` enum (`.noTracks`, `.invalidDuration`)
+   - `validate(_ movie:)` / `isValid(_ movie:)` for pre-open movie inspection
+   - Used by `DocumentController.prepareOpen` for early error detection
+
+8. **Document+Utilities.swift** (811 lines)
+   - Actor isolation helpers (`performAsync`, `withSelfOnMainActor`, `afterSheetContinue`)
+   - Sheet control (progress, alerts, busy indicators)
+   - Observer management (`UserDefaults`, `NotificationCenter`)
    - Position control utilities
 
 ### Layer 7: Localization Layer ✨ **NEW (Phase 2.1)**
@@ -447,45 +466,116 @@ ViewController                 179 lines (core)
 
 ## Concurrency Model
 
-### Actor Isolation
+cutter2 adopts Swift 6's strict concurrency model with actor isolation, structured concurrency, and `Sendable` checking. The architecture is built around three primary concurrency patterns:
 
-**Main Actor Usage**:
-- All UI updates must occur on `@MainActor`
-- `Document` class is `@MainActor` isolated
-- `ViewController` components are `@MainActor` isolated
+### 1. Actor Isolation
 
-**Background Processing**:
+**Main Actor (`@MainActor`)**
+- All UI components (`Document`, `WindowController`, `ViewController` and its extensions) are isolated to the main actor
+- All UI updates, storyboard interactions, and AppKit APIs must execute on the main actor
+- The document's `undoManagerWrapper` and progress reporting are main-actor isolated
+
+**Dedicated Actor: `MovieWriter`**
 ```swift
-// File I/O on background
-Task.detached {
-    let movie = try AVMutableMovie(url: url)
-    await MainActor.run {
-        // Update UI with result
+actor MovieWriter: SampleBufferChannelDelegate {
+    // All export/transcode/write operations execute in this actor's isolation
+    // State (writeProgress, writeSuccess, writeError, etc.) is protected by actor isolation
+    // Callers use `await writer.exportMovie(...)` from any context
+}
+```
+- `MovieWriter` encapsulates all AVFoundation export session logic, custom export with `SampleBufferChannel`, and progress streaming
+- Actor isolation guarantees thread-safe access to mutable state without explicit locks
+- Call sites (from `Document+Export.swift`, `Document+FileIO.swift`) use `await` to hop into the actor
+
+### 2. Async-to-Sync Bridge: `AsyncBridge`
+
+`Utilities/AsyncBridge.swift` provides a unified bridge for running async work synchronously from non-async contexts (e.g., `NSDocument` overrides).
+
+```swift
+enum AsyncBridge {
+    static func perform<T: Sendable>(
+        timeout: TimeInterval? = nil,
+        allowMainThread: Bool = false,
+        _ block: @Sendable @escaping () async throws -> T
+    ) throws -> T
+}
+```
+
+**Key characteristics:**
+- Runs the async block on a detached `Task.detached(priority: .userInitiated)`
+- Uses `os_unfair_lock` + `DispatchSemaphore` for thread-safe result propagation
+- Supports optional timeout and `allowMainThread` override (with deadlock warning)
+- Throws `PerformAsyncError.timeout` or `PerformAsyncError.operationFailed` on failure
+- **Must not be called from the main thread** unless `allowMainThread: true` is explicitly set
+
+**Usage in `Document`:**
+```swift
+// Document+ActorIsolation.swift
+nonisolated func performAsync<T: Sendable>(
+    timeout: TimeInterval? = nil,
+    _ block: @Sendable @escaping () async throws -> T
+) throws -> T {
+    try AsyncBridge.perform(timeout: timeout, block)
+}
+```
+
+### 3. Main Actor Synchronization: `ActorUtilities`
+
+`Utilities/ActorUtilities.swift` provides synchronous execution of `@MainActor`-isolated closures from any thread.
+
+```swift
+public struct ActorUtilities {
+    public static func performSyncOnMainActor<T: Sendable>(
+        _ block: @MainActor () throws -> T
+    ) throws -> T
+    
+    public static func performSyncOnMainActor<T: Sendable>(
+        _ block: @MainActor () -> T
+    ) -> T
+}
+```
+
+**Implementation:** Uses `Thread.isMainThread` check + `MainActor.assumeIsolated` (Swift 6 idiom) with `DispatchQueue.main.sync` fallback for background callers.
+
+**Usage patterns:**
+```swift
+// Non-throwing: UI state reads
+let text = ActorUtilities.performSyncOnMainActor {
+    currentDisplayText
+}
+
+// Throwing: mutations that may fail
+let result = try ActorUtilities.performSyncOnMainActor {
+    try updateModel(with: newValue)
+}
+```
+
+### 4. Progress Reporting with `AsyncStream`
+
+Export/write operations expose progress via `AsyncStream<Float>` from `MovieMutatorBase`:
+
+```swift
+// In MovieMutatorBase (MainActor-isolated)
+func progressStream() -> AsyncStream<Float> {
+    AsyncStream { [weak self] continuation in
+        ActorUtilities.performSyncOnMainActor {
+            self?.progressContinuation = continuation
+        }
+        continuation.onTermination = { @Sendable [weak self] _ in
+            Task { @MainActor in
+                self?.progressContinuation = nil
+            }
+        }
     }
 }
 ```
 
-### Synchronization Utilities
-
-**performSyncOnMainActor** helper:
+**Critical sequencing (caller side):**
 ```swift
-func performSyncOnMainActor(_ block: @Sendable @escaping () -> Void) {
-    if Thread.isMainThread {
-        block()
-    } else {
-        DispatchQueue.main.sync(execute: block)
-    }
-}
-```
-
-### Progress Reporting with AsyncStream ✨ **NEW (Nov 2025)**
-
-**Modern AsyncStream Pattern**:
-```swift
-// Create stream BEFORE starting operation (critical timing requirement)
+// 1. Create stream BEFORE starting operation
 let stream = mutator.progressStream()
 
-// Start consuming progress updates
+// 2. Consume progress on MainActor
 let progressTask = Task { @MainActor in
     for await progress in stream {
         updateProgressIndicator(progress)
@@ -493,16 +583,29 @@ let progressTask = Task { @MainActor in
 }
 defer { progressTask.cancel() }
 
-// Now start the operation (continuation already set)
+// 3. NOW start the operation (continuation already set)
 try await mutator.exportMovie(to: url, fileType: .mov, presetName: nil)
 ```
 
-**Key Implementation Details**:
-- ✅ Stream must be created **before** export/write operation begins
-- ✅ `progressContinuation` set synchronously on MainActor
-- ✅ Proper weak captures prevent memory leaks
-- ✅ Diagnostic logging for lifecycle debugging
-- ✅ Legacy callback API completely removed (75 lines cleaned up)
+### 5. Concurrency Pattern Summary
+
+| Pattern | Location | Use Case |
+|---------|----------|----------|
+| `@MainActor` classes | `Document`, `ViewController*`, `WindowController` | All UI / AppKit interaction |
+| `actor` | `MovieWriter` | Export/transcode/write with mutable state |
+| `Task.detached` | `AsyncBridge.perform`, `MovieWriter` custom export | Background CPU-intensive work |
+| `Task { @MainActor in }` | Progress consumers, sheet callbacks | Explicit main-actor hops |
+| `ActorUtilities.performSyncOnMainActor` | `MovieMutatorBase`, `Document+Utilities` | Sync main-actor calls from any thread |
+| `AsyncBridge.perform` | `Document+ActorIsolation` | Sync bridge for `NSDocument` async overrides |
+| `DispatchQueue` (legacy) | `MovieWriter+CustomExport.swift` customQueue | SampleBufferChannel dispatch (being migrated) |
+
+### 6. Anti-Patterns (Avoided)
+
+- ❌ `Thread.isMainThread` + `DispatchQueue.main.sync` for new code (use `ActorUtilities`)
+- ❌ `Task { await MainActor.run { ... } }` when already on MainActor (redundant hop)
+- ❌ Force-unwrap (`!`) on async boundaries — use `guard let` / `throws`
+- ❌ `unowned self` in `@Sendable` closures — use explicit `let me = self` + `ActorUtilities`
+- ❌ `preconditionFailure` for expected nil (teardown) — use `return` / `throw` instead
 
 ---
 

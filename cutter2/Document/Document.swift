@@ -31,47 +31,47 @@ enum DocumentError: Error, NSErrorConvertible {
         switch self {
         case .incompatibleFileType:
             let message = NSLocalizedString("error.document.incompatible_file_type",
-                                          comment: "Error message when file type is incompatible")
+                                            comment: "Error message when file type is incompatible")
             let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: unimpErr, userInfo: info)
         case .unableToOpenFile:
             let message = NSLocalizedString("error.document.unable_to_open_file",
-                                          comment: "Error when file cannot be opened as AVMovie")
+                                            comment: "Error when file cannot be opened as AVMovie")
             let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: paramErr, userInfo: info)
         case .emptyMovie:
             let message = NSLocalizedString("error.document.empty_movie",
-                                          comment: "Error when trying to save an empty movie")
+                                            comment: "Error when trying to save an empty movie")
             let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: paramErr, userInfo: info)
         case .unsupportedSaveOperation:
             let message = NSLocalizedString("error.document.unsupported_save_operation",
-                                          comment: "Error when save operation type is not supported")
+                                            comment: "Error when save operation type is not supported")
             let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: paramErr, userInfo: info)
         case .unsupportedFileExtension:
             let message = NSLocalizedString("error.document.unsupported_file_extension",
-                                          comment: "Error when file extension is not supported")
+                                            comment: "Error when file extension is not supported")
             let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: paramErr, userInfo: info)
         case .fileTypeAndExtensionMismatch:
             let message = NSLocalizedString("error.document.file_type_extension_mismatch",
-                                          comment: "Error when file extension doesn't match file type")
+                                            comment: "Error when file extension doesn't match file type")
             let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: paramErr, userInfo: info)
         case .overwriteSelfContainedWithReference:
             let message = NSLocalizedString("error.document.overwrite_self_contained_with_reference",
-                                          comment: "Error when trying to overwrite self-contained with reference")
+                                            comment: "Error when trying to overwrite self-contained with reference")
             let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: paramErr, userInfo: info)
         case .internalError:
             let message = NSLocalizedString("error.document.internal_error",
-                                          comment: "Generic internal error message")
+                                            comment: "Generic internal error message")
             let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: unimpErr, userInfo: info)
         case .modifyCaparFailed:
             let message = NSLocalizedString("error.document.modify_capar_failed",
-                                          comment: "Error when modifying CAPAR extensions fails")
+                                            comment: "Error when modifying CAPAR extensions fails")
             let info = [NSLocalizedDescriptionKey: message]
             return NSError(domain: domain, code: unimpErr, userInfo: info)
         }

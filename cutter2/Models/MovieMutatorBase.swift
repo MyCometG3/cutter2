@@ -89,9 +89,9 @@ class MovieMutatorBase: NSObject {
     
     @inline(__always) public func validateRange(_ range: CMTimeRange, _ needsDuration: Bool) -> Bool {
         let movieRange: CMTimeRange = self.movieRange()
-        return (range.duration > CMTime.zero)
-            ? (movieRange.start <= range.start && range.end <= movieRange.end)
-            : (needsDuration ? false : validateTime(range.start))
+        return ((range.duration > CMTime.zero)
+                ? (movieRange.start <= range.start && range.end <= movieRange.end)
+                : (needsDuration ? false : validateTime(range.start)))
     }
     
     @inline(__always) public func clampRange(_ range: CMTimeRange) -> CMTimeRange {
@@ -213,7 +213,7 @@ class MovieMutatorBase: NSObject {
         let timeValue: NSValue = NSValue(time: time)
         let timeRangeValue: NSValue = NSValue(timeRange: range)
         let userInfo: [AnyHashable:Any] = [timeValueInfoKey:timeValue,
-                                           timeRangeValueInfoKey:timeRangeValue]
+                                      timeRangeValueInfoKey:timeRangeValue]
         let notification = Notification(name: .movieWasMutated,
                                         object: self, userInfo: userInfo)
         NotificationCenter.default.post(notification)

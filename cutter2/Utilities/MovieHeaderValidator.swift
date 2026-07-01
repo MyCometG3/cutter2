@@ -9,11 +9,11 @@
 import AVFoundation
 
 struct MovieHeaderValidator {
-
+    
     enum ValidationError: LocalizedError {
         case noTracks
         case invalidDuration
-
+        
         var errorDescription: String? {
             switch self {
             case .noTracks:
@@ -23,7 +23,7 @@ struct MovieHeaderValidator {
             }
         }
     }
-
+    
     static func validate(_ movie: AVMutableMovie) -> ValidationError? {
         if movie.tracks.isEmpty {
             return .noTracks
@@ -33,7 +33,7 @@ struct MovieHeaderValidator {
         }
         return nil
     }
-
+    
     static func isValid(_ movie: AVMutableMovie) -> Bool {
         return validate(movie) == nil
     }

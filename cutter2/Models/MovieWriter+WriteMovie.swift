@@ -105,7 +105,7 @@ extension MovieWriter {
         
         // Issue start notification
         let userInfoStart: [AnyHashable:Any] = [urlInfoKey:url,
-                                                startInfoKey:dateStart]
+                                              startInfoKey:dateStart]
         let notificationStart = Notification(name: before, object: self, userInfo: userInfoStart)
         NotificationCenter.default.post(notificationStart)
         
@@ -173,8 +173,8 @@ extension MovieWriter {
         
         // Issue end notification
         var userInfoEnd: [AnyHashable:Any] = [urlInfoKey:url,
-                                              startInfoKey:dateStart,
-                                              completedInfoKey:self.writeSuccess]
+                                            startInfoKey:dateStart,
+                                        completedInfoKey:self.writeSuccess]
         if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
             userInfoEnd[endInfoKey] = dateEnd
             userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)

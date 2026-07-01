@@ -5,7 +5,7 @@ public struct boxSize {
     public internal(set) var videoSize: Int64 = 0, videoCount: Int64 = 0
     public internal(set) var audioSize: Int64 = 0, audioCount: Int64 = 0
     public internal(set) var otherSize: Int64 = 0, otherCount: Int64 = 0
-
+    
     public init(
         headerSize: Int64 = 0,
         videoSize: Int64 = 0,
@@ -36,6 +36,6 @@ public struct RefOrSelfCont: OptionSet, Sendable {
     public let rawValue: Int
     public static let hasReferenceTrack = RefOrSelfCont(rawValue: 1<<0)
     public static let hasSelfContTrack = RefOrSelfCont(rawValue: 1<<1)
-
+    
     public init(rawValue: Int) { self.rawValue = rawValue }
 }

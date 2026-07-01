@@ -342,9 +342,7 @@ extension ViewController {
     
     override func keyDown(with event: NSEvent) {
         
-        #if false
         keyDump(with: event)
-        #endif
         
         if mimicJKLcombination {
             if keyMimic(with: event) {

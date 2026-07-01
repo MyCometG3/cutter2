@@ -50,9 +50,9 @@ extension MovieWriter {
                 if abs(progress - lastProgress) < 0.001 {
                     stagnantCount += 1
                     // After 10 stagnant updates (1 second), slow down to 500ms
-                    interval = stagnantCount >= 10
-                        ? self.exportSessionTimerMaxInterval 
-                        : self.exportSessionTimerRefreshInterval
+                    interval = (stagnantCount >= 10
+                                ? self.exportSessionTimerMaxInterval
+                                : self.exportSessionTimerRefreshInterval)
                 } else {
                     // Progress is changing, use fast interval
                     stagnantCount = 0
@@ -152,7 +152,7 @@ extension MovieWriter {
         
         // Issue start notification
         let userInfoStart: [AnyHashable:Any] = [urlInfoKey:url,
-                                                startInfoKey:dateStart]
+                                              startInfoKey:dateStart]
         let notificationStart = Notification(name: .movieWillExportSession,
                                              object: self, userInfo: userInfoStart)
         NotificationCenter.default.post(notificationStart)
@@ -236,8 +236,8 @@ extension MovieWriter {
         
         // Issue end notification
         var userInfoEnd: [AnyHashable:Any] = [urlInfoKey:url,
-                                              startInfoKey:dateStart,
-                                              completedInfoKey:self.writeSuccess]
+                                            startInfoKey:dateStart,
+                                        completedInfoKey:self.writeSuccess]
         if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
             userInfoEnd[endInfoKey] = dateEnd
             userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)

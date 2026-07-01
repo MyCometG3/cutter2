@@ -115,12 +115,12 @@ extension Document {
             let errYmin: Bool = (origin.y < screenRect.origin.y)
             let errYmax: Bool = (origin.y + newWindowSize.height > scrYmax)
             if errXmin || errXmax || errYmin || errYmax {
-                let hOffset: CGFloat =
-                    errXmax ? (scrXmax - (origin.x + newWindowSize.width)) :
-                        (errXmin ? (screenRect.origin.x - origin.x) : 0.0)
-                let vOffset: CGFloat =
-                    errYmax ? (scrYmax - (origin.y + newWindowSize.height)) :
-                        (errYmin ? (screenRect.origin.y - origin.y) : 0.0)
+                let hOffset: CGFloat = (errXmax
+                                        ? (scrXmax - (origin.x + newWindowSize.width))
+                                        : (errXmin ? (screenRect.origin.x - origin.x) : 0.0))
+                let vOffset: CGFloat = (errYmax
+                                        ? (scrYmax - (origin.y + newWindowSize.height))
+                                        : (errYmin ? (screenRect.origin.y - origin.y) : 0.0))
                 let newOrigin = NSPoint(x: origin.x + hOffset, y: origin.y + vOffset)
                 origin = newOrigin
             }

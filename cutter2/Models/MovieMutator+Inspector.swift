@@ -112,9 +112,8 @@ extension MovieMutatorBase {
             for desc in track.formatDescriptions as! [CMVideoFormatDescription] { // CF typealias of CMFormatDescription
                 var name: String = ""
                 do {
-                    let ext: CFPropertyList? =
-                        CMFormatDescriptionGetExtension(desc,
-                                                        extensionKey: kCMFormatDescriptionExtension_FormatName)
+                    let ext: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
+                                                                               extensionKey: kCMFormatDescriptionExtension_FormatName)
                     if let nameStr = ext as? NSString {
                         name = String(nameStr)
                     } else {
@@ -125,22 +124,19 @@ extension MovieMutatorBase {
                 }
                 var dimension: String = ""
                 do {
-                    let encoded: CGSize =
-                        CMVideoFormatDescriptionGetPresentationDimensions(desc,
-                                                                          usePixelAspectRatio: false,
-                                                                          useCleanAperture: false)
-                    let prod: CGSize =
-                        CMVideoFormatDescriptionGetPresentationDimensions(desc,
-                                                                          usePixelAspectRatio: true,
-                                                                          useCleanAperture: false)
-                    let clean: CGSize =
-                        CMVideoFormatDescriptionGetPresentationDimensions(desc,
-                                                                          usePixelAspectRatio: true,
-                                                                          useCleanAperture: true)
+                    let encoded: CGSize = CMVideoFormatDescriptionGetPresentationDimensions(desc,
+                                                                                            usePixelAspectRatio: false,
+                                                                                            useCleanAperture: false)
+                    let prod: CGSize = CMVideoFormatDescriptionGetPresentationDimensions(desc,
+                                                                                         usePixelAspectRatio: true,
+                                                                                         useCleanAperture: false)
+                    let clean: CGSize = CMVideoFormatDescriptionGetPresentationDimensions(desc,
+                                                                                          usePixelAspectRatio: true,
+                                                                                          useCleanAperture: true)
                     if encoded != prod || encoded != clean {
-                        dimension = (prod == clean) ?
-                            stringForTwo(encoded, prod) :
-                            stringForThree(encoded, prod, clean)
+                        dimension = ((prod == clean)
+                                     ? stringForTwo(encoded, prod)
+                                     : stringForThree(encoded, prod, clean))
                     } else {
                         dimension = stringForOne(encoded)
                     }
@@ -183,8 +179,7 @@ extension MovieMutatorBase {
                 do {
                     // get AudioStreamBasicDescription ptr
                     let asbdSize: UInt32 = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
-                    let asbdPtr: UnsafePointer<AudioStreamBasicDescription>? =
-                        CMAudioFormatDescriptionGetStreamBasicDescription(desc)
+                    let asbdPtr: UnsafePointer<AudioStreamBasicDescription>? = CMAudioFormatDescriptionGetStreamBasicDescription(desc)
                     if asbdPtr != nil {
                         var formatSize: UInt32 = UInt32(MemoryLayout<CFString?>.size)
                         var format: Unmanaged<CFString>? = nil
@@ -204,8 +199,7 @@ extension MovieMutatorBase {
                     var dataSize: UInt32 = 0
                     var data: Data? = nil
                     var err: OSStatus = noErr;
-                    let item: UnsafePointer<AudioFormatListItem>? =
-                        CMAudioFormatDescriptionGetMostCompatibleFormat(desc)
+                    let item: UnsafePointer<AudioFormatListItem>? = CMAudioFormatDescriptionGetMostCompatibleFormat(desc)
                     if let item = item {
                         tag = item.pointee.mChannelLayoutTag // kAudioChannelLayoutTag_Stereo //
                         err = AudioFormatGetPropertyInfo(kAudioFormatProperty_ChannelLayoutForTag,
@@ -235,8 +229,7 @@ extension MovieMutatorBase {
                 do {
                     var err: OSStatus = noErr;
                     var aclSize: Int = 0
-                    let aclPtr: UnsafePointer<AudioChannelLayout>? =
-                        CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &aclSize)
+                    let aclPtr: UnsafePointer<AudioChannelLayout>? = CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &aclSize)
                     if aclSize > 0, let aclPtr = aclPtr {
                         var nameSize: UInt32 = UInt32(MemoryLayout<CFString?>.size)
                         var name: Unmanaged<CFString>? = nil

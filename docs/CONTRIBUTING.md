@@ -54,7 +54,7 @@ We are committed to providing a welcoming and inspiring community for all. Pleas
 
 Before contributing, ensure you have:
 
-1. **macOS** 11.0 or later
+1. **macOS** 14.0 or later
 2. **Xcode** 15.0 or later (currently 26.1.1)
 3. **Swift** 6.0 or later (currently 6.2.1)
 4. **Git** installed and configured

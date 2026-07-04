@@ -66,8 +66,9 @@ extension MovieMutatorBase {
         let mediaSegment: CMTimeRange = mapping.source
         let trackSegment: CMTimeRange = mapping.target
         
-        var time: CMTime =
-            CMTimeMapTimeFromRangeToRange(samplePTS, fromRange: mediaSegment, toRange: trackSegment)
+        var time: CMTime = CMTimeMapTimeFromRangeToRange(samplePTS,
+                                                         fromRange: mediaSegment,
+                                                         toRange: trackSegment)
         time = CMTimeConvertScale(time, timescale: internalMovie.timescale, method: .roundAwayFromZero)
         time = CMTimeClampToRange(time, range: trackSegment)
         return time
@@ -83,8 +84,9 @@ extension MovieMutatorBase {
         let mediaSegment: CMTimeRange = mapping.source
         let trackSegment: CMTimeRange = mapping.target
         
-        var time: CMTime =
-            CMTimeMapTimeFromRangeToRange(trackTime, fromRange: trackSegment, toRange: mediaSegment)
+        var time: CMTime = CMTimeMapTimeFromRangeToRange(trackTime,
+                                                         fromRange: trackSegment,
+                                                         toRange: mediaSegment)
         time = CMTimeClampToRange(time, range: mediaSegment)
         return time
     }
@@ -112,10 +114,12 @@ extension MovieMutatorBase {
             position = Float64(target.value) / Float64(duration.value)
         } else {
             let timescale: CMTimeScale = internalMovie.timescale
-            let target2: CMTime =
-                CMTimeConvertScale(target, timescale: timescale, method: .roundAwayFromZero)
-            let duration2: CMTime =
-                CMTimeConvertScale(duration, timescale: timescale, method: .roundAwayFromZero)
+            let target2: CMTime = CMTimeConvertScale(target,
+                                                     timescale: timescale,
+                                                     method: .roundAwayFromZero)
+            let duration2: CMTime = CMTimeConvertScale(duration,
+                                                       timescale: timescale,
+                                                       method: .roundAwayFromZero)
             position = Float64(target2.value) / Float64(duration2.value)
         }
         return clampPosition(position)
@@ -150,9 +154,9 @@ extension MovieMutatorBase {
             let pts = track.samplePresentationTime(forTrackTime: time)
             guard CMTIME_IS_VALID(pts) else { continue }
             guard let cursor: AVSampleCursor = track.makeSampleCursor(presentationTimeStamp: pts)
-                else { continue }
+            else { continue }
             guard let segment: AVAssetTrackSegment = track.segment(forTrackTime: time)
-                else { continue }
+            else { continue }
             guard (segment.isEmpty == false) else { continue }
             // Prepare
             let mapping: CMTimeMapping = segment.timeMapping
@@ -161,7 +165,7 @@ extension MovieMutatorBase {
             guard let info: PresentationInfo = samplePresentationInfo(startPTS,
                                                                       endPTS,
                                                                       from: mapping)
-                else { continue }
+            else { continue }
             if info.timeRange.duration > CMTime.zero {
                 return info
             } else {
@@ -189,9 +193,9 @@ extension MovieMutatorBase {
             let pts = track.samplePresentationTime(forTrackTime: range.start)
             guard CMTIME_IS_VALID(pts) else { continue }
             guard let cursor: AVSampleCursor = track.makeSampleCursor(presentationTimeStamp: pts)
-                else { continue }
+            else { continue }
             guard let segment: AVAssetTrackSegment = track.segment(forTrackTime: range.start)
-                else { continue }
+            else { continue }
             guard (segment.isEmpty == false) else { continue }
             // Prepare
             let mapping = segment.timeMapping
@@ -205,14 +209,15 @@ extension MovieMutatorBase {
                     let sampleStartPTS: CMTime = cursor.presentationTimeStamp
                     let sampleStartTT: CMTime = trackTime(of: sampleStartPTS, from: mapping)
                     if (range.start - sampleStartTT) < resolution { continue }
-                    let pRange: CMTimeRange =
-                        CMTimeRangeFromTimeToTime(start: sampleStartTT, end: range.start)
-                    let info: PresentationInfo = PresentationInfo(range: pRange, of: internalMovie)
+                    let pRange: CMTimeRange = CMTimeRangeFromTimeToTime(start: sampleStartTT,
+                                                                        end: range.start)
+                    let info: PresentationInfo = PresentationInfo(range: pRange,
+                                                                  of: internalMovie)
                     return info
                 } else {
                     if (range.start - trackSegmentMin) < resolution { break }
-                    let pRange: CMTimeRange =
-                        CMTimeRangeFromTimeToTime(start: trackSegmentMin, end: range.start)
+                    let pRange: CMTimeRange = CMTimeRangeFromTimeToTime(start: trackSegmentMin,
+                                                                        end: range.start)
                     let info: PresentationInfo = PresentationInfo(range: pRange, of: internalMovie)
                     return info
                 }
@@ -225,7 +230,7 @@ extension MovieMutatorBase {
         if let info = presentationInfoAtTime(testTime) {
             return info
         }
-
+        
         // S-08 pattern: graceful return instead of preconditionFailure.
         // public API must not crash user-reachable code paths.
         LoggingSystem.video.error("\(self.ts()) Cannot find previous sample's PresentationInfo for range: \(self.shortTimeString(range.start, withDecimals: false))..\(self.shortTimeString(range.end, withDecimals: false))")
@@ -247,9 +252,9 @@ extension MovieMutatorBase {
             let pts = track.samplePresentationTime(forTrackTime: range.start)
             guard CMTIME_IS_VALID(pts) else { continue }
             guard let cursor: AVSampleCursor = track.makeSampleCursor(presentationTimeStamp: pts)
-                else { continue }
+            else { continue }
             guard let segment: AVAssetTrackSegment = track.segment(forTrackTime: range.start)
-                else { continue }
+            else { continue }
             guard (segment.isEmpty == false) else { continue }
             // Prepare
             let mapping = segment.timeMapping
@@ -263,14 +268,14 @@ extension MovieMutatorBase {
                     let sampleStartPTS: CMTime = cursor.presentationTimeStamp
                     let sampleStartTT: CMTime = trackTime(of: sampleStartPTS, from: mapping)
                     if (sampleStartTT - range.end) < resolution { continue }
-                    let nRange: CMTimeRange =
-                        CMTimeRangeFromTimeToTime(start: range.end, end: sampleStartTT)
+                    let nRange: CMTimeRange = CMTimeRangeFromTimeToTime(start: range.end,
+                                                                        end: sampleStartTT)
                     let info: PresentationInfo = PresentationInfo(range: nRange, of: internalMovie)
                     return info
                 } else {
                     if (trackSegmentMax - range.end) < resolution { break }
-                    let nRange: CMTimeRange =
-                        CMTimeRangeFromTimeToTime(start: range.end, end: trackSegmentMax)
+                    let nRange: CMTimeRange = CMTimeRangeFromTimeToTime(start: range.end,
+                                                                        end: trackSegmentMax)
                     let info: PresentationInfo = PresentationInfo(range: nRange, of: internalMovie)
                     return info
                 }
@@ -283,7 +288,7 @@ extension MovieMutatorBase {
         if let info = presentationInfoAtTime(testTime) {
             return info
         }
-
+        
         // S-08 pattern: graceful return instead of preconditionFailure.
         // public API must not crash user-reachable code paths.
         LoggingSystem.video.error("\(self.ts()) Cannot find next sample's PresentationInfo for range: \(self.shortTimeString(range.start, withDecimals: false))..\(self.shortTimeString(range.end, withDecimals: false))")

@@ -209,6 +209,29 @@ final class UtilitiesTests: XCTestCase {
         }
     }
     
+    func testLayoutConverterConvertsHeaderOnlyAAC51Layout() throws {
+        let converter = LayoutConverter()
+        let sourceData = converter.dataFor(tag: kAudioChannelLayoutTag_AAC_5_1)
+        
+        guard let convertedData = converter.convertAsAACTag(from: sourceData) else {
+            XCTFail("Expected header-only AAC 5.1 layout to convert")
+            return
+        }
+        
+        let convertedTag = convertedData.withUnsafeBytes { rawBuffer -> AudioChannelLayoutTag in
+            guard let baseAddress = rawBuffer.baseAddress else {
+                XCTFail("Expected converted AAC layout bytes")
+                return 0
+            }
+            
+            var tag: AudioChannelLayoutTag = 0
+            memcpy(&tag, baseAddress, MemoryLayout<AudioChannelLayoutTag>.size)
+            return tag
+        }
+        
+        XCTAssertEqual(convertedTag, kAudioChannelLayoutTag_AAC_5_1)
+    }
+    
     // MARK: - Notification Tests
     
     func testMovieWasMutatedNotification() throws {

@@ -229,9 +229,9 @@ extension MovieWriter {
                                                   outputCallback: nil,
                                                   decompressionSessionOut: &decompSession)
             guard status == noErr, let session = decompSession else { return false }
-
+            
             defer { VTDecompressionSessionInvalidate(session) }
-
+            
             status = VTSessionCopySupportedPropertyDictionary(session,
                                                               supportedPropertyDictionaryOut: &dict)
             guard status == noErr else { return false }
@@ -322,9 +322,8 @@ extension MovieWriter {
                 var fieldCount: NSNumber? = nil
                 var fieldDetail: NSString? = nil
                 
-                let extCA: CFPropertyList? =
-                    CMFormatDescriptionGetExtension(desc,
-                                                    extensionKey: kCMFormatDescriptionExtension_CleanAperture)
+                let extCA: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
+                                                                             extensionKey: kCMFormatDescriptionExtension_CleanAperture)
                 if let extCA = extCA,
                    let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as? NSNumber,
                    let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as? NSNumber,
@@ -340,9 +339,8 @@ extension MovieWriter {
                     cleanAperture = dict
                 }
                 
-                let extPA: CFPropertyList? =
-                    CMFormatDescriptionGetExtension(desc,
-                                                    extensionKey: kCMFormatDescriptionExtension_PixelAspectRatio)
+                let extPA: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
+                                                                             extensionKey: kCMFormatDescriptionExtension_PixelAspectRatio)
                 if let extPA = extPA,
                    let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as? NSNumber,
                    let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as? NSNumber {
@@ -355,37 +353,32 @@ extension MovieWriter {
                 }
                 
                 if copyNCLC {
-                    let extCP: CFPropertyList? =
-                        CMFormatDescriptionGetExtension(desc,
-                                                        extensionKey: kCMFormatDescriptionExtension_ColorPrimaries)
-                    let extTF: CFPropertyList? =
-                        CMFormatDescriptionGetExtension(desc,
-                                                        extensionKey: kCMFormatDescriptionExtension_TransferFunction)
-                    let extMX: CFPropertyList? =
-                        CMFormatDescriptionGetExtension(desc,
-                                                        extensionKey: kCMFormatDescriptionExtension_YCbCrMatrix)
+                    let extCP: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
+                                                                                 extensionKey: kCMFormatDescriptionExtension_ColorPrimaries)
+                    let extTF: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
+                                                                                 extensionKey: kCMFormatDescriptionExtension_TransferFunction)
+                    let extMX: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
+                                                                                 extensionKey: kCMFormatDescriptionExtension_YCbCrMatrix)
                     if let extCP  = extCP, let extTF = extTF, let extMX = extMX {
                         if let colorPrimaries = extCP as? NSString,
-                            let transferFunction = extTF as? NSString,
-                            let ycbcrMatrix = extMX as? NSString {
-                        
-                        let dict: NSMutableDictionary = NSMutableDictionary()
-                        dict[AVVideoColorPrimariesKey] = colorPrimaries
-                        dict[AVVideoTransferFunctionKey] = transferFunction
-                        dict[AVVideoYCbCrMatrixKey] = ycbcrMatrix
-                        
-                        nclc = dict
+                           let transferFunction = extTF as? NSString,
+                           let ycbcrMatrix = extMX as? NSString {
+                            
+                            let dict: NSMutableDictionary = NSMutableDictionary()
+                            dict[AVVideoColorPrimariesKey] = colorPrimaries
+                            dict[AVVideoTransferFunctionKey] = transferFunction
+                            dict[AVVideoYCbCrMatrixKey] = ycbcrMatrix
+                            
+                            nclc = dict
                         }
                     }
                 }
                 
                 if copyField {
-                    let extFC: CFPropertyList? =
-                        CMFormatDescriptionGetExtension(desc,
-                                                        extensionKey: kCMFormatDescriptionExtension_FieldCount)
-                    let extFD: CFPropertyList? =
-                        CMFormatDescriptionGetExtension(desc,
-                                                        extensionKey: kCMFormatDescriptionExtension_FieldDetail)
+                    let extFC: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
+                                                                                 extensionKey: kCMFormatDescriptionExtension_FieldCount)
+                    let extFD: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
+                                                                                 extensionKey: kCMFormatDescriptionExtension_FieldDetail)
                     if let extFC = extFC, let extFD = extFD {
                         fieldCount = (extFC as? NSNumber)
                         fieldDetail = (extFD as? NSString)
@@ -550,7 +543,7 @@ extension MovieWriter {
         
         // Notify that export is starting.
         let userInfoStart: [AnyHashable:Any] = [urlInfoKey:url,
-                                                startInfoKey:dateStart]
+                                              startInfoKey:dateStart]
         let notificationStart = Notification(name: .movieWillExportCustom,
                                              object: self, userInfo: userInfoStart)
         NotificationCenter.default.post(notificationStart)
@@ -597,7 +590,7 @@ extension MovieWriter {
         
         // Export using the async method.
         await exportCustomMovieCore(ar: ar, aw: aw, startTime: startTime, endTime: endTime, dateStart: dateStart)
-
+        
         // If export failed, throw the error.
         if writeSuccess == false {
             if writeCancelled {
@@ -613,8 +606,8 @@ extension MovieWriter {
         
         // Notify that export has finished.
         var userInfoEnd: [AnyHashable:Any] = [urlInfoKey:url,
-                                              startInfoKey:dateStart,
-                                              completedInfoKey:self.writeSuccess]
+                                            startInfoKey:dateStart,
+                                        completedInfoKey:self.writeSuccess]
         if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
             userInfoEnd[endInfoKey] = dateEnd
             userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)

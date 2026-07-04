@@ -115,7 +115,7 @@ extension Document {
         guard let mutator = self.movieMutator else { throw CocoaError(.fileWriteUnknown) }
         guard mutator.movieDuration() > CMTime.zero else {
             let reason = NSLocalizedString("error.reason.zero_duration_movie",
-                                         comment: "Error reason when movie has zero duration")
+                                           comment: "Error reason when movie has zero duration")
             LoggingSystem.document.error("Cannot save: movie has zero duration")
             try throwError(.emptyMovie, reason: reason)
         }
@@ -240,8 +240,9 @@ extension Document {
     ///
     /// - SeeAlso: `canAsynchronouslyWrite(to:ofType:for:)` - enables background execution
     /// - SeeAlso: `performAsync(_:)` - async-to-sync bridge implementation
-    override nonisolated func write(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType,
-                        originalContentsURL absoluteOriginalContentsURL: URL?) throws {
+    override nonisolated func write(to url: URL, ofType typeName: String,
+                                    for saveOperation: NSDocument.SaveOperationType,
+                                    originalContentsURL absoluteOriginalContentsURL: URL?) throws {
         
         // Trigger long running task via global dispatch queue
         do {

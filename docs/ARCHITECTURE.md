@@ -28,7 +28,7 @@ cutter2 is a document-based macOS video editing application built with Swift and
 - **Language**: Swift 6.2.1
 - **Concurrency**: Swift Concurrency (async/await, actors, AsyncStream)
 - **Architecture**: Document-based, MVC pattern with protocol-oriented design
-- **Platform**: macOS 11.0+, Universal Binary (x86_64 + arm64)
+- **Platform**: macOS 14.0+, Universal Binary (x86_64 + arm64)
 
 ---
 

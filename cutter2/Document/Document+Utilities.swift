@@ -53,6 +53,8 @@ extension Document {
         self.removeMutationObserver()
         self.removeAllUndoRecords()
         self.useUpdateTimer(false)
+        self.playerReloadTask?.cancel()
+        self.playerReloadTask = nil
         self.removePlayerObserver()
         
         //

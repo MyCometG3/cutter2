@@ -90,8 +90,8 @@ extension MovieMutator {
             
             // Update Marker
             let newTime: CMTime = (time <= range.start ? time
-                : (range.start < time && time <= range.end) ? range.start
-                : time - range.duration)
+                                   : (range.start < time && time <= range.end) ? range.start
+                                   : time - range.duration)
             let newRange: CMTimeRange = CMTimeRangeMake(start: range.start, duration: CMTime.zero)
             resetMarker(newTime, newRange, true)
         }

@@ -330,7 +330,7 @@ extension LoggingSystem {
 
 extension LoggingSystem {
     /// Thread-local DateFormatter for timestamp generation
-    /// 
+    ///
     /// Thread-safety: Uses Thread.threadDictionary to maintain one formatter per thread,
     /// avoiding data races from concurrent access to a shared DateFormatter instance.
     private static var timestampFormatter: DateFormatter {

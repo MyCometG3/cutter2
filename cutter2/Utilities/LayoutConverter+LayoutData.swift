@@ -36,7 +36,7 @@ extension LayoutConverter {
         // dataSize()'s header calculation.
         let headerSize: Int = dataSize(descCount: 0)
         guard size >= headerSize else { return nil }
-
+        
         // Stage 2: full-size minimum. Now that the header is known to be
         // in-bounds, read mNumberChannelDescriptions and ask dataSize() for
         // the full struct + descriptions size. The M-07 `count >= 0` guard
@@ -49,7 +49,7 @@ extension LayoutConverter {
         guard size >= acLayoutSize else { return nil }
         return Data.init(bytes: ptr, count: size)
     }
-
+    
     /// Create AudioChannelLayoutData (copied)
     ///
     /// - Parameter ptr: pointer to AudioChannelLayout
@@ -133,7 +133,7 @@ extension LayoutConverter {
         // 0 so the L-04 `guard size >= acLayoutSize` rejects it gracefully and the
         // existing `if let dataSrc = dataSrc` pattern absorbs the nil.
         guard count >= 0 else { return 0 }
-
+        
         let acDescSize: Int = MemoryLayout<AudioChannelDescription>.size
         if count == 0 {
             // Header-only layout (no description array). Matches CoreMedia's
@@ -143,8 +143,13 @@ extension LayoutConverter {
             return MemoryLayout<AudioChannelLayout>.size - acDescSize
         } else {
             // structSize (header + 1 trailing mChannelDescriptions[1]) plus any
-            // descriptions beyond the first.
-            return MemoryLayout<AudioChannelLayout>.size + (count - 1) * acDescSize
+            // descriptions beyond the first. Guard the arithmetic so malformed
+            // count values from untrusted buffers cannot trap on Int overflow.
+            let (extraBytes, multiplyOverflow) = (count - 1).multipliedReportingOverflow(by: acDescSize)
+            guard multiplyOverflow == false else { return 0 }
+            let (totalSize, addOverflow) = MemoryLayout<AudioChannelLayout>.size.addingReportingOverflow(extraBytes)
+            guard addOverflow == false else { return 0 }
+            return totalSize
         }
     }
 }

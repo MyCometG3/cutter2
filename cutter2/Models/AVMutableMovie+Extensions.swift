@@ -19,17 +19,16 @@ extension AVMutableMovie {
         return headerData
     }
     
-    /// Analyze movHeader to find referencing URLs for each track sample. nil returned in case of any error.
+    /// Analyze movHeader bytes for embedded 'url ' atoms and return any referenced URLs. Returns nil if no URLs can be parsed.
     public func findReferenceURLs() -> [URL]? {
         if let data = self.movHeader {
-            let pattern: [UInt8] =
-                [0x75, 0x72, 0x6C, 0x20, 0x00, 0x00, 0x00, 0x00] // 'url ', 0x00 * 4
             // Two-stage size guard:
             //   Stage 1 (header): pattern match + atom-size header (4 bytes) needs data.count >= 12.
             //   Stage 2 (full):   url body needs data.count >= 8 + 5 + 0 (atomSize >= 13).
+            let pattern: [UInt8] = [0x75, 0x72, 0x6C, 0x20, 0x00, 0x00, 0x00, 0x00] // 'url ', 0x00 * 4
             let headerSize: Int = pattern.count + 4 // pattern(8) + atomSizeHeader(4)
             guard data.count >= headerSize + 5 else { return nil }
-            let start: Int = 4           // ptr[n-4..n-1] needs n >= 4
+            let start: Int = 4 // ptr[n-4..n-1] needs n >= 4
             let end: Int = data.count - pattern.count
             var set: Set<URL> = []
             data.withUnsafeBytes { (ptr: UnsafeRawBufferPointer) in
@@ -41,17 +40,17 @@ extension AVMutableMovie {
                     // validate pattern
                     var valid: Bool = true
                     for offset in 0..<(pattern.count) {
-                        if ptr[n+offset] != pattern[offset] {
+                        if ptr[n + offset] != pattern[offset] {
                             valid = false
                             break
                         }
                     }
                     if valid { // found file url
                         // get atom size
-                        let s4 = Int(ptr[n-4])
-                        let s3 = Int(ptr[n-3])
-                        let s2 = Int(ptr[n-2])
-                        let s1 = Int(ptr[n-1])
+                        let s4 = Int(ptr[n - 4])
+                        let s3 = Int(ptr[n - 3])
+                        let s2 = Int(ptr[n - 2])
+                        let s1 = Int(ptr[n - 1])
                         let atomSize: Int = (s4 << 24) | (s3 << 16) | (s2 << 8) | s1
                         guard atomSize >= 13 else { continue }
                         let urlStart = n + 8
@@ -70,7 +69,7 @@ extension AVMutableMovie {
             }
             
             if set.count > 0 {
-                let array :[URL] = Array(set)
+                let array: [URL] = Array(set)
                 return array
             }
         }

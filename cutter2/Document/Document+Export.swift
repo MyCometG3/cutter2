@@ -73,7 +73,7 @@ extension Document {
         guard let mutator = self.movieMutator else {
             throw CocoaError(.fileWriteUnknown)
         }
-
+        
         // Create NSProgress with proper lifecycle management
         let progress = Progress(totalUnitCount: 100)
         progress.isCancellable = true
@@ -88,7 +88,7 @@ extension Document {
                 self.saveProgress = nil
             }
         }
-
+        
         // Show busy sheet
         showBusySheet(title, message)
         mutator.unblockUserInteraction = { @Sendable [weak self] in
@@ -98,7 +98,7 @@ extension Document {
             mutator.unblockUserInteraction = nil
             hideBusySheet()
         }
-
+        
         // Create progress stream and start monitoring BEFORE operation begins
         let stream = mutator.progressStream()
         let progressTask = Task { @MainActor [weak self, weak progress] in
@@ -118,7 +118,7 @@ extension Document {
         defer {
             progressTask.cancel()
         }
-
+        
         return try await operation(mutator)
     }
     

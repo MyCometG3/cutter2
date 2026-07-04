@@ -35,7 +35,7 @@
 
 ### Prerequisites
 
-- **macOS**: 11.0 or later (currently using 26.1)
+- **macOS**: 14.0 or later (currently using 26.1)
 - **Xcode**: 15.0 or later (currently using 26.1.1)
 - **Swift**: 6.0 or later (currently using 6.2.1)
 - **Git**: For version control

@@ -15,15 +15,19 @@ import AVFoundation
 
 extension MovieMutator {
     
-    /// Make new AVPlayerItem for internalMovie
+    /// Make new AVPlayerItem for internalMovie.
+    ///
+    /// The video-composition derivation path is asynchronous on macOS 15+ and
+    /// falls back to the legacy synchronous API on macOS 14.
     ///
     /// - Returns: AVPlayerItem
-    public func makePlayerItem() -> AVPlayerItem {
+    /// - Throws: Errors thrown by async video-composition generation on macOS 15+.
+    public func makePlayerItem() async throws -> AVPlayerItem {
         guard let asset = internalMovie.copy() as? AVAsset else {
             preconditionFailure("copy() of AVMutableMovie returned non-AVAsset")
         }
         let playerItem: AVPlayerItem = AVPlayerItem(asset: asset)
-        if let comp = makeVideoComposition() {
+        if let comp = try await makeVideoComposition(for: asset) {
             playerItem.videoComposition = comp
         }
         return playerItem
@@ -33,14 +37,21 @@ extension MovieMutator {
     // MARK: private method
     /* ============================================ */
     
-    /// Make new AVVideoComposition for internalMovie
+    /// Make new AVVideoComposition for the supplied asset when multiple video
+    /// tracks require composition.
     ///
-    /// - Returns: AVVideoComposition
-    private func makeVideoComposition() -> AVVideoComposition? {
-        let vCount = internalMovie.tracks(withMediaType: .video).count
+    /// - Parameter asset: Asset copied from `internalMovie`.
+    /// - Returns: AVVideoComposition, or nil when composition is unnecessary.
+    /// - Throws: Errors thrown by async AVFoundation property loading /
+    ///   composition generation on macOS 15+.
+    private func makeVideoComposition(for asset: AVAsset) async throws -> AVVideoComposition? {
+        let vCount = try await asset.loadTracks(withMediaType: .video).count
         if vCount > 1 {
-            let comp: AVVideoComposition = AVVideoComposition(propertiesOf: internalMovie)
-            return comp
+            if #available(macOS 15, *) {
+                return try await AVVideoComposition.videoComposition(withPropertiesOf: asset)
+            } else {
+                return AVVideoComposition(propertiesOf: asset)
+            }
         }
         return nil
     }

@@ -180,13 +180,19 @@ extension Document {
 
 extension Document {
     
-    /// Update Timeline view, seek, and refresh AVPlayerItem if required
+    /// Update Timeline view, seek, and refresh AVPlayerItem if required.
+    ///
+    /// When `reload` is true, player-item refresh is enqueued onto a MainActor
+    /// task because player-item regeneration may await AVFoundation async APIs.
     public func updateGUI(_ time: CMTime, _ timeRange: CMTimeRange, _ reload: Bool) {
         
         // update GUI
         self.updateTimeline(time, range: timeRange)
         if reload {
-            self.updatePlayer()
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                await self.updatePlayer()
+            }
         } else {
             guard let player = self.player else { return }
             self.resumeAfterSeek(to: time, with: player.rate)
@@ -243,37 +249,45 @@ extension Document {
         center.post(notification)
     }
     
-    /// Refresh AVPlayerItem and seek as is
-    private func updatePlayer() {
+    /// Refresh AVPlayerItem and seek as is.
+    ///
+    /// Player-item regeneration can throw on macOS 15+ when AVFoundation async
+    /// video-composition derivation fails, so this method surfaces the error
+    /// via `showErrorSheet(_:)`.
+    private func updatePlayer() async {
         
         guard let mutator = movieMutator, let pv = playerView else { return }
         
-        if let player = pv.player {
-            // Apply modified source movie
-            let playerItem = mutator.makePlayerItem()
-            player.replaceCurrentItem(with: playerItem)
+        do {
+            let playerItem = try await mutator.makePlayerItem()
             
-            // seek
-            let handler: @Sendable (Bool) -> Void = {[weak pv] (_) in // @escaping
+            if let player = pv.player {
+                // Apply modified source movie
+                player.replaceCurrentItem(with: playerItem)
                 
-                guard let pv = pv else { return }
-                ActorUtilities.performSyncOnMainActor {
-                    pv.needsDisplay = true
+                // seek
+                let handler: @Sendable (Bool) -> Void = {[weak pv] (_) in // @escaping
+                    
+                    guard let pv = pv else { return }
+                    ActorUtilities.performSyncOnMainActor {
+                        pv.needsDisplay = true
+                    }
                 }
+                playerItem.seek(to: mutator.insertionTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero,
+                                completionHandler: handler)
+            } else {
+                // Initial setup
+                let player: AVPlayer = AVPlayer(playerItem: playerItem)
+                pv.player = player
+                
+                // AddObserver to AVPlayer
+                self.addPlayerObserver()
+                
+                // Start polling timer
+                self.useUpdateTimer(true)
             }
-            playerItem.seek(to: mutator.insertionTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero,
-                            completionHandler: handler)
-        } else {
-            // Initial setup
-            let playerItem = mutator.makePlayerItem()
-            let player: AVPlayer = AVPlayer(playerItem: playerItem)
-            pv.player = player
-            
-            // AddObserver to AVPlayer
-            self.addPlayerObserver()
-            
-            // Start polling timer
-            self.useUpdateTimer(true)
+        } catch {
+            self.showErrorSheet(error)
         }
     }
     

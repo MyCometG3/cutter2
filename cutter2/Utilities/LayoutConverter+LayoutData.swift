@@ -143,8 +143,13 @@ extension LayoutConverter {
             return MemoryLayout<AudioChannelLayout>.size - acDescSize
         } else {
             // structSize (header + 1 trailing mChannelDescriptions[1]) plus any
-            // descriptions beyond the first.
-            return MemoryLayout<AudioChannelLayout>.size + (count - 1) * acDescSize
+            // descriptions beyond the first. Guard the arithmetic so malformed
+            // count values from untrusted buffers cannot trap on Int overflow.
+            let (extraBytes, multiplyOverflow) = (count - 1).multipliedReportingOverflow(by: acDescSize)
+            guard multiplyOverflow == false else { return 0 }
+            let (totalSize, addOverflow) = MemoryLayout<AudioChannelLayout>.size.addingReportingOverflow(extraBytes)
+            guard addOverflow == false else { return 0 }
+            return totalSize
         }
     }
 }

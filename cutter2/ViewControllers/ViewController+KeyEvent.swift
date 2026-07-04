@@ -373,6 +373,7 @@ extension ViewController {
     
     private func keyDump(with event: NSEvent) {
         #if DEBUG
+        guard ProcessInfo.processInfo.environment["CUTTER2_DEBUG_KEYDUMP"] == "1" else { return }
         let code: UInt = UInt(event.keyCode)
         let char = event.charactersIgnoringModifiers
         let option: Bool = event.modifierFlags.contains(.option)

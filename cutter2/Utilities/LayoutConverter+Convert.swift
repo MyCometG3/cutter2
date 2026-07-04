@@ -74,7 +74,13 @@ extension LayoutConverter {
             case kAudioChannelLayoutTag_UseChannelBitmap:
                 pos = channelLabelSet(forBitmap: header.bitmap)
             case kAudioChannelLayoutTag_UseChannelDescriptions:
-                let layoutPtr = baseAddress.bindMemory(to: AudioChannelLayout.self, capacity: 1)
+                let alignedStorage = UnsafeMutableRawPointer.allocate(
+                    byteCount: requiredSize,
+                    alignment: MemoryLayout<AudioChannelLayout>.alignment
+                )
+                defer { alignedStorage.deallocate() }
+                memcpy(alignedStorage, baseAddress, requiredSize)
+                let layoutPtr = alignedStorage.bindMemory(to: AudioChannelLayout.self, capacity: 1)
                 pos = channelLabelSet(forDescriptions: layoutPtr, count: header.descCount)
             default:
                 pos = channelLabelSet(forTag: header.tag)

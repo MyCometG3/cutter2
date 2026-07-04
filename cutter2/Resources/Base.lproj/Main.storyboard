@@ -1589,7 +1589,7 @@ Gw
                                         </view>
                                     </tabViewItem>
                                     <tabViewItem label="1" identifier="" id="bjr-UL-QSL">
-                                        <view key="view" ambiguous="YES" id="wZ2-7T-zQd">
+                                        <view key="view" id="wZ2-7T-zQd">
                                             <rect key="frame" x="10" y="7" width="303" height="225"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -1643,7 +1643,7 @@ Gw
                                         </view>
                                     </tabViewItem>
                                     <tabViewItem label="2" identifier="" id="zM1-2c-siu">
-                                        <view key="view" ambiguous="YES" id="F44-wS-paW">
+                                        <view key="view" id="F44-wS-paW">
                                             <rect key="frame" x="10" y="7" width="303" height="225"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
@@ -1682,7 +1682,7 @@ Gw
                                         </view>
                                     </tabViewItem>
                                     <tabViewItem label="3" identifier="" id="Dg0-gw-yjs">
-                                        <view key="view" ambiguous="YES" id="JXQ-1L-bdS">
+                                        <view key="view" id="JXQ-1L-bdS">
                                             <rect key="frame" x="10" y="7" width="303" height="225"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>

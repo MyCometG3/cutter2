@@ -15,43 +15,70 @@ extension LayoutConverter {
     // MARK: - private helpers
     /* ============================================ */
     
+    private typealias AudioChannelLayoutHeader = (
+        tag: AudioChannelLayoutTag,
+        bitmap: AudioChannelBitmap,
+        descCount: Int
+    )
+    
+    /// Reads an integer-like header field from potentially unaligned Data bytes.
+    private func loadHeaderValue<T>(_ type: T.Type, from baseAddress: UnsafeRawPointer, offset: Int) -> T {
+        baseAddress.loadUnaligned(fromByteOffset: offset, as: T.self)
+    }
+    
+    /// Reads only the fixed-size AudioChannelLayout header from raw bytes.
+    ///
+    /// CoreMedia may provide tag-only AudioChannelLayout buffers that contain
+    /// just the 12-byte header, so this helper intentionally reads only the
+    /// header fields and leaves full-layout validation to the caller.
+    private func extractChannelLayoutHeader(from aclData: AudioChannelLayoutData) -> AudioChannelLayoutHeader? {
+        let tagOffset = MemoryLayout<AudioChannelLayout>.offset(of: \AudioChannelLayout.mChannelLayoutTag)!
+        let bitmapOffset = MemoryLayout<AudioChannelLayout>.offset(of: \AudioChannelLayout.mChannelBitmap)!
+        let countOffset = MemoryLayout<AudioChannelLayout>.offset(of: \AudioChannelLayout.mNumberChannelDescriptions)!
+        let headerSize = countOffset + MemoryLayout<UInt32>.size
+        
+        return aclData.withUnsafeBytes { rawBuffer in
+            guard rawBuffer.count >= headerSize else { return nil }
+            guard let baseAddress = rawBuffer.baseAddress else { return nil }
+            
+            let tag = loadHeaderValue(AudioChannelLayoutTag.self, from: baseAddress, offset: tagOffset)
+            let bitmap = loadHeaderValue(AudioChannelBitmap.self, from: baseAddress, offset: bitmapOffset)
+            let descCount = loadHeaderValue(UInt32.self, from: baseAddress, offset: countOffset)
+            
+            return (tag, bitmap, Int(descCount))
+        }
+    }
+    
     /// Safely extracts channel label set from AudioChannelLayoutData.
-    /// Returns nil if the buffer is empty or invalid.
+    ///
+    /// Tag-only / bitmap layouts require only the fixed-size header, while
+    /// UseChannelDescriptions layouts must provide the full trailing array.
+    /// Returns nil if the buffer is empty or structurally invalid.
     private func extractChannelLabelSet(from aclData: AudioChannelLayoutData) -> Set<AudioChannelLabel>? {
         var pos: Set<AudioChannelLabel>?
+        
+        guard let header = extractChannelLayoutHeader(from: aclData) else { return nil }
+        
+        let requiredSize: Int
+        if header.tag == kAudioChannelLayoutTag_UseChannelDescriptions {
+            guard header.descCount > 0 else { return nil }
+            requiredSize = dataSize(descCount: header.descCount)
+        } else {
+            requiredSize = dataSize(descCount: 0)
+        }
+        
         aclData.withUnsafeBytes { (p: UnsafeRawBufferPointer) in
-            guard let baseAddress = p.baseAddress else { return }
-            // Discover layout at runtime: do not hardcode any offset or size, so
-            // the helper adapts to struct definition changes (e.g. Apple adding
-            // fields, changing padding, or redefining alignment on a future
-            // platform).
-            let descSize = MemoryLayout<AudioChannelDescription>.size
-            let structSize = MemoryLayout<AudioChannelLayout>.size
-            // bindMemory with capacity 1 requires structSize contiguous bytes
-            // for the header read; channelLabelSet will bind the same way, so a
-            // single guard covers both.
-            guard p.count >= structSize else { return }
-            let headerPtr = baseAddress.bindMemory(to: AudioChannelLayout.self, capacity: 1)
-            let tag = headerPtr.pointee.mChannelLayoutTag
-            let descCount = Int(headerPtr.pointee.mNumberChannelDescriptions)
-            // For UseChannelDescriptions, channelLabelSet walks descCount
-            // AudioChannelDescription values past the header. The first slot is
-            // already covered by structSize (the trailing mChannelDescriptions[1]
-            // inside AudioChannelLayout), so we only need to add (descCount - 1)
-            // more. For other tags, channelLabelSet only touches the header fields
-            // and structSize is sufficient.
-            let requiredSize: Int
-            if tag == kAudioChannelLayoutTag_UseChannelDescriptions {
-                // A UseChannelDescriptions tag with descCount == 0 is malformed
-                // (the tag promises a description array but declares it empty);
-                // reject up front to avoid a redundant 0-size check below.
-                guard descCount > 0 else { return }
-                requiredSize = structSize + (descCount - 1) * descSize
-            } else {
-                requiredSize = structSize
+            guard p.count >= requiredSize, let baseAddress = p.baseAddress else { return }
+            
+            switch header.tag {
+            case kAudioChannelLayoutTag_UseChannelBitmap:
+                pos = channelLabelSet(forBitmap: header.bitmap)
+            case kAudioChannelLayoutTag_UseChannelDescriptions:
+                let layoutPtr = baseAddress.bindMemory(to: AudioChannelLayout.self, capacity: 1)
+                pos = channelLabelSet(forDescriptions: layoutPtr, count: header.descCount)
+            default:
+                pos = channelLabelSet(forTag: header.tag)
             }
-            guard p.count >= requiredSize else { return }
-            pos = channelLabelSet(headerPtr)
         }
         return pos
     }

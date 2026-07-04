@@ -6,7 +6,7 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 - __Framework__: AVFoundation (macOS native)
 - __Restriction__: No autosave support.
 - __Architecture__: Universal binary (x86_64 + arm64)
-- __Languages__: English, Japanese (日本語) ✨ **NEW**
+- __Languages__: English, Japanese (日本語)
 
 #### Basic feature
 - Standard key shortcuts - JKL mode - like legacy QuickTime Player Pro 7
@@ -14,7 +14,7 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 - Support remux b/w mov/mp4/m4v/m4a
 - Transcode to H264+AAC.mov/.mp4/m4v
 - Transcode to HEVC+AAC.mov/.mp4/m4v
-- Full internationalization support (English/Japanese) ✨ **NEW**
+- Full internationalization support (English/Japanese)
 
 #### Advanced feature
 - Save as reference movie (AVFoundation based)
@@ -35,7 +35,7 @@ cutter2 is simple QuickTime movie editor - with powerful key shortcuts.
 For detailed information about architecture, development, testing, and project history, see the [docs](docs/) directory.
 
 #### Development environment
-- macOS 26.5.1
+- macOS 26.5.2
 - Xcode 26.6
 - Swift 6.3.3
 

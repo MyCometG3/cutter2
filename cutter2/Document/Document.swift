@@ -180,6 +180,15 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     //
     internal var mutationObserver: NSObjectProtocol? = nil
     
+    /// The latest scheduled player reload task. Replaced/cancelled when a new
+    /// reload request arrives so stale AVPlayerItems are never applied after a
+    /// newer edit has already requested another refresh.
+    internal var playerReloadTask: Task<Void, Never>? = nil
+    
+    /// Monotonic generation counter for player reload requests. Used so only
+    /// the newest in-flight reload task may clear `playerReloadTask`.
+    internal var playerReloadGeneration: UInt64 = 0
+    
     /* ============================================ */
     // MARK: - NSDocument methods/properties
     /* ============================================ */

@@ -182,17 +182,28 @@ extension Document {
     
     /// Update Timeline view, seek, and refresh AVPlayerItem if required.
     ///
-    /// When `reload` is true, player-item refresh is enqueued onto a MainActor
-    /// task because player-item regeneration may await AVFoundation async APIs.
+    /// When `reload` is true, player-item refresh is enqueued onto a single
+    /// MainActor task because player-item regeneration may await AVFoundation
+    /// async APIs. Any older in-flight reload task is cancelled first so stale
+    /// player items cannot be applied out of order.
     public func updateGUI(_ time: CMTime, _ timeRange: CMTimeRange, _ reload: Bool) {
         
         // update GUI
         self.updateTimeline(time, range: timeRange)
         if reload {
-            Task { @MainActor [weak self] in
+            self.playerReloadGeneration += 1
+            let generation = self.playerReloadGeneration
+            self.playerReloadTask?.cancel()
+            let reloadTask = Task { @MainActor [weak self] in
                 guard let self else { return }
+                defer {
+                    if self.playerReloadGeneration == generation {
+                        self.playerReloadTask = nil
+                    }
+                }
                 await self.updatePlayer()
             }
+            self.playerReloadTask = reloadTask
         } else {
             guard let player = self.player else { return }
             self.resumeAfterSeek(to: time, with: player.rate)
@@ -253,13 +264,15 @@ extension Document {
     ///
     /// Player-item regeneration can throw on macOS 15+ when AVFoundation async
     /// video-composition derivation fails, so this method surfaces the error
-    /// via `showErrorSheet(_:)`.
+    /// via `showErrorSheet(_:)`. Cancelled reload tasks exit quietly without
+    /// mutating the current player item.
     private func updatePlayer() async {
         
         guard let mutator = movieMutator, let pv = playerView else { return }
         
         do {
             let playerItem = try await mutator.makePlayerItem()
+            guard !Task.isCancelled else { return }
             
             if let player = pv.player {
                 // Apply modified source movie
@@ -286,6 +299,8 @@ extension Document {
                 // Start polling timer
                 self.useUpdateTimer(true)
             }
+        } catch is CancellationError {
+            return
         } catch {
             self.showErrorSheet(error)
         }

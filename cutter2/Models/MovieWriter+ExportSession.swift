@@ -269,10 +269,9 @@ extension MovieWriter {
             do {
                 try await exportSession.export(to: url, as: type, isolation: #isolation)
                 let dateEnd = Date()
-                let progress = max(self.writeProgress, 1.0)
                 finalizeExport(startedAt: dateStart,
                                endedAt: dateEnd,
-                               progress: progress,
+                               progress: 1.0,
                                status: .completed,
                                error: nil)
             } catch {

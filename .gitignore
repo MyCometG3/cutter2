@@ -46,3 +46,7 @@ coverage.lcov
 
 # Sample Media
 scripts/sampleMedia/
+
+# Local planning artifacts
+plans/
+_plans/

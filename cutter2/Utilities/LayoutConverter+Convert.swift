@@ -66,6 +66,7 @@ extension LayoutConverter {
         } else {
             requiredSize = dataSize(descCount: 0)
         }
+        guard requiredSize > 0 else { return nil }
         
         aclData.withUnsafeBytes { (p: UnsafeRawBufferPointer) in
             guard p.count >= requiredSize, let baseAddress = p.baseAddress else { return }

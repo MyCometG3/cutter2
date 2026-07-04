@@ -30,7 +30,7 @@ To run tests: Press `⌘U` in Xcode or run `xcodebuild test` from command line.
 ### Prerequisites
 
 - Xcode 15.0 or later (currently using 26.1.1)
-- macOS 11.0 or later (currently using 26.1)
+- macOS 14.0 or later (currently using 26.1)
 - Swift 6.0 or later (currently using 6.2.1)
 
 ### Initial Setup

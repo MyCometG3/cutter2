@@ -1381,7 +1381,7 @@ Gw
                                             </textFieldCell>
                                         </textField>
                                         <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="cWW-On-RD2">
-                                            <rect key="frame" x="86" y="16" width="40" height="22"/>
+                                            <rect key="frame" x="86" y="16" width="40" height="19"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" constant="40" id="bFA-tj-dgM"/>
                                             </constraints>
@@ -1403,10 +1403,7 @@ Gw
                                             </connections>
                                         </textField>
                                         <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="boM-i5-omD">
-                                            <rect key="frame" x="201" y="16" width="40" height="22"/>
-                                            <constraints>
-                                                <constraint firstAttribute="height" constant="19" id="IRY-nr-Cdy"/>
-                                            </constraints>
+                                            <rect key="frame" x="201" y="16" width="40" height="19"/>
                                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="I9B-KZ-Gqs">
                                                 <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="RDM-vd-iLs"/>
                                                 <font key="font" metaFont="message" size="11"/>
@@ -1435,7 +1432,6 @@ Gw
                                     </subviews>
                                     <constraints>
                                         <constraint firstAttribute="bottom" secondItem="cWW-On-RD2" secondAttribute="bottom" constant="16" id="2Up-6Z-n0n"/>
-                                        <constraint firstItem="dPE-QT-C8c" firstAttribute="top" secondItem="0T6-3Q-FLF" secondAttribute="top" constant="22" id="C7X-F3-vXL"/>
                                         <constraint firstItem="cWW-On-RD2" firstAttribute="leading" secondItem="dPE-QT-C8c" secondAttribute="trailing" constant="8" symbolic="YES" id="H7u-bn-2Xt"/>
                                         <constraint firstItem="6LX-LA-Vm4" firstAttribute="baseline" secondItem="dPE-QT-C8c" secondAttribute="firstBaseline" id="I0e-3p-qeH"/>
                                         <constraint firstAttribute="trailing" secondItem="boM-i5-omD" secondAttribute="trailing" constant="26" id="N8I-aI-PaV"/>
@@ -1796,7 +1792,7 @@ Gw
                                                             <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="6cJ-Nx-Uu8">
                                                                 <rect key="frame" x="232" y="33" width="31" height="21"/>
                                                                 <constraints>
-                                                                    <constraint firstAttribute="width" constant="27" id="bTi-33-IrN"/>
+                                                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="27" id="bTi-33-IrN"/>
                                                                 </constraints>
                                                                 <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Kbps" id="hgP-a0-SBb">
                                                                     <font key="font" metaFont="message" size="11"/>
@@ -1819,7 +1815,7 @@ Gw
                                                                     <font key="font" metaFont="message" size="11"/>
                                                                 </buttonCell>
                                                                 <constraints>
-                                                                    <constraint firstAttribute="width" constant="52" id="cyG-pT-hL8"/>
+                                                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="52" id="cyG-pT-hL8"/>
                                                                 </constraints>
                                                                 <connections>
                                                                     <binding destination="1Rd-hP-Eqn" name="value" keyPath="values.videoEncode" id="cIV-BT-CDV"/>
@@ -1883,6 +1879,7 @@ Gw
                                                             <constraint firstItem="ltE-Wi-WQU" firstAttribute="baseline" secondItem="UOK-GC-Wzi" secondAttribute="firstBaseline" id="DPI-p0-ZWR"/>
                                                             <constraint firstItem="2nx-N2-Ms5" firstAttribute="bottom" secondItem="ZoA-IR-aQt" secondAttribute="bottom" id="ESO-8x-PRg"/>
                                                             <constraint firstItem="ZoA-IR-aQt" firstAttribute="top" secondItem="ByZ-78-vaQ" secondAttribute="bottom" constant="8" symbolic="YES" id="Ei0-FG-u0X"/>
+                                                            <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="UOK-GC-Wzi" secondAttribute="trailing" constant="14" id="EpB-ep-sBs"/>
                                                             <constraint firstItem="fg0-ST-ZUy" firstAttribute="bottom" secondItem="ByZ-78-vaQ" secondAttribute="bottom" id="Fu9-JY-ilC"/>
                                                             <constraint firstItem="ByZ-78-vaQ" firstAttribute="baseline" secondItem="JPr-yI-Hf3" secondAttribute="baseline" id="GWJ-i9-oyG"/>
                                                             <constraint firstItem="JPr-yI-Hf3" firstAttribute="top" secondItem="c3D-r3-esW" secondAttribute="top" constant="17" id="INs-vb-ntL"/>
@@ -2066,6 +2063,7 @@ Gw
                             <constraint firstAttribute="bottom" secondItem="6jN-5t-7ua" secondAttribute="bottom" constant="20" symbolic="YES" id="hTw-cV-2fu"/>
                             <constraint firstItem="p2Y-uC-jNq" firstAttribute="leading" secondItem="MTN-Er-6zJ" secondAttribute="leading" constant="13" id="nW4-ND-aL7"/>
                             <constraint firstAttribute="bottom" secondItem="p2Y-uC-jNq" secondAttribute="bottom" constant="166" id="oqY-Si-ZQN"/>
+                            <constraint firstItem="6jN-5t-7ua" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="MTN-Er-6zJ" secondAttribute="leading" constant="20" symbolic="YES" id="rUf-8U-XPE"/>
                             <constraint firstItem="f40-EF-BUT" firstAttribute="leading" secondItem="p2Y-uC-jNq" secondAttribute="trailing" constant="8" symbolic="YES" id="ref-B2-aw1"/>
                             <constraint firstAttribute="trailing" secondItem="f40-EF-BUT" secondAttribute="trailing" constant="12" id="sLl-Xj-9Ns"/>
                             <constraint firstItem="mpg-Op-36E" firstAttribute="leading" secondItem="6jN-5t-7ua" secondAttribute="trailing" constant="12" symbolic="YES" id="ugN-41-1NT"/>

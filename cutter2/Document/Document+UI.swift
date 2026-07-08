@@ -188,6 +188,11 @@ extension Document {
     /// player items cannot be applied out of order.
     public func updateGUI(_ time: CMTime, _ timeRange: CMTimeRange, _ reload: Bool) {
         
+        // Suppress timer updates until async reload completes.
+        if reload {
+            self.suppressQueryPosition = true
+        }
+        
         // update GUI
         self.updateTimeline(time, range: timeRange)
         if reload {
@@ -268,6 +273,9 @@ extension Document {
     /// mutating the current player item.
     private func updatePlayer() async {
         
+        // Clear suppression on all exit paths.
+        defer { self.suppressQueryPosition = false }
+        
         guard let mutator = movieMutator, let pv = playerView else { return }
         
         do {
@@ -327,6 +335,9 @@ extension Document {
     
     /// Poll AVPlayer/AVPlayerItem status and refresh Timeline
     @objc func queryPosition() {
+        
+        // Skip if a reload/seek is in progress.
+        guard !self.suppressQueryPosition else { return }
         
         guard let mutator = self.movieMutator else { return }
         guard let player = self.player else { return }

@@ -189,6 +189,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     /// the newest in-flight reload task may clear `playerReloadTask`.
     internal var playerReloadGeneration: UInt64 = 0
     
+    /// Suppress queryPosition while a reload/seek is in progress.
+    internal var suppressQueryPosition: Bool = false
+    
     /* ============================================ */
     // MARK: - NSDocument methods/properties
     /* ============================================ */

@@ -94,6 +94,11 @@ class MovieMutatorBase: NSObject {
                 : (needsDuration ? false : validateTime(range.start)))
     }
     
+    @inline(__always) public func clampTime(_ time: CMTime) -> CMTime {
+        let movieRange: CMTimeRange = self.movieRange()
+        return CMTimeClampToRange(time, range: movieRange)
+    }
+    
     @inline(__always) public func clampRange(_ range: CMTimeRange) -> CMTimeRange {
         let movieRange: CMTimeRange = self.movieRange()
         return CMTimeRangeGetIntersection(range, otherRange: movieRange)
@@ -155,6 +160,19 @@ class MovieMutatorBase: NSObject {
             NSSound.beep()
             return
         }
+        
+        // Clamp insertionTime and selection into the new range.
+        var clampedTime: CMTime = clampTime(insertionTime)
+        var clampedRange: CMTimeRange = clampRange(selectedTimeRange)
+        
+        // Reset invalid time/range
+        clampedTime = (CMTIME_IS_VALID(clampedTime) ? clampedTime : .zero)
+        clampedRange = (CMTIMERANGE_IS_VALID(clampedRange) ? clampedRange
+                        : CMTimeRange(start: clampTime(selectedTimeRange.start), duration: .zero))
+        
+        // Notify observers after internalMovie is replaced.
+        resetMarker(clampedTime, clampedRange, true)
+        
         do {
             let prop: CMTime = internalMovie.duration
             let calc: CMTime = internalMovie.range.duration // extension

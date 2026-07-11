@@ -87,10 +87,10 @@ extension Document {
         }
     }
     
-    override func read(from url: URL, ofType typeName: String) throws {
+    override nonisolated func read(from url: URL, ofType typeName: String) throws {
         // Synchronous revert/reload path:
         // 1) validate the AppKit-provided file type
-        // 2) load file metadata and movie header on a background queue
+        // 2) load file metadata and movie header via AsyncBridge
         // 3) apply the new mutator on the MainActor
         
         // Stage 0: Validate the AppKit-provided UTI before doing any I/O.
@@ -101,35 +101,23 @@ extension Document {
             try throwError(.incompatibleFileType, reason: reason)
         }
         
-        // Stage 1: File I/O is performed on a background queue and bridged back
-        // with ThrowingAsyncResultBox.
-        let box = ThrowingAsyncResultBox<OpenPreparation>()
-        
-        Task.detached(priority: .userInitiated) {
-            // Read file metadata and movie header off the MainActor.
-            do {
+        // Stage 1: File I/O is performed on a background task and bridged back
+        // through AsyncBridge.
+        let preparation: OpenPreparation
+        do {
+            preparation = try AsyncBridge.perform(timeout: 30, allowMainThread: true) { @Sendable in
                 let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
                 let modificationDate = attrs[.modificationDate] as? Date
                 let movie = AVMutableMovie(url: url, options: nil)
                 if let error = MovieHeaderValidator.validate(movie) {
-                    box.store(.failure(NSError(
-                        domain: NSCocoaErrorDomain,
-                        code: CocoaError.fileReadUnknown.rawValue,
-                        userInfo: [NSLocalizedDescriptionKey: error.localizedDescription])))
-                    return
+                    try throwError(.unableToOpenFile, reason: error.localizedDescription)
                 }
-                box.store(.success(OpenPreparation(
+                return OpenPreparation(
                     typeName: typeName,
                     modificationDate: modificationDate,
-                    movHeader: movie.movHeader)))
-            } catch {
-                box.store(.failure(error as NSError))
+                    movHeader: movie.movHeader
+                )
             }
-        }
-        
-        let preparation: OpenPreparation
-        do {
-            preparation = try box.waitAndGet(timeout: nil)
         } catch {
             LoggingSystem.document.fault("Revert prepare failed: \(error)")
             throw error

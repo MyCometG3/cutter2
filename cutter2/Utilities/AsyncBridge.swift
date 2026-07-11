@@ -58,7 +58,7 @@ private final class AsyncResultBox<T>: @unchecked Sendable {
     }
 }
 
-internal final class ThrowingAsyncResultBox<T: Sendable>: @unchecked Sendable {
+private final class ThrowingAsyncResultBox<T: Sendable>: @unchecked Sendable {
     private let lock = UnfairLockBox()
     private let semaphore = DispatchSemaphore(value: 0)
     private var result: Result<T, Error>?

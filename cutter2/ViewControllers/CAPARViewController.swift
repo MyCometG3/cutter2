@@ -67,7 +67,10 @@ class CAPARViewController: NSViewController {
         
         self.parentWindow = parent
         guard let sheet = self.view.window else { return }
-        parent.beginSheet(sheet, completionHandler: handler)
+        parent.beginSheet(sheet) { [weak self] response in
+            self?.removeTextObserver()
+            handler(response)
+        }
         
         let textHandler: @Sendable (Notification) -> Void = { [weak self] notification in
             
@@ -102,14 +105,19 @@ class CAPARViewController: NSViewController {
         guard let sheet = self.view.window else { return }
         parent.endSheet(sheet, returnCode: response)
         
-        do {
-            guard let observer = self.textObserver else { return }
-            let center = NotificationCenter.default
-            center.removeObserver(observer,
-                                  name: NSControl.textDidChangeNotification,
-                                  object: nil)
-            self.textObserver = nil
-        }
+        removeTextObserver()
+    }
+    
+    private func removeTextObserver() {
+        guard let observer = self.textObserver else { return }
+        NotificationCenter.default.removeObserver(observer,
+                                                  name: NSControl.textDidChangeNotification,
+                                                  object: nil)
+        self.textObserver = nil
+    }
+    
+    deinit {
+        removeTextObserver()
     }
     
     /* ============================================ */

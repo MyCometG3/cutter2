@@ -28,6 +28,7 @@ struct OpenPreparation: Sendable {
 // MARK: - File I/O Operations
 /* ============================================ */
 
+@MainActor
 extension Document {
     
     /* ============================================ */
@@ -87,9 +88,77 @@ extension Document {
     }
     
     override func read(from url: URL, ofType typeName: String) throws {
-        let reason = "read(from:ofType:) should never be called"
-        LoggingSystem.document.fault("Unexpected read(from:ofType:) called - internal error")
-        try throwError(.internalError, reason: reason)
+        // Synchronous revert/reload path:
+        // 1) validate the AppKit-provided file type
+        // 2) load file metadata and movie header on a background queue
+        // 3) apply the new mutator on the MainActor
+        
+        // Stage 0: Validate the AppKit-provided UTI before doing any I/O.
+        let fileType = AVFileType.init(rawValue: typeName)
+        guard AVMovie.movieTypes().contains(fileType) else {
+            LoggingSystem.fileIO.error("Incompatible file type: \(typeName)")
+            throw DocumentError.incompatibleFileType
+        }
+        
+        // Stage 1: File I/O is performed on a background queue and bridged back
+        // with ThrowingAsyncResultBox.
+        let box = ThrowingAsyncResultBox<OpenPreparation>()
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            // Read file metadata and movie header off the MainActor.
+            do {
+                let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
+                let modificationDate = attrs[.modificationDate] as? Date
+                let movie = AVMutableMovie(url: url, options: nil)
+                if let error = MovieHeaderValidator.validate(movie) {
+                    box.store(.failure(NSError(
+                        domain: NSCocoaErrorDomain,
+                        code: CocoaError.fileReadUnknown.rawValue,
+                        userInfo: [NSLocalizedDescriptionKey: error.localizedDescription])))
+                    return
+                }
+                box.store(.success(OpenPreparation(
+                    typeName: typeName,
+                    modificationDate: modificationDate,
+                    movHeader: movie.movHeader)))
+            } catch {
+                box.store(.failure(error as NSError))
+            }
+        }
+        
+        let preparation: OpenPreparation
+        do {
+            preparation = try box.waitAndGet(timeout: nil)
+        } catch {
+            LoggingSystem.document.fault("Revert prepare failed: \(error)")
+            throw DocumentError.unableToOpenFile
+        }
+        
+        // Stage 2: Rebuild the mutator on the MainActor.
+        do {
+            try ActorUtilities.performSyncOnMainActor {
+                if let header = preparation.movHeader {
+                    let movie = AVMutableMovie(data: header)
+                    guard MovieHeaderValidator.isValid(movie) else {
+                        let reason = "Invalid movie header for \(url.lastPathComponent)"
+                        LoggingSystem.fileIO.error("Failed to validate movie header: \(url.lastPathComponent)")
+                        try self.throwError(.unableToOpenFile, reason: reason)
+                    }
+                    self.removeMutationObserver()
+                    self.removeAllUndoRecords()
+                    self.movieMutator = MovieMutator(with: movie)
+                    self.addMutationObserver()
+                    LoggingSystem.fileIO.notice("Document opened successfully: \(url.lastPathComponent)")
+                } else {
+                    let reason = url.lastPathComponent + " at " + url.deletingLastPathComponent().path
+                    LoggingSystem.fileIO.error("Failed to open file: \(url.lastPathComponent)")
+                    try self.throwError(.unableToOpenFile, reason: reason)
+                }
+            }
+        } catch {
+            LoggingSystem.document.fault("Revert Stage 2 failed: \(error)")
+            throw error
+        }
     }
     
     override class func canConcurrentlyReadDocuments(ofType typeName: String) -> Bool {

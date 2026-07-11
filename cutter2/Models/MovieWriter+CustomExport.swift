@@ -66,7 +66,7 @@ extension MovieWriter {
         }
         
         guard let fourcc = customParam[kAudioCodecKey] as? NSString else {
-            preconditionFailure("kAudioCodecKey not set in customParam")
+            try throwError(.movieWriterFailed, reason: "kAudioCodecKey not set in customParam")
         }
         
         let numAudioKbps = customParam[kAudioKbpsKey] as? NSNumber
@@ -134,21 +134,20 @@ extension MovieWriter {
                             dataDst = conv.convertAsAACTag(from: dataSrc)
                         }
                     }
-                    if let data1 = dataSrc, let data2 = dataDst {
-                        data1.withUnsafeBytes {(p: UnsafeRawBufferPointer) in
-                            guard let baseAddress: UnsafeRawPointer = p.baseAddress else { preconditionFailure("ERROR: Invalid AudioChannelLayoutData") }
-                            let ptr: LayoutPtr = baseAddress.bindMemory(to: AudioChannelLayout.self, capacity: 1)
-                            avacSrcLayout = AVAudioChannelLayout(layout: ptr)
-                        }
-                        data2.withUnsafeBytes {(p: UnsafeRawBufferPointer) in
-                            guard let baseAddress: UnsafeRawPointer = p.baseAddress else { preconditionFailure("ERROR: Invalid AudioChannelLayoutData") }
-                            let ptr: LayoutPtr = baseAddress.bindMemory(to: AudioChannelLayout.self, capacity: 1)
-                            avacDstLayout = AVAudioChannelLayout(layout: ptr)
-                            numChannel = Int(avacDstLayout.channelCount)
-                        }
-                    } else {
-                        preconditionFailure("ERROR: Failed to convert layout")
+                    guard let data1 = dataSrc, let data2 = dataDst else {
+                        try throwError(.movieWriterFailed, reason: "Failed to convert layout")
                     }
+                    guard
+                        let baseAddress1 = data1.withUnsafeBytes({ $0.baseAddress }),
+                        let baseAddress2 = data2.withUnsafeBytes({ $0.baseAddress })
+                    else {
+                        try throwError(.movieWriterFailed, reason: "Invalid AudioChannelLayoutData")
+                    }
+                    let ptr1: LayoutPtr = baseAddress1.bindMemory(to: AudioChannelLayout.self, capacity: 1)
+                    let ptr2: LayoutPtr = baseAddress2.bindMemory(to: AudioChannelLayout.self, capacity: 1)
+                    avacSrcLayout = AVAudioChannelLayout(layout: ptr1)
+                    avacDstLayout = AVAudioChannelLayout(layout: ptr2)
+                    numChannel = Int(avacDstLayout.channelCount)
                 }
                 
                 //
@@ -269,7 +268,7 @@ extension MovieWriter {
         }
     }
     
-    private func prepareVideoChannels(_ movie: AVMutableMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) {
+    private func prepareVideoChannels(_ movie: AVMutableMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) throws {
         let numVideoEncode = customParam[kVideoEncodeKey] as? NSNumber
         let videoEncode: Bool = numVideoEncode?.boolValue ?? true
         if videoEncode == false {
@@ -278,7 +277,7 @@ extension MovieWriter {
         }
         
         guard let fourcc = customParam[kVideoCodecKey] as? NSString else {
-            preconditionFailure("kVideoCodecKey not set in customParam")
+            try throwError(.movieWriterFailed, reason: "kVideoCodecKey not set in customParam")
         }
         
         let numVideoKbps = customParam[kVideoKbpsKey] as? NSNumber
@@ -574,7 +573,7 @@ extension MovieWriter {
                 
                 // Prepare media channels.
                 try prepareAudioChannels(movie, ar, aw)
-                prepareVideoChannels(movie, ar, aw)
+                try prepareVideoChannels(movie, ar, aw)
                 prepareOtherMediaChannels(movie, ar, aw)
                 
                 // Begin reading and writing.

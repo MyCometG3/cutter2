@@ -123,50 +123,53 @@ extension MovieWriter {
         
         /* ============================================ */
         
-        // Start flatten movie
-        do {
-            var success: Bool = false
-            let cancel: Bool = self.writeCancelled
-            var error: Error? = nil
-            
-            // Insert sampleData to destination first
-            try newMovie.insertTimeRange(range,
-                                         of: movie,
-                                         at: CMTime.zero,
-                                         copySampleData: selfContained)
-            
-            // Write movieHeader to destination
-            try newMovie.writeHeader(to: url, fileType: AVFileType.mov, options: option)
-            
-            //
-            success = true
-            error = nil
-            
-            //
-            let progress: Float = 1.0
-            let dateEnd: Date = Date()
-            let interval: TimeInterval = dateEnd.timeIntervalSince(dateStart)
-            
-            // Update Properties
-            self.writeSuccess = success
-            self.writeError = error
-            self.writeCancelled = cancel
-            self.writeStart = dateStart
-            self.writeEnd = dateEnd
-            self.writeProgress = 1.0
-            
-            //
-            let status = "completed" // (success ? "completed" : (cancel ? "cancelled" : "failed"))
-            let progressStr = String(format:"%.2f",progress * 100)
-            let intervalStr = String(format:"%.2f",interval)
-            if let error = self.writeError {
-                LoggingSystem.export.error("Result: \(status), progress: \(progressStr), elapsed: \(intervalStr), error: \(error)")
-            } else {
-                LoggingSystem.export.notice("Result: \(status), progress: \(progressStr), elapsed: \(intervalStr)")
+        // Start flatten movie with security-scoped access bracket for reference media
+        let referenceURLs: [URL] = internalMovie.findReferenceURLs() ?? []
+        try await bracketSecurityScopedAccess(for: referenceURLs) {
+            do {
+                var success: Bool = false
+                let cancel: Bool = self.writeCancelled
+                var error: Error? = nil
+                
+                // Insert sampleData to destination first
+                try newMovie.insertTimeRange(range,
+                                             of: movie,
+                                             at: CMTime.zero,
+                                             copySampleData: selfContained)
+                
+                // Write movieHeader to destination
+                try newMovie.writeHeader(to: url, fileType: AVFileType.mov, options: option)
+                
+                //
+                success = true
+                error = nil
+                
+                //
+                let progress: Float = 1.0
+                let dateEnd: Date = Date()
+                let interval: TimeInterval = dateEnd.timeIntervalSince(dateStart)
+                
+                // Update Properties
+                self.writeSuccess = success
+                self.writeError = error
+                self.writeCancelled = cancel
+                self.writeStart = dateStart
+                self.writeEnd = dateEnd
+                self.writeProgress = 1.0
+                
+                //
+                let status = "completed" // (success ? "completed" : (cancel ? "cancelled" : "failed"))
+                let progressStr = String(format:"%.2f",progress * 100)
+                let intervalStr = String(format:"%.2f",interval)
+                if let error = self.writeError {
+                    LoggingSystem.export.error("Result: \(status), progress: \(progressStr), elapsed: \(intervalStr), error: \(error)")
+                } else {
+                    LoggingSystem.export.notice("Result: \(status), progress: \(progressStr), elapsed: \(intervalStr)")
+                }
+            } catch {
+                let reason = "Failed to write movie: \(option)."
+                try throwError(.movieWriterFailed, reason: reason)
             }
-        } catch {
-            let reason = "Failed to write movie: \(option)."
-            try throwError(.movieWriterFailed, reason: reason)
         }
         
         /* ============================================ */

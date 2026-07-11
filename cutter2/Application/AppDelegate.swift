@@ -198,3 +198,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return data
     }
 }
+
+/// Access URLs with security-scoped bookmarks for the duration of `body`.
+/// Duplicate URLs are coalesced before access starts.
+func bracketSecurityScopedAccess<T>(
+    for urls: [URL],
+    perform body: () async throws -> T
+) async throws -> T {
+    let uniqueURLs = Array(Set(urls.map { $0.standardizedFileURL }))
+    for url in uniqueURLs {
+        _ = url.startAccessingSecurityScopedResource()
+    }
+    defer {
+        for url in uniqueURLs.reversed() {
+            url.stopAccessingSecurityScopedResource()
+        }
+    }
+    return try await body()
+}

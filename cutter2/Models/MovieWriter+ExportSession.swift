@@ -264,46 +264,49 @@ extension MovieWriter {
         
         /* ============================================ */
         
-        // Start ExportSession
-        if #available(macOS 15, *) {
-            do {
-                try await exportSession.export(to: url, as: type, isolation: #isolation)
-                let dateEnd = Date()
-                finalizeExport(startedAt: dateStart,
-                               endedAt: dateEnd,
-                               progress: 1.0,
-                               status: .completed,
-                               error: nil)
-            } catch {
-                let dateEnd = Date()
-                let nsError = error as NSError
-                let cancelled = writeCancelled || nsError.code == NSUserCancelledError
-                let status: AVAssetExportSession.Status = (cancelled ? .cancelled : .failed)
-                finalizeExport(startedAt: dateStart,
-                               endedAt: dateEnd,
-                               progress: self.writeProgress,
-                               status: status,
-                               error: cancelled ? nil : error)
-            }
-        } else {
-            exportSession.outputFileType = type
-            exportSession.outputURL = url
-            
-            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-                exportSession.exportAsynchronously { @Sendable in
-                    continuation.resume()
+        // Start ExportSession with security-scoped access bracket for reference media
+        let referenceURLs: [URL] = internalMovie.findReferenceURLs() ?? []
+        try await bracketSecurityScopedAccess(for: referenceURLs) {
+            if #available(macOS 15, *) {
+                do {
+                    try await exportSession.export(to: url, as: type, isolation: #isolation)
+                    let dateEnd = Date()
+                    finalizeExport(startedAt: dateStart,
+                                   endedAt: dateEnd,
+                                   progress: 1.0,
+                                   status: .completed,
+                                   error: nil)
+                } catch {
+                    let dateEnd = Date()
+                    let nsError = error as NSError
+                    let cancelled = writeCancelled || nsError.code == NSUserCancelledError
+                    let status: AVAssetExportSession.Status = (cancelled ? .cancelled : .failed)
+                    finalizeExport(startedAt: dateStart,
+                                   endedAt: dateEnd,
+                                   progress: self.writeProgress,
+                                   status: status,
+                                   error: cancelled ? nil : error)
                 }
+            } else {
+                exportSession.outputFileType = type
+                exportSession.outputURL = url
+                
+                await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                    exportSession.exportAsynchronously { @Sendable in
+                        continuation.resume()
+                    }
+                }
+                
+                let progress: Float = exportSession.progress
+                let dateEnd: Date = Date()
+                let result: AVAssetExportSession.Status = exportSession.status
+                let error: Error? = (result == .cancelled ? nil : exportSession.error)
+                finalizeExport(startedAt: dateStart,
+                               endedAt: dateEnd,
+                               progress: progress,
+                               status: result,
+                               error: error)
             }
-            
-            let progress: Float = exportSession.progress
-            let dateEnd: Date = Date()
-            let result: AVAssetExportSession.Status = exportSession.status
-            let error: Error? = (result == .cancelled ? nil : exportSession.error)
-            finalizeExport(startedAt: dateStart,
-                           endedAt: dateEnd,
-                           progress: progress,
-                           status: result,
-                           error: error)
         }
         
         //

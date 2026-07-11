@@ -110,7 +110,7 @@ extension Document {
                 let modificationDate = attrs[.modificationDate] as? Date
                 let movie = AVMutableMovie(url: url, options: nil)
                 if let error = MovieHeaderValidator.validate(movie) {
-                    try throwError(.unableToOpenFile, reason: error.localizedDescription)
+                    try self.throwError(.unableToOpenFile, reason: error.localizedDescription)
                 }
                 return OpenPreparation(
                     typeName: typeName,

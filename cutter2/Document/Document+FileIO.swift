@@ -375,27 +375,20 @@ extension Document {
     private func refreshMutator() {
         
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
-        Task { @MainActor [weak self] in
-            
-            guard let self else { return }
-            guard let url: URL = self.fileURL else { preconditionFailure("Unexpected nil fileURL detected.") }
-            let newMovie: AVMutableMovie? = AVMutableMovie(url: url, options: nil)
-            if let newMovie = newMovie {
-                guard let mutator = self.movieMutator else { return }
-                let time: CMTime = mutator.insertionTime
-                let range: CMTimeRange = mutator.selectedTimeRange
-                
-                let newMovieRange: CMTimeRange = newMovie.range
-                var newTime: CMTime = CMTimeClampToRange(time, range: newMovieRange)
-                let newRange: CMTimeRange = CMTimeRangeGetIntersection(range, otherRange: newMovieRange)
-                newTime = CMTIME_IS_VALID(newTime) ? newTime : CMTime.zero
-                
-                self.removeMutationObserver()
-                self.removeAllUndoRecords()
-                self.movieMutator = MovieMutator(with: newMovie)
-                self.movieMutator?.resetMarker(newTime, newRange, true)
-                self.addMutationObserver()
-            }
+        guard let url = self.fileURL else { return }
+        let newMovie = AVMutableMovie(url: url, options: nil)
+        guard let mutator = self.movieMutator else { return }
+        let time: CMTime = mutator.insertionTime
+        let range: CMTimeRange = mutator.selectedTimeRange
+        
+        let newMovieRange: CMTimeRange = newMovie.range
+        var newTime: CMTime = CMTimeClampToRange(time, range: newMovieRange)
+        let newRange: CMTimeRange = CMTimeRangeGetIntersection(range, otherRange: newMovieRange)
+        newTime = CMTIME_IS_VALID(newTime) ? newTime : CMTime.zero
+        
+        guard mutator.reloadAndNotify(from: newMovie.movHeader, range: newRange, time: newTime) else {
+            LoggingSystem.fileIO.error("Failed to refresh mutator after SaveAs")
+            return
         }
     }
 }

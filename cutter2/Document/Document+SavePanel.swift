@@ -69,7 +69,11 @@ extension Document {
         savePanel.canSelectHiddenExtension = true
         savePanel.isExtensionHidden = false
         savePanel.delegate = self
-        savePanel.allowedContentTypes = [UTType(uti)!]
+        guard let ut = UTType(uti) else {
+            LoggingSystem.document.error("Invalid save-panel UTI: \(uti, privacy: .public)")
+            return false
+        }
+        savePanel.allowedContentTypes = [ut]
         savePanel.accessoryView = accessoryVC.view
         self.savePanel = savePanel
         
@@ -148,6 +152,10 @@ extension Document {
     public func didUpdateFileType(_ fileType: AVFileType, selfContained: Bool) {
         
         guard let savePanel = self.savePanel else { return }
-        savePanel.allowedContentTypes = [UTType(fileType.rawValue)!]
+        guard let ut = UTType(fileType.rawValue) else {
+            LoggingSystem.document.error("Invalid file type rawValue for save panel: \(fileType.rawValue, privacy: .public)")
+            return
+        }
+        savePanel.allowedContentTypes = [ut]
     }
 }

@@ -11,6 +11,27 @@ import AVFoundation
 
 /* ============================================ */
 
+private final class ObserverTokenBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var token: NSObjectProtocol? = nil
+    
+    func store(_ token: NSObjectProtocol?) {
+        lock.lock()
+        self.token = token
+        lock.unlock()
+    }
+    
+    func take() -> NSObjectProtocol? {
+        lock.lock()
+        defer { lock.unlock() }
+        let token = self.token
+        self.token = nil
+        return token
+    }
+}
+
+/* ============================================ */
+
 @MainActor
 class CAPARViewController: NSViewController {
     
@@ -30,7 +51,7 @@ class CAPARViewController: NSViewController {
     /* ============================================ */
     
     private var parentWindow: NSWindow? = nil
-    private var textObserver: NSObjectProtocol? = nil
+    private let textObserver = ObserverTokenBox()
     
     /* ============================================ */
     // MARK: - Sheet control
@@ -67,7 +88,10 @@ class CAPARViewController: NSViewController {
         
         self.parentWindow = parent
         guard let sheet = self.view.window else { return }
-        parent.beginSheet(sheet, completionHandler: handler)
+        parent.beginSheet(sheet) { [weak self] response in
+            self?.removeTextObserver()
+            handler(response)
+        }
         
         let textHandler: @Sendable (Notification) -> Void = { [weak self] notification in
             
@@ -91,7 +115,7 @@ class CAPARViewController: NSViewController {
                                           object: nil,
                                           queue: OperationQueue.main,
                                           using: textHandler)
-            self.textObserver = observer
+            self.textObserver.store(observer)
         }
     }
     
@@ -102,14 +126,21 @@ class CAPARViewController: NSViewController {
         guard let sheet = self.view.window else { return }
         parent.endSheet(sheet, returnCode: response)
         
-        do {
-            guard let observer = self.textObserver else { return }
-            let center = NotificationCenter.default
-            center.removeObserver(observer,
-                                  name: NSControl.textDidChangeNotification,
-                                  object: nil)
-            self.textObserver = nil
-        }
+        removeTextObserver()
+    }
+    
+    private nonisolated func removeTextObserver() {
+        guard let observer = self.textObserver.take() else { return }
+        NotificationCenter.default.removeObserver(observer,
+                                                  name: NSControl.textDidChangeNotification,
+                                                  object: nil)
+    }
+    
+    deinit {
+        guard let observer = textObserver.take() else { return }
+        NotificationCenter.default.removeObserver(observer,
+                                                  name: NSControl.textDidChangeNotification,
+                                                  object: nil)
     }
     
     /* ============================================ */

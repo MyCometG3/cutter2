@@ -48,7 +48,9 @@ extension Document {
     
     /// Cleanup for close document
     public func cleanup() {
-        
+        guard didCleanup == false else { return }
+        didCleanup = true
+
         //
         self.removeMutationObserver()
         self.removeAllUndoRecords()
@@ -56,14 +58,14 @@ extension Document {
         self.playerReloadTask?.cancel()
         self.playerReloadTask = nil
         self.removePlayerObserver()
-        
+
         //
         self.viewController?.cleanup()
-        
+
         // dealloc AVPlayer
         self.player?.pause()
         self.playerView?.player = nil
-        
+
         // dealloc mutator
         self.movieMutator = nil
     }

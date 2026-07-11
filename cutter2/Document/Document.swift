@@ -314,12 +314,17 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         }
     }
     
+    internal var didCleanup: Bool = false
+
     override func close() {
-        
+        cleanup()
         super.close()
     }
-    
+
     deinit {
+        DispatchQueue.main.async { [weak self] in
+            self?.cleanup()
+        }
     }
     
     /* ============================================ */

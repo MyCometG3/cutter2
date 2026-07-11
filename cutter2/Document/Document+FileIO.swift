@@ -96,15 +96,16 @@ extension Document {
         // Stage 0: Validate the AppKit-provided UTI before doing any I/O.
         let fileType = AVFileType.init(rawValue: typeName)
         guard AVMovie.movieTypes().contains(fileType) else {
+            let reason = "(UTI: \(typeName))"
             LoggingSystem.fileIO.error("Incompatible file type: \(typeName)")
-            throw DocumentError.incompatibleFileType
+            try throwError(.incompatibleFileType, reason: reason)
         }
         
         // Stage 1: File I/O is performed on a background queue and bridged back
         // with ThrowingAsyncResultBox.
         let box = ThrowingAsyncResultBox<OpenPreparation>()
         
-        DispatchQueue.global(qos: .userInitiated).async {
+        Task.detached(priority: .userInitiated) {
             // Read file metadata and movie header off the MainActor.
             do {
                 let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
@@ -131,7 +132,7 @@ extension Document {
             preparation = try box.waitAndGet(timeout: nil)
         } catch {
             LoggingSystem.document.fault("Revert prepare failed: \(error)")
-            throw DocumentError.unableToOpenFile
+            throw error
         }
         
         // Stage 2: Rebuild the mutator on the MainActor.
@@ -148,6 +149,8 @@ extension Document {
                     self.removeAllUndoRecords()
                     self.movieMutator = MovieMutator(with: movie)
                     self.addMutationObserver()
+                    self.fileType = preparation.typeName
+                    self.fileModificationDate = preparation.modificationDate
                     LoggingSystem.fileIO.notice("Document opened successfully: \(url.lastPathComponent)")
                 } else {
                     let reason = url.lastPathComponent + " at " + url.deletingLastPathComponent().path

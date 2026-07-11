@@ -48,6 +48,8 @@ extension Document {
     
     /// Cleanup for close document
     public func cleanup() {
+        guard didCleanup == false else { return }
+        didCleanup = true
         
         //
         self.removeMutationObserver()
@@ -59,8 +61,6 @@ extension Document {
         
         //
         self.viewController?.cleanup()
-        
-        // dealloc AVPlayer
         self.player?.pause()
         self.playerView?.player = nil
         

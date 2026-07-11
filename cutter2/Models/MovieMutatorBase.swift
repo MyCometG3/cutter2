@@ -193,8 +193,10 @@ class MovieMutatorBase: NSObject {
     ///   - notify: trigger notification for GUI update
     public func resetMarker(_ time: CMTime, _ range: CMTimeRange, _ notify: Bool) {
         
-        precondition(validateRange(range, false), "ERROR: Invalid range: \(range)")
-        precondition(validateTime(time), "ERROR: Invalid time: \(time)")
+        guard validateRange(range, false), validateTime(time) else {
+            LoggingSystem.video.error("\(self.ts()) Invalid marker state: time=\(CMTimeGetSeconds(time)) range=\(CMTimeGetSeconds(range.start))...\(CMTimeGetSeconds(range.end))")
+            return
+        }
         
         insertionTime = time
         selectedTimeRange = range

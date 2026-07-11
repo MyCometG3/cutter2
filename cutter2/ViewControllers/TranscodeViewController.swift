@@ -88,7 +88,7 @@ class TranscodeViewController: NSViewController {
                                   AVAssetExportPreset3840x2160,
                                   AVAssetExportPresetHEVC1920x1080,
                                   AVAssetExportPresetHEVC3840x2160]
-            preset = name[preset0]
+            preset = name[min(max(preset0, 0), name.count - 1)]
             fileType = .mov
         case 1:
             let preset1: Int = UserDefaults.standard.integer(forKey: kTrancode1Key)
@@ -96,7 +96,7 @@ class TranscodeViewController: NSViewController {
                                   AVAssetExportPresetMediumQuality,
                                   AVAssetExportPresetHighestQuality,
                                   AVAssetExportPresetHEVCHighestQuality]
-            preset = name[preset1]
+            preset = name[min(max(preset1, 0), name.count - 1)]
             fileType = .mov
         case 2:
             //let preset2: Int = UserDefaults.standard.integer(forKey: kTrancode2Key)
@@ -111,7 +111,7 @@ class TranscodeViewController: NSViewController {
                                   AVAssetExportPresetAppleM4VWiFi,
                                   AVAssetExportPresetAppleM4V720pHD,
                                   AVAssetExportPresetAppleM4V1080pHD]
-            preset = name[preset3]
+            preset = name[min(max(preset3, 0), name.count - 1)]
             fileType = .m4v
         case 4:
             preset = kTranscodePresetCustom

@@ -550,46 +550,47 @@ extension MovieWriter {
         
         /* ============================================ */
         
-        // Initialize asset reader and writer.
+        // Initialize and run export with security-scoped access bracket for reference media
         let movie: AVMutableMovie = internalMovie
         let startTime: CMTime = movie.range.start
         let endTime: CMTime = movie.range.end
-        var ar: AVAssetReader
-        var aw: AVAssetWriter
-        do {
-            ar = try AVAssetReader(asset: movie)
-            aw = try AVAssetWriter(url: url, fileType: type)
-        } catch {
-            try throwError(.assetReaderWriterUnavailable, reason: "Failed to create AVAssetReader or AVAssetWriter.")
-        }
-        
-        // Configure asset reader and writer.
-        do {
-            // Set writer parameters.
-            aw.movieTimeScale = movie.timescale
-            aw.movieFragmentInterval = CMTime.invalid
-            aw.shouldOptimizeForNetworkUse = true
-            
-            // Prepare media channels.
-            try prepareAudioChannels(movie, ar, aw)
-            prepareVideoChannels(movie, ar, aw)
-            prepareOtherMediaChannels(movie, ar, aw)
-            
-            // Begin reading and writing.
-            let readyReader: Bool = ar.startReading()
-            let readyWriter: Bool = aw.startWriting()
-            guard readyReader && readyWriter else {
-                let error = (readyReader == false) ? ar.error : aw.error
-                ar.cancelReading()
-                aw.cancelWriting()
-                try throwError(.assetReaderWriterFailed, reason: error.debugDescription)
+        let referenceURLs: [URL] = internalMovie.findReferenceURLs() ?? []
+        try await bracketSecurityScopedAccess(for: referenceURLs) {
+            var ar: AVAssetReader
+            var aw: AVAssetWriter
+            do {
+                ar = try AVAssetReader(asset: movie)
+                aw = try AVAssetWriter(url: url, fileType: type)
+            } catch {
+                try throwError(.assetReaderWriterUnavailable, reason: "Failed to create AVAssetReader or AVAssetWriter.")
             }
+            
+            // Configure asset reader and writer.
+            do {
+                // Set writer parameters.
+                aw.movieTimeScale = movie.timescale
+                aw.movieFragmentInterval = CMTime.invalid
+                aw.shouldOptimizeForNetworkUse = true
+                
+                // Prepare media channels.
+                try prepareAudioChannels(movie, ar, aw)
+                prepareVideoChannels(movie, ar, aw)
+                prepareOtherMediaChannels(movie, ar, aw)
+                
+                // Begin reading and writing.
+                let readyReader: Bool = ar.startReading()
+                let readyWriter: Bool = aw.startWriting()
+                guard readyReader && readyWriter else {
+                    let error = (readyReader == false) ? ar.error : aw.error
+                    ar.cancelReading()
+                    aw.cancelWriting()
+                    try throwError(.assetReaderWriterFailed, reason: error.debugDescription)
+                }
+            }
+            
+            // Export using the async method.
+            await exportCustomMovieCore(ar: ar, aw: aw, startTime: startTime, endTime: endTime, dateStart: dateStart)
         }
-        
-        /* ============================================ */
-        
-        // Export using the async method.
-        await exportCustomMovieCore(ar: ar, aw: aw, startTime: startTime, endTime: endTime, dateStart: dateStart)
         
         // If export failed, throw the error.
         if writeSuccess == false {

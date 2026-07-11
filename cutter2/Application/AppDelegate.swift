@@ -199,7 +199,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-/// Access URLs with security-scoped bookmarks for the duration of `body`.
+/// Access security-scoped URLs for the duration of `body`.
 /// Duplicate URLs are coalesced before access starts.
 func bracketSecurityScopedAccess<T>(
     for urls: [URL],

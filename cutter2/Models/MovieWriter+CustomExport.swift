@@ -139,13 +139,13 @@ extension MovieWriter {
                     }
                     avacSrcLayout = try data1.withUnsafeBytes { rawPtr -> AVAudioChannelLayout in
                         guard let base = rawPtr.baseAddress else {
-                            throw MovieWriterError.movieWriterFailed
+                            try throwError(.movieWriterFailed, reason: "Invalid AudioChannelLayoutData")
                         }
                         return AVAudioChannelLayout(layout: base.bindMemory(to: AudioChannelLayout.self, capacity: 1))
                     }
                     avacDstLayout = try data2.withUnsafeBytes { rawPtr -> AVAudioChannelLayout in
                         guard let base = rawPtr.baseAddress else {
-                            throw MovieWriterError.movieWriterFailed
+                            try throwError(.movieWriterFailed, reason: "Invalid AudioChannelLayoutData")
                         }
                         return AVAudioChannelLayout(layout: base.bindMemory(to: AudioChannelLayout.self, capacity: 1))
                     }

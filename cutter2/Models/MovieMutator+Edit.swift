@@ -50,7 +50,7 @@ extension MovieMutator {
                 try clip.insertTimeRange(movieRange, of: internalMovie, at: CMTime.zero, copySampleData: false)
             } catch {
                 LoggingSystem.video.error("\(self.ts()) \(error)")
-                preconditionFailure("ERROR: invalid clip")
+                return nil
             }
         }
         
@@ -69,7 +69,10 @@ extension MovieMutator {
             return nil
         }
         
-        precondition(validateClip(clip), "ERROR: invalid clip")
+        guard validateClip(clip) else {
+            LoggingSystem.video.error("\(self.ts()) invalid clip")
+            return nil
+        }
         return clip
     }
     

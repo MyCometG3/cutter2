@@ -321,10 +321,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         super.close()
     }
 
+    @MainActor
     deinit {
-        DispatchQueue.main.async { [weak self] in
-            self?.cleanup()
-        }
+        self.cleanup()
     }
     
     /* ============================================ */

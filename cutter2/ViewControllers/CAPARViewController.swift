@@ -12,7 +12,22 @@ import AVFoundation
 /* ============================================ */
 
 private final class ObserverTokenBox: @unchecked Sendable {
-    var token: NSObjectProtocol? = nil
+    private let lock = NSLock()
+    private var token: NSObjectProtocol? = nil
+    
+    func store(_ token: NSObjectProtocol?) {
+        lock.lock()
+        self.token = token
+        lock.unlock()
+    }
+    
+    func take() -> NSObjectProtocol? {
+        lock.lock()
+        defer { lock.unlock() }
+        let token = self.token
+        self.token = nil
+        return token
+    }
 }
 
 /* ============================================ */
@@ -100,7 +115,7 @@ class CAPARViewController: NSViewController {
                                           object: nil,
                                           queue: OperationQueue.main,
                                           using: textHandler)
-            self.textObserver.token = observer
+            self.textObserver.store(observer)
         }
     }
     
@@ -114,20 +129,18 @@ class CAPARViewController: NSViewController {
         removeTextObserver()
     }
     
-    private func removeTextObserver() {
-        guard let observer = self.textObserver.token else { return }
+    private nonisolated func removeTextObserver() {
+        guard let observer = self.textObserver.take() else { return }
         NotificationCenter.default.removeObserver(observer,
                                                   name: NSControl.textDidChangeNotification,
                                                   object: nil)
-        self.textObserver.token = nil
     }
     
     deinit {
-        guard let observer = textObserver.token else { return }
+        guard let observer = textObserver.take() else { return }
         NotificationCenter.default.removeObserver(observer,
                                                   name: NSControl.textDidChangeNotification,
                                                   object: nil)
-        textObserver.token = nil
     }
     
     /* ============================================ */

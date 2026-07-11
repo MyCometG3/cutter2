@@ -50,7 +50,7 @@ extension Document {
     public func cleanup() {
         guard didCleanup == false else { return }
         didCleanup = true
-
+        
         //
         self.removeMutationObserver()
         self.removeAllUndoRecords()
@@ -58,12 +58,12 @@ extension Document {
         self.playerReloadTask?.cancel()
         self.playerReloadTask = nil
         self.removePlayerObserver()
-
+        
         //
         self.viewController?.cleanup()
         self.player?.pause()
         self.playerView?.player = nil
-
+        
         // dealloc mutator
         self.movieMutator = nil
     }

@@ -315,12 +315,12 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     }
     
     internal var didCleanup: Bool = false
-
+    
     override func close() {
         cleanup()
         super.close()
     }
-
+    
     @MainActor
     deinit {
         self.cleanup()

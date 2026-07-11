@@ -69,7 +69,8 @@ extension Document {
         savePanel.canSelectHiddenExtension = true
         savePanel.isExtensionHidden = false
         savePanel.delegate = self
-        savePanel.allowedContentTypes = [UTType(uti)!]
+        guard let ut = UTType(uti) else { return false }
+        savePanel.allowedContentTypes = [ut]
         savePanel.accessoryView = accessoryVC.view
         self.savePanel = savePanel
         
@@ -148,6 +149,7 @@ extension Document {
     public func didUpdateFileType(_ fileType: AVFileType, selfContained: Bool) {
         
         guard let savePanel = self.savePanel else { return }
-        savePanel.allowedContentTypes = [UTType(fileType.rawValue)!]
+        guard let ut = UTType(fileType.rawValue) else { return }
+        savePanel.allowedContentTypes = [ut]
     }
 }

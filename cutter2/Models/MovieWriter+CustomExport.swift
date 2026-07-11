@@ -137,16 +137,18 @@ extension MovieWriter {
                     guard let data1 = dataSrc, let data2 = dataDst else {
                         try throwError(.movieWriterFailed, reason: "Failed to convert layout")
                     }
-                    guard
-                        let baseAddress1 = data1.withUnsafeBytes({ $0.baseAddress }),
-                        let baseAddress2 = data2.withUnsafeBytes({ $0.baseAddress })
-                    else {
-                        try throwError(.movieWriterFailed, reason: "Invalid AudioChannelLayoutData")
+                    avacSrcLayout = try data1.withUnsafeBytes { rawPtr -> AVAudioChannelLayout in
+                        guard let base = rawPtr.baseAddress else {
+                            throw MovieWriterError.movieWriterFailed
+                        }
+                        return AVAudioChannelLayout(layout: base.bindMemory(to: AudioChannelLayout.self, capacity: 1))
                     }
-                    let ptr1: LayoutPtr = baseAddress1.bindMemory(to: AudioChannelLayout.self, capacity: 1)
-                    let ptr2: LayoutPtr = baseAddress2.bindMemory(to: AudioChannelLayout.self, capacity: 1)
-                    avacSrcLayout = AVAudioChannelLayout(layout: ptr1)
-                    avacDstLayout = AVAudioChannelLayout(layout: ptr2)
+                    avacDstLayout = try data2.withUnsafeBytes { rawPtr -> AVAudioChannelLayout in
+                        guard let base = rawPtr.baseAddress else {
+                            throw MovieWriterError.movieWriterFailed
+                        }
+                        return AVAudioChannelLayout(layout: base.bindMemory(to: AudioChannelLayout.self, capacity: 1))
+                    }
                     numChannel = Int(avacDstLayout.channelCount)
                 }
                 

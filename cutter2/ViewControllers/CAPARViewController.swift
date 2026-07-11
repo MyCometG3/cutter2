@@ -30,7 +30,7 @@ class CAPARViewController: NSViewController {
     /* ============================================ */
     
     private var parentWindow: NSWindow? = nil
-    private var textObserver: NSObjectProtocol? = nil
+    private nonisolated(unsafe) var textObserver: NSObjectProtocol? = nil
     
     /* ============================================ */
     // MARK: - Sheet control
@@ -117,7 +117,10 @@ class CAPARViewController: NSViewController {
     }
     
     deinit {
-        removeTextObserver()
+        guard let observer = textObserver else { return }
+        NotificationCenter.default.removeObserver(observer,
+                                                  name: NSControl.textDidChangeNotification,
+                                                  object: nil)
     }
     
     /* ============================================ */

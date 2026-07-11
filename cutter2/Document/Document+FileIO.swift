@@ -376,7 +376,7 @@ extension Document {
         
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
         guard let url = self.fileURL else { return }
-        guard let newMovie = AVMutableMovie(url: url, options: nil) else { return }
+        let newMovie = AVMutableMovie(url: url, options: nil)
         guard let mutator = self.movieMutator else { return }
         let time: CMTime = mutator.insertionTime
         let range: CMTimeRange = mutator.selectedTimeRange

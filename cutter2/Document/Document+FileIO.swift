@@ -28,6 +28,7 @@ struct OpenPreparation: Sendable {
 // MARK: - File I/O Operations
 /* ============================================ */
 
+@MainActor
 extension Document {
     
     /* ============================================ */
@@ -86,10 +87,69 @@ extension Document {
         }
     }
     
-    override func read(from url: URL, ofType typeName: String) throws {
-        let reason = "read(from:ofType:) should never be called"
-        LoggingSystem.document.fault("Unexpected read(from:ofType:) called - internal error")
-        try throwError(.internalError, reason: reason)
+    override nonisolated func read(from url: URL, ofType typeName: String) throws {
+        // Synchronous revert/reload path:
+        // 1) validate the AppKit-provided file type
+        // 2) load file metadata and movie header via AsyncBridge
+        // 3) apply the new mutator on the MainActor
+        
+        // Stage 0: Validate the AppKit-provided UTI before doing any I/O.
+        let fileType = AVFileType.init(rawValue: typeName)
+        guard AVMovie.movieTypes().contains(fileType) else {
+            let reason = "(UTI: \(typeName))"
+            LoggingSystem.fileIO.error("Incompatible file type: \(typeName)")
+            try throwError(.incompatibleFileType, reason: reason)
+        }
+        
+        // Stage 1: File I/O is performed on a background task and bridged back
+        // through AsyncBridge.
+        let preparation: OpenPreparation
+        do {
+            preparation = try AsyncBridge.perform(timeout: 30, allowMainThread: true) { @Sendable in
+                let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
+                let modificationDate = attrs[.modificationDate] as? Date
+                let movie = AVMutableMovie(url: url, options: nil)
+                if let error = MovieHeaderValidator.validate(movie) {
+                    try self.throwError(.unableToOpenFile, reason: error.localizedDescription)
+                }
+                return OpenPreparation(
+                    typeName: typeName,
+                    modificationDate: modificationDate,
+                    movHeader: movie.movHeader
+                )
+            }
+        } catch {
+            LoggingSystem.document.fault("Revert prepare failed: \(error)")
+            throw error
+        }
+        
+        // Stage 2: Rebuild the mutator on the MainActor.
+        do {
+            try ActorUtilities.performSyncOnMainActor {
+                if let header = preparation.movHeader {
+                    let movie = AVMutableMovie(data: header)
+                    guard MovieHeaderValidator.isValid(movie) else {
+                        let reason = "Invalid movie header for \(url.lastPathComponent)"
+                        LoggingSystem.fileIO.error("Failed to validate movie header: \(url.lastPathComponent)")
+                        try self.throwError(.unableToOpenFile, reason: reason)
+                    }
+                    self.removeMutationObserver()
+                    self.removeAllUndoRecords()
+                    self.movieMutator = MovieMutator(with: movie)
+                    self.addMutationObserver()
+                    self.fileType = preparation.typeName
+                    self.fileModificationDate = preparation.modificationDate
+                    LoggingSystem.fileIO.notice("Document opened successfully: \(url.lastPathComponent)")
+                } else {
+                    let reason = url.lastPathComponent + " at " + url.deletingLastPathComponent().path
+                    LoggingSystem.fileIO.error("Failed to open file: \(url.lastPathComponent)")
+                    try self.throwError(.unableToOpenFile, reason: reason)
+                }
+            }
+        } catch {
+            LoggingSystem.document.fault("Revert Stage 2 failed: \(error)")
+            throw error
+        }
     }
     
     override class func canConcurrentlyReadDocuments(ofType typeName: String) -> Bool {

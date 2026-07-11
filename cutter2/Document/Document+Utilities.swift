@@ -60,11 +60,9 @@ extension Document {
         self.removePlayerObserver()
 
         //
-        MainActor.assumeIsolated {
-            self.viewController?.cleanup()
-            self.player?.pause()
-            self.playerView?.player = nil
-        }
+        self.viewController?.cleanup()
+        self.player?.pause()
+        self.playerView?.player = nil
 
         // dealloc mutator
         self.movieMutator = nil

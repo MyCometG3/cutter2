@@ -206,11 +206,14 @@ func bracketSecurityScopedAccess<T>(
     perform body: () async throws -> T
 ) async throws -> T {
     let uniqueURLs = Array(Set(urls.map { $0.standardizedFileURL }))
+    var startedURLs: [URL] = []
     for url in uniqueURLs {
-        _ = url.startAccessingSecurityScopedResource()
+        if url.startAccessingSecurityScopedResource() {
+            startedURLs.append(url)
+        }
     }
     defer {
-        for url in uniqueURLs.reversed() {
+        for url in startedURLs.reversed() {
             url.stopAccessingSecurityScopedResource()
         }
     }

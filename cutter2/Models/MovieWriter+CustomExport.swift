@@ -153,6 +153,8 @@ extension MovieWriter {
                 }
                 
                 //
+                // `avacDstLayout.layout` is framework-derived and satisfies the
+                // no-size overload's precondition (complete AudioChannelLayout).
                 aclData = LayoutConverter().dataFor(layoutBytes: avacDstLayout.layout)
             }
             

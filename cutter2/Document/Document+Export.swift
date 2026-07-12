@@ -150,7 +150,7 @@ extension Document {
             let audioEncode = defaults.bool(forKey: kAudioEncodeKey)
             let videoCodecIndex = min(max(defaults.integer(forKey: kVideoCodecKey), 0), videoID.count - 1)
             let audioCodecIndex = min(max(defaults.integer(forKey: kAudioCodecKey), 0), audioID.count - 1)
-            let lpcmDepthIndex = min(max(defaults.integer(forKey: kLPCMDepthKey), 0), lpcmBPC.count - 1)
+            let lpcmDepthIndex = min(max(defaults.integer(forKey: kAudioCodecKey), 0), lpcmBPC.count - 1)
             let videoCodec = videoID[videoCodecIndex]
             let audioCodec = audioID[audioCodecIndex]
             let lpcmDepth = lpcmBPC[lpcmDepthIndex]

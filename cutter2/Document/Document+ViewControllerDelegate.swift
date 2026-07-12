@@ -35,11 +35,10 @@ extension Document: ViewControllerDelegate {
     }
     
     public func debugInfo() {
-        
-        guard let mutator = self.movieMutator else { return }
-        let player = self.player!
-        
         #if DEBUG
+        guard let mutator = self.movieMutator else { return }
+        guard let player = self.player else { return }
+        
         LoggingSystem.document.debug("===== Document State: \(mutator.ts()) =====")
         
         do {

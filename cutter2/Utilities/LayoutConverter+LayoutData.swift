@@ -53,7 +53,10 @@ extension LayoutConverter {
     /// Create AudioChannelLayoutData (copied)
     ///
     /// - Parameter ptr: pointer to AudioChannelLayout
-    /// - Returns: Data (copied) of AudioChannelLayout
+    /// - Returns: Data (copied) of AudioChannelLayout.
+    ///   Use only when `ptr` is guaranteed to reference a complete
+    ///   framework-owned `AudioChannelLayout` buffer. For size-uncertain or
+    ///   externally supplied input, call `dataFor(layoutBytes:size:)`.
     public func dataFor(layoutBytes ptr: UnsafePointer<AudioChannelLayout>) -> AudioChannelLayoutData {
         // "Copy" struct into Data as backing store
         let acDescCount: Int = Int(ptr.pointee.mNumberChannelDescriptions)

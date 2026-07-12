@@ -92,6 +92,7 @@ extension TimelineView {
     /// - Returns: quantized position in Float64
     func quantize(_ input :Float64) -> Float64 {
         guard let vc = delegate, let info = vc.presentationInfo(at: input) else { return input }
+        guard (info.endPosition - info.startPosition) > 0 else { return input }
         
         let ratio: Float64 = (input - info.startPosition) / (info.endPosition - info.startPosition)
         return (ratio < 0.5) ? info.startPosition : info.endPosition

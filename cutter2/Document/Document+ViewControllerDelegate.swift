@@ -37,7 +37,7 @@ extension Document: ViewControllerDelegate {
     public func debugInfo() {
         
         guard let mutator = self.movieMutator else { return }
-        let player = self.player!
+        guard let player = self.player else { return }
         
         #if DEBUG
         LoggingSystem.document.debug("===== Document State: \(mutator.ts()) =====")

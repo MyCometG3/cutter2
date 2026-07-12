@@ -148,9 +148,12 @@ extension Document {
             let copyOtherMedia = defaults.bool(forKey: kCopyOtherMediaKey)
             let videoEncode = defaults.bool(forKey: kVideoEncodeKey)
             let audioEncode = defaults.bool(forKey: kAudioEncodeKey)
-            let videoCodec = videoID[defaults.integer(forKey: kVideoCodecKey)]
-            let audioCodec = audioID[defaults.integer(forKey: kAudioCodecKey)]
-            let lpcmDepth = lpcmBPC[defaults.integer(forKey: kAudioCodecKey)]
+            let videoCodecIndex = min(max(defaults.integer(forKey: kVideoCodecKey), 0), videoID.count - 1)
+            let audioCodecIndex = min(max(defaults.integer(forKey: kAudioCodecKey), 0), audioID.count - 1)
+            let lpcmDepthIndex = min(max(defaults.integer(forKey: kAudioCodecKey), 0), lpcmBPC.count - 1)
+            let videoCodec = videoID[videoCodecIndex]
+            let audioCodec = audioID[audioCodecIndex]
+            let lpcmDepth = lpcmBPC[lpcmDepthIndex]
             
             var param: [String: any Sendable] = [:]
             param[kAudioKbpsKey] = audioRate

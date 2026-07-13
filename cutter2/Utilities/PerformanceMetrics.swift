@@ -7,11 +7,31 @@
 //
 
 import Foundation
+import os.lock
 import os.log
 
 /* ============================================ */
 // MARK: - Performance Measurement Utility
 /* ============================================ */
+
+// UnfairLockBox — lightweight lock following the same pattern as AsyncBridge.swift.
+// Defined locally because PerformanceMetrics is used privately within this module;
+// AsyncBridge.swift's private final class is not accessible from here.
+private final class UnfairLockBox<T>: @unchecked Sendable {
+    private var rawLock = os_unfair_lock_s()
+    private var value: T
+
+    init(_ value: T) {
+        self.value = value
+    }
+
+    @inline(__always)
+    func withLock<U>(_ body: (inout T) throws -> U) rethrows -> U {
+        os_unfair_lock_lock(&rawLock)
+        defer { os_unfair_lock_unlock(&rawLock) }
+        return try body(&value)
+    }
+}
 
 /// Performance measurement utility for tracking operation timing and generating reports
 ///
@@ -48,14 +68,29 @@ class PerformanceMetrics {
     // MARK: - Properties
     /* ============================================ */
     
-    /// Storage for measurement data: operation name -> array of durations
-    private var measurements: [String: [TimeInterval]] = [:]
-    
+    /// Lock-protected state holding the measurements and the logging flags.
+    /// `recordMeasurement` is `nonisolated` and may run off the main actor, so both
+    /// the dictionary and the flags are synchronized through one lock instead of
+    /// relying on `nonisolated(unsafe)`, which would drop compile-time isolation.
+    private struct MetricsState {
+        var measurements: [String: [TimeInterval]] = [:]
+        var loggingEnabled: Bool = true
+        var verboseLogging: Bool = false
+    }
+
+    private nonisolated let state = UnfairLockBox(MetricsState())
+
     /// Flag to enable/disable performance logging
-    public var loggingEnabled: Bool = true
-    
+    public nonisolated var loggingEnabled: Bool {
+        get { state.withLock { $0.loggingEnabled } }
+        set { state.withLock { $0.loggingEnabled = newValue } }
+    }
+
     /// Flag to enable/disable detailed console output
-    public var verboseLogging: Bool = false
+    public nonisolated var verboseLogging: Bool {
+        get { state.withLock { $0.verboseLogging } }
+        set { state.withLock { $0.verboseLogging = newValue } }
+    }
     
     /* ============================================ */
     // MARK: - Initialization
@@ -78,11 +113,12 @@ class PerformanceMetrics {
         let start = CFAbsoluteTimeGetCurrent()
         defer {
             let duration = CFAbsoluteTimeGetCurrent() - start
-            recordMeasurement(name, duration: duration)
+            // S-09: recordMeasurement is nonisolated — no actor hop from @MainActor
+            self.recordMeasurement(name, duration: duration)
         }
         return try operation()
     }
-    
+
     /// Measure the execution time of an asynchronous operation
     ///
     /// - Parameters:
@@ -90,11 +126,12 @@ class PerformanceMetrics {
     ///   - operation: The async operation to measure
     /// - Returns: The result of the operation
     /// - Throws: Any error thrown by the operation
-    func measureAsync<T>(_ name: String, operation: () async throws -> T) async rethrows -> T {
+    nonisolated func measureAsync<T>(_ name: String, operation: () async throws -> T) async rethrows -> T {
         let start = CFAbsoluteTimeGetCurrent()
         defer {
             let duration = CFAbsoluteTimeGetCurrent() - start
-            recordMeasurement(name, duration: duration)
+            // S-09: recordMeasurement is nonisolated — no actor hop from nonisolated measureAsync
+            self.recordMeasurement(name, duration: duration)
         }
         return try await operation()
     }
@@ -106,12 +143,15 @@ class PerformanceMetrics {
     /// - Parameters:
     ///   - name: A descriptive name for the operation
     ///   - duration: The duration in seconds
-    func recordMeasurement(_ name: String, duration: TimeInterval) {
-        measurements[name, default: []].append(duration)
-        
-        if loggingEnabled {
+    nonisolated func recordMeasurement(_ name: String, duration: TimeInterval) {
+        let (shouldLog, isVerbose) = state.withLock { box in
+            box.measurements[name, default: []].append(duration)
+            return (box.loggingEnabled, box.verboseLogging)
+        }
+
+        if shouldLog {
             let formatted = String(format: "%.3f", duration)
-            if verboseLogging {
+            if isVerbose {
                 LoggingSystem.performance.info("[\(name)] completed in \(formatted)s")
             }
         }
@@ -135,7 +175,8 @@ class PerformanceMetrics {
     ///   - startTime: The start time returned by `startMeasurement()`
     func endMeasurement(_ name: String, startTime: CFAbsoluteTime) {
         let duration = CFAbsoluteTimeGetCurrent() - startTime
-        recordMeasurement(name, duration: duration)
+        // S-09: recordMeasurement is nonisolated — no actor hop from @MainActor
+        self.recordMeasurement(name, duration: duration)
     }
     
     /* ============================================ */
@@ -146,16 +187,17 @@ class PerformanceMetrics {
     ///
     /// - Returns: A multi-line string containing performance statistics
     func report() -> String {
+        let snapshot = state.withLock { $0.measurements }
         var output = "=== Performance Report ===\n"
         output += "Generated: \(Date())\n\n"
         
-        if measurements.isEmpty {
+        if snapshot.isEmpty {
             output += "No measurements recorded.\n"
             return output
         }
         
         // Sort by operation name for consistent output
-        for (name, durations) in measurements.sorted(by: { $0.key < $1.key }) {
+        for (name, durations) in snapshot.sorted(by: { $0.key < $1.key }) {
             let count = durations.count
             let total = durations.reduce(0, +)
             let avg = total / Double(count)
@@ -179,7 +221,7 @@ class PerformanceMetrics {
     /// - Parameter name: The operation name
     /// - Returns: Dictionary with statistics (avg, min, max, count, total), or nil if no data
     func statistics(for name: String) -> [String: Double]? {
-        guard let durations = measurements[name], !durations.isEmpty else {
+        guard let durations = state.withLock({ $0.measurements[name] }), !durations.isEmpty else {
             return nil
         }
         
@@ -204,7 +246,7 @@ class PerformanceMetrics {
     
     /// Clear all recorded measurements
     func reset() {
-        measurements.removeAll()
+        state.withLock { $0.measurements.removeAll() }
         if loggingEnabled {
             LoggingSystem.performance.info("Performance metrics reset")
         }
@@ -214,7 +256,7 @@ class PerformanceMetrics {
     ///
     /// - Parameter name: The operation name to clear
     func reset(for name: String) {
-        measurements.removeValue(forKey: name)
+        state.withLock { _ = $0.measurements.removeValue(forKey: name) }
         if loggingEnabled {
             LoggingSystem.performance.info("Performance metrics reset for: \(name)")
         }
@@ -226,7 +268,7 @@ class PerformanceMetrics {
     func exportJSON() -> Data? {
         var exportData: [String: [[String: Any]]] = [:]
         
-        for (name, durations) in measurements {
+        for (name, durations) in state.withLock({ $0.measurements }) {
             exportData[name] = durations.enumerated().map { index, duration in
                 return ["index": index, "duration": duration]
             }

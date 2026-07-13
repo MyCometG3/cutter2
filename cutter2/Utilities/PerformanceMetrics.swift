@@ -78,7 +78,7 @@ class PerformanceMetrics {
         var verboseLogging: Bool = false
     }
 
-    private let state = UnfairLockBox(MetricsState())
+    private nonisolated let state = UnfairLockBox(MetricsState())
 
     /// Flag to enable/disable performance logging
     public nonisolated var loggingEnabled: Bool {

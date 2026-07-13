@@ -68,14 +68,29 @@ class PerformanceMetrics {
     // MARK: - Properties
     /* ============================================ */
     
-    /// Storage for measurement data: operation name -> array of durations
-    private let measurements = UnfairLockBox<[String: [TimeInterval]]>([:])
-    
+    /// Lock-protected state holding the measurements and the logging flags.
+    /// `recordMeasurement` is `nonisolated` and may run off the main actor, so both
+    /// the dictionary and the flags are synchronized through one lock instead of
+    /// relying on `nonisolated(unsafe)`, which would drop compile-time isolation.
+    private struct MetricsState {
+        var measurements: [String: [TimeInterval]] = [:]
+        var loggingEnabled: Bool = true
+        var verboseLogging: Bool = false
+    }
+
+    private let state = UnfairLockBox(MetricsState())
+
     /// Flag to enable/disable performance logging
-    public nonisolated(unsafe) var loggingEnabled: Bool = true
+    public nonisolated var loggingEnabled: Bool {
+        get { state.withLock { $0.loggingEnabled } }
+        set { state.withLock { $0.loggingEnabled = newValue } }
+    }
 
     /// Flag to enable/disable detailed console output
-    public nonisolated(unsafe) var verboseLogging: Bool = false
+    public nonisolated var verboseLogging: Bool {
+        get { state.withLock { $0.verboseLogging } }
+        set { state.withLock { $0.verboseLogging = newValue } }
+    }
     
     /* ============================================ */
     // MARK: - Initialization
@@ -129,11 +144,14 @@ class PerformanceMetrics {
     ///   - name: A descriptive name for the operation
     ///   - duration: The duration in seconds
     nonisolated func recordMeasurement(_ name: String, duration: TimeInterval) {
-        measurements.withLock { $0[name, default: []].append(duration) }
-        
-        if loggingEnabled {
+        let (shouldLog, isVerbose) = state.withLock { box in
+            box.measurements[name, default: []].append(duration)
+            return (box.loggingEnabled, box.verboseLogging)
+        }
+
+        if shouldLog {
             let formatted = String(format: "%.3f", duration)
-            if verboseLogging {
+            if isVerbose {
                 LoggingSystem.performance.info("[\(name)] completed in \(formatted)s")
             }
         }
@@ -169,7 +187,7 @@ class PerformanceMetrics {
     ///
     /// - Returns: A multi-line string containing performance statistics
     func report() -> String {
-        let snapshot = measurements.withLock { $0 }
+        let snapshot = state.withLock { $0.measurements }
         var output = "=== Performance Report ===\n"
         output += "Generated: \(Date())\n\n"
         
@@ -203,7 +221,7 @@ class PerformanceMetrics {
     /// - Parameter name: The operation name
     /// - Returns: Dictionary with statistics (avg, min, max, count, total), or nil if no data
     func statistics(for name: String) -> [String: Double]? {
-        guard let durations = measurements.withLock({ $0[name] }), !durations.isEmpty else {
+        guard let durations = state.withLock({ $0.measurements[name] }), !durations.isEmpty else {
             return nil
         }
         
@@ -228,7 +246,7 @@ class PerformanceMetrics {
     
     /// Clear all recorded measurements
     func reset() {
-        measurements.withLock { $0.removeAll() }
+        state.withLock { $0.measurements.removeAll() }
         if loggingEnabled {
             LoggingSystem.performance.info("Performance metrics reset")
         }
@@ -238,7 +256,7 @@ class PerformanceMetrics {
     ///
     /// - Parameter name: The operation name to clear
     func reset(for name: String) {
-        measurements.withLock { _ = $0.removeValue(forKey: name) }
+        state.withLock { _ = $0.measurements.removeValue(forKey: name) }
         if loggingEnabled {
             LoggingSystem.performance.info("Performance metrics reset for: \(name)")
         }
@@ -250,7 +268,7 @@ class PerformanceMetrics {
     func exportJSON() -> Data? {
         var exportData: [String: [[String: Any]]] = [:]
         
-        for (name, durations) in measurements.withLock({ $0 }) {
+        for (name, durations) in state.withLock({ $0.measurements }) {
             exportData[name] = durations.enumerated().map { index, duration in
                 return ["index": index, "duration": duration]
             }

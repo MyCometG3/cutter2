@@ -14,9 +14,9 @@ import os.log
 // MARK: - Performance Measurement Utility
 /* ============================================ */
 
-// UnfairLockBox — 軽量ロック（AsyncBridge.swift と同一パターン）。
-// PerformanceMetrics はコードベース内で Private 利用のため、
-// ローカル定義とする（AsyncBridge.swift の private final class は外部アクセス不可）。
+// UnfairLockBox — lightweight lock following the same pattern as AsyncBridge.swift.
+// Defined locally because PerformanceMetrics is used privately within this module;
+// AsyncBridge.swift's private final class is not accessible from here.
 private final class UnfairLockBox<T>: @unchecked Sendable {
     private var rawLock = os_unfair_lock_s()
     private var value: T

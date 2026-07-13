@@ -238,7 +238,7 @@ class PerformanceMetrics {
     ///
     /// - Parameter name: The operation name to clear
     func reset(for name: String) {
-        measurements.withLock { $0.removeValue(forKey: name) }
+        measurements.withLock { _ = $0.removeValue(forKey: name) }
         if loggingEnabled {
             LoggingSystem.performance.info("Performance metrics reset for: \(name)")
         }
@@ -250,7 +250,7 @@ class PerformanceMetrics {
     func exportJSON() -> Data? {
         var exportData: [String: [[String: Any]]] = [:]
         
-        for (name, durations) in measurements.withLock { $0 } {
+        for (name, durations) in measurements.withLock({ $0 }) {
             exportData[name] = durations.enumerated().map { index, duration in
                 return ["index": index, "duration": duration]
             }

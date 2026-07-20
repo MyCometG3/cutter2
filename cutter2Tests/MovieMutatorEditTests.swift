@@ -74,7 +74,8 @@ private func writeSampleMovie(
 final class MovieMutatorEditTests: XCTestCase {
 
     /// Fixture files kept until tearDown so AVMutableMovie can lazy-read sample data.
-    private var fixtureURLs: [URL] = []
+    /// nonisolated(unsafe): XCTest `tearDownWithError` is nonisolated; tests run serially per instance.
+    nonisolated(unsafe) private var fixtureURLs: [URL] = []
 
     override func setUpWithError() throws {
         continueAfterFailure = false

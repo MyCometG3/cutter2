@@ -73,8 +73,19 @@ private func writeSampleMovie(
 @MainActor
 final class MovieMutatorEditTests: XCTestCase {
 
+    /// Fixture files kept until tearDown so AVMutableMovie can lazy-read sample data.
+    private var fixtureURLs: [URL] = []
+
     override func setUpWithError() throws {
         continueAfterFailure = false
+    }
+
+    override func tearDownWithError() throws {
+        for url in fixtureURLs {
+            try? FileManager.default.removeItem(at: url)
+        }
+        fixtureURLs.removeAll()
+        try super.tearDownWithError()
     }
 
     // MARK: - Helpers
@@ -101,14 +112,13 @@ final class MovieMutatorEditTests: XCTestCase {
             XCTFail("failed to write sample movie")
             return nil
         }
+        fixtureURLs.append(tempURL)
 
         let movie = AVMutableMovie(url: tempURL, options: nil)
         guard movie.range.duration > CMTime.zero else {
             XCTFail("AVMutableMovie(url:) produced empty movie")
-            try? FileManager.default.removeItem(at: tempURL)
             return nil
         }
-        try? FileManager.default.removeItem(at: tempURL)
         movie.timescale = timescale
 
         let mutator = MovieMutator(with: movie)
@@ -127,6 +137,11 @@ final class MovieMutatorEditTests: XCTestCase {
         let realUM = UndoManager()
         realUM.groupsByEvent = false
 
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        XCTAssertNil(pasteboard.data(forType: .movieMutator),
+                     "precondition: pasteboard must not already hold .movieMutator")
+
         let durationBefore = mutator.movieRange().duration.seconds
         let selectionBefore = mutator.selectedTimeRange.duration.seconds
 
@@ -140,7 +155,7 @@ final class MovieMutatorEditTests: XCTestCase {
         XCTAssertEqual(mutator.movieRange().duration.seconds,
                        durationBefore - selectionBefore, accuracy: 0.01,
                        "movie duration must shrink by selection")
-        XCTAssertNotNil(NSPasteboard.general.data(forType: .movieMutator),
+        XCTAssertNotNil(pasteboard.data(forType: .movieMutator),
                         "clip must be cached on PBoard")
     }
 

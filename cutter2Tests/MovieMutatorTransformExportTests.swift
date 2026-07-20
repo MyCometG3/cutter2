@@ -75,8 +75,19 @@ private func writeSampleMovie(
 @MainActor
 final class MovieMutatorTransformExportTests: XCTestCase {
 
+    /// Fixture files kept until tearDown so AVMutableMovie can lazy-read sample data.
+    private var fixtureURLs: [URL] = []
+
     override func setUpWithError() throws {
         continueAfterFailure = false
+    }
+
+    override func tearDownWithError() throws {
+        for url in fixtureURLs {
+            try? FileManager.default.removeItem(at: url)
+        }
+        fixtureURLs.removeAll()
+        try super.tearDownWithError()
     }
 
     // MARK: - Helpers
@@ -95,9 +106,9 @@ final class MovieMutatorTransformExportTests: XCTestCase {
             XCTFail("failed to write sample movie")
             return nil
         }
+        fixtureURLs.append(tempURL)
 
         let movie = AVMutableMovie(url: tempURL, options: nil)
-        try? FileManager.default.removeItem(at: tempURL)
         guard movie.range.duration > CMTime.zero else {
             XCTFail("AVMutableMovie(url:) produced empty movie")
             return nil

@@ -33,18 +33,6 @@ final class DocumentTests: XCTestCase {
         XCTAssertTrue(types.contains("com.apple.quicktime-movie"))
     }
     
-    // MARK: - File Extension Tests
-    
-    func testMovFileExtension() throws {
-        let movExtension = "mov"
-        XCTAssertEqual(movExtension, "mov")
-    }
-    
-    func testMp4FileExtension() throws {
-        let mp4Extension = "mp4"
-        XCTAssertEqual(mp4Extension, "mp4")
-    }
-    
     // MARK: - DocumentError Tests
     
     func testDocumentErrorTypes() throws {

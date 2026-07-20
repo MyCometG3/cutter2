@@ -11,7 +11,7 @@ final class MovieHeaderValidatorTests: XCTestCase {
     func testValidateEmptyMovieReturnsNoTracks() {
         let movie = AVMutableMovie()
         let error = MovieHeaderValidator.validate(movie)
-        guard case .noTracks = error else {
+        guard case .noTracks? = error else {
             return XCTFail("expected .noTracks, got \(String(describing: error))")
         }
         XCTAssertFalse(MovieHeaderValidator.isValid(movie))

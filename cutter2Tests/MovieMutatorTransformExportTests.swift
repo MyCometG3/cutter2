@@ -56,9 +56,15 @@ private func writeSampleMovie(
 
     let frameDuration = CMTime(value: CMTimeValue(timescale) / CMTimeValue(frameRate), timescale: timescale)
     let frameCount = Int((duration * Double(frameRate)).rounded())
+    let maxReadySpins = 5_000 // 5s at 1ms
     var presentation = CMTime.zero
     for _ in 0..<frameCount {
-        while !input.isReadyForMoreMediaData { usleep(1000) }
+        var spins = 0
+        while !input.isReadyForMoreMediaData {
+            spins += 1
+            if spins > maxReadySpins { return false }
+            usleep(1000)
+        }
         let ok = adaptor.append(pb, withPresentationTime: presentation)
         if !ok { return false }
         presentation = CMTimeAdd(presentation, frameDuration)
@@ -72,22 +78,40 @@ private func writeSampleMovie(
     return writer.status == .completed
 }
 
+/// Thread-safe fixture URL store (tearDown is nonisolated; tests are serial per instance).
+private final class TransformFixtureURLStore: @unchecked Sendable {
+    private let lock = NSLock()
+    private var urls: [URL] = []
+
+    func append(_ url: URL) {
+        lock.lock()
+        urls.append(url)
+        lock.unlock()
+    }
+
+    func takeAll() -> [URL] {
+        lock.lock()
+        defer { lock.unlock() }
+        let snapshot = urls
+        urls.removeAll()
+        return snapshot
+    }
+}
+
 @MainActor
 final class MovieMutatorTransformExportTests: XCTestCase {
 
     /// Fixture files kept until tearDown so AVMutableMovie can lazy-read sample data.
-    /// nonisolated(unsafe): XCTest `tearDownWithError` is nonisolated; tests run serially per instance.
-    nonisolated(unsafe) private var fixtureURLs: [URL] = []
+    private let fixtureStore = TransformFixtureURLStore()
 
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
 
     override func tearDownWithError() throws {
-        for url in fixtureURLs {
+        for url in fixtureStore.takeAll() {
             try? FileManager.default.removeItem(at: url)
         }
-        fixtureURLs.removeAll()
         try super.tearDownWithError()
     }
 
@@ -107,7 +131,7 @@ final class MovieMutatorTransformExportTests: XCTestCase {
             XCTFail("failed to write sample movie")
             return nil
         }
-        fixtureURLs.append(tempURL)
+        fixtureStore.append(tempURL)
 
         let movie = AVMutableMovie(url: tempURL, options: nil)
         guard movie.range.duration > CMTime.zero else {

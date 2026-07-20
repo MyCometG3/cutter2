@@ -40,6 +40,73 @@ final class ModelTests: XCTestCase {
         XCTAssertTrue(Thread.isMainThread)
     }
     
+    // MARK: - UndoManagerWrapper Round-Trip (T-06)
+    
+    @MainActor
+    func testUndoManagerWrapperRegisterUndoAndSetActionName() throws {
+        final class Target { var counter = 0 }
+        let realUM = UndoManager()
+        realUM.groupsByEvent = false
+        let wrapper = UndoManagerWrapper(realUM)
+        let target = Target()
+        
+        realUM.beginUndoGrouping()
+        wrapper.registerUndo(withTarget: target) { _ in target.counter += 1 }
+        wrapper.setActionName("Increment")
+        realUM.endUndoGrouping()
+        
+        XCTAssertTrue(realUM.canUndo, "undo must be registered")
+        XCTAssertEqual(realUM.undoActionName, "Increment", "action name propagated")
+        XCTAssertEqual(target.counter, 0, "handler must not run before undo()")
+        // Handler execution / redo are covered by
+        // testUndoManagerWrapperRegisterUndoWithInverseHandlerSupportsRedo.
+    }
+    
+    @MainActor
+    func testUndoManagerWrapperRegisterUndoWithInverseHandlerSupportsRedo() throws {
+        final class Target { var counter = 0 }
+        let realUM = UndoManager()
+        realUM.groupsByEvent = false
+        let wrapper = UndoManagerWrapper(realUM)
+        let target = Target()
+        
+        realUM.beginUndoGrouping()
+        wrapper.registerUndo(withTarget: target) { t1 in
+            t1.counter += 1
+            wrapper.registerUndo(withTarget: t1) { t2 in
+                t2.counter -= 1
+            }
+        }
+        realUM.endUndoGrouping()
+        
+        realUM.undo()
+        XCTAssertEqual(target.counter, 1, "undo: +1")
+        XCTAssertTrue(realUM.canRedo)
+        realUM.redo()
+        XCTAssertEqual(target.counter, 0, "redo: -1")
+    }
+    
+    @MainActor
+    func testUndoManagerWrapperRemoveAllActionsWithTarget() throws {
+        final class Target {}
+        final class Other {}
+        let realUM = UndoManager()
+        realUM.groupsByEvent = false
+        let wrapper = UndoManagerWrapper(realUM)
+        let target = Target()
+        let other = Other()
+        
+        realUM.beginUndoGrouping()
+        wrapper.registerUndo(withTarget: target) { _ in /* no-op */ }
+        wrapper.registerUndo(withTarget: other) { _ in /* no-op */ }
+        realUM.endUndoGrouping()
+        XCTAssertTrue(realUM.canUndo)
+        
+        wrapper.removeAllActions(withTarget: target)
+        
+        XCTAssertTrue(realUM.canUndo, "other's undo action must still be registered")
+    }
+    
     // MARK: - SampleBufferChannel Delegate Tests
     
     func testSampleBufferChannelDelegateProtocolExists() throws {

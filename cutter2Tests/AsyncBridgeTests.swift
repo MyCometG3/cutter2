@@ -58,7 +58,9 @@ final class AsyncBridgeTests: XCTestCase {
         XCTAssertTrue(caughtTimeout)
     }
 
+    @MainActor
     func testPerformAllowMainThread() {
+        XCTAssertTrue(Thread.isMainThread, "testPerformAllowMainThread must run on main thread")
         do {
             let value = try AsyncBridge.perform(timeout: nil, allowMainThread: true) { @Sendable in
                 "ok"

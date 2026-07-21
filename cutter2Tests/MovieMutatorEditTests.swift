@@ -7,76 +7,6 @@ import CoreMedia
 import AppKit
 @testable import cutter2
 
-/// nonisolated helper: write a sample .mov off the main thread
-private func writeSampleMovie(
-    to url: URL,
-    duration: TimeInterval,
-    timescale: CMTimeScale,
-    frameDuration: CMTime,
-    frameCount: Int
-) -> Bool {
-    guard let writer = try? AVAssetWriter(outputURL: url, fileType: .mov) else { return false }
-
-    let width = 320
-    let height = 180
-    let videoSettings: [String: Any] = [
-        AVVideoCodecKey: AVVideoCodecType.h264,
-        AVVideoWidthKey: width,
-        AVVideoHeightKey: height
-    ]
-    let input = AVAssetWriterInput(mediaType: .video, outputSettings: videoSettings)
-    input.expectsMediaDataInRealTime = false
-    let adaptor = AVAssetWriterInputPixelBufferAdaptor(
-        assetWriterInput: input,
-        sourcePixelBufferAttributes: [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-            kCVPixelBufferWidthKey as String: width,
-            kCVPixelBufferHeightKey as String: height
-        ]
-    )
-    guard writer.canAdd(input) else { return false }
-    writer.add(input)
-
-    guard writer.startWriting() else { return false }
-    writer.startSession(atSourceTime: .zero)
-
-    let attrs: [CFString: Any] = [
-        kCVPixelBufferCGImageCompatibilityKey: true,
-        kCVPixelBufferCGBitmapContextCompatibilityKey: true,
-        kCVPixelBufferIOSurfacePropertiesKey: [:] as CFDictionary
-    ]
-    var pixelBuffer: CVPixelBuffer?
-    let pstatus = CVPixelBufferCreate(kCFAllocatorDefault, width, height,
-                                      kCVPixelFormatType_32BGRA, attrs as CFDictionary, &pixelBuffer)
-    guard pstatus == kCVReturnSuccess, let pb = pixelBuffer else { return false }
-    CVPixelBufferLockBaseAddress(pb, [])
-    if let base = CVPixelBufferGetBaseAddress(pb) {
-        memset(base, 0, CVPixelBufferGetDataSize(pb))
-    }
-    CVPixelBufferUnlockBaseAddress(pb, [])
-
-    let maxReadySpins = 5_000 // 5s at 1ms
-    var presentation = CMTime.zero
-    for _ in 0..<frameCount {
-        var spins = 0
-        while !input.isReadyForMoreMediaData {
-            spins += 1
-            if spins > maxReadySpins { return false }
-            usleep(1000)
-        }
-        let ok = adaptor.append(pb, withPresentationTime: presentation)
-        if !ok { return false }
-        presentation = CMTimeAdd(presentation, frameDuration)
-    }
-    input.markAsFinished()
-    writer.endSession(atSourceTime: presentation)
-    let group = DispatchGroup()
-    group.enter()
-    writer.finishWriting { group.leave() }
-    group.wait()
-    return writer.status == .completed
-}
-
 /// Thread-safe fixture URL store (tearDown is nonisolated; tests are serial per instance).
 private final class FixtureURLStore: @unchecked Sendable {
     private let lock = NSLock()
@@ -123,16 +53,13 @@ final class MovieMutatorEditTests: XCTestCase {
     ) -> MovieMutator? {
         let timescale: CMTimeScale = 600
         let frameRate: Int = 30
-        let frameDuration = CMTime(value: CMTimeValue(timescale) / CMTimeValue(frameRate), timescale: timescale)
-        let frameCount = Int((duration * Double(frameRate)).rounded())
 
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("cutter2_edit_test_\(UUID().uuidString).mov")
 
         // Write fixture off main thread to avoid AVAssetWriter thread warnings
         let writeOK = DispatchQueue.global().sync {
-            writeSampleMovie(to: tempURL, duration: duration, timescale: timescale,
-                             frameDuration: frameDuration, frameCount: frameCount)
+            writeSampleMovie(to: tempURL, duration: duration, timescale: timescale, frameRate: frameRate)
         }
         guard writeOK else {
             XCTFail("failed to write sample movie")

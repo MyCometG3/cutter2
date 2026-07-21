@@ -8,17 +8,17 @@ import AppKit
 @testable import cutter2
 
 /// Thread-safe fixture URL store (tearDown is nonisolated; tests are serial per instance).
-private final class TransformFixtureURLStore: @unchecked Sendable {
+public final class TestFixtureURLStore: @unchecked Sendable {
     private let lock = NSLock()
     private var urls: [URL] = []
 
-    func append(_ url: URL) {
+    public func append(_ url: URL) {
         lock.lock()
         urls.append(url)
         lock.unlock()
     }
 
-    func takeAll() -> [URL] {
+    public func takeAll() -> [URL] {
         lock.lock()
         defer { lock.unlock() }
         let snapshot = urls
@@ -31,7 +31,7 @@ private final class TransformFixtureURLStore: @unchecked Sendable {
 final class MovieMutatorTransformExportTests: XCTestCase {
 
     /// Fixture files kept until tearDown so AVMutableMovie can lazy-read sample data.
-    private let fixtureStore = TransformFixtureURLStore()
+    private let fixtureStore = TestFixtureURLStore()
 
     override func setUpWithError() throws {
         continueAfterFailure = false

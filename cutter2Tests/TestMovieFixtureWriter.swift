@@ -48,11 +48,15 @@ func writeSampleMovie(
     let pstatus = CVPixelBufferCreate(kCFAllocatorDefault, width, height,
                                       kCVPixelFormatType_32BGRA, attrs as CFDictionary, &pixelBuffer)
     guard pstatus == kCVReturnSuccess, let pb = pixelBuffer else { return false }
-    CVPixelBufferLockBaseAddress(pb, [])
-    if let base = CVPixelBufferGetBaseAddress(pb) {
-        memset(base, 0, CVPixelBufferGetDataSize(pb))
+    var baseAddress: UnsafeMutableRawPointer? = nil
+    let lockStatus = CVPixelBufferLockBaseAddress(pb, [])
+    defer {
+        if lockStatus == kCVReturnSuccess {
+            CVPixelBufferUnlockBaseAddress(pb, [])
+        }
     }
-    CVPixelBufferUnlockBaseAddress(pb, [])
+    guard lockStatus == kCVReturnSuccess, let base = CVPixelBufferGetBaseAddress(pb) else { return false }
+    memset(base, 0, CVPixelBufferGetDataSize(pb))
 
     let frameDuration = CMTime(value: CMTimeValue(timescale) / CMTimeValue(frameRate), timescale: timescale)
     let frameCount = Int((duration * Double(frameRate)).rounded())

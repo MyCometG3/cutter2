@@ -7,7 +7,7 @@ import AVFoundation
 import CoreMedia
 import Foundation
 
-/// Thread-safe fixture URL store (tearDown is nonisolated; tests are serial per instance).
+/// Thread-safe fixture URL store.
 public final class TestFixtureURLStore: @unchecked Sendable {
     private let lock = NSLock()
     private var urls: [URL] = []

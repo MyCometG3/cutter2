@@ -104,7 +104,10 @@ final class ModelTests: XCTestCase {
         
         wrapper.removeAllActions(withTarget: target)
         
+        // Verify target's undo action is removed while other's remains
         XCTAssertTrue(realUM.canUndo, "other's undo action must still be registered")
+        realUM.undo()
+        XCTAssertTrue(realUM.canUndo, "other's undo action must still be available after first undo")
     }
     
     // MARK: - SampleBufferChannel Delegate Tests

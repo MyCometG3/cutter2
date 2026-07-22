@@ -48,7 +48,6 @@ func writeSampleMovie(
     let pstatus = CVPixelBufferCreate(kCFAllocatorDefault, width, height,
                                       kCVPixelFormatType_32BGRA, attrs as CFDictionary, &pixelBuffer)
     guard pstatus == kCVReturnSuccess, let pb = pixelBuffer else { return false }
-    var baseAddress: UnsafeMutableRawPointer? = nil
     let lockStatus = CVPixelBufferLockBaseAddress(pb, [])
     defer {
         if lockStatus == kCVReturnSuccess {

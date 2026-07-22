@@ -7,26 +7,6 @@ import CoreMedia
 import AppKit
 @testable import cutter2
 
-/// Thread-safe fixture URL store (tearDown is nonisolated; tests are serial per instance).
-public final class TestFixtureURLStore: @unchecked Sendable {
-    private let lock = NSLock()
-    private var urls: [URL] = []
-
-    public func append(_ url: URL) {
-        lock.lock()
-        urls.append(url)
-        lock.unlock()
-    }
-
-    public func takeAll() -> [URL] {
-        lock.lock()
-        defer { lock.unlock() }
-        let snapshot = urls
-        urls.removeAll()
-        return snapshot
-    }
-}
-
 @MainActor
 final class MovieMutatorEditTests: XCTestCase {
 

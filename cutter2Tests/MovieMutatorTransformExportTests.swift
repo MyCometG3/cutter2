@@ -169,7 +169,7 @@ final class MovieMutatorTransformExportTests: XCTestCase {
     // MARK: - writeMovie / cancel
 
     func testWriteMovieSelfContainedProducesFile() async throws {
-        guard let mutator = makeMutator(duration: 1.0) else { return }
+        guard let mutator = await makeMutator(duration: 1.0) else { return }
         let outURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("cutter2_write_\(UUID().uuidString).mov")
         defer { try? FileManager.default.removeItem(at: outURL) }
@@ -193,7 +193,7 @@ final class MovieMutatorTransformExportTests: XCTestCase {
     }
 
     func testWriteMovieThenCancelIsSafe() async throws {
-        guard let mutator = makeMutator(duration: 1.0) else { return }
+        guard let mutator = await makeMutator(duration: 1.0) else { return }
         let outURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("cutter2_write_cancel_\(UUID().uuidString).mov")
         defer { try? FileManager.default.removeItem(at: outURL) }

@@ -80,15 +80,11 @@ func writeSampleMovie(
 
     let frameDuration = CMTime(value: CMTimeValue(timescale), timescale: CMTimeScale(frameRate) * CMTimeScale(timescale))
     let frameCount = Int((duration * Double(frameRate)).rounded())
-    let maxReadySpins = 5_000 // 5s at 1ms
+    let deadline = DispatchTime.now() + .seconds(30)
     var presentation = CMTime.zero
-    var totalSpins = 0
     for _ in 0..<frameCount {
-        var spins = 0
         while !input.isReadyForMoreMediaData {
-            spins += 1
-            totalSpins += 1
-            if totalSpins > maxReadySpins { return false }
+            if DispatchTime.now() > deadline { return false }
             usleep(1000)
         }
         let ok = adaptor.append(pb, withPresentationTime: presentation)

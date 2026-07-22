@@ -77,15 +77,17 @@ func writeSampleMovie(
     guard lockStatus == kCVReturnSuccess, let base = CVPixelBufferGetBaseAddress(pb) else { return false }
     memset(base, 0, CVPixelBufferGetDataSize(pb))
 
-    let frameDuration = CMTime(value: CMTimeValue(timescale) / CMTimeValue(frameRate), timescale: timescale)
+    let frameDuration = CMTime(value: CMTimeValue(timescale), timescale: CMTimeScale(frameRate) * CMTimeScale(timescale))
     let frameCount = Int((duration * Double(frameRate)).rounded())
     let maxReadySpins = 5_000 // 5s at 1ms
     var presentation = CMTime.zero
+    var totalSpins = 0
     for _ in 0..<frameCount {
         var spins = 0
         while !input.isReadyForMoreMediaData {
             spins += 1
-            if spins > maxReadySpins { return false }
+            totalSpins += 1
+            if totalSpins > maxReadySpins { return false }
             usleep(1000)
         }
         let ok = adaptor.append(pb, withPresentationTime: presentation)

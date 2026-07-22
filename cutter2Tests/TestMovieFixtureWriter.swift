@@ -7,6 +7,26 @@ import AVFoundation
 import CoreMedia
 import Foundation
 
+/// Thread-safe fixture URL store (tearDown is nonisolated; tests are serial per instance).
+public final class TestFixtureURLStore: @unchecked Sendable {
+    private let lock = NSLock()
+    private var urls: [URL] = []
+
+    public func append(_ url: URL) {
+        lock.lock()
+        urls.append(url)
+        lock.unlock()
+    }
+
+    public func takeAll() -> [URL] {
+        lock.lock()
+        defer { lock.unlock() }
+        let snapshot = urls
+        urls.removeAll()
+        return snapshot
+    }
+}
+
 /// nonisolated helper: write a sample H.264 .mov off the main thread
 func writeSampleMovie(
     to url: URL,
@@ -77,6 +97,8 @@ func writeSampleMovie(
     let group = DispatchGroup()
     group.enter()
     writer.finishWriting { group.leave() }
-    group.wait()
+    let timeout = DispatchTime.now() + .seconds(10)
+    let result = group.wait(timeout: timeout)
+    guard result == .success else { return false }
     return writer.status == .completed
 }

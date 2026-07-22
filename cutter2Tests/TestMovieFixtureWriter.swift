@@ -35,6 +35,9 @@ func writeSampleMovie(
     timescale: CMTimeScale = 600,
     frameRate: Int = 30
 ) -> Bool {
+    guard frameRate > 0, timescale > 0, duration > 0 else {
+        return false
+    }
     guard let writer = try? AVAssetWriter(outputURL: url, fileType: .mov) else { return false }
 
     let width = 320

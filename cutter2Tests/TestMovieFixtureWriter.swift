@@ -1,7 +1,7 @@
 //  TestMovieFixtureWriter.swift
 //  cutter2Tests
 //
-//  Shared test helper: write a sample H.264 .mov off the main thread.
+//  Shared test helper: write a sample H.264 .mov. Callers must invoke on a background thread.
 
 import AVFoundation
 import CoreMedia
@@ -14,8 +14,8 @@ public final class TestFixtureURLStore: @unchecked Sendable {
 
     public func append(_ url: URL) {
         lock.lock()
+        defer { lock.unlock() }
         urls.append(url)
-        lock.unlock()
     }
 
     public func takeAll() -> [URL] {
@@ -27,7 +27,8 @@ public final class TestFixtureURLStore: @unchecked Sendable {
     }
 }
 
-/// nonisolated helper: write a sample H.264 .mov off the main thread
+/// nonisolated synchronous helper: write a sample H.264 .mov.
+/// Callers must invoke on a background thread to avoid blocking the main actor.
 func writeSampleMovie(
     to url: URL,
     duration: TimeInterval = 1.0,

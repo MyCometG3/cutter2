@@ -30,17 +30,17 @@ final class MovieMutatorEditTests: XCTestCase {
         duration: TimeInterval = 10.0,
         insertionTime: TimeInterval = 0.0,
         selectionDuration: TimeInterval = 1.0
-    ) -> MovieMutator? {
+    ) async -> MovieMutator? {
         let timescale: CMTimeScale = 600
         let frameRate: Int = 30
 
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("cutter2_edit_test_\(UUID().uuidString).mov")
 
-        // Write fixture off main thread to avoid AVAssetWriter thread warnings
-        let writeOK = DispatchQueue.global().sync {
+        // Write fixture on background thread to avoid AVAssetWriter thread warnings
+        let writeOK = await Task.detached {
             writeSampleMovie(to: tempURL, duration: duration, timescale: timescale, frameRate: frameRate)
-        }
+        }.value
         guard writeOK else {
             XCTFail("failed to write sample movie")
             return nil
@@ -65,12 +65,19 @@ final class MovieMutatorEditTests: XCTestCase {
 
     // MARK: - Cut / Paste / Delete round-trip (T-09)
 
-    func testCutSelectionRegistersUndoAndCachesClip() {
-        guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
+    func testCutSelectionRegistersUndoAndCachesClip() async {
+        guard let mutator = await makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
 
         let pasteboard = NSPasteboard.general
+        let previousContents = pasteboard.string(forType: .string)
+        defer {
+            if let previousContents {
+                pasteboard.clearContents()
+                pasteboard.setString(previousContents, forType: .string)
+            }
+        }
         pasteboard.clearContents()
         XCTAssertNil(pasteboard.data(forType: .movieMutator),
                      "precondition: pasteboard must not already hold .movieMutator")
@@ -92,8 +99,8 @@ final class MovieMutatorEditTests: XCTestCase {
                         "clip must be cached on PBoard")
     }
 
-    func testCutUndoRestoresDurationAndMarker() {
-        guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
+    func testCutUndoRestoresDurationAndMarker() async {
+        guard let mutator = await makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
 
@@ -120,8 +127,8 @@ final class MovieMutatorEditTests: XCTestCase {
         XCTAssertTrue(realUM.canRedo, "redo available after undo")
     }
 
-    func testCutRedoReappliesCut() {
-        guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
+    func testCutRedoReappliesCut() async {
+        guard let mutator = await makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
 
@@ -142,8 +149,8 @@ final class MovieMutatorEditTests: XCTestCase {
         XCTAssertTrue(realUM.canUndo, "undo available after redo")
     }
 
-    func testPasteAtInsertionTimeRoundTrip() {
-        guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
+    func testPasteAtInsertionTimeRoundTrip() async {
+        guard let mutator = await makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
 
@@ -178,8 +185,8 @@ final class MovieMutatorEditTests: XCTestCase {
                        "redo paste re-inserts clip")
     }
 
-    func testDeleteSelectionRoundTrip() {
-        guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
+    func testDeleteSelectionRoundTrip() async {
+        guard let mutator = await makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
 

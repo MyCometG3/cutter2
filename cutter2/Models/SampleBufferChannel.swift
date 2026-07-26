@@ -13,6 +13,11 @@ protocol SampleBufferChannelDelegate: AnyObject {
     func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer)
 }
 
+/// `@unchecked Sendable` rationale:
+/// `SampleBufferChannel` had data races fixed in S-12 (PR #53) via `UnfairLockBox`.
+/// `finished` / `completionHandler` are accessed under `UnfairLockBox` protection.
+/// `delegate` is held as a `weak` reference, and `queue` is a `DispatchQueue` (thread-safe).
+/// `@unchecked` is intentional; internal synchronization makes it safe.
 class SampleBufferChannel: @unchecked Sendable {
     
     init(readerOutput: AVAssetReaderOutput, writerInput: AVAssetWriterInput, trackID: CMPersistentTrackID) {

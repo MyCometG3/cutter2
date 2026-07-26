@@ -105,7 +105,8 @@ extension Document {
         // through AsyncBridge.
         let preparation: OpenPreparation
         do {
-            preparation = try AsyncBridge.perform(timeout: 30, allowMainThread: true) { @Sendable in
+            // allowMainThread: true — canConcurrentlyReadDocuments == true, so AppKit calls from a background queue. Safe.
+        preparation = try AsyncBridge.perform(timeout: 30, allowMainThread: true) { @Sendable in
                 let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
                 let modificationDate = attrs[.modificationDate] as? Date
                 let movie = AVMutableMovie(url: url, options: nil)

@@ -82,7 +82,10 @@ extension MovieMutator {
         
         let formats: [Any] = (vTracks[0]).formatDescriptions
         guard !formats.isEmpty else { NSSound.beep(); return nil }
-        let desc = formats[0] as! CMFormatDescription // CF typealias — first index safe after isEmpty check
+        // formats[0] is CMFormatDescription (CF type). as! is safe: the compiler
+        // guarantees the cast always succeeds. as? is rejected by Swift 6 strict
+        // concurrency ("will always succeed"). Index 0 is safe after isEmpty guard.
+        let desc = formats[0] as! CMFormatDescription
         
         dict[dimensionsKey] = CMVideoFormatDescriptionGetPresentationDimensions(desc,
                                                                                 usePixelAspectRatio: false,
@@ -130,7 +133,10 @@ extension MovieMutator {
         
         let vTracks: [AVMutableMovieTrack] = movie.tracks(withMediaType: .video)
         for track in vTracks {
-            let formats = track.formatDescriptions as! [CMFormatDescription] // CF typealias — as! always succeeds
+            // CMFormatDescription is a CF type. as! is safe: the compiler guarantees
+            // the cast always succeeds. as? is rejected by Swift 6 strict concurrency
+            // ("will always succeed").
+            let formats = track.formatDescriptions as! [CMFormatDescription]
             
             // Verify if track.encodedDimension is equal to target dimensions
             var valid: Bool = false

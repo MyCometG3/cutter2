@@ -141,7 +141,7 @@ nonisolated func performAsync<T: Sendable>(
 
 **Allowed ONLY for:**
 - `SampleBufferChannel` dispatch queue in `MovieWriter+CustomExport.swift` (AudioToolbox interop)
-- AVFoundation `requestMediaDataWhenReady(on:queue:)` API (AVFoundation interop)
+- AVFoundation `requestMediaDataWhenReady(on:using:)` API (AVFoundation interop)
 - `OperationQueue.main` for `NotificationCenter` (AppKit requirement)
 - `Timer.scheduledTimer` (Foundation API)
 
@@ -149,7 +149,7 @@ nonisolated func performAsync<T: Sendable>(
 
 #### AVFoundation `requestMediaDataWhenReady` DispatchQueue Usage
 
-The `requestMediaDataWhenReady(on:queue:)` API in AVFoundation asynchronously notifies on the specified `DispatchQueue` when media data is ready for writing. This is an official AVFoundation API that requires a `DispatchQueue` parameter.
+The `requestMediaDataWhenReady(on:using:)` API in AVFoundation asynchronously notifies on the specified `DispatchQueue` when media data is ready for writing. This is an official AVFoundation API that requires a `DispatchQueue` parameter.
 
 - **Usage location:** `cutter2/Models/SampleBufferChannel.swift:60` (queue created at `MovieWriter+CustomExport.swift:539`)
 - **Reason:** AVFoundation API contract requires `DispatchQueue` — cannot be replaced with `Task` / `async`.

@@ -14,10 +14,13 @@ protocol SampleBufferChannelDelegate: AnyObject {
 }
 
 /// `@unchecked Sendable` rationale:
-/// `SampleBufferChannel` had data races fixed in S-12 (PR #53) via `UnfairLockBox`.
-/// `finished` / `completionHandler` are accessed under `UnfairLockBox` protection.
-/// `delegate` is held as a `weak` reference, and `queue` is a `DispatchQueue` (thread-safe).
-/// `@unchecked` is intentional; internal synchronization makes it safe.
+/// Thread safety is achieved by confining all mutation of `finished` and
+/// `completionHandler` to the serial `queue`. `start()` sets `delegate` and
+/// `completionHandler` before the `requestMediaDataWhenReady` callback fires on
+/// `queue`, so there is no race between `start()` and the callback. `cancel()`
+/// also dispatches to `queue` before touching `finished`. `delegate` is held
+/// as a `weak` reference. `@unchecked` is intentional; the serial queue
+/// guarantees sequential access.
 class SampleBufferChannel: @unchecked Sendable {
     
     init(readerOutput: AVAssetReaderOutput, writerInput: AVAssetWriterInput, trackID: CMPersistentTrackID) {

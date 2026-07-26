@@ -108,6 +108,12 @@ extension Notification.Name {
 // MARK: -
 /* ============================================ */
 
+/// `@unchecked Sendable` rationale:
+/// `MovieWriterParams` is created by `prepareMovieWriterParams()` and
+/// immediately moved into the `MovieWriter` actor (effectively move-only).
+/// `progressContinuation` and `unblockUserInteraction` are accessed only
+/// within the `MovieWriter` actor. `movie` (`AVMutableMovie`) is mutated
+/// only under actor isolation.
 struct MovieWriterParams: @unchecked Sendable {
     let movie: AVMutableMovie
     let unblockUserInteraction: (@Sendable () -> Void)?

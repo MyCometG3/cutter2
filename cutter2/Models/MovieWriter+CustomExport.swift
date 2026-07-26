@@ -654,6 +654,11 @@ extension MovieWriter {
         }
     }
     
+    /// `@unchecked Sendable` rationale:
+    /// `cancelParams` is created on the `MovieWriter` actor (in `cancelCustomMovie`)
+    /// and then captured by a `@Sendable` closure dispatched to `customQueue`.
+    /// The `channels` array is read only from `customQueue.async` blocks, so no
+    /// data races occur across the actor-to-queue handoff.
     private struct cancelParams: @unchecked Sendable {
         let channels: [SampleBufferChannel]
     }
@@ -686,6 +691,11 @@ extension MovieWriter {
         //}
     }
     
+    /// `@unchecked Sendable` rationale:
+    /// `didReadParams` is created in the `nonisolated` `didRead` delegate callback
+    /// and then captured by a `@Sendable` closure in a `Task`. The struct is
+    /// consumed only from within that `Task` (via `didReadCore`), so no data races
+    /// occur across the nonisolated-to-async handoff.
     private struct didReadParams: @unchecked Sendable {
         let channel: SampleBufferChannel
         let buffer: CMSampleBuffer

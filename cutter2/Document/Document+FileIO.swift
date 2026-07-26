@@ -105,6 +105,9 @@ extension Document {
         // through AsyncBridge.
         let preparation: OpenPreparation
         do {
+            // allowMainThread: true — the bridged async block performs only file I/O
+            // and AVMovie header parsing, deliberately staying MainActor-free so no
+            // deadlock can occur even if NSDocument invokes read() on the main thread.
             preparation = try AsyncBridge.perform(timeout: 30, allowMainThread: true) { @Sendable in
                 let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
                 let modificationDate = attrs[.modificationDate] as? Date

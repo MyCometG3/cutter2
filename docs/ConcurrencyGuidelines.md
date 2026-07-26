@@ -141,10 +141,20 @@ nonisolated func performAsync<T: Sendable>(
 
 **Allowed ONLY for:**
 - `SampleBufferChannel` dispatch queue in `MovieWriter+CustomExport.swift` (AudioToolbox interop)
+- AVFoundation `requestMediaDataWhenReady(on:queue:)` API (AVFoundation interop)
 - `OperationQueue.main` for `NotificationCenter` (AppKit requirement)
 - `Timer.scheduledTimer` (Foundation API)
 
 **Migration target:** Replace with `Task` / `AsyncBridge` / `ActorUtilities` where possible.
+
+#### AVFoundation `requestMediaDataWhenReady` DispatchQueue Usage
+
+The `requestMediaDataWhenReady(on:queue:)` API in AVFoundation asynchronously notifies on the specified `DispatchQueue` when media data is ready for writing. This is an official AVFoundation API that requires a `DispatchQueue` parameter.
+
+- **Usage location:** `cutter2/Models/SampleBufferChannel.swift:60` (queue created at `MovieWriter+CustomExport.swift:539`)
+- **Reason:** AVFoundation API contract requires `DispatchQueue` — cannot be replaced with `Task` / `async`.
+- **Safety:** `requestMediaDataWhenReady` processes sequentially on the queue, so no data races occur. Queue cleanup happens at `stopRequestingMediaData` call.
+- **Note:** This API must be called outside `actor` isolation. When called from within the `MovieWriter` actor, use `DispatchQueue.global(qos:)` and pass data back to the actor via `@Sendable` closure.
 
 ---
 

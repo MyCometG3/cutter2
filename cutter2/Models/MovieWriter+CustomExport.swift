@@ -654,6 +654,10 @@ extension MovieWriter {
         }
     }
     
+    /// `@unchecked Sendable` rationale:
+    /// `cancelParams` is only accessed on `customQueue` for sequential processing.
+    /// The `channels` array is read only from `customQueue.async` blocks inside `cancelCustomMovie()`.
+    /// No data races are possible.
     private struct cancelParams: @unchecked Sendable {
         let channels: [SampleBufferChannel]
     }
@@ -686,6 +690,10 @@ extension MovieWriter {
         //}
     }
     
+    /// `@unchecked Sendable` rationale:
+    /// `didReadParams` is confined to sequential processing on `customQueue`.
+    /// `channel` and `buffer` are processed serially on `customQueue` and
+    /// accessed only from the `didRead` callback. No data races.
     private struct didReadParams: @unchecked Sendable {
         let channel: SampleBufferChannel
         let buffer: CMSampleBuffer

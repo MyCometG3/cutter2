@@ -82,9 +82,11 @@ extension MovieMutator {
         
         let formats: [Any] = (vTracks[0]).formatDescriptions
         guard !formats.isEmpty else { NSSound.beep(); return nil }
-        // formats[0] is CMFormatDescription (CF type). as! is safe: the compiler
-        // guarantees the cast always succeeds. as? is rejected by Swift 6 strict
-        // concurrency ("will always succeed"). Index 0 is safe after isEmpty guard.
+        // formats[0] is CMFormatDescription (CF type). as! is safe: the Swift
+        // compiler guarantees the cast always succeeds ("conditional downcast
+        // will always succeed"). as? is rejected by the compiler for this reason.
+        // If the SDK ever changes the type hierarchy, the force-cast will trap
+        // loudly rather than silently misbehave. Index 0 is safe after isEmpty guard.
         let desc = formats[0] as! CMFormatDescription
         
         dict[dimensionsKey] = CMVideoFormatDescriptionGetPresentationDimensions(desc,
@@ -133,9 +135,11 @@ extension MovieMutator {
         
         let vTracks: [AVMutableMovieTrack] = movie.tracks(withMediaType: .video)
         for track in vTracks {
-            // CMFormatDescription is a CF type. as! is safe: the compiler guarantees
-            // the cast always succeeds. as? is rejected by Swift 6 strict concurrency
-            // ("will always succeed").
+            // CMFormatDescription is a CF type. as! is safe: the Swift compiler
+            // guarantees the cast always succeeds ("conditional downcast will
+            // always succeed"). as? is rejected by the compiler for this reason.
+            // If the SDK ever changes the type hierarchy, the force-cast will trap
+            // loudly rather than silently misbehave.
             let formats = track.formatDescriptions as! [CMFormatDescription]
             
             // Verify if track.encodedDimension is equal to target dimensions

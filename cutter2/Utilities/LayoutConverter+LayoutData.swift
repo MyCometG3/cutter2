@@ -69,26 +69,26 @@ extension LayoutConverter {
     // MARK: - AudioChannelLayoutData helpers
     /* ============================================ */
     
-    func dataFor(tag: AudioChannelLayoutTag) -> AudioChannelLayoutData {
-        precondition(tag != 0, "ERROR: AudioChannelLayoutTag must not be zero")
-        precondition(tag != kAudioChannelLayoutTag_UseChannelDescriptions, "ERROR: AudioChannelLayoutTag must not be kAudioChannelLayoutTag_UseChannelDescriptions")
-        precondition(tag != kAudioChannelLayoutTag_UseChannelBitmap, "ERROR: AudioChannelLayoutTag must not be kAudioChannelLayoutTag_UseChannelBitmap")
+    func dataFor(tag: AudioChannelLayoutTag) -> AudioChannelLayoutData? {
+        guard tag != 0 else { return nil }
+        guard tag != kAudioChannelLayoutTag_UseChannelDescriptions else { return nil }
+        guard tag != kAudioChannelLayoutTag_UseChannelBitmap else { return nil }
         let count: Int = dataSize(descCount: 0)
         var aclData: Data = Data.init(count: count)
         aclData.withUnsafeMutableBytes {(p: UnsafeMutableRawBufferPointer) in
-            guard let baseAddress: UnsafeMutableRawPointer = p.baseAddress else { preconditionFailure("ERROR: Invalid AudioChannelLayoutData") }
+            let baseAddress: UnsafeMutableRawPointer = p.baseAddress!
             let ptr: MutableLayoutPtr = baseAddress.bindMemory(to: AudioChannelLayout.self, capacity: 1)
             ptr.pointee.mChannelLayoutTag = tag
         }
         return aclData
     }
     
-    func dataFor(bitmap: AudioChannelBitmap) -> AudioChannelLayoutData {
-        precondition(bitmap != [], "ERROR: AudioChannelBitmap must not be empty")
+    func dataFor(bitmap: AudioChannelBitmap) -> AudioChannelLayoutData? {
+        guard bitmap != [] else { return nil }
         let count: Int = dataSize(descCount: 0)
         var aclData: Data = Data.init(count: count)
         aclData.withUnsafeMutableBytes {(p: UnsafeMutableRawBufferPointer) in
-            guard let baseAddress: UnsafeMutableRawPointer = p.baseAddress else { preconditionFailure("ERROR: Invalid AudioChannelLayoutData") }
+            let baseAddress: UnsafeMutableRawPointer = p.baseAddress!
             let ptr: MutableLayoutPtr = baseAddress.bindMemory(to: AudioChannelLayout.self, capacity: 1)
             ptr.pointee.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap
             ptr.pointee.mChannelBitmap = bitmap
@@ -96,13 +96,13 @@ extension LayoutConverter {
         return aclData
     }
     
-    func dataFor(descriptions array: [AudioChannelDescription]) -> AudioChannelLayoutData {
+    func dataFor(descriptions array: [AudioChannelDescription]) -> AudioChannelLayoutData? {
         let acDescCount = array.count
-        precondition(acDescCount > 0, "ERROR: AudioChannelDescription array must not be empty")
+        guard acDescCount > 0 else { return nil }
         let count: Int = dataSize(descCount: acDescCount)
         var aclData: Data = Data.init(count: count)
         aclData.withUnsafeMutableBytes {(p: UnsafeMutableRawBufferPointer) in
-            guard let baseAddress: UnsafeMutableRawPointer = p.baseAddress else { preconditionFailure("ERROR: Invalid AudioChannelLayoutData") }
+            let baseAddress: UnsafeMutableRawPointer = p.baseAddress!
             let ptr: MutableLayoutPtr = baseAddress.bindMemory(to: AudioChannelLayout.self, capacity: 1)
             ptr.pointee.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions
             ptr.pointee.mNumberChannelDescriptions = UInt32(acDescCount)

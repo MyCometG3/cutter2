@@ -106,7 +106,7 @@ extension LayoutConverter {
             tag = tag1
         }
         if (tag & 0xFFFF0000) != kAudioChannelLayoutTag_Unknown {
-            let data = dataFor(tag: tag)
+            guard let data = dataFor(tag: tag) else { return nil }
             return data
         } else {
             return nil
@@ -121,7 +121,7 @@ extension LayoutConverter {
         guard let pos = extractChannelLabelSet(from: aclData) else { return nil }
         let tag: AudioChannelLayoutTag = channelLayoutTagLPCMForChannelLabelSet(pos)
         if (tag & 0xFFFF0000) != kAudioChannelLayoutTag_Unknown {
-            let data = dataFor(tag: tag)
+            guard let data = dataFor(tag: tag) else { return nil }
             return data
         } else {
             return nil
@@ -136,7 +136,7 @@ extension LayoutConverter {
         guard let pos = extractChannelLabelSet(from: aclData) else { return nil }
         let bitmap: AudioChannelBitmap = channelBitmapForChannelLabelSet(pos)
         if bitmap != [] {
-            let data = dataFor(bitmap: bitmap)
+            guard let data = dataFor(bitmap: bitmap) else { return nil }
             return data
         } else {
             return nil
@@ -151,7 +151,7 @@ extension LayoutConverter {
         guard let pos = extractChannelLabelSet(from: aclData) else { return nil }
         let descs: [AudioChannelDescription] = channelDescriptionsForChannelLabelSet(pos)
         if descs.count > 0 {
-            let data = dataFor(descriptions: descs)
+            guard let data = dataFor(descriptions: descs) else { return nil }
             return data
         } else {
             return nil

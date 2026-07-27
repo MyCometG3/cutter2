@@ -211,8 +211,11 @@ final class UtilitiesTests: XCTestCase {
     
     func testLayoutConverterConvertsHeaderOnlyAAC51Layout() throws {
         let converter = LayoutConverter()
-        let sourceData = converter.dataFor(tag: kAudioChannelLayoutTag_AAC_5_1)
-        
+        guard let sourceData = converter.dataFor(tag: kAudioChannelLayoutTag_AAC_5_1) else {
+            XCTFail("Expected dataFor(tag:) to return non-nil for valid tag")
+            return
+        }
+
         guard let convertedData = converter.convertAsAACTag(from: sourceData) else {
             XCTFail("Expected header-only AAC 5.1 layout to convert")
             return

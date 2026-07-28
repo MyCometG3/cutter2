@@ -119,7 +119,14 @@ extension Document {
             progressTask.cancel()
         }
         
-        return try await PerformanceMetrics.shared.measureAsync(PerformanceMetrics.Operation.fileExport) {
+        // Select metric name based on operationName to avoid mixing write/export metrics
+        let metricName: String = switch operationName {
+        case "write": PerformanceMetrics.Operation.fileSave
+        case "custom export": PerformanceMetrics.Operation.customExport
+        default: PerformanceMetrics.Operation.fileExport
+        }
+        
+        return try await PerformanceMetrics.shared.measureAsync(metricName) {
             try await operation(mutator)
         }
     }

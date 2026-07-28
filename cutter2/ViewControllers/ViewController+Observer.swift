@@ -31,10 +31,13 @@ extension ViewController {
             guard let self else { return }
             guard let newValue = change.newValue, let newBool = newValue as? Bool else { return }
             
-            // ★ 反転ロジックを維持: useStepMode=true → mimicJKLcombination=false
-            if self.mimicJKLcombination != newBool {
-                self.mimicJKLcombination = newBool
-                self.applyMode()
+            // Inversion logic preserved: useStepMode=true → mimicJKLcombination=false
+            let inverted = !newBool
+            ActorUtilities.performSyncOnMainActor {
+                if self.mimicJKLcombination != inverted {
+                    self.mimicJKLcombination = inverted
+                    self.applyMode()
+                }
             }
         }
     }

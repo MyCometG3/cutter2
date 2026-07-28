@@ -62,6 +62,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     // Notification Observer
     internal var resizeObserver: NSObjectProtocol? = nil
     internal var updateObserver: NSObjectProtocol? = nil
+    internal var stepModeObservation: NSKeyValueObservation? = nil
     
     /* ============================================ */
     // MARK: - public properties

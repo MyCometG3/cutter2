@@ -119,7 +119,9 @@ extension Document {
             progressTask.cancel()
         }
         
-        return try await operation(mutator)
+        return try await PerformanceMetrics.shared.measureAsync(PerformanceMetrics.Operation.fileExport) {
+            try await operation(mutator)
+        }
     }
     
     internal func export(to url: URL, ofType typeName: String, preset: String) async throws {

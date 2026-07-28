@@ -9,6 +9,13 @@
 import Cocoa
 import AVFoundation
 
+extension UserDefaults {
+    @objc dynamic var useStepMode: Bool {
+        get { bool(forKey: "useStepMode") }
+        set { set(newValue, forKey: "useStepMode") }
+    }
+}
+
 /* ============================================ */
 // MARK: - Observer utilities
 /* ============================================ */
@@ -20,35 +27,21 @@ extension ViewController {
     /* ============================================ */
     
     internal func addUserDefaultObserver() {
-        let defaults = UserDefaults.standard
-        defaults.addObserver(self,
-                             forKeyPath: keyPathStepMode,
-                             options: [.initial, .old,.new],
-                             context: nil)
+        stepModeObservation = UserDefaults.standard.observe(\.useStepMode, options: [.initial, .new]) { [weak self] defaults, change in
+            guard let self else { return }
+            guard let newValue = change.newValue, let newBool = newValue as? Bool else { return }
+            
+            // ★ 反転ロジックを維持: useStepMode=true → mimicJKLcombination=false
+            if self.mimicJKLcombination != newBool {
+                self.mimicJKLcombination = newBool
+                self.applyMode()
+            }
+        }
     }
     
     internal func removeUserDefaultsObserver() {
-        let defaults = UserDefaults.standard
-        defaults.removeObserver(self,
-                                forKeyPath: keyPathStepMode)
-    }
-    
-    override nonisolated func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey:Any]?,
-                                           context: UnsafeMutableRawPointer?) {
-        guard let keyPath = keyPath else { return }
-        guard let change: [NSKeyValueChangeKey:Any] = change else { return }
-        guard let newAny = change[.newKey] else { return }
-        
-        if keyPath == keyPathStepMode, let newNumber = newAny as? NSNumber {
-            let new: Bool = !newNumber.boolValue
-            ActorUtilities.performSyncOnMainActor {
-                if mimicJKLcombination != new {
-                    mimicJKLcombination = new
-                    
-                    applyMode()
-                }
-            }
-        }
+        stepModeObservation?.invalidate()
+        stepModeObservation = nil
     }
     
     /* ============================================ */

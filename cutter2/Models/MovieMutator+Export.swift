@@ -50,20 +50,26 @@ extension MovieMutator {
     }
     
     public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws {
-        try await withMovieWriter { movieWriter in
-            try await movieWriter.exportMovie(to: url, fileType: type, presetName: preset)
+        try await PerformanceMetrics.shared.measureAsync(PerformanceMetrics.Operation.videoExport) {
+            try await withMovieWriter { movieWriter in
+                try await movieWriter.exportMovie(to: url, fileType: type, presetName: preset)
+            }
         }
     }
     
     public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String: any Sendable]) async throws {
-        try await withMovieWriter { movieWriter in
-            try await movieWriter.exportCustomMovie(to: url, fileType: type, settings: param)
+        try await PerformanceMetrics.shared.measureAsync(PerformanceMetrics.Operation.customExport) {
+            try await withMovieWriter { movieWriter in
+                try await movieWriter.exportCustomMovie(to: url, fileType: type, settings: param)
+            }
         }
     }
     
     public func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) async throws {
-        try await withMovieWriter { movieWriter in
-            try await movieWriter.writeMovie(to: url, fileType: type, copySampleData: selfContained)
+        try await PerformanceMetrics.shared.measureAsync(PerformanceMetrics.Operation.fileSave) {
+            try await withMovieWriter { movieWriter in
+                try await movieWriter.writeMovie(to: url, fileType: type, copySampleData: selfContained)
+            }
         }
     }
     

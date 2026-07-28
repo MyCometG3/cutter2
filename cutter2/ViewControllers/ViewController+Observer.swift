@@ -10,9 +10,11 @@ import Cocoa
 import AVFoundation
 
 extension UserDefaults {
+    private static let useStepModeKey = "useStepMode"
+    
     @objc dynamic var useStepMode: Bool {
-        get { bool(forKey: "useStepMode") }
-        set { set(newValue, forKey: "useStepMode") }
+        get { bool(forKey: Self.useStepModeKey) }
+        set { set(newValue, forKey: Self.useStepModeKey) }
     }
 }
 
@@ -29,7 +31,7 @@ extension ViewController {
     internal func addUserDefaultObserver() {
         stepModeObservation = UserDefaults.standard.observe(\.useStepMode, options: [.initial, .new]) { [weak self] defaults, change in
             guard let self else { return }
-            guard let newValue = change.newValue, let newBool = newValue as? Bool else { return }
+            guard let newBool = change.newValue else { return }
             
             // Inversion logic preserved: useStepMode=true → mimicJKLcombination=false
             let inverted = !newBool

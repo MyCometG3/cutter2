@@ -7,9 +7,6 @@ import XCTest
 import AVFoundation
 @testable import cutter2
 
-nonisolated(unsafe) private var viewControllerTestStorage: ViewController?
-nonisolated(unsafe) private var delegateTestStorage: MockViewControllerDelegate?
-
 @MainActor
 private final class MockViewControllerDelegate: ViewControllerDelegate {
     var setRateCalls: [Int] = []
@@ -80,26 +77,20 @@ private final class MockViewControllerDelegate: ViewControllerDelegate {
 
 @MainActor
 final class ViewControllerKeyEventTests: XCTestCase {
-    nonisolated(unsafe) private var viewController: ViewController!
-    nonisolated(unsafe) private var mockDelegate: MockViewControllerDelegate!
+    private var viewController: ViewController!
+    private var mockDelegate: MockViewControllerDelegate!
 
-    override func setUp() {
-        super.setUp()
-        MainActor.assumeIsolated {
-            viewControllerTestStorage = ViewController(nibName: nil, bundle: nil)
-            delegateTestStorage = MockViewControllerDelegate()
-            viewControllerTestStorage?.delegate = delegateTestStorage
-        }
-        viewController = viewControllerTestStorage
-        mockDelegate = delegateTestStorage
+    override func setUp() async throws {
+        try await super.setUp()
+        viewController = ViewController(nibName: nil, bundle: nil)
+        mockDelegate = MockViewControllerDelegate()
+        viewController.delegate = mockDelegate
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         viewController = nil
         mockDelegate = nil
-        viewControllerTestStorage = nil
-        delegateTestStorage = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     private func event(
@@ -150,7 +141,7 @@ final class ViewControllerKeyEventTests: XCTestCase {
         XCTAssertEqual(mockDelegate.togglePlayCalls, 1)
     }
 
-    func testJKLMode_IJK_Combo_CallsSetSlow() {
+    func testJKLMode_JK_Combo_CallsSetSlow() {
         viewController.mimicJKLcombination = true
         viewController.keyDown(with: event(keyCode: 0x26, characters: "j"))
         viewController.keyDown(with: event(keyCode: 0x28, characters: "k"))

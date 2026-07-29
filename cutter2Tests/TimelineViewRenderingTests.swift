@@ -7,24 +7,18 @@ import XCTest
 import Cocoa
 @testable import cutter2
 
-nonisolated(unsafe) private var timelineViewTestStorage: TimelineView?
-
 @MainActor
 final class TimelineViewRenderingTests: XCTestCase {
-    nonisolated(unsafe) private var timelineView: TimelineView!
+    private var timelineView: TimelineView!
 
-    override func setUp() {
-        super.setUp()
-        MainActor.assumeIsolated {
-            timelineViewTestStorage = TimelineView(frame: CGRect(x: 0, y: 0, width: 200, height: 50))
-        }
-        timelineView = timelineViewTestStorage
+    override func setUp() async throws {
+        try await super.setUp()
+        timelineView = TimelineView(frame: CGRect(x: 0, y: 0, width: 200, height: 50))
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         timelineView = nil
-        timelineViewTestStorage = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     func testPointOfPosition_CalculatesCorrectX() {

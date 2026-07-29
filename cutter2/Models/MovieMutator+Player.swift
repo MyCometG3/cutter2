@@ -24,7 +24,8 @@ extension MovieMutator {
     /// - Throws: Errors thrown by async video-composition generation on macOS 15+.
     public func makePlayerItem() async throws -> AVPlayerItem {
         guard let asset = internalMovie.copy() as? AVAsset else {
-            preconditionFailure("copy() of AVMutableMovie returned non-AVAsset")
+            LoggingSystem.video.error("copy() of AVMutableMovie returned non-AVAsset")
+            throw CocoaError(.fileReadUnknown)
         }
         let playerItem: AVPlayerItem = AVPlayerItem(asset: asset)
         if let comp = try await makeVideoComposition(for: asset) {

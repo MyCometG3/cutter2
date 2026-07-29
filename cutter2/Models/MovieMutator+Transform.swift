@@ -21,11 +21,17 @@ extension MovieMutator {
     
     //
     private func doReplace(_ movie: Data, _ range: CMTimeRange, _ time: CMTime) {
-        precondition(validateRange(range, false), "ERROR: invalid range")
+        guard validateRange(range, false) else {
+            LoggingSystem.video.error("invalid range in doReplace")
+            return
+        }
         
         // perform replacement
         do {
-            precondition(reloadMovie(from: movie), "ERROR: reloadMovie failed")
+            guard reloadMovie(from: movie) else {
+                LoggingSystem.video.error("reloadMovie failed in doReplace")
+                return
+            }
             
             // Update Marker
             let movie = internalMovie
@@ -38,7 +44,10 @@ extension MovieMutator {
     //
     private func undoReplace(_ data: Data, _ range: CMTimeRange, _ time: CMTime) {
         let reloadDone: Bool = reloadAndNotify(from: data, range: range, time: time)
-        precondition(reloadDone, "ERROR: reloadAndNotify failed")
+        guard reloadDone else {
+            LoggingSystem.video.error("reloadAndNotify failed in undoReplace")
+            return
+        }
     }
     
     //
@@ -130,7 +139,8 @@ extension MovieMutator {
         var count: Int = 0
         
         guard let movie = internalMovie.mutableCopy() as? AVMutableMovie else {
-            preconditionFailure("mutableCopy() of AVMutableMovie returned non-AVMutableMovie")
+            LoggingSystem.video.error("mutableCopy() of AVMutableMovie returned non-AVMutableMovie")
+            return false
         }
         
         let vTracks: [AVMutableMovieTrack] = movie.tracks(withMediaType: .video)

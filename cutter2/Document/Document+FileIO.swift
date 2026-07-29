@@ -244,14 +244,12 @@ extension Document {
                 let fileType: AVFileType = AVFileType.init(rawValue: typeName)
                 guard fileType == .mov else { return }
                 
-                guard let accessoryVC = self.accessoryVC else { preconditionFailure("Unexpected nil accessoryVC detected.") }
+                guard let accessoryVC = self.accessoryVC else { return }
                 let saveAsRefMov: Bool = (accessoryVC.selfContained == false)
                 guard saveAsRefMov else { return }
                 
                 // SaveAs reference movie - Need to keep readonly access to original
-                guard let app = NSApp.delegate as? AppDelegate else {
-                    preconditionFailure("NSApp.delegate is not AppDelegate")
-                }
+                guard let app = NSApp.delegate as? AppDelegate else { return }
                 app.addBookmark(for: srcURL)
             }
         }

@@ -161,12 +161,21 @@ class TimelineView: NSView, CALayerDelegate {
     // MARK: - NSView methods
     /* ============================================ */
     
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        initializeLayers()
+    }
+
     required init?(coder decoder: NSCoder) {
         super.init(coder: decoder)
+        initializeLayers()
+    }
+
+    private func initializeLayers() {
         self.wantsLayer = true
         
         setupLabel()
         setupSublayer()
-        needsUpdateTrackingArea = true // setupTrackingArea()
+        needsUpdateTrackingArea = true
     }
 }

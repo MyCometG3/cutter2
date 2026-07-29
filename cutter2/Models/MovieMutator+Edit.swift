@@ -31,7 +31,8 @@ extension MovieMutator {
         
         // Prepare clip
         guard let aClip = internalMovie.mutableCopy() as? AVMutableMovie else {
-            preconditionFailure("mutableCopy() of AVMutableMovie returned non-AVMutableMovie")
+            LoggingSystem.video.error("mutableCopy() of AVMutableMovie returned non-AVMutableMovie")
+            return nil
         }
         var clip = aClip
         if clip.timescale != range.duration.timescale {

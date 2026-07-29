@@ -146,13 +146,14 @@ extension Document {
         let storyboard: NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
         let sid: NSStoryboard.SceneIdentifier = "CAPARSheet Controller"
         guard let caparWC = storyboard.instantiateController(withIdentifier: sid) as? NSWindowController else {
-            preconditionFailure("Failed to instantiate CAPARSheet Controller")
+            NSSound.beep()
+            return
         }
         // caparWC.loadWindow()
         
         // Prepare CAPAR ViewController
-        guard let contVC = caparWC.contentViewController else { preconditionFailure("Unexpected nil contentViewController detected.") }
-        guard let caparVC = contVC as? CAPARViewController else { preconditionFailure("Unexpected nil CAPARViewController detected.") }
+        guard let contVC = caparWC.contentViewController else { NSSound.beep(); return }
+        guard let caparVC = contVC as? CAPARViewController else { NSSound.beep(); return }
         guard caparVC.applySource(dict) else { return }
         
         // Show CAPAR Sheet

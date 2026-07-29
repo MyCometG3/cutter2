@@ -347,7 +347,8 @@ extension MovieWriter {
     public func validateExportSession(fileType type: AVFileType, presetName preset: String?) async -> Bool {
         let preset: String = (preset ?? AVAssetExportPresetPassthrough)
         guard let movie = internalMovie.copy() as? AVAsset else {
-            preconditionFailure("copy() of AVMutableMovie returned non-AVAsset")
+            LoggingSystem.video.error("copy() of AVMutableMovie returned non-AVAsset")
+            return false
         }
         
         let compatible: Bool

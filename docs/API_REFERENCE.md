@@ -129,96 +129,92 @@ Core class for movie editing operations.
 
 ```swift
 class MovieMutator: MovieMutatorBase {
-    /// Cuts a time range from the movie
-    /// - Parameters:
-    ///   - start: Start time
-    ///   - end: End time
-    ///   - undoManager: Undo manager for the operation
-    /// - Throws: EditError if operation fails
-    func cut(from start: CMTime, to end: CMTime, using undoManager: UndoManagerWrapper) throws
+    /// Copies the current selection to the clipboard
+    func copySelection()
     
-    /// Copies a time range to the clipboard
-    /// - Parameters:
-    ///   - start: Start time
-    ///   - end: End time
-    /// - Throws: EditError if operation fails
-    func copy(from start: CMTime, to end: CMTime) throws
+    /// Cuts the current selection, copying it to the clipboard
+    /// - Parameter undoManager: Undo manager for the operation
+    func cutSelection(using undoManager: UndoManagerWrapper)
     
-    /// Pastes clipboard content at specified time
-    /// - Parameters:
-    ///   - time: Insertion time
-    ///   - undoManager: Undo manager for the operation
-    /// - Throws: EditError if operation fails
-    func paste(at time: CMTime, using undoManager: UndoManagerWrapper) throws
+    /// Pastes clipboard content at the insertion time
+    /// - Parameter undoManager: Undo manager for the operation
+    func pasteAtInsertionTime(using undoManager: UndoManagerWrapper)
     
-    /// Deletes a time range
-    /// - Parameters:
-    ///   - start: Start time
-    ///   - end: End time
-    ///   - undoManager: Undo manager for the operation
-    /// - Throws: EditError if operation fails
-    func delete(from start: CMTime, to end: CMTime, using undoManager: UndoManagerWrapper) throws
+    /// Deletes the current selection
+    /// - Parameter undoManager: Undo manager for the operation
+    func deleteSelection(using undoManager: UndoManagerWrapper)
 }
 ```
 
 #### Transform Operations
 
 ```swift
-/// Modifies clean aperture settings
-/// - Parameters:
-///   - width: Clean aperture width
-///   - height: Clean aperture height
-///   - horizontalOffset: Horizontal offset
-///   - verticalOffset: Vertical offset
-///   - undoManager: Undo manager
-/// - Throws: TransformError if operation fails
-func modifyCleanAperture(width: Int, height: Int, 
-                        horizontalOffset: Int, verticalOffset: Int,
-                        using undoManager: UndoManagerWrapper) throws
+/// Reads clean aperture / pixel aspect atoms from the movie
+/// - Returns: Dictionary of clap/pasp values, or nil if absent
+func clappaspDictionary() -> [AnyHashable: Any]?
 
-/// Modifies pixel aspect ratio
+/// Applies clean aperture / pixel aspect changes
 /// - Parameters:
-///   - hSpacing: Horizontal spacing
-///   - vSpacing: Vertical spacing
-///   - undoManager: Undo manager
-/// - Throws: TransformError if operation fails
-func modifyPixelAspectRatio(hSpacing: Int, vSpacing: Int,
-                            using undoManager: UndoManagerWrapper) throws
+///   - dict: Clap/pasp dictionary (from `clappaspDictionary()`)
+///   - undoManager: Undo manager for the operation
+/// - Returns: true if the operation succeeded
+func applyClapPasp(_ dict: [AnyHashable: Any], using undoManager: UndoManagerWrapper) -> Bool
 ```
 
 #### Export Operations
 
 ```swift
-/// Exports movie with custom settings
+/// Exports movie with a preset (H.264, HEVC, ProRes)
 /// - Parameters:
 ///   - url: Destination URL
-///   - videoCodec: Video codec type
-///   - audioCodec: Audio codec type
-///   - progressCallback: Progress update callback
-/// - Throws: ExportError if export fails
-func export(to url: URL, 
-           videoCodec: VideoCodec, 
-           audioCodec: AudioCodec,
-           progress progressCallback: @escaping (Double) -> Void) async throws
+///   - fileType: Output file type (.mov, .mp4, .m4v, .m4a)
+///   - preset: Preset name (nil for standard export)
+func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws
+
+/// Exports movie with custom settings (codec, bitrate, clap/pasp)
+/// - Parameters:
+///   - url: Destination URL
+///   - fileType: Output file type
+///   - settings: Custom export settings dictionary
+func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String: any Sendable]) async throws
+
+/// Saves movie (self-contained or reference)
+/// - Parameters:
+///   - url: Destination URL
+///   - fileType: Output file type
+///   - copySampleData: true for self-contained, false for reference movie
+func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) async throws
+
+/// Cancels an in-progress export
+func cancel() async
 ```
 
 ### MovieWriter
 
-Handles movie export and transcoding.
+Handles movie export and transcoding as an actor, isolating export session lifecycle from the main actor.
 
 ```swift
-class MovieWriter {
-    /// Exports a movie with specified settings
-    /// - Parameters:
-    ///   - asset: Source asset
-    ///   - url: Destination URL
-    ///   - settings: Export settings
-    ///   - progress: Progress callback
-    /// - Returns: Result indicating success or failure
-    func export(asset: AVAsset, 
-               to url: URL, 
-               settings: ExportSettings,
-               progress: @escaping (Double) -> Void) async -> Result<Void, Error>
+actor MovieWriter: SampleBufferChannelDelegate {
+    public init(params: MovieWriterParams)
+    
+    /// Exports movie with a preset (AVAssetExportSession)
+    func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws
+    
+    /// Exports movie with custom settings (AVAssetReader/Writer)
+    func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String: any Sendable]) async throws
+    
+    /// Saves movie (self-contained or reference)
+    func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) async throws
+    
+    /// Cancels an in-progress export
+    func cancelExport()
+    
+    /// Cancels an in-progress custom export
+    func cancelCustomMovie()
+    
+    /// Starts/stops export session polling
+    func exportSessionPollingStart()
+    func exportSessionPollingStop()
 }
 ```
 
@@ -274,20 +270,16 @@ class ViewController: NSViewController {
 
 ### ErrorUtilities
 
-Centralized error handling and presentation.
+Shared utilities for error handling.
 
 ```swift
-class ErrorUtilities {
-    /// Presents an error to the user
+public struct ErrorUtilities {
+    /// Throw an error with a specific reason.
     /// - Parameters:
-    ///   - error: The error to present
-    ///   - window: Optional window for modal presentation
-    static func presentError(_ error: Error, window: NSWindow? = nil)
-    
-    /// Creates a user-friendly error description
-    /// - Parameter error: The error to describe
-    /// - Returns: Localized error description
-    static func errorDescription(for error: Error) -> String
+    ///   - error: The error conforming to NSErrorConvertible to throw.
+    ///   - reason: An optional reason for the error.
+    /// - Returns: Never
+    public static func throwError<E: NSErrorConvertible>(_ error: E, reason: String? = nil) throws -> Never
 }
 ```
 
@@ -563,33 +555,31 @@ Protocol for Document ↔ ViewController communication.
 
 ```swift
 @MainActor
-protocol ViewControllerDelegate: AnyObject {
-    /// Returns the current player item
-    func playerItem() -> AVPlayerItem?
-    
-    /// Returns the current playback time
-    func currentTime() -> CMTime
-    
-    /// Returns the selection start time
-    func startTime() -> CMTime
-    
-    /// Returns the selection end time
-    func endTime() -> CMTime
-    
-    /// Requests GUI update
-    func requestUpdateGUI()
-    
-    /// Performs cut operation
-    func cut(from: CMTime, to: CMTime)
-    
-    /// Performs copy operation
-    func copy(from: CMTime, to: CMTime)
-    
-    /// Performs paste operation
-    func paste(at: CMTime)
-    
-    /// Performs delete operation
-    func delete(from: CMTime, to: CMTime)
+protocol ViewControllerDelegate: TimelineUpdateDelegate, Sendable {
+    func hasSelection() -> Bool
+    func hasDuration() -> Bool
+    func hasClipOnPBoard() -> Bool
+    //
+    func debugInfo()
+    func timeOfPosition(_ percentage: Float64) -> CMTime
+    func positionOfTime(_ time: CMTime) -> Float64
+    //
+    func doCut() throws
+    func doCopy() throws
+    func doPaste() throws
+    func doDelete() throws
+    func selectAll()
+    //
+    func doStepByCount(_ count: Int64, _ resetStart: Bool, _ resetEnd: Bool)
+    func doStepBySecond(_ offset: Float64, _ resetStart: Bool, _ resetEnd: Bool)
+    func doVolumeOffset(_ percent: Int)
+    //
+    func doMoveLeft(_ optFlag: Bool, _ shiftFlag: Bool, _ resetStart: Bool, _ resetEnd: Bool)
+    func doMoveRight(_ optFlag: Bool, _ shiftFlag: Bool, _ resetStart: Bool, _ resetEnd: Bool)
+    //
+    func doSetSlow(_ ratio: Float)
+    func doSetRate(_ offset: Int)
+    func doTogglePlay()
 }
 ```
 
@@ -598,18 +588,21 @@ protocol ViewControllerDelegate: AnyObject {
 Protocol for Timeline ↔ ViewController communication.
 
 ```swift
+@MainActor
 protocol TimelineUpdateDelegate: AnyObject {
-    /// Called when cursor position changes
-    func didUpdateCursor(to time: CMTime)
-    
-    /// Called when selection start changes
-    func didUpdateStart(to time: CMTime)
-    
-    /// Called when selection end changes
-    func didUpdateEnd(to time: CMTime)
-    
-    /// Returns presentation info at specified time
-    func presentationInfo(at time: CMTime) -> PresentationInfo?
+    // called on mouse down/drag event
+    func didUpdateCursor(to position: Float64)
+    func didUpdateStart(to position: Float64)
+    func didUpdateEnd(to position: Float64)
+    func didUpdateSelection(from fromPos: Float64, to toPos: Float64)
+    //
+    func presentationInfo(at position: Float64) -> PresentationInfo?
+    func previousInfo(of range: CMTimeRange) -> PresentationInfo?
+    func nextInfo(of range: CMTimeRange) -> PresentationInfo?
+    //
+    func doSetCurrent(to goTo: anchor)
+    func doSetStart(to goTo: anchor)
+    func doSetEnd(to goTo: anchor)
 }
 ```
 
@@ -622,30 +615,42 @@ protocol TimelineUpdateDelegate: AnyObject {
 Errors related to document operations.
 
 ```swift
-enum DocumentError: Error {
-    case invalidFormat(String)
-    case readFailed(String, underlying: Error?)
-    case writeFailed(String, underlying: Error?)
-    case exportFailed(String, underlying: Error?)
-    case invalidURL
-    case bookmarkFailed
+enum DocumentError: Error, NSErrorConvertible {
+    case incompatibleFileType
+    case unableToOpenFile
+    case emptyMovie
+    case unsupportedSaveOperation
+    case unsupportedFileExtension
+    case fileTypeAndExtensionMismatch
+    case overwriteSelfContainedWithReference
+    case internalError
+    case modifyCaparFailed
     
-    var localizedDescription: String {
-        // Returns user-friendly error message
+    var nsError: NSError {
+        // Returns NSError with localized message
     }
 }
 ```
 
-### EditError
+### MovieWriterError
 
-Errors related to editing operations.
+Errors related to movie writing and export operations.
 
 ```swift
-enum EditError: Error {
-    case invalidTimeRange
-    case clipboardEmpty
-    case operationFailed(String)
-    case undoFailed
+enum MovieWriterError: Error, NSErrorConvertible {
+    case compatibilityError
+    case assetReaderWriterUnavailable
+    case anotherExportSessionRunning
+    case movieWriterFailed
+    case assetReaderWriterFailed
+    case operationCancelled
+    case unknown
+    
+    static let errorDomain = "MovieWriterError"
+    
+    var nsError: NSError {
+        // Returns NSError with localized message
+    }
 }
 ```
 
@@ -653,45 +658,63 @@ enum EditError: Error {
 
 ## Types and Enums
 
-### VideoCodec
+### boxSize
 
-Supported video codecs for export.
+Movie box size breakdown (header / video / audio / other tracks).
 
 ```swift
-enum VideoCodec: String {
-    case h264 = "avc1"
-    case hevc = "hvc1"
-    case proRes422 = "apcn"
-    case proRes422LT = "apcs"
-    case proRes422Proxy = "apco"
+public struct boxSize {
+    public internal(set) var headerSize: Int64 = 0
+    public internal(set) var videoSize: Int64 = 0, videoCount: Int64 = 0
+    public internal(set) var audioSize: Int64 = 0, audioCount: Int64 = 0
+    public internal(set) var otherSize: Int64 = 0, otherCount: Int64 = 0
+    
+    public init(headerSize: Int64 = 0, videoSize: Int64 = 0, videoCount: Int64 = 0,
+                audioSize: Int64 = 0, audioCount: Int64 = 0,
+                otherSize: Int64 = 0, otherCount: Int64 = 0)
 }
 ```
 
-### AudioCodec
+### dimensionsType
 
-Supported audio codecs for export.
+Type of dimensions for `dimensions(of:)`.
 
 ```swift
-enum AudioCodec: String {
-    case aac = "aac"
-    case lpcm16 = "lpcm16"
-    case lpcm24 = "lpcm24"
-    case lpcm32 = "lpcm32"
+public enum dimensionsType {
+    case clean
+    case production
+    case encoded
 }
 ```
 
-### ExportSettings
+### RefOrSelfCont
 
-Export configuration structure.
+Option set describing whether the movie contains reference and/or self-contained tracks.
 
 ```swift
-struct ExportSettings {
-    let videoCodec: VideoCodec
-    let audioCodec: AudioCodec
-    let videoBitRate: Int?
-    let audioBitRate: Int?
-    let preserveTransforms: Bool
-    let fileType: AVFileType
+public struct RefOrSelfCont: OptionSet, Sendable {
+    public let rawValue: Int
+    public static let hasReferenceTrack = RefOrSelfCont(rawValue: 1<<0)
+    public static let hasSelfContTrack = RefOrSelfCont(rawValue: 1<<1)
+    
+    public init(rawValue: Int)
+}
+```
+
+### PresentationInfo
+
+Timeline presentation information for a time range.
+
+```swift
+public struct PresentationInfo {
+    public private(set) var timeRange: CMTimeRange
+    public private(set) var startSecond: Float64
+    public private(set) var endSecond: Float64
+    public private(set) var movieDuration: Float64
+    public private(set) var startPosition: Float64
+    public private(set) var endPosition: Float64
+    
+    public init(range: CMTimeRange, of movie: AVMutableMovie)
 }
 ```
 
@@ -708,10 +731,13 @@ let document = try await Document(contentsOf: url, ofType: "mov")
 // Get the mutator
 guard let mutator = document.movieMutator else { return }
 
-// Cut a section
+// Set selection range
 let start = CMTime(seconds: 10, preferredTimescale: 600)
 let end = CMTime(seconds: 20, preferredTimescale: 600)
-try mutator.cut(from: start, to: end, using: document.undoManagerWrapper)
+mutator.selectedTimeRange = CMTimeRange(start: start, end: end)
+
+// Cut the selection
+mutator.cutSelection(using: document.undoManagerWrapper)
 
 // Save changes
 try await document.save(to: url, ofType: "mov", for: .saveOperation)
@@ -720,16 +746,15 @@ try await document.save(to: url, ofType: "mov", for: .saveOperation)
 ### Exporting with Custom Settings
 
 ```swift
-let settings = ExportSettings(
-    videoCodec: .hevc,
-    audioCodec: .aac,
-    videoBitRate: 10_000_000,
-    audioBitRate: 256_000,
-    preserveTransforms: true,
-    fileType: .mp4
-)
+let settings: [String: any Sendable] = [
+    kVideoCodecKey: "avc1", // FourCC: avc1 / hvc1 / apcn / apcs / apco
+    kAudioCodecKey: "aac ", // FourCC: "aac " (AAC) / "lpcm" (LPCM)
+    kVideoKbpsKey: 10_000,
+    kAudioKbpsKey: 256,
+    kCopyOtherMediaKey: true,
+]
 
-try await document.exportMovie(to: outputURL, settings: settings)
+try await document.movieMutator?.exportCustomMovie(to: outputURL, fileType: .mp4, settings: settings)
 ```
 
 ### Handling Errors
@@ -737,10 +762,8 @@ try await document.exportMovie(to: outputURL, settings: settings)
 ```swift
 do {
     try await document.save(to: url, ofType: "mov", for: .saveOperation)
-} catch let error as DocumentError {
-    ErrorUtilities.presentError(error, window: document.windowController?.window)
 } catch {
-    ErrorUtilities.presentError(error)
+    document.showErrorSheet(error)
 }
 ```
 
@@ -799,7 +822,7 @@ public func method(param1: Type1, param2: Type2) throws -> ReturnType {
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture overview
 - [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) - Development practices
-- [CODEBASE_REVIEW.md](archive/reviews/CODEBASE_REVIEW.md) - Detailed code analysis
+- [CODEBASE_REVIEW.md](CODEBASE_REVIEW.md) - Detailed source-level code review findings
 
 ---
 

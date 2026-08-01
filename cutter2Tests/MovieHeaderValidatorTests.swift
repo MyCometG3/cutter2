@@ -44,10 +44,4 @@ final class MovieHeaderValidatorTests: XCTestCase {
             MovieHeaderValidator.ValidationError.invalidDuration.errorDescription?.isEmpty ?? true
         )
     }
-
-    func testInvalidDurationPath() throws {
-        throw XCTSkip(
-            "invalidDuration fixture not constructible via public AVMutableMovie API"
-        )
-    }
 }

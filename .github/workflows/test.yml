@@ -21,7 +21,7 @@ jobs:
     - name: Show Xcode version
       run: xcodebuild -version
       
-    - name: Build for testing
+    - name: Build
       run: |
         xcodebuild clean build-for-testing \
           -project cutter2.xcodeproj \
@@ -37,6 +37,15 @@ jobs:
           -scheme cutter2 \
           -destination 'platform=macOS' \
           -enableCodeCoverage YES \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO
+      
+    - name: Analyze
+      run: |
+        xcodebuild analyze \
+          -project cutter2.xcodeproj \
+          -scheme cutter2 \
+          -destination 'platform=macOS' \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO
       

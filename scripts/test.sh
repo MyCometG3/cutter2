@@ -5,9 +5,9 @@
 # This script runs all tests for the cutter2 application with code coverage enabled.
 # 
 # Test Suite (as of Phase 2.1):
-#   - 7 test files
-#   - 60 total tests (49 functional + 11 localization)
-#   - Expected result: 60/60 passing (100%)
+#   - 15 test files
+#   - 190 total tests (189 passing + 1 skipped)
+#   - Expected result: 189/190 passing (99.5%)
 #
 # Usage: ./scripts/test.sh [derivedDataPath]
 #
@@ -20,7 +20,7 @@
 set -e
 
 echo "🧪 Running cutter2 tests..."
-echo "   Test Suite: 7 files, 60 tests"
+echo "   Test Suite: 15 files, 190 tests"
 echo ""
 
 # Colors for output
@@ -50,8 +50,24 @@ echo "   Derived Data: $DERIVED_DATA_PATH"
 echo "   Code Coverage: Enabled"
 echo ""
 
-# Run tests with code coverage using explicit derived data path
-xcodebuild clean test \
+# Run build, test, and analyze sequentially (xcodebuild does not parallelize these well)
+echo -e "${BLUE}🔨 Building...${NC}"
+xcodebuild clean build \
+  -project cutter2.xcodeproj \
+  -scheme cutter2 \
+  -destination 'platform=macOS' \
+  -derivedDataPath "$DERIVED_DATA_PATH" \
+  CODE_SIGN_IDENTITY="" \
+  CODE_SIGNING_REQUIRED=NO
+
+BUILD_RESULT=$?
+if [ $BUILD_RESULT -ne 0 ]; then
+  echo -e "${RED}❌ Build failed!${NC}"
+  exit 1
+fi
+
+echo -e "${BLUE}🧪 Running tests...${NC}"
+xcodebuild test \
   -project cutter2.xcodeproj \
   -scheme cutter2 \
   -destination 'platform=macOS' \
@@ -61,6 +77,25 @@ xcodebuild clean test \
   CODE_SIGNING_REQUIRED=NO
 
 TEST_RESULT=$?
+if [ $TEST_RESULT -ne 0 ]; then
+  echo -e "${RED}❌ Tests failed!${NC}"
+  exit 1
+fi
+
+echo -e "${BLUE}🔍 Analyzing...${NC}"
+xcodebuild analyze \
+  -project cutter2.xcodeproj \
+  -scheme cutter2 \
+  -destination 'platform=macOS' \
+  -derivedDataPath "$DERIVED_DATA_PATH" \
+  CODE_SIGN_IDENTITY="" \
+  CODE_SIGNING_REQUIRED=NO
+
+ANALYZE_RESULT=$?
+if [ $ANALYZE_RESULT -ne 0 ]; then
+  echo -e "${RED}❌ Analysis failed!${NC}"
+  exit 1
+fi
 
 if [ $TEST_RESULT -eq 0 ]; then
   echo ""
@@ -131,10 +166,10 @@ if [ $TEST_RESULT -eq 0 ]; then
   echo -e "${GREEN}  Test Run Summary${NC}"
   echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo -e "${GREEN}  Status: ✅ All Passed${NC}"
-  echo -e "  Test Files: 7"
-  echo -e "  Total Tests: 60"
-  echo -e "    - Functional Tests: 49"
-  echo -e "    - Localization Tests: 11"
+echo -e "  Test Files: 15"
+echo -e "  Total Tests: 190"
+echo -e "    - Passing: 189"
+echo -e "    - Skipped: 1"
   echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo ""
 else

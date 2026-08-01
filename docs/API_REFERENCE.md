@@ -799,7 +799,7 @@ public func method(param1: Type1, param2: Type2) throws -> ReturnType {
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture overview
 - [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) - Development practices
-- [CODEBASE_REVIEW.md](archive/reviews/CODEBASE_REVIEW.md) - Detailed code analysis
+- [CODEBASE_REVIEW.md](CODEBASE_REVIEW.md) - Detailed source-level code review findings
 
 ---
 

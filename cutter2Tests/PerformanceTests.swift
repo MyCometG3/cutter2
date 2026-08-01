@@ -221,7 +221,7 @@ final class PerformanceTests: XCTestCase {
         
         // Assert on the best of multiple runs
         XCTAssertLessThan(bestOverheadPercent, 30.0,
-            "Performance metrics overhead too high (best of \(iterations) runs: \(String(format: "%.2f", bestOverheadPercent)))%")
+            "Performance metrics overhead too high (best of \(iterations) runs: \(String(format: "%.2f", bestOverheadPercent))%)")
     }
 }
 

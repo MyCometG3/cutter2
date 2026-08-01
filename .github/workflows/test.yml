@@ -23,7 +23,7 @@ jobs:
       
     - name: Build
       run: |
-        xcodebuild clean build \
+        xcodebuild clean build-for-testing \
           -project cutter2.xcodeproj \
           -scheme cutter2 \
           -destination 'platform=macOS' \
@@ -32,7 +32,7 @@ jobs:
       
     - name: Run tests
       run: |
-        xcodebuild test \
+        xcodebuild test-without-building \
           -project cutter2.xcodeproj \
           -scheme cutter2 \
           -destination 'platform=macOS' \

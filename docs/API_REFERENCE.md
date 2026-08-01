@@ -747,8 +747,8 @@ try await document.save(to: url, ofType: "mov", for: .saveOperation)
 
 ```swift
 let settings: [String: any Sendable] = [
-    kVideoCodecKey: "h264",
-    kAudioCodecKey: "aac",
+    kVideoCodecKey: "avc1", // FourCC: avc1 / hvc1 / apcn / apcs / apco
+    kAudioCodecKey: "aac ", // FourCC: "aac " (AAC) / "lpcm" (LPCM)
     kVideoKbpsKey: 10_000,
     kAudioKbpsKey: 256,
     kCopyOtherMediaKey: true,

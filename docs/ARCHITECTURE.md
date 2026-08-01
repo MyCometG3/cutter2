@@ -25,7 +25,7 @@ cutter2 is a document-based macOS video editing application built with Swift and
 
 - **Framework**: AVFoundation (native macOS)
 - **UI Framework**: Cocoa/AppKit
-- **Language**: Swift 6.2.1
+- **Language**: Swift 6.0
 - **Concurrency**: Swift Concurrency (async/await, actors, AsyncStream)
 - **Architecture**: Document-based, MVC pattern with protocol-oriented design
 - **Platform**: macOS 14.0+, Universal Binary (x86_64 + arm64)
@@ -70,11 +70,20 @@ Extensive use of delegates for component communication:
 Swift protocols define clear contracts between components:
 
 ```swift
-protocol ViewControllerDelegate: AnyObject {
-    func playerItem() -> AVPlayerItem?
-    func currentTime() -> CMTime
-    func requestUpdateGUI()
-    // ... more methods
+@MainActor
+protocol ViewControllerDelegate: TimelineUpdateDelegate, Sendable {
+    func hasSelection() -> Bool
+    func hasDuration() -> Bool
+    func hasClipOnPBoard() -> Bool
+    func debugInfo()
+    func timeOfPosition(_ percentage: Float64) -> CMTime
+    func positionOfTime(_ time: CMTime) -> Float64
+    func doCut() throws
+    func doCopy() throws
+    func doPaste() throws
+    func doDelete() throws
+    func selectAll()
+    // ... more methods (step/move/rate control)
 }
 ```
 
@@ -107,7 +116,7 @@ protocol ViewControllerDelegate: AnyObject {
 - `Document+SavePanel.swift` - Save panel UI and configuration
 - `Document+Export.swift` - Export and transcode operations
 - `Document+UI.swift` - Window resizing and video transforms
-- `Document+Delegate.swift` - ViewControllerDelegate implementation
+- `Document+ViewControllerDelegate.swift` - ViewControllerDelegate implementation
 
 **Responsibilities**:
 - File loading and saving (async operations)
@@ -335,14 +344,14 @@ MovieMutatorBase               ~500 lines
 **Core Responsibilities**:
 
 1. **Editing Operations** (`MovieMutator+Edit.swift`)
-   - `cut(from:to:)` - Remove selection, copy to clipboard
-   - `copy(from:to:)` - Copy selection to clipboard
-   - `paste(at:)` - Insert clipboard content
-   - `delete(from:to:)` - Remove selection without clipboard
+   - `cutSelection(using:)` - Remove selection, copy to clipboard
+   - `copySelection()` - Copy selection to clipboard
+   - `pasteAtInsertionTime(using:)` - Insert clipboard content
+   - `deleteSelection(using:)` - Remove selection without clipboard
 
 2. **Transform Operations** (`MovieMutator+Transform.swift`)
-   - `modifyCleanAperture()` - Adjust visible area
-   - `modifyPixelAspectRatio()` - Change pixel aspect
+   - `clappaspDictionary()` - Read clean aperture / pixel aspect atoms
+   - `applyClapPasp(_:using:)` - Apply clean aperture / pixel aspect changes
    - Non-destructive video transformations
 
 3. **Export Operations** (`MovieMutator+Export.swift`)
@@ -421,21 +430,19 @@ ViewController                 179 lines (core)
    ↓
 2. ViewController.cut(_:)
    ↓
-3. ViewControllerDelegate.cut(from:to:)
+3. Document.doCut()
    ↓
-4. Document receives delegate call
+4. MovieMutator.cutSelection(using:)
    ↓
-5. MovieMutator.cut(from:to:using:)
+5. Internal movie manipulation + undo registration
    ↓
-6. Internal movie manipulation
+6. refreshMovie() → TimelineView update
    ↓
 7. Register undo operation
    ↓
-8. Notify delegate of change
+8. Notify delegate of change (timelineUpdateReq)
    ↓
-9. ViewController.requestUpdateGUI()
-   ↓
-10. Timeline and player update
+9. Timeline and player update
 ```
 
 ### Export Flow
@@ -443,23 +450,25 @@ ViewController                 179 lines (core)
 ```
 1. User selects File > Export
    ↓
-2. Document.exportMovie(to:settings:)
+2. Document (Document+Export) withBusyProgress
    ↓
 3. Show progress sheet
    ↓
-4. MovieWriter.export(from:to:settings:progress:)
+4. MovieMutator.exportMovie(to:fileType:presetName:)
    ↓
-5. AVAssetExportSession creation
+5. MovieWriter actor (withMovieWriter)
    ↓
-6. Progress updates via callback
+6. AVAssetExportSession / AVAssetWriter creation
    ↓
-7. Update progress UI on main actor
+7. Progress updates via progressStream
    ↓
-8. Export completes or cancels
+8. Update progress UI on main actor
    ↓
-9. Hide progress sheet
+9. Export completes or cancels
    ↓
-10. Show result to user
+10. Hide progress sheet
+   ↓
+11. Show result to user
 ```
 
 ---
@@ -625,7 +634,7 @@ cutter2/
 │   ├── Document+SavePanel.swift
 │   ├── Document+Export.swift
 │   ├── Document+UI.swift
-│   ├── Document+Delegate.swift
+│   ├── Document+ViewControllerDelegate.swift
 │   └── Document+Utilities.swift
 │
 ├── Models/                      # Business logic
@@ -694,10 +703,12 @@ Each component has a single, well-defined responsibility. File refactoring reduc
 
 Protocols define clear contracts and enable testability:
 ```swift
-protocol ViewControllerDelegate: AnyObject {
-    func playerItem() -> AVPlayerItem?
-    func currentTime() -> CMTime
-    func requestUpdateGUI()
+@MainActor
+protocol ViewControllerDelegate: TimelineUpdateDelegate, Sendable {
+    func hasSelection() -> Bool
+    func doCut() throws
+    func doStepByCount(_ count: Int64, _ resetStart: Bool, _ resetEnd: Bool)
+    func doTogglePlay()
 }
 ```
 

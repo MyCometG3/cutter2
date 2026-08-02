@@ -5,7 +5,7 @@
 cutter2 is a sophisticated macOS video editing application written in Swift, leveraging Apple's AVFoundation framework. It serves as a QuickTime movie editor with powerful keyboard shortcuts, designed for precise video editing workflows.
 
 **Current Status**:
-- **Version**: 0.8.11
+- **Version**: 0.8.19
 - **Swift**: 6.0
 - **Xcode**: 26.0.1
 - **macOS**: 26.0.1
@@ -104,9 +104,19 @@ override func makeWindowControllers() {
 
 ### Async File Operations
 ```swift
-func readAsync(from url: URL, ofType typeName: String) async throws {
-    // Use Task.detached for heavy operations
-    // Update UI on main actor
+// Document file I/O is split into preparation (background) + readAsync (MainActor):
+// - DocumentController.prepareOpen(for:) collects OpenPreparation off the main actor
+// - Document.readAsync(from:openPreparation:) applies the prepared metadata
+struct OpenPreparation: Sendable {
+    let typeName: String
+    let modificationDate: Date?
+    let movHeader: Data?
+}
+
+func readAsync(from url: URL, openPreparation: OpenPreparation) async throws {
+    // Validate UTI via Document.validateMovieType(_:) (shared with read(from:ofType:))
+    // Validate movie header via MovieHeaderValidator
+    // Apply movieMutator on the main actor
     // Handle errors with custom DocumentError types
 }
 ```

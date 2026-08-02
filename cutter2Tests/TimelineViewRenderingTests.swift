@@ -5,6 +5,7 @@
 
 import XCTest
 import Cocoa
+import AVFoundation
 @testable import cutter2
 
 @MainActor
@@ -154,5 +155,139 @@ final class TimelineViewRenderingTests: XCTestCase {
         XCTAssertEqual(timelineView.selectedMarker, currentMarker)
         XCTAssertEqual(currentMarker.strokeColor, timelineView.strokeColorActive)
         XCTAssertEqual(currentMarker.fillColor, timelineView.fillColorActive)
+    }
+
+    // MARK: - TimelineView mouse input (T-14)
+
+    /// Mock delegate for TimelineView mouse input tests
+    @MainActor
+    private final class MockTimelineDelegate: TimelineUpdateDelegate {
+        var cursorUpdates: [Float64] = []
+        var startUpdates: [Float64] = []
+        var endUpdates: [Float64] = []
+        var selectionUpdates: [(Float64, Float64)] = []
+        var currentRequests: [anchor] = []
+        var startRequests: [anchor] = []
+        var endRequests: [anchor] = []
+        var presentationInfoValue: PresentationInfo? = nil
+
+        func didUpdateCursor(to position: Float64) { cursorUpdates.append(position) }
+        func didUpdateStart(to position: Float64) { startUpdates.append(position) }
+        func didUpdateEnd(to position: Float64) { endUpdates.append(position) }
+        func didUpdateSelection(from fromPos: Float64, to toPos: Float64) {
+            selectionUpdates.append((fromPos, toPos))
+        }
+        func presentationInfo(at position: Float64) -> PresentationInfo? { return presentationInfoValue }
+        func previousInfo(of range: CMTimeRange) -> PresentationInfo? { return nil }
+        func nextInfo(of range: CMTimeRange) -> PresentationInfo? { return nil }
+        func doSetCurrent(to goTo: anchor) { currentRequests.append(goTo) }
+        func doSetStart(to goTo: anchor) { startRequests.append(goTo) }
+        func doSetEnd(to goTo: anchor) { endRequests.append(goTo) }
+    }
+
+    /// mouseDown で startMarker クリック → selectNewMarker(true) + resetCurrent が doSetCurrent を呼ぶ
+    func testSelectNewMarkerOnStartRequestsCurrent() throws {
+        timelineView.layout()
+        let delegate = MockTimelineDelegate()
+        timelineView.delegate = delegate
+
+        let window = NSWindow(contentRect: timelineView.bounds, styleMask: [.borderless], backing: .buffered, defer: false)
+        window.contentView = timelineView
+
+        guard let startMarker = timelineView.startMarker else {
+            return XCTFail("start marker should exist")
+        }
+
+        let hitPoint = CGPoint(
+            x: startMarker.frame.midX,
+            y: startMarker.frame.midY
+        )
+        let event = NSEvent.mouseEvent(
+            with: .leftMouseDown,
+            location: hitPoint,
+            modifierFlags: [], timestamp: 0, windowNumber: window.windowNumber,
+            context: nil, eventNumber: 1, clickCount: 1, pressure: 1
+        )!
+        timelineView.mouseDown(with: event)
+
+        XCTAssertEqual(delegate.currentRequests, [.start], "doSetCurrent(.start) should be called when clicking start marker")
+    }
+
+    /// 選択済み startMarker をドラッグ → startPosition が更新され delegate に通知
+    func testMouseDraggedUpdatesStartPosition() throws {
+        timelineView.layout()
+        timelineView.isValid = true
+        timelineView.endPosition = 0.8 // Prevent selection update (start < end after drag)
+        let delegate = MockTimelineDelegate()
+        timelineView.delegate = delegate
+
+        guard let startMarker = timelineView.startMarker else {
+            return XCTFail("start marker should exist")
+        }
+        timelineView.selectedMarker = startMarker
+
+        let window = NSWindow(contentRect: timelineView.bounds, styleMask: [.borderless], backing: .buffered, defer: false)
+        window.contentView = timelineView
+
+        let event = NSEvent.mouseEvent(
+            with: .leftMouseDragged,
+            location: CGPoint(x: 131.5, y: timelineView.bounds.midY),
+            modifierFlags: [], timestamp: 0, windowNumber: window.windowNumber,
+            context: nil, eventNumber: 1, clickCount: 1, pressure: 1
+        )!
+        timelineView.mouseDragged(with: event)
+
+        XCTAssertFalse(delegate.startUpdates.isEmpty, "didUpdateStart should be called when dragging start marker")
+        XCTAssertEqual(timelineView.startPosition, 0.5, accuracy: 0.01)
+    }
+
+    /// 選択済み currentMarker をドラッグ → currentPosition が更新され delegate に通知
+    func testMouseDraggedUpdatesCurrentPosition() throws {
+        timelineView.layout()
+        timelineView.isValid = true
+        let delegate = MockTimelineDelegate()
+        timelineView.delegate = delegate
+
+        guard let currentMarker = timelineView.currentMarker else {
+            return XCTFail("current marker should exist")
+        }
+        timelineView.selectedMarker = currentMarker
+
+        let window = NSWindow(contentRect: timelineView.bounds, styleMask: [.borderless], backing: .buffered, defer: false)
+        window.contentView = timelineView
+
+        let event = NSEvent.mouseEvent(
+            with: .leftMouseDragged,
+            location: CGPoint(x: 131.5, y: timelineView.bounds.midY),
+            modifierFlags: [], timestamp: 0, windowNumber: window.windowNumber,
+            context: nil, eventNumber: 1, clickCount: 1, pressure: 1
+        )!
+        timelineView.mouseDragged(with: event)
+
+        XCTAssertFalse(delegate.cursorUpdates.isEmpty, "didUpdateCursor should be called when dragging current marker")
+        XCTAssertEqual(timelineView.currentPosition, 0.5, accuracy: 0.01)
+    }
+
+    /// selectedMarker が nil のとき mouseDragged は何もしない
+    func testMouseDraggedDoesNothingWhenNoSelection() throws {
+        timelineView.layout()
+        timelineView.isValid = true
+        timelineView.currentPosition = 0.0
+
+        let delegate = MockTimelineDelegate()
+        timelineView.delegate = delegate
+
+        let event = NSEvent.mouseEvent(
+            with: .leftMouseDragged,
+            location: CGPoint(x: 100, y: 25),
+            modifierFlags: [], timestamp: 0, windowNumber: 0,
+            context: nil, eventNumber: 1, clickCount: 1, pressure: 1
+        )!
+        timelineView.mouseDragged(with: event)
+
+        XCTAssertTrue(delegate.cursorUpdates.isEmpty)
+        XCTAssertTrue(delegate.startUpdates.isEmpty)
+        XCTAssertTrue(delegate.endUpdates.isEmpty)
+        XCTAssertEqual(timelineView.currentPosition, 0.0, accuracy: 0.001)
     }
 }

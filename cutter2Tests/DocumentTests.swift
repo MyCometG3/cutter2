@@ -33,8 +33,47 @@ final class DocumentTests: XCTestCase {
         XCTAssertTrue(types.contains("com.apple.quicktime-movie"))
     }
     
-    // MARK: - DocumentError Tests
+    // MARK: - Document read error handling (T-14)
     
+    /// `validateMovieType` が不正な UTI で `incompatibleFileType` をスローすることを検証。
+    /// `Document()` 直接生成は `windowControllers[0]` アクセス（NSRangeException）でクラッシュするため、
+    /// `readAsync` の UTI 検証ロジック（`Self.validateMovieType`）を分離してテストする。
+    ///
+    /// 注: `ErrorUtilities.throwError` は `DocumentError` を `NSError` に変換して throw する。
+    /// `DocumentError.incompatibleFileType` は `NSOSStatusErrorDomain` / `unimpErr` (-4) にマップされる。
+    func testValidateMovieTypeRejectsInvalidUTI() throws {
+        XCTAssertThrowsError(try Document.validateMovieType("invalid.type")) { error in
+            let nsError = error as NSError
+            XCTAssertEqual(nsError.domain, NSOSStatusErrorDomain)
+            XCTAssertEqual(nsError.code, unimpErr)
+        }
+    }
+    
+    /// `validateMovieType` が有効な movie UTI を許可することを検証。
+    func testValidateMovieTypeAcceptsMovieUTI() throws {
+        XCTAssertNoThrow(try Document.validateMovieType("com.apple.quicktime-movie"))
+    }
+    
+    /// トラックを含まない AVMutableMovie が `MovieHeaderValidator.isValid` で false になることを検証。
+    /// `readAsync` のヘッダー検証は `MovieHeaderValidator.isValid` に委譲しているため、
+    /// ヘッダー検証エラー経路（`.unableToOpenFile` 相当）を直接テストする。
+    ///
+    /// 注: `AVMutableMovie()`（引数なし）でトラックなしの movie を安全に構築する。
+    /// `AVMutableMovie(data:)` に任意バイト列を渡すと AVFoundation が例外を上げるリスクがあるため使用しない。
+    func testInvalidHeaderFailsValidation() throws {
+        let movie = AVMutableMovie() // 引数なし → トラックなしの movie を生成
+        XCTAssertFalse(MovieHeaderValidator.isValid(movie))
+        if let error = MovieHeaderValidator.validate(movie) {
+            guard case .noTracks = error else {
+                return XCTFail("Unexpected validation error: \(error)")
+            }
+        } else {
+            XCTFail("Expected noTracks validation error for track-less movie")
+        }
+    }
+
+    // MARK: - DocumentError Tests
+
     func testDocumentErrorTypes() throws {
         enum TestDocumentError: NSErrorConvertible {
             case testError

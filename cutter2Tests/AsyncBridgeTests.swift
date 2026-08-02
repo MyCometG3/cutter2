@@ -1,3 +1,11 @@
+//
+//  AsyncBridgeTests.swift
+//  cutter2Tests
+//
+//  Created by Takashi Mochizuki on 2026/07/20.
+//  Copyright © 2026 MyCometG3. All rights reserved.
+//
+
 import XCTest
 import Foundation
 @testable import cutter2

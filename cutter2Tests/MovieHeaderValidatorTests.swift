@@ -1,3 +1,11 @@
+//
+//  MovieHeaderValidatorTests.swift
+//  cutter2Tests
+//
+//  Created by Takashi Mochizuki on 2026/07/20.
+//  Copyright © 2026 MyCometG3. All rights reserved.
+//
+
 //  MovieHeaderValidatorTests.swift (T-03)
 //  cutter2Tests
 

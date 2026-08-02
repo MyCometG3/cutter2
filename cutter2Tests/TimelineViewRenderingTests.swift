@@ -185,7 +185,7 @@ final class TimelineViewRenderingTests: XCTestCase {
         func doSetEnd(to goTo: anchor) { endRequests.append(goTo) }
     }
 
-    /// mouseDown で startMarker クリック → selectNewMarker(true) + resetCurrent が doSetCurrent を呼ぶ
+    /// Clicking the start marker triggers selectNewMarker(true) and resetCurrent, which calls doSetCurrent
     func testSelectNewMarkerOnStartRequestsCurrent() throws {
         timelineView.layout()
         let delegate = MockTimelineDelegate()
@@ -213,7 +213,7 @@ final class TimelineViewRenderingTests: XCTestCase {
         XCTAssertEqual(delegate.currentRequests, [.start], "doSetCurrent(.start) should be called when clicking start marker")
     }
 
-    /// 選択済み startMarker をドラッグ → startPosition が更新され delegate に通知
+    /// Dragging the selected start marker updates startPosition and notifies the delegate
     func testMouseDraggedUpdatesStartPosition() throws {
         timelineView.layout()
         timelineView.isValid = true
@@ -241,7 +241,7 @@ final class TimelineViewRenderingTests: XCTestCase {
         XCTAssertEqual(timelineView.startPosition, 0.5, accuracy: 0.01)
     }
 
-    /// 選択済み currentMarker をドラッグ → currentPosition が更新され delegate に通知
+    /// Dragging the selected current marker updates currentPosition and notifies the delegate
     func testMouseDraggedUpdatesCurrentPosition() throws {
         timelineView.layout()
         timelineView.isValid = true
@@ -268,7 +268,7 @@ final class TimelineViewRenderingTests: XCTestCase {
         XCTAssertEqual(timelineView.currentPosition, 0.5, accuracy: 0.01)
     }
 
-    /// selectedMarker が nil のとき mouseDragged は何もしない
+    /// mouseDragged does nothing when no marker is selected
     func testMouseDraggedDoesNothingWhenNoSelection() throws {
         timelineView.layout()
         timelineView.isValid = true

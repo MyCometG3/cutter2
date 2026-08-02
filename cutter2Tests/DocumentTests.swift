@@ -35,12 +35,13 @@ final class DocumentTests: XCTestCase {
     
     // MARK: - Document read error handling (T-14)
     
-    /// `validateMovieType` が不正な UTI で `incompatibleFileType` をスローすることを検証。
-    /// `Document()` 直接生成は `windowControllers[0]` アクセス（NSRangeException）でクラッシュするため、
-    /// `readAsync` の UTI 検証ロジック（`Self.validateMovieType`）を分離してテストする。
+    /// Verifies that `validateMovieType` throws for an invalid UTI (`incompatibleFileType`).
+    /// Constructing a `Document` directly crashes in the test environment (NSRangeException from
+    /// the `windowControllers[0]` access in the `window` property), so the UTI validation logic
+    /// of `readAsync` (`Self.validateMovieType`) is tested in isolation.
     ///
-    /// 注: `ErrorUtilities.throwError` は `DocumentError` を `NSError` に変換して throw する。
-    /// `DocumentError.incompatibleFileType` は `NSOSStatusErrorDomain` / `unimpErr` (-4) にマップされる。
+    /// Note: `ErrorUtilities.throwError` converts `DocumentError` to `NSError` before throwing.
+    /// `DocumentError.incompatibleFileType` maps to `NSOSStatusErrorDomain` / `unimpErr` (-4).
     func testValidateMovieTypeRejectsInvalidUTI() throws {
         XCTAssertThrowsError(try Document.validateMovieType("invalid.type")) { error in
             let nsError = error as NSError
@@ -49,19 +50,20 @@ final class DocumentTests: XCTestCase {
         }
     }
     
-    /// `validateMovieType` が有効な movie UTI を許可することを検証。
+    /// Verifies that `validateMovieType` accepts a valid movie UTI.
     func testValidateMovieTypeAcceptsMovieUTI() throws {
         XCTAssertNoThrow(try Document.validateMovieType("com.apple.quicktime-movie"))
     }
     
-    /// トラックを含まない AVMutableMovie が `MovieHeaderValidator.isValid` で false になることを検証。
-    /// `readAsync` のヘッダー検証は `MovieHeaderValidator.isValid` に委譲しているため、
-    /// ヘッダー検証エラー経路（`.unableToOpenFile` 相当）を直接テストする。
+    /// Verifies that a trackless AVMutableMovie fails `MovieHeaderValidator.isValid`.
+    /// Since `readAsync`'s header validation delegates to `MovieHeaderValidator.isValid`,
+    /// this directly tests the header validation error path (equivalent to `.unableToOpenFile`).
     ///
-    /// 注: `AVMutableMovie()`（引数なし）でトラックなしの movie を安全に構築する。
-    /// `AVMutableMovie(data:)` に任意バイト列を渡すと AVFoundation が例外を上げるリスクがあるため使用しない。
+    /// Note: `AVMutableMovie()` (no arguments) safely constructs a trackless movie.
+    /// `AVMutableMovie(data:)` is avoided because passing arbitrary bytes risks an
+    /// AVFoundation exception.
     func testInvalidHeaderFailsValidation() throws {
-        let movie = AVMutableMovie() // 引数なし → トラックなしの movie を生成
+        let movie = AVMutableMovie() // no arguments → produces a trackless movie
         XCTAssertFalse(MovieHeaderValidator.isValid(movie))
         if let error = MovieHeaderValidator.validate(movie) {
             guard case .noTracks = error else {

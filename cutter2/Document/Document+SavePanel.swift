@@ -30,13 +30,14 @@ extension Document {
             let storyboard: NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
             let sid: NSStoryboard.SceneIdentifier = "Accessory View Controller"
             guard let accessoryVC = storyboard.instantiateController(withIdentifier: sid) as? AccessoryViewController else {
-                preconditionFailure("Failed to instantiate AccessoryViewController")
+                NSSound.beep()
+                return false
             }
             self.accessoryVC = accessoryVC
             accessoryVC.loadView()
             accessoryVC.delegate = self
         }
-        guard let accessoryVC = self.accessoryVC else { preconditionFailure("Unexpected nil accessoryVC detected.") }
+        guard let accessoryVC = self.accessoryVC else { return false }
         
         // prepare file types same as current source
         var uti: String = self.fileType ?? AVFileType.mov.rawValue

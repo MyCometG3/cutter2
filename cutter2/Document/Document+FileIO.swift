@@ -46,6 +46,28 @@ extension Document {
     }
     
     /* ============================================ */
+    // MARK: - File type validation
+    /* ============================================ */
+    
+    /// Validate that the given UTI is a supported movie type.
+    ///
+    /// Shared by `readAsync(from:openPreparation:)` and `read(from:ofType:)` so the
+    /// UTI check has a single source of truth (and is directly testable).
+    /// - Parameter typeName: The UTI to validate.
+    /// - Throws: An `NSError` produced by `ErrorUtilities.throwError` for
+    ///   `DocumentError.incompatibleFileType` (domain `NSOSStatusErrorDomain`, code
+    ///   `unimpErr`) when the UTI is not a movie type. Note the thrown value is the
+    ///   NSError form, not the `DocumentError` case itself.
+    nonisolated static func validateMovieType(_ typeName: String) throws {
+        let fileType = AVFileType.init(rawValue: typeName)
+        guard AVMovie.movieTypes().contains(fileType) else {
+            let reason = "(UTI: \(typeName))"
+            LoggingSystem.fileIO.error("Incompatible file type: \(typeName)")
+            try ErrorUtilities.throwError(DocumentError.incompatibleFileType, reason: reason)
+        }
+    }
+    
+    /* ============================================ */
     // MARK: - Read
     /* ============================================ */
     
@@ -57,13 +79,7 @@ extension Document {
         LoggingSystem.fileIO.info("Reading document from \(url.lastPathComponent, privacy: .public)")
         
         // Check UTI for AVMovie fileType
-        let typeName = openPreparation.typeName
-        let fileType = AVFileType.init(rawValue: typeName)
-        if AVMovie.movieTypes().contains(fileType) == false {
-            let reason = "(UTI: \(typeName))"
-            LoggingSystem.fileIO.error("Incompatible file type: \(typeName)")
-            try throwError(.incompatibleFileType, reason: reason)
-        }
+        try Self.validateMovieType(openPreparation.typeName)
         
         if let header = openPreparation.movHeader {
             // File opened successfully
@@ -94,17 +110,15 @@ extension Document {
         // 3) apply the new mutator on the MainActor
         
         // Stage 0: Validate the AppKit-provided UTI before doing any I/O.
-        let fileType = AVFileType.init(rawValue: typeName)
-        guard AVMovie.movieTypes().contains(fileType) else {
-            let reason = "(UTI: \(typeName))"
-            LoggingSystem.fileIO.error("Incompatible file type: \(typeName)")
-            try throwError(.incompatibleFileType, reason: reason)
-        }
+        try Self.validateMovieType(typeName)
         
         // Stage 1: File I/O is performed on a background task and bridged back
         // through AsyncBridge.
         let preparation: OpenPreparation
         do {
+            // allowMainThread: true — the bridged async block performs only file I/O
+            // and AVMovie header parsing, deliberately staying MainActor-free so no
+            // deadlock can occur even if NSDocument invokes read() on the main thread.
             preparation = try AsyncBridge.perform(timeout: 30, allowMainThread: true) { @Sendable in
                 let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
                 let modificationDate = attrs[.modificationDate] as? Date
@@ -241,14 +255,12 @@ extension Document {
                 let fileType: AVFileType = AVFileType.init(rawValue: typeName)
                 guard fileType == .mov else { return }
                 
-                guard let accessoryVC = self.accessoryVC else { preconditionFailure("Unexpected nil accessoryVC detected.") }
+                guard let accessoryVC = self.accessoryVC else { return }
                 let saveAsRefMov: Bool = (accessoryVC.selfContained == false)
                 guard saveAsRefMov else { return }
                 
                 // SaveAs reference movie - Need to keep readonly access to original
-                guard let app = NSApp.delegate as? AppDelegate else {
-                    preconditionFailure("NSApp.delegate is not AppDelegate")
-                }
+                guard let app = NSApp.delegate as? AppDelegate else { return }
                 app.addBookmark(for: srcURL)
             }
         }

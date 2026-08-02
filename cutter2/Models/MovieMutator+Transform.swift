@@ -21,11 +21,17 @@ extension MovieMutator {
     
     //
     private func doReplace(_ movie: Data, _ range: CMTimeRange, _ time: CMTime) {
-        precondition(validateRange(range, false), "ERROR: invalid range")
+        guard validateRange(range, false) else {
+            LoggingSystem.video.error("invalid range in doReplace")
+            return
+        }
         
         // perform replacement
         do {
-            precondition(reloadMovie(from: movie), "ERROR: reloadMovie failed")
+            guard reloadMovie(from: movie) else {
+                LoggingSystem.video.error("reloadMovie failed in doReplace")
+                return
+            }
             
             // Update Marker
             let movie = internalMovie
@@ -38,7 +44,10 @@ extension MovieMutator {
     //
     private func undoReplace(_ data: Data, _ range: CMTimeRange, _ time: CMTime) {
         let reloadDone: Bool = reloadAndNotify(from: data, range: range, time: time)
-        precondition(reloadDone, "ERROR: reloadAndNotify failed")
+        guard reloadDone else {
+            LoggingSystem.video.error("reloadAndNotify failed in undoReplace")
+            return
+        }
     }
     
     //
@@ -82,7 +91,12 @@ extension MovieMutator {
         
         let formats: [Any] = (vTracks[0]).formatDescriptions
         guard !formats.isEmpty else { NSSound.beep(); return nil }
-        let desc = formats[0] as! CMFormatDescription // CF typealias — first index safe after isEmpty check
+        // formats[0] is CMFormatDescription (CF type). as! is safe: the Swift
+        // compiler guarantees the cast always succeeds ("conditional downcast
+        // will always succeed"). as? is rejected by the compiler for this reason.
+        // If the SDK ever changes the type hierarchy, the force-cast will trap
+        // loudly rather than silently misbehave. Index 0 is safe after isEmpty guard.
+        let desc = formats[0] as! CMFormatDescription
         
         dict[dimensionsKey] = CMVideoFormatDescriptionGetPresentationDimensions(desc,
                                                                                 usePixelAspectRatio: false,
@@ -125,12 +139,18 @@ extension MovieMutator {
         var count: Int = 0
         
         guard let movie = internalMovie.mutableCopy() as? AVMutableMovie else {
-            preconditionFailure("mutableCopy() of AVMutableMovie returned non-AVMutableMovie")
+            LoggingSystem.video.error("mutableCopy() of AVMutableMovie returned non-AVMutableMovie")
+            return false
         }
         
         let vTracks: [AVMutableMovieTrack] = movie.tracks(withMediaType: .video)
         for track in vTracks {
-            let formats = track.formatDescriptions as! [CMFormatDescription] // CF typealias — as! always succeeds
+            // CMFormatDescription is a CF type. as! is safe: the Swift compiler
+            // guarantees the cast always succeeds ("conditional downcast will
+            // always succeed"). as? is rejected by the compiler for this reason.
+            // If the SDK ever changes the type hierarchy, the force-cast will trap
+            // loudly rather than silently misbehave.
+            let formats = track.formatDescriptions as! [CMFormatDescription]
             
             // Verify if track.encodedDimension is equal to target dimensions
             var valid: Bool = false

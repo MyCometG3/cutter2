@@ -20,11 +20,11 @@ import os.log
 private final class UnfairLockBox<T>: @unchecked Sendable {
     private var rawLock = os_unfair_lock_s()
     private var value: T
-
+    
     init(_ value: T) {
         self.value = value
     }
-
+    
     @inline(__always)
     func withLock<U>(_ body: (inout T) throws -> U) rethrows -> U {
         os_unfair_lock_lock(&rawLock)
@@ -77,15 +77,15 @@ class PerformanceMetrics {
         var loggingEnabled: Bool = true
         var verboseLogging: Bool = false
     }
-
+    
     private nonisolated let state = UnfairLockBox(MetricsState())
-
+    
     /// Flag to enable/disable performance logging
     public nonisolated var loggingEnabled: Bool {
         get { state.withLock { $0.loggingEnabled } }
         set { state.withLock { $0.loggingEnabled = newValue } }
     }
-
+    
     /// Flag to enable/disable detailed console output
     public nonisolated var verboseLogging: Bool {
         get { state.withLock { $0.verboseLogging } }
@@ -118,7 +118,7 @@ class PerformanceMetrics {
         }
         return try operation()
     }
-
+    
     /// Measure the execution time of an asynchronous operation
     ///
     /// - Parameters:
@@ -148,7 +148,7 @@ class PerformanceMetrics {
             box.measurements[name, default: []].append(duration)
             return (box.loggingEnabled, box.verboseLogging)
         }
-
+        
         if shouldLog {
             let formatted = String(format: "%.3f", duration)
             if isVerbose {

@@ -9,6 +9,15 @@
 import Cocoa
 import AVFoundation
 
+extension UserDefaults {
+    private static let useStepModeKey = "useStepMode"
+    
+    @objc dynamic var useStepMode: Bool {
+        get { bool(forKey: Self.useStepModeKey) }
+        set { set(newValue, forKey: Self.useStepModeKey) }
+    }
+}
+
 /* ============================================ */
 // MARK: - Observer utilities
 /* ============================================ */
@@ -20,35 +29,24 @@ extension ViewController {
     /* ============================================ */
     
     internal func addUserDefaultObserver() {
-        let defaults = UserDefaults.standard
-        defaults.addObserver(self,
-                             forKeyPath: keyPathStepMode,
-                             options: [.initial, .old,.new],
-                             context: nil)
-    }
-    
-    internal func removeUserDefaultsObserver() {
-        let defaults = UserDefaults.standard
-        defaults.removeObserver(self,
-                                forKeyPath: keyPathStepMode)
-    }
-    
-    override nonisolated func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey:Any]?,
-                                           context: UnsafeMutableRawPointer?) {
-        guard let keyPath = keyPath else { return }
-        guard let change: [NSKeyValueChangeKey:Any] = change else { return }
-        guard let newAny = change[.newKey] else { return }
-        
-        if keyPath == keyPathStepMode, let newNumber = newAny as? NSNumber {
-            let new: Bool = !newNumber.boolValue
+        stepModeObservation = UserDefaults.standard.observe(\.useStepMode, options: [.initial, .new]) { [weak self] defaults, change in
+            guard let self else { return }
+            guard let newBool = change.newValue else { return }
+            
+            // Inversion logic preserved: useStepMode=true → mimicJKLcombination=false
+            let inverted = !newBool
             ActorUtilities.performSyncOnMainActor {
-                if mimicJKLcombination != new {
-                    mimicJKLcombination = new
-                    
-                    applyMode()
+                if self.mimicJKLcombination != inverted {
+                    self.mimicJKLcombination = inverted
+                    self.applyMode()
                 }
             }
         }
+    }
+    
+    internal func removeUserDefaultsObserver() {
+        stepModeObservation?.invalidate()
+        stepModeObservation = nil
     }
     
     /* ============================================ */

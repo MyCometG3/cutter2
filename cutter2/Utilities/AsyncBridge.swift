@@ -4,6 +4,9 @@
 //
 //  Unified async-to-sync bridge adopted from performAsync_comparison.md §10.2.
 //
+//  Created by Takashi Mochizuki on 2026/06/13.
+//  Copyright © 2026 MyCometG3. All rights reserved.
+//
 
 /* This software is released under the MIT License, see LICENSE.txt. */
 

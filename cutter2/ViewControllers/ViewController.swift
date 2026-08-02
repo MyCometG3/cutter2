@@ -50,9 +50,6 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     // MARK: - private properties/constants
     /* ============================================ */
     
-    // Observer key
-    internal let keyPathStepMode: String = "useStepMode" // "values.useStepMode" is NG
-    
     // To mimic legacy QT7PlayerPro JKL key tracking
     internal var keyDownJ: Bool = false
     internal var keyDownK: Bool = false
@@ -62,6 +59,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     // Notification Observer
     internal var resizeObserver: NSObjectProtocol? = nil
     internal var updateObserver: NSObjectProtocol? = nil
+    internal var stepModeObservation: NSKeyValueObservation? = nil
     
     /* ============================================ */
     // MARK: - public properties

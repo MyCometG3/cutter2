@@ -250,7 +250,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
                 self.movieMutator = MovieMutator(with: movie)
                 self.addMutationObserver()
             } else {
-                preconditionFailure("ERROR: Failed on AVMutableMovie()")
+                LoggingSystem.video.error("AVMutableMovie() returned nil")
+                NSSound.beep()
+                return
             }
         }
         
@@ -260,7 +262,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
         // Instantiate and Register Window Controller
         let sid: NSStoryboard.SceneIdentifier = "Document Window Controller"
         guard let windowController = storyboard.instantiateController(withIdentifier: sid) as? WindowController else {
-            preconditionFailure("Failed to instantiate WindowController")
+            NSSound.beep()
+            return
         }
         self.addWindowController(windowController)
         

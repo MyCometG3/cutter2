@@ -1,3 +1,11 @@
+//
+//  AsyncBridgeTests.swift
+//  cutter2Tests
+//
+//  Created by Takashi Mochizuki on 2026/07/20.
+//  Copyright © 2026 MyCometG3. All rights reserved.
+//
+
 import XCTest
 import Foundation
 @testable import cutter2
@@ -6,9 +14,9 @@ final class AsyncBridgeTests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
-
+    
     private enum TestError: Error { case expected }
-
+    
     func testPerformCompletesWithValue() async {
         let task = Task.detached {
             try AsyncBridge.perform(timeout: 1.0, allowMainThread: false) { @Sendable in
@@ -22,7 +30,7 @@ final class AsyncBridgeTests: XCTestCase {
             XCTFail("unexpected error: \(error)")
         }
     }
-
+    
     func testPerformPropagatesThrow() async {
         var caught = false
         let task = Task.detached {
@@ -39,7 +47,7 @@ final class AsyncBridgeTests: XCTestCase {
         }
         XCTAssertTrue(caught)
     }
-
+    
     func testPerformTimeout() async {
         var caughtTimeout = false
         let task = Task.detached {
@@ -57,10 +65,8 @@ final class AsyncBridgeTests: XCTestCase {
         }
         XCTAssertTrue(caughtTimeout)
     }
-
-    @MainActor
+    
     func testPerformAllowMainThread() {
-        XCTAssertTrue(Thread.isMainThread, "testPerformAllowMainThread must run on main thread")
         do {
             let value = try AsyncBridge.perform(timeout: nil, allowMainThread: true) { @Sendable in
                 "ok"

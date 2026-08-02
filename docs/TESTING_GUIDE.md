@@ -177,15 +177,21 @@ final class MyFeatureTests: XCTestCase {
 ### Testing Async Code
 
 ```swift
+// Note: A `Document` instance cannot be constructed in the unit-test environment —
+// the `window` computed property force-indexes `windowControllers[0]`, raising
+// `NSRangeException` on the empty array during `NSDocument.init()`. Test Document
+// logic through extracted helpers instead (e.g. `Document.validateMovieType(_:)`
+// and `MovieHeaderValidator`).
 func testAsyncOperation() async throws {
     // Given
-    let document = Document()
-    
-    // When
-    try await document.readAsync(from: testURL, ofType: "mov")
-    
-    // Then
-    XCTAssertNotNil(document.movieMutator)
+    let typeName = "com.apple.quicktime-movie"
+
+    // When — UTI validation (shared by readAsync / read) accepts a movie type
+    try Document.validateMovieType(typeName)
+
+    // Then — header validation rejects a trackless movie
+    let movie = AVMutableMovie()
+    XCTAssertFalse(MovieHeaderValidator.isValid(movie))
 }
 ```
 

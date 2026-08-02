@@ -26,13 +26,14 @@ extension Document {
         let storyboard: NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
         let sid: NSStoryboard.SceneIdentifier = "TranscodeSheet Controller"
         guard let transcodeWC = storyboard.instantiateController(withIdentifier: sid) as? NSWindowController else {
-            preconditionFailure("Failed to instantiate TranscodeSheet Controller")
+            NSSound.beep()
+            return
         }
         // transcodeWC.loadWindow()
         
         // Prepare Transcode ViewController
-        guard let contVC = transcodeWC.contentViewController else { preconditionFailure("Unexpected nil contentViewController detected.") }
-        guard let transcodeVC = contVC as? TranscodeViewController else { preconditionFailure("Unexpected nil TranscodeViewController detected.") }
+        guard let contVC = transcodeWC.contentViewController else { NSSound.beep(); return }
+        guard let transcodeVC = contVC as? TranscodeViewController else { NSSound.beep(); return }
         
         // Show Transcode Sheet
         transcodeVC.beginSheetModal(for: self.window!) { @Sendable @MainActor [weak self] (response) in // @escaping

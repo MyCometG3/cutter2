@@ -109,7 +109,12 @@ extension MovieMutatorBase {
             var trackString: [String] = []
             let trackID: Int = Int(track.trackID)
             let reference: Bool = !(track.isSelfContained)
-            for desc in track.formatDescriptions as! [CMVideoFormatDescription] { // CF typealias of CMFormatDescription
+            // CMVideoFormatDescription is a CF typealias of CMFormatDescription.
+            // as! is safe: the Swift compiler guarantees the cast always succeeds
+            // ("conditional downcast will always succeed"). as? is rejected by the
+            // compiler for this reason. If the SDK ever changes the type hierarchy,
+            // the force-cast will trap loudly rather than silently misbehave.
+            for desc in track.formatDescriptions as! [CMVideoFormatDescription] {
                 var name: String = ""
                 do {
                     let ext: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
@@ -166,7 +171,12 @@ extension MovieMutatorBase {
             var trackString: [String] = []
             let trackID: Int = Int(track.trackID)
             let reference: Bool = !(track.isSelfContained)
-            for desc in track.formatDescriptions as! [CMAudioFormatDescription] { // CF typealias of CMFormatDescription
+            // CMAudioFormatDescription is a CF typealias of CMFormatDescription.
+            // as! is safe: the Swift compiler guarantees the cast always succeeds
+            // ("conditional downcast will always succeed"). as? is rejected by the
+            // compiler for this reason. If the SDK ever changes the type hierarchy,
+            // the force-cast will trap loudly rather than silently misbehave.
+            for desc in track.formatDescriptions as! [CMAudioFormatDescription] {
                 var rateString: String = ""
                 do {
                     let basic = CMAudioFormatDescriptionGetStreamBasicDescription(desc)

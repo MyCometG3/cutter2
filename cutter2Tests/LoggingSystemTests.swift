@@ -49,7 +49,7 @@ final class LoggingSystemTests: XCTestCase {
         // Should be bundle identifier or fallback
         XCTAssertFalse(subsystem.isEmpty)
         XCTAssertTrue(subsystem == "com.mycometg3.cutter2" || 
-                     subsystem.contains("cutter2"))
+                      subsystem.contains("cutter2"))
     }
     
     /// Test that all categories are listed

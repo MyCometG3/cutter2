@@ -7,7 +7,7 @@ import CoreMedia
 @testable import cutter2
 
 final class MovieHeaderValidatorTests: XCTestCase {
-
+    
     func testValidateEmptyMovieReturnsNoTracks() {
         let movie = AVMutableMovie()
         let error = MovieHeaderValidator.validate(movie)
@@ -16,7 +16,7 @@ final class MovieHeaderValidatorTests: XCTestCase {
         }
         XCTAssertFalse(MovieHeaderValidator.isValid(movie))
     }
-
+    
     func testValidateMovieWithTrackReturnsNil() {
         let movie = AVMutableMovie()
         movie.timescale = 600
@@ -30,12 +30,12 @@ final class MovieHeaderValidatorTests: XCTestCase {
             duration: CMTime(seconds: 1.0, preferredTimescale: 600)
         )
         movie.insertEmptyTimeRange(range)
-
+        
         XCTAssertFalse(movie.tracks.isEmpty, "precondition: fixture must have tracks")
         XCTAssertNil(MovieHeaderValidator.validate(movie))
         XCTAssertTrue(MovieHeaderValidator.isValid(movie))
     }
-
+    
     func testValidationErrorDescriptionsAreNonEmpty() {
         XCTAssertFalse(
             MovieHeaderValidator.ValidationError.noTracks.errorDescription?.isEmpty ?? true

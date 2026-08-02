@@ -365,14 +365,14 @@ final class ModelTests: XCTestCase {
             }
         }
     }
-
+    
     // MARK: - LayoutConverter.dataSize edge cases (T-04)
-
+    
     func testDataSizeEdgeCases() {
         let converter = LayoutConverter()
         let layoutSize = MemoryLayout<AudioChannelLayout>.size
         let descSize = MemoryLayout<AudioChannelDescription>.size
-
+        
         XCTAssertEqual(converter.dataSize(descCount: 0), layoutSize - descSize,
                        "count==0 must return header-only size")
         XCTAssertEqual(converter.dataSize(descCount: -1), 0,
@@ -381,7 +381,7 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(converter.dataSize(descCount: 1), layoutSize)
         XCTAssertEqual(converter.dataSize(descCount: 3), layoutSize + 2 * descSize)
         XCTAssertEqual(converter.dataSize(descCount: 6), layoutSize + 5 * descSize)
-
+        
         XCTAssertEqual(converter.dataSize(descCount: Int.max), 0,
                        "overflow must return 0 without trapping")
     }

@@ -6,9 +6,9 @@ final class AsyncBridgeTests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
-
+    
     private enum TestError: Error { case expected }
-
+    
     func testPerformCompletesWithValue() async {
         let task = Task.detached {
             try AsyncBridge.perform(timeout: 1.0, allowMainThread: false) { @Sendable in
@@ -22,7 +22,7 @@ final class AsyncBridgeTests: XCTestCase {
             XCTFail("unexpected error: \(error)")
         }
     }
-
+    
     func testPerformPropagatesThrow() async {
         var caught = false
         let task = Task.detached {
@@ -39,7 +39,7 @@ final class AsyncBridgeTests: XCTestCase {
         }
         XCTAssertTrue(caught)
     }
-
+    
     func testPerformTimeout() async {
         var caughtTimeout = false
         let task = Task.detached {
@@ -57,7 +57,7 @@ final class AsyncBridgeTests: XCTestCase {
         }
         XCTAssertTrue(caughtTimeout)
     }
-
+    
     func testPerformAllowMainThread() {
         do {
             let value = try AsyncBridge.perform(timeout: nil, allowMainThread: true) { @Sendable in

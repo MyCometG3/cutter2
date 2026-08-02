@@ -12,15 +12,15 @@ import AVFoundation
 
 /// Integration tests for cutter2 application
 final class cutter2Tests: XCTestCase {
-
+    
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
-
+    
     override func tearDownWithError() throws {
         // Cleanup
     }
-
+    
     // MARK: - Basic Integration Tests
     
     func testApplicationBundle() throws {

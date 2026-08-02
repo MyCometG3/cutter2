@@ -215,7 +215,7 @@ final class UtilitiesTests: XCTestCase {
             XCTFail("Expected dataFor(tag:) to return non-nil for valid tag")
             return
         }
-
+        
         guard let convertedData = converter.convertAsAACTag(from: sourceData) else {
             XCTFail("Expected header-only AAC 5.1 layout to convert")
             return
@@ -292,22 +292,22 @@ final class UtilitiesTests: XCTestCase {
             }
         }
     }
-
+    
     // MARK: - DateFormatter factory (T-05)
-
+    
     func testLogFormatterSetsDateFormat() {
         let format = "yyyy-MM-dd HH:mm:ss.SSS"
         let formatter = DateFormatter.logFormatter(format: format)
         XCTAssertEqual(formatter.dateFormat, format)
     }
-
+    
     func testLogFormatterReturnsDistinctInstances() {
         let format = "HH:mm:ss"
         let a = DateFormatter.logFormatter(format: format)
         let b = DateFormatter.logFormatter(format: format)
         XCTAssertFalse(a === b, "factory must not share instances")
     }
-
+    
     func testLogFormatterProducesNonEmptyString() {
         let formatter = DateFormatter.logFormatter(format: "yyyy-MM-dd'T'HH:mm:ss")
         let s = formatter.string(from: Date())

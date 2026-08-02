@@ -73,9 +73,9 @@ final class DocumentTests: XCTestCase {
             XCTFail("Expected noTracks validation error for track-less movie")
         }
     }
-
+    
     // MARK: - DocumentError Tests
-
+    
     func testDocumentErrorTypes() throws {
         enum TestDocumentError: NSErrorConvertible {
             case testError

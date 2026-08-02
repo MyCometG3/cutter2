@@ -165,12 +165,12 @@ class TimelineView: NSView, CALayerDelegate {
         super.init(frame: frameRect)
         initializeLayers()
     }
-
+    
     required init?(coder decoder: NSCoder) {
         super.init(coder: decoder)
         initializeLayers()
     }
-
+    
     private func initializeLayers() {
         self.wantsLayer = true
         

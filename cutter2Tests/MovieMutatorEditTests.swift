@@ -16,7 +16,7 @@ private func writeSampleMovie(
     frameCount: Int
 ) -> Bool {
     guard let writer = try? AVAssetWriter(outputURL: url, fileType: .mov) else { return false }
-
+    
     let width = 320
     let height = 180
     let videoSettings: [String: Any] = [
@@ -36,10 +36,10 @@ private func writeSampleMovie(
     )
     guard writer.canAdd(input) else { return false }
     writer.add(input)
-
+    
     guard writer.startWriting() else { return false }
     writer.startSession(atSourceTime: .zero)
-
+    
     let attrs: [CFString: Any] = [
         kCVPixelBufferCGImageCompatibilityKey: true,
         kCVPixelBufferCGBitmapContextCompatibilityKey: true,
@@ -54,7 +54,7 @@ private func writeSampleMovie(
         memset(base, 0, CVPixelBufferGetDataSize(pb))
     }
     CVPixelBufferUnlockBaseAddress(pb, [])
-
+    
     let maxReadySpins = 5_000 // 5s at 1ms
     var presentation = CMTime.zero
     for _ in 0..<frameCount {
@@ -81,13 +81,13 @@ private func writeSampleMovie(
 private final class FixtureURLStore: @unchecked Sendable {
     private let lock = NSLock()
     private var urls: [URL] = []
-
+    
     func append(_ url: URL) {
         lock.lock()
         urls.append(url)
         lock.unlock()
     }
-
+    
     func takeAll() -> [URL] {
         lock.lock()
         defer { lock.unlock() }
@@ -99,23 +99,23 @@ private final class FixtureURLStore: @unchecked Sendable {
 
 @MainActor
 final class MovieMutatorEditTests: XCTestCase {
-
+    
     /// Fixture files kept until tearDown so AVMutableMovie can lazy-read sample data.
     private let fixtureStore = FixtureURLStore()
-
+    
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
-
+    
     override func tearDownWithError() throws {
         for url in fixtureStore.takeAll() {
             try? FileManager.default.removeItem(at: url)
         }
         try super.tearDownWithError()
     }
-
+    
     // MARK: - Helpers
-
+    
     private func makeMutator(
         duration: TimeInterval = 10.0,
         insertionTime: TimeInterval = 0.0,
@@ -125,10 +125,10 @@ final class MovieMutatorEditTests: XCTestCase {
         let frameRate: Int = 30
         let frameDuration = CMTime(value: CMTimeValue(timescale) / CMTimeValue(frameRate), timescale: timescale)
         let frameCount = Int((duration * Double(frameRate)).rounded())
-
+        
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("cutter2_edit_test_\(UUID().uuidString).mov")
-
+        
         // Write fixture off main thread to avoid AVAssetWriter thread warnings
         let writeOK = DispatchQueue.global().sync {
             writeSampleMovie(to: tempURL, duration: duration, timescale: timescale,
@@ -139,14 +139,14 @@ final class MovieMutatorEditTests: XCTestCase {
             return nil
         }
         fixtureStore.append(tempURL)
-
+        
         let movie = AVMutableMovie(url: tempURL, options: nil)
         guard movie.range.duration > CMTime.zero else {
             XCTFail("AVMutableMovie(url:) produced empty movie")
             return nil
         }
         movie.timescale = timescale
-
+        
         let mutator = MovieMutator(with: movie)
         mutator.insertionTime = CMTime(seconds: insertionTime, preferredTimescale: timescale)
         mutator.selectedTimeRange = CMTimeRange(
@@ -155,27 +155,27 @@ final class MovieMutatorEditTests: XCTestCase {
         )
         return mutator
     }
-
+    
     // MARK: - Cut / Paste / Delete round-trip (T-09)
-
+    
     func testCutSelectionRegistersUndoAndCachesClip() {
         guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
-
+        
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         XCTAssertNil(pasteboard.data(forType: .movieMutator),
                      "precondition: pasteboard must not already hold .movieMutator")
-
+        
         let durationBefore = mutator.movieRange().duration.seconds
         let selectionBefore = mutator.selectedTimeRange.duration.seconds
-
+        
         realUM.beginUndoGrouping()
         let wrapper = UndoManagerWrapper(realUM)
         mutator.cutSelection(using: wrapper)
         realUM.endUndoGrouping()
-
+        
         XCTAssertTrue(realUM.canUndo, "undo must be registered after cut")
         XCTAssertEqual(realUM.undoActionName, "Cut selection")
         XCTAssertEqual(mutator.movieRange().duration.seconds,
@@ -184,24 +184,24 @@ final class MovieMutatorEditTests: XCTestCase {
         XCTAssertNotNil(pasteboard.data(forType: .movieMutator),
                         "clip must be cached on PBoard")
     }
-
+    
     func testCutUndoRestoresDurationAndMarker() {
         guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
-
+        
         let durationBefore = mutator.movieRange().duration.seconds
         let insertionBefore = mutator.insertionTime.seconds
         let selectionStartBefore = mutator.selectedTimeRange.start.seconds
         let selectionDurationBefore = mutator.selectedTimeRange.duration.seconds
-
+        
         realUM.beginUndoGrouping()
         let wrapper = UndoManagerWrapper(realUM)
         mutator.cutSelection(using: wrapper)
         realUM.endUndoGrouping()
-
+        
         realUM.undo()
-
+        
         XCTAssertEqual(mutator.movieRange().duration.seconds, durationBefore, accuracy: 0.01,
                        "duration restored")
         XCTAssertEqual(mutator.insertionTime.seconds, insertionBefore, accuracy: 0.01,
@@ -212,37 +212,37 @@ final class MovieMutatorEditTests: XCTestCase {
                        "selection duration restored")
         XCTAssertTrue(realUM.canRedo, "redo available after undo")
     }
-
+    
     func testCutRedoReappliesCut() {
         guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
-
+        
         let durationBefore = mutator.movieRange().duration.seconds
         let selectionBefore = mutator.selectedTimeRange.duration.seconds
-
+        
         realUM.beginUndoGrouping()
         let wrapper = UndoManagerWrapper(realUM)
         mutator.cutSelection(using: wrapper)
         realUM.endUndoGrouping()
-
+        
         realUM.undo()
         realUM.redo()
-
+        
         XCTAssertEqual(mutator.movieRange().duration.seconds,
                        durationBefore - selectionBefore, accuracy: 0.01,
                        "redo re-applies cut")
         XCTAssertTrue(realUM.canUndo, "undo available after redo")
     }
-
+    
     func testPasteAtInsertionTimeRoundTrip() {
         guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
-
+        
         let durationBefore = mutator.movieRange().duration.seconds
         let selectionBefore = mutator.selectedTimeRange.duration.seconds
-
+        
         // Cut
         realUM.beginUndoGrouping()
         let cutWrapper = UndoManagerWrapper(realUM)
@@ -250,7 +250,7 @@ final class MovieMutatorEditTests: XCTestCase {
         realUM.endUndoGrouping()
         XCTAssertEqual(mutator.movieRange().duration.seconds,
                        durationBefore - selectionBefore, accuracy: 0.01)
-
+        
         // Paste (cut's doRemove made selection zero-duration; paste allows needsDuration=false)
         realUM.beginUndoGrouping()
         let pasteWrapper = UndoManagerWrapper(realUM)
@@ -258,27 +258,27 @@ final class MovieMutatorEditTests: XCTestCase {
         realUM.endUndoGrouping()
         XCTAssertEqual(mutator.movieRange().duration.seconds, durationBefore, accuracy: 0.01,
                        "paste restores duration")
-
+        
         // Undo paste -> back to cut state
         realUM.undo()
         XCTAssertEqual(mutator.movieRange().duration.seconds,
                        durationBefore - selectionBefore, accuracy: 0.01,
                        "undo paste returns to cut state")
-
+        
         // Redo paste -> duration restored
         realUM.redo()
         XCTAssertEqual(mutator.movieRange().duration.seconds, durationBefore, accuracy: 0.01,
                        "redo paste re-inserts clip")
     }
-
+    
     func testDeleteSelectionRoundTrip() {
         guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
-
+        
         let durationBefore = mutator.movieRange().duration.seconds
         let selectionBefore = mutator.selectedTimeRange.duration.seconds
-
+        
         realUM.beginUndoGrouping()
         let delWrapper = UndoManagerWrapper(realUM)
         mutator.deleteSelection(using: delWrapper)
@@ -287,11 +287,11 @@ final class MovieMutatorEditTests: XCTestCase {
         XCTAssertEqual(mutator.movieRange().duration.seconds,
                        durationBefore - selectionBefore, accuracy: 0.01,
                        "delete shrinks movie")
-
+        
         realUM.undo()
         XCTAssertEqual(mutator.movieRange().duration.seconds, durationBefore, accuracy: 0.01,
                        "undo restores duration")
-
+        
         realUM.redo()
         XCTAssertEqual(mutator.movieRange().duration.seconds,
                        durationBefore - selectionBefore, accuracy: 0.01,

@@ -243,7 +243,7 @@ Security-scoped resource access is properly wrapped with `NSFileCoordinator` and
 - `scripts/test.sh` orchestrates build → test → analyze via `xcodebuild`
 - CI workflow (`.github/workflows/test.yml`) runs on push/PR to `main`, `work`, and `develop` branches (Build → Test → Analyze, using `build-for-testing` + `test-without-building` to avoid double compilation)
 - 197 tests pass (196 executed in the latest run; `testLoggingWithInterpolation` intermittently skipped but passes in isolation). No skipped tests (`testInvalidDurationPath` removed by S-12), no flaky tests (`testPerformanceMetricsOverhead` stabilized by M-22)
-- The `scripts/test.sh` summary reports 15 files / 190 tests — **stale**, actual suite is 197 tests (see §7.3)
+- The `scripts/test.sh` summary reports 15 files / 197 tests, matching the actual suite
 
 ### 5.3 Test Coverage Gaps
 
@@ -330,7 +330,7 @@ The `API_REFERENCE.md` file contains outdated protocol signatures:
 - Runs `xcodebuild clean build` → `xcodebuild test` → `xcodebuild analyze` sequentially (xcodebuild does not parallelize these well)
 - Each step is guarded with `if ! ...; then exit 1; fi` so failures are reported with a custom message (works with `set -e`)
 - Uses `xcpretty` for output formatting
-- Reports a pass summary; the hardcoded counts are **stale** — they claim "15 files / 190 tests" but the actual suite is 197 tests (updated by T-14; test.sh has not been regenerated)
+- Reports a pass summary; the hardcoded counts match the actual suite (15 files / 197 tests)
 
 ---
 
@@ -425,4 +425,4 @@ The concurrency model is sound, error handling is robust, and resource managemen
 ### Configuration
 - `cutter2.xcodeproj/project.pbxproj` (version 0.8.19 / build 20260801 — uncommitted as of this review)
 - `.github/workflows/test.yml` (build/test/analyze, branches `main`/`work`/`develop`)
-- `scripts/test.sh` (build/test/analyze; hardcoded counts stale — claims 15 files / 190 tests, actual suite is 197 tests)
+- `scripts/test.sh` (build/test/analyze; counts match the actual suite: 15 files / 197 tests)

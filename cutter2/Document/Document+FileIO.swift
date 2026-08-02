@@ -54,7 +54,10 @@ extension Document {
     /// Shared by `readAsync(from:openPreparation:)` and `read(from:ofType:)` so the
     /// UTI check has a single source of truth (and is directly testable).
     /// - Parameter typeName: The UTI to validate.
-    /// - Throws: `DocumentError.incompatibleFileType` if the UTI is not a movie type.
+    /// - Throws: An `NSError` produced by `ErrorUtilities.throwError` for
+    ///   `DocumentError.incompatibleFileType` (domain `NSOSStatusErrorDomain`, code
+    ///   `unimpErr`) when the UTI is not a movie type. Note the thrown value is the
+    ///   NSError form, not the `DocumentError` case itself.
     nonisolated static func validateMovieType(_ typeName: String) throws {
         let fileType = AVFileType.init(rawValue: typeName)
         guard AVMovie.movieTypes().contains(fileType) else {

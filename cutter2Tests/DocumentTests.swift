@@ -54,16 +54,14 @@ final class DocumentTests: XCTestCase {
         XCTAssertNoThrow(try Document.validateMovieType("com.apple.quicktime-movie"))
     }
     
-    /// トラックを含まない無効な movHeader から生成した AVMutableMovie が
-    /// `MovieHeaderValidator.isValid` で false になることを検証。
+    /// トラックを含まない AVMutableMovie が `MovieHeaderValidator.isValid` で false になることを検証。
     /// `readAsync` のヘッダー検証は `MovieHeaderValidator.isValid` に委譲しているため、
     /// ヘッダー検証エラー経路（`.unableToOpenFile` 相当）を直接テストする。
     ///
-    /// 注: `AVMutableMovie(data:)` は空データ（length 0）を NSInvalidArgumentException で拒否するため、
-    /// トラックを含まない非ゼロ長のダミーデータを使用する。
-    func testInvalidHeaderFailsValidation() {
-        let dummyHeader = Data([0x00, 0x00, 0x00, 0x00]) // 非ゼロ長・トラックなし
-        let movie = AVMutableMovie(data: dummyHeader)
+    /// 注: `AVMutableMovie()`（引数なし）でトラックなしの movie を安全に構築する。
+    /// `AVMutableMovie(data:)` に任意バイト列を渡すと AVFoundation が例外を上げるリスクがあるため使用しない。
+    func testInvalidHeaderFailsValidation() throws {
+        let movie = AVMutableMovie() // 引数なし → トラックなしの movie を生成
         XCTAssertFalse(MovieHeaderValidator.isValid(movie))
         if let error = MovieHeaderValidator.validate(movie) {
             guard case .noTracks = error else {

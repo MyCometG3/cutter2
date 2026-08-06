@@ -14,13 +14,13 @@
 # Options:
 #   derivedDataPath - Optional custom derived data path (default: ./.build)
 #
-# Required Test Media:
-#   - scripts/sampleMedia/DL-1115173527.mov (sample movie file for tests)
+# Optional Test Media:
+#   - scripts/sampleMedia/DL-1115173527.mov (sample movie file for specific tests)
 
 set -e
 
 echo "🧪 Running cutter2 tests..."
-echo "   Test Suite: 15 files, 197 tests"
+echo "   Test Suite: 16 files (15 test + 1 helper), 197 tests"
 echo ""
 
 # Colors for output
@@ -30,12 +30,10 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Check for required test media
+# Check for optional test media (tests pass without it)
 SAMPLE_MEDIA="./scripts/sampleMedia/DL-1115173527.mov"
 if [ ! -f "$SAMPLE_MEDIA" ]; then
-  echo -e "${YELLOW}⚠️  Warning: Sample media file not found${NC}"
-  echo "   Expected: $SAMPLE_MEDIA"
-  echo "   Some tests may be skipped or fail without this file."
+  echo -e "${YELLOW}ℹ️  Optional sample media file not found (tests will run without it)${NC}"
   echo ""
 fi
 

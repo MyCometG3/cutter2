@@ -1,15 +1,8 @@
 # Contributing to cutter2
 
-**Last Updated**: February 5, 2026
+**Last Updated**: August 5, 2026
 
 Thank you for your interest in contributing to cutter2! This document provides guidelines and instructions for contributing to the project.
-
-**Recent Updates**:
-- ✅ Phase 2.1 complete: Full internationalization support
-- ✅ Phase 2.2 complete: Performance optimization infrastructure
-- ✅ LocalizationTests added
-- ✅ PerformanceTests added
-- ✅ String Catalog integration
 
 ---
 
@@ -55,8 +48,8 @@ We are committed to providing a welcoming and inspiring community for all. Pleas
 Before contributing, ensure you have:
 
 1. **macOS** 14.0 or later
-2. **Xcode** 15.0 or later (currently 26.1.1)
-3. **Swift** 6.0 or later (currently 6.2.1)
+2. **Xcode** 16.0 or later (Swift 6.0 requires Xcode 16+; currently using Xcode 26.6, Swift 6.3.3)
+3. **Swift** 6.0
 4. **Git** installed and configured
 5. **GitHub account** for submitting contributions
 
@@ -100,7 +93,7 @@ Before contributing, ensure you have:
 
 4. **Read documentation**
    - [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) - Development setup and workflows
-   - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture
+   - [CODEBASE_REVIEW.md](CODEBASE_REVIEW.md) - Codebase analysis and architecture overview
    - [TESTING_GUIDE.md](TESTING_GUIDE.md) - Testing practices
 
 ---
@@ -290,19 +283,19 @@ class MyClass {
     // MARK: Properties
     // Public properties first
     var publicProperty: String
-    
+
     // Then private properties
     private var privateProperty: Int
-    
+
     // MARK: Initialization
     init() { }
-    
+
     // MARK: Public Methods
     func publicMethod() { }
-    
+
     // MARK: Private Methods
     private func privateMethod() { }
-    
+
     // MARK: Protocol Conformance
 }
 
@@ -342,7 +335,9 @@ class ViewController: NSViewController {
 
 // Use async/await for I/O
 func loadData() async throws -> Data {
-    return try await Task.detached {
+    // Task.detached runs the @Sendable closure on a background thread.
+    // Specify priority explicitly for user-facing vs maintenance work.
+    return try await Task.detached(priority: .userInitiated) {
         // Background work
     }.value
 }
@@ -401,6 +396,7 @@ LoggingSystem.video.debug("Detailed state: \(complexObject)")
 - `debug()` - Development debugging (wrap in `#if DEBUG`)
 - `info()` - Informational messages
 - `notice()` - Significant events
+- `warning()` - Potential issues, non-fatal problems (e.g., `LoggingSystem.document.warning("...")`)
 - `error()` - Error conditions
 - `fault()` - Critical failures
 
@@ -451,24 +447,24 @@ class MyFeatureTests: XCTestCase {
         super.setUp()
         // Test setup
     }
-    
+
     override func tearDown() {
         // Test cleanup
         super.tearDown()
     }
-    
+
     // MARK: - Tests
     func testFeatureWorks() {
         // Arrange
         let input = setupInput()
-        
+
         // Act
         let result = performOperation(input)
-        
+
         // Assert
         XCTAssertEqual(result, expected)
     }
-    
+
     func testFeatureHandlesError() {
         // Test error case
     }
@@ -580,10 +576,10 @@ What should happen
 What actually happens
 
 ## Environment
-- macOS version: 26.1
-- Xcode version: 26.1.1
-- Swift version: 6.2.1
-- App version: 1.0.0
+- macOS version: 14.0+
+- Xcode version: 16.0+
+- Swift version: 6.0
+- App version: 0.8.19
 
 ## Additional Context
 - Screenshots if applicable
@@ -651,6 +647,6 @@ Your contributions help make video editing on macOS better for everyone.
 
 ---
 
-**Document Status**: ✅ Active  
-**Last Updated**: February 5, 2026  
+**Document Status**: ✅ Active
+**Last Updated**: August 5, 2026
 **Maintained By**: cutter2 project maintainers

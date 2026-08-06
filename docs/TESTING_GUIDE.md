@@ -1,6 +1,6 @@
 # Testing Guide for cutter2
 
-**Status**: ✅ **Active - Test Infrastructure Operational** *(Updated: February 5, 2026)*
+**Status**: ✅ **Active - Test Infrastructure Operational** *(Updated: August 5, 2026)*
 
 This guide provides instructions for running and writing tests for the cutter2 application.
 
@@ -29,9 +29,9 @@ To run tests: Press `⌘U` in Xcode or run `xcodebuild test` from command line.
 
 ### Prerequisites
 
-- Xcode 15.0 or later (currently using 26.1.1)
-- macOS 14.0 or later (currently using 26.1)
-- Swift 6.0 or later (currently using 6.2.1)
+- Xcode 16.0 or later (Swift 6.0 requires Xcode 16+; currently using Xcode 26.6, Swift 6.3.3)
+- macOS 14.0 or later
+- Swift 6.0
 
 ### Initial Setup
 
@@ -54,34 +54,28 @@ To run tests: Press `⌘U` in Xcode or run `xcodebuild test` from command line.
 
 ```
 cutter2Tests/
-├── cutter2Tests.swift              # Base test class and setup ✅
-├── DocumentTests.swift             # Document tests ✅
-├── LocalizationTests.swift         # Localization tests ✅ (Phase 2.1)
-├── LoggingSystemTests.swift        # Logging tests ✅ (Phase 2.3)
-├── ModelTests.swift                # Additional model tests ✅
-├── MovieMutatorTests.swift         # Model layer tests ✅
-├── PerformanceTests.swift          # Performance tests ✅ (Phase 2.2)
-├── UtilitiesTests.swift            # Utility class tests ✅
-└── ViewControllerTests.swift       # ViewController tests ✅
+├── cutter2Tests.swift                    # Base test class and integration tests (20 tests)
+├── DocumentTests.swift                   # Document tests (6 tests)
+├── LocalizationTests.swift               # Localization tests (11 tests)
+├── LoggingSystemTests.swift              # Logging tests (17 tests)
+├── ModelTests.swift                      # Additional model tests (25 tests)
+├── MovieMutatorTests.swift               # Model layer tests (22 tests)
+├── MovieMutatorEditTests.swift           # Edit operation tests (5 tests)
+├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
+├── MovieHeaderValidatorTests.swift       # Header validation tests (3 tests)
+├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
+├── TimelineViewRenderingTests.swift      # Timeline rendering tests (15 tests)
+├── ViewControllerTests.swift             # ViewController tests (15 tests)
+├── ViewControllerKeyEventTests.swift     # Key event tests (14 tests)
+├── PerformanceTests.swift                # Performance tests (12 tests)
+└── UtilitiesTests.swift                  # Utility class tests (20 tests)
 ```
+
+**Total**: 16 files (15 test + 1 helper), **197 test methods**
 
 **Current Status**:
 - Full test suite implemented covering core functionality, localization, logging, and performance
 - Run `./scripts/test.sh` or `xcodebuild test` for current results
-
-**Phase 2.1 - Localization**:
-- ✅ LocalizationTests.swift - localization coverage
-- Tests all error messages (DocumentError, MovieWriterError)
-- Tests UI strings (buttons, menus, inspector labels)
-- Tests LocalizationHelper utility methods
-- Tests formatted string localization
-
-**Phase 2.2 - Performance**:
-- ✅ PerformanceTests.swift - performance coverage
-- Tests CMTime operations performance
-- Tests movie loading and preparation
-- Tests export progress reporting
-- Baseline performance measurements for regression detection
 
 ---
 
@@ -146,27 +140,27 @@ import XCTest
 @testable import cutter2
 
 final class MyFeatureTests: XCTestCase {
-    
+
     var sut: MyFeatureClass?
-    
+
     override func setUpWithError() throws {
         try super.setUpWithError()
         sut = MyFeatureClass()
         continueAfterFailure = false
     }
-    
+
     override func tearDownWithError() throws {
         sut = nil
         try super.tearDownWithError()
     }
-    
+
     func testFeatureBehavior() throws {
         // Given
         let input = "test"
-        
+
         // When
         let result = sut?.processInput(input)
-        
+
         // Then
         XCTAssertNotNil(result)
         XCTAssertEqual(result, "expected")
@@ -200,14 +194,14 @@ func testAsyncOperation() async throws {
 ```swift
 func testMainActorOperation() throws {
     let expectation = self.expectation(description: "Main actor operation")
-    
+
     Task { @MainActor in
         // Test main actor code
         let viewController = ViewController()
         XCTAssertTrue(Thread.isMainThread)
         expectation.fulfill()
     }
-    
+
     wait(for: [expectation], timeout: 1.0)
 }
 ```
@@ -233,7 +227,7 @@ Follow this structure for test methods:
 // MARK: - Initialization Tests
 func testInitialization() { }
 
-// MARK: - Business Logic Tests  
+// MARK: - Business Logic Tests
 func testFeatureA() { }
 func testFeatureB() { }
 
@@ -273,18 +267,10 @@ Run tests with coverage enabled to track progress toward current goals.
 
 ### Generate Coverage Report (CLI)
 
-```bash
-xcodebuild test \
-  -project cutter2.xcodeproj \
-  -scheme cutter2 \
-  -destination 'platform=macOS' \
-  -enableCodeCoverage YES
+Use the test script which includes coverage report generation:
 
-xcrun llvm-cov export \
-  -format="lcov" \
-  -instr-profile=$(find ~/Library/Developer/Xcode/DerivedData -name "Coverage.profdata" | head -1) \
-  $(find ~/Library/Developer/Xcode/DerivedData -name "cutter2" -type f | head -1) \
-  > coverage.lcov
+```bash
+./scripts/test.sh
 ```
 
 ---
@@ -299,7 +285,7 @@ xcrun llvm-cov export \
 
 Workflow file: `.github/workflows/test.yml`
 
-**Status**: CI/CD pipeline configured and operational as of October 13, 2025.
+**Status**: CI/CD pipeline configured and operational as of August 2026.
 
 ### Local Pre-commit Testing
 
@@ -365,7 +351,7 @@ When needed, create mock objects in test files:
 ```swift
 class MockMovieMutator: MovieMutatorProtocol {
     var didCallMethod = false
-    
+
     func someMethod() {
         didCallMethod = true
     }
@@ -374,10 +360,7 @@ class MockMovieMutator: MovieMutatorProtocol {
 
 ### Test Data
 
-Store test resources in `cutter2Tests/TestResources/`:
-- Sample video files (small, < 1MB)
-- Configuration files
-- Mock data files
+Test fixtures are created programmatically using `TestMovieFixtureWriter` in `cutter2Tests/TestMovieFixtureWriter.swift`.
 
 ---
 
@@ -425,6 +408,6 @@ Based on Phase 2-3 of the improvement plan:
 
 ---
 
-**Last Updated**: February 5, 2026  
-**Version**: 1.2  
-**Status**: ✅ Test Infrastructure Operational - Phase 2.1 & 2.2 Complete
+**Last Updated**: August 5, 2026
+**Version**: 1.3
+**Status**: ✅ Test Infrastructure Operational - 197 tests passing

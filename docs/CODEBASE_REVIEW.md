@@ -1,27 +1,36 @@
 # Codebase Review — cutter2
 
-**Date:** 2026-08-05
-**Reviewer:** Claude (source-level code review)
-**Scope:** `cutter2/` (repository root)
-**Status:** Completed
+**Date:** 2026-08-06
+**Reviewer:** Source-level documentation and code review
+**Scope:** Source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
+**Reviewed commit:** `78f1d00e140afb2e2ce7ce030781895e0d981e5c` (`work`)
+**Verification environment:** macOS 26.6 (build 25G72), Xcode 26.6 (build 17F113), Swift compiler 6.3.3
+**Status:** Updated; current test verification is blocked by a duplicate test helper declaration
 
 ---
 
 ## 1. Summary
 
-This document records the findings of a comprehensive source-level review of the **cutter2** project — a macOS video editor application built with Swift and AVFoundation. The review covers project structure, architecture, concurrency model, code quality, test coverage, documentation accuracy, and build/CI configuration.
+This document records a source-level review of the **cutter2** project — a macOS video editor application built with Swift and AVFoundation. The review covers project structure, architecture, concurrency model, code quality, test coverage, documentation accuracy, and build/CI configuration.
 
-The review was conducted by reading all source files, test files, documentation, build configuration, and CI scripts, and by running `xcodebuild test` to verify test execution results. This revision (2026-08-05) refreshes the previous review (2026-08-01) against the current `work` branch state.
+This revision was checked against the current `work` branch at commit `78f1d00e140afb2e2ce7ce030781895e0d981e5c`. Source files, test files, Markdown documentation, build configuration, CI workflow, and test scripts were inspected. The following test command was also attempted:
 
-**Changes since the 2026-07-30 review:**
+```bash
+xcodebuild test -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS' -derivedDataPath .build-current -enableCodeCoverage YES CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO
+```
 
-- **Test count: 197** (16 files: 15 test files + 1 helper; 197 test methods, all passing, none skipped). This revision reflects S-12 (removed the always-skipped `testInvalidDurationPath`), M-22 (stabilized `PerformanceTests.testPerformanceMetricsOverhead()`), and T-14 (added 7 tests covering Document read error paths and TimelineView mouse input).
-- **CI workflow updated** to trigger on `main`, `work`, and `develop`, and to run Build → Test → Analyze as three sequential steps (previously single `xcodebuild test` on `main`/`develop`).
-- **Strict concurrency enabled** — `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` synced from master (PR #53) across all 4 build configurations.
-- **Swift version is pinned** to `SWIFT_VERSION = 6.0` in the project (the earlier review incorrectly stated it was unpinned).
-- **Force casts (`as!`) count is 14** (10 code lines: 8 CF typealias + 2 NSDictionary; plus 4 comment lines) — all with safety justifications.
-- **`precondition` in `AsyncBridge.swift` (line 100)** — a deliberate main-thread guard for `AsyncBridge.perform`, distinct from the `preconditionFailure` in `MovieMutatorBase.swift:20`.
-- **Version bump to 0.8.19** (uncommitted, `CURRENT_PROJECT_VERSION = 20260802`).
+The command did not reach test execution because the build failed with a duplicate `writeSampleMovie(to:duration:timescale:frameRate:)` declaration at `cutter2Tests/MovieMutatorTransformExportTests.swift:19` and `cutter2Tests/TestMovieFixtureWriter.swift:32`. Therefore, this document distinguishes static source counts from runtime test results.
+
+**Current verification facts:**
+
+- **Static test suite size:** 16 files total (15 test source files + 1 helper), with 197 statically declared `func test...` methods.
+- **Recorded historical run:** The August 5, 2026 review recorded 197 passing tests; that result is not a passing result for the current HEAD until the duplicate declaration is fixed and the suite is rerun.
+- **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps. The workflow uses `macos-latest` and does not pin a specific Xcode image.
+- **Strict concurrency:** `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` are enabled across all four app/test configurations.
+- **Swift language mode:** `SWIFT_VERSION = 6.0` is pinned in the app and test targets.
+- **Version:** `MARKETING_VERSION = 0.8.19`, `CURRENT_PROJECT_VERSION = 20260802`; these values are committed in the reviewed project state.
+- **Force casts:** The earlier review recorded 14 `as!` lines (10 code lines and 4 comment lines); this count is a historical review metric and should be rechecked when the code is changed.
+- **Main-thread guards:** `AsyncBridge.perform` contains an intentional main-thread precondition, while `MovieMutatorBase.swift:20` guards an impossible `mutableCopy()` type result.
 
 ---
 
@@ -136,17 +145,11 @@ cutter2Tests/
 └── TestMovieFixtureWriter.swift          # Test helper (0 tests, fixture writer)
 ```
 
-**Total:** 16 files (15 test + 1 helper), **197 test methods** (all passing — see §2.3). Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`).
+**Total:** 16 files (15 test source files + 1 helper), **197 statically declared test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`).
 
 ### 2.3 Test Execution Results
 
-```
-Test Suite Summary (2026-08-05, verified on this branch)
-  Result: ✅ 197 Passed, 0 Failed
-  Total: 197 test methods, all executed, none skipped
-```
-
-The suite contains 197 `func test` methods with no `XCTSkip` usage. The always-skipped `MovieHeaderValidatorTests.testInvalidDurationPath()` was removed by S-12 (consistent with master PR #53). The previously flaky `PerformanceTests.testPerformanceMetricsOverhead()` was stabilized by M-22 (workload increased to 100k iterations, best-of-N measurement, threshold relaxed to 30%) — verified passing in isolation (5 runs) and in the full suite (2 runs). T-14 added 7 tests covering Document read error paths (`validateMovieType` / `MovieHeaderValidator`) and TimelineView mouse input (`mouseDown` / `mouseDragged`).
+The static suite contains 197 `func test...` methods and no `XCTSkip` usage was found in the current source. The August 5, 2026 recorded run reported 197 passing tests. The fresh August 6, 2026 run for the reviewed commit did not reach test execution because the build failed on the duplicate `writeSampleMovie` declaration described in §1. The runtime result for the current HEAD is therefore **not verified as passing**.
 
 ---
 
@@ -235,14 +238,14 @@ Security-scoped resource access is properly wrapped with `NSFileCoordinator` and
 | **LoggingSystem** | `LoggingSystemTests.swift` | 17 | ✅ Covered |
 | **cutter2 (integration)** | `cutter2Tests.swift` | 20 | ✅ Covered |
 | **MovieHeaderValidator** | `MovieHeaderValidatorTests.swift` | 3 | ✅ Covered |
-| **Overall** | 16 files (15 test + 1 helper) | **197 tests** | ✅ 197 passing |
+| **Overall** | 16 files (15 test source + 1 helper) | **197 statically declared methods** | Runtime status not verified for current HEAD |
 
 ### 5.2 Test Execution
 
 - `scripts/test.sh` orchestrates build → test → analyze via `xcodebuild`
 - CI workflow (`.github/workflows/test.yml`) runs on push/PR to `main`, `work`, and `develop` branches (Build → Test → Analyze, using `build-for-testing` + `test-without-building` to avoid double compilation)
-- 197 tests pass (all 197 executed, none skipped). No `XCTSkip` usage (`testInvalidDurationPath` removed by S-12), no flaky tests (`testPerformanceMetricsOverhead` stabilized by M-22)
-- The `scripts/test.sh` summary reports 16 files / 197 tests, matching the actual suite
+- The current source contains 197 statically declared test methods and no `XCTSkip` usage; runtime success is not established for the reviewed HEAD because the build currently fails on the duplicate test helper declaration
+- The `scripts/test.sh` summary distinguishes 15 test source files from 1 helper file and reports 197 test methods
 
 ### 5.3 Test Coverage Gaps
 
@@ -278,13 +281,11 @@ The following documents were removed on 2026-08-05 because they were outdated an
 - **`ARCHITECTURE.md`** — Last updated 2026-02-05, contained stale file names, line counts, and layer descriptions. Information is now maintained in this document (§3 Architecture Overview).
 - **`API_REFERENCE.md`** — Last updated 2026-02-05, contained outdated protocol signatures and error types. API details should be sourced from inline documentation and this review.
 
-### 6.2 Concurrency Guidelines
+### 6.2 Documentation Review
 
-`ConcurrencyGuidelines.md` (updated 2026-08-05) appears accurate and aligns with the current concurrency model.
+`ConcurrencyGuidelines.md`, `CONTRIBUTING.md`, `DEVELOPMENT_GUIDE.md`, and `TESTING_GUIDE.md` were checked for internal links, code fences, test-count consistency, command reproducibility, and alignment with the current implementation. The review found and corrected stale environment labels, placeholder clone commands, incomplete `test-without-building` instructions, an omitted test helper, and an unsafe `AVMutableMovie` concurrency example.
 
-### 6.3 Other Documentation
-
-- `CONTRIBUTING.md`, `DEVELOPMENT_GUIDE.md`, `TESTING_GUIDE.md` — not reviewed in detail but appear structurally sound based on file listing.
+The Markdown set contains 7 files when `README.md` and `.github/copilot-instructions.md` are included; the 5 files under `docs/` are listed separately in §11.
 
 ---
 
@@ -293,9 +294,9 @@ The following documents were removed on 2026-08-05 because they were outdated an
 ### 7.1 Xcode Project
 
 - Project file: `cutter2.xcodeproj/project.pbxproj`
-- Deployment target: macOS 14.0 (project-level `MACOSX_DEPLOYMENT_TARGET = 14.0`; target-level uses `$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)`)
-- Swift version: pinned to `SWIFT_VERSION = 6.0` (all targets)
-- Version: `MARKETING_VERSION = 0.8.19`, `CURRENT_PROJECT_VERSION = 20260802` (uncommitted bump from 0.8.18 as of this review)
+- Deployment target: app and test targets explicitly set `MACOSX_DEPLOYMENT_TARGET = 14.0` in both Debug and Release configurations. The project-level Debug/Release settings retain `$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)` as a fallback.
+- Swift version: pinned to `SWIFT_VERSION = 6.0` (all app/test target configurations)
+- Version: `MARKETING_VERSION = 0.8.19`, `CURRENT_PROJECT_VERSION = 20260802` (committed in the reviewed project state)
 - `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` enabled in all 4 build configurations (synced from master PR #53)
 
 ### 7.2 CI Workflow
@@ -313,7 +314,7 @@ The following documents were removed on 2026-08-05 because they were outdated an
 - Each step is guarded with `if ! ...; then exit 1; fi` so failures are reported with a custom message (works with `set -e`)
 - Uses color-coded echo statements for output formatting
 - Generates coverage reports via `xcrun llvm-cov`
-- Reports a pass summary; the hardcoded counts match the actual suite (16 files / 197 tests)
+- Reports a summary; its static counts distinguish 15 test source files from 1 helper and report 197 methods
 
 ---
 
@@ -371,9 +372,9 @@ The following documents were removed on 2026-08-05 because they were outdated an
 
 ## 10. Conclusion
 
-The cutter2 codebase demonstrates a well-structured, maintainable architecture with strong concurrency discipline and comprehensive test coverage (197 test methods, all passing). Strict concurrency (`complete`) and warnings-as-errors are now enabled across all build configurations. The primary area needing attention is the remaining test coverage gaps (Document+UI window resize, Document+SavePanel flow, MovieMutator clipboard, Document+PositionControl scrubbing — the FileIO revert and TimelineView mouse input gaps were closed by T-14).
+The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 197 statically declared test methods. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Runtime test status for the reviewed HEAD remains blocked by the duplicate `writeSampleMovie` declaration; the historical August 5 passing result must not be treated as current until the build is repaired and the suite is rerun. Remaining documented coverage gaps include Document+UI window resize, Document+SavePanel flow, MovieMutator clipboard, and Document+PositionControl scrubbing.
 
-The concurrency model is sound, error handling is robust, and resource management follows best practices. The flaky performance test has been stabilized and the test suite is deterministic.
+The concurrency model, typed error propagation, and security-scoped resource cleanup align with the implementation inspected. The next verification step is to remove or rename the duplicate test helper, then rerun build, test, and analyze.
 
 ---
 
@@ -388,7 +389,7 @@ The concurrency model is sound, error handling is robust, and resource managemen
 - Utilities: `AsyncBridge.swift`, `ActorUtilities.swift`, `LayoutConverter.swift` + 3 extensions (`+Convert`, `+LayoutData`, `+Mapping`), `MovieHeaderValidator.swift`, `PerformanceMetrics.swift`, `ErrorUtilities.swift`, `Constants.swift`, `LocalizationHelper.swift`, `LoggingSystem.swift`, `DateFormatter+Factory.swift`
 - Resources: `Info.plist`, `cutter2.entitlements`, `Localizable.xcstrings`
 
-### Test Files (16 files, 197 test methods)
+### Test Files (16 files: 15 test source files + 1 helper; 197 statically declared methods)
 - `cutter2Tests.swift` (20 tests), `MovieMutatorTests.swift` (22 tests), `MovieMutatorEditTests.swift` (5 tests), `MovieMutatorTransformExportTests.swift` (8 tests)
 - `MovieHeaderValidatorTests.swift` (3 tests), `AsyncBridgeTests.swift` (4 tests)
 - `TimelineViewRenderingTests.swift` (15 tests), `ViewControllerTests.swift` (15 tests), `ViewControllerKeyEventTests.swift` (14 tests)
@@ -397,14 +398,16 @@ The concurrency model is sound, error handling is robust, and resource managemen
 - `LocalizationTests.swift` (11 tests), `LoggingSystemTests.swift` (17 tests)
 - `TestMovieFixtureWriter.swift` (0 tests, fixture writer helper)
 
-### Documentation (5 files)
-- `CODEBASE_REVIEW.md` (this document — see §3 for architecture overview)
-- `ConcurrencyGuidelines.md` (current — updated 2026-08-05)
-- `CONTRIBUTING.md` (updated 2026-08-05)
-- `DEVELOPMENT_GUIDE.md` (updated 2026-08-05)
-- `TESTING_GUIDE.md` (updated 2026-08-05)
+### Markdown Documentation (7 files)
+- `README.md` (project overview, Quick Start, features, and environment)
+- `.github/copilot-instructions.md` (Copilot-specific project guidance)
+- `docs/CODEBASE_REVIEW.md` (this document — architecture and verification record)
+- `docs/ConcurrencyGuidelines.md` (concurrency rules)
+- `docs/CONTRIBUTING.md` (contribution workflow)
+- `docs/DEVELOPMENT_GUIDE.md` (development workflow)
+- `docs/TESTING_GUIDE.md` (test structure and commands)
 
 ### Configuration
-- `cutter2.xcodeproj/project.pbxproj` (version 0.8.19 / build 20260802 — uncommitted as of this review)
-- `.github/workflows/test.yml` (build/test/analyze, branches `main`/`work`/`develop`)
-- `scripts/test.sh` (build/test/analyze; counts match the actual suite: 16 files / 197 tests)
+- `cutter2.xcodeproj/project.pbxproj` (version 0.8.19 / build 20260802 — committed in the reviewed state)
+- `.github/workflows/test.yml` (build/test/analyze, branches `main`/`work`/`develop`; coverage artifact generation is optional)
+- `scripts/test.sh` (build/test/analyze; static suite count: 15 test source files + 1 helper, 197 methods)

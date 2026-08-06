@@ -1,7 +1,7 @@
 # Concurrency Guidelines for cutter2
 
 **Version**: 1.1
-**Last Updated**: August 5, 2026
+**Last Updated**: August 6, 2026
 **Swift Version**: 6.0
 
 ---
@@ -54,7 +54,8 @@ actor MovieWriter: SampleBufferChannelDelegate {
     func exportMovie(...) async throws { ... }
 }
 
-// progressStream() is on MovieMutatorBase (a @MainActor class), not on MovieWriter
+// progressStream() is on MovieMutatorBase, which is @MainActor-isolated, not on MovieWriter
+@MainActor
 class MovieMutatorBase: NSObject {
     public func progressStream() -> AsyncStream<Float> { ... }
 }
@@ -224,4 +225,5 @@ When touching a file, verify:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.1 | 2026-08-06 | — | Clarified `MovieMutatorBase` `@MainActor` isolation and synchronized the documented concurrency examples with the current implementation. |
 | 1.0 | 2026-06-21 | — | Initial version based on post-PR#33/34/37/39/40/41 codebase |

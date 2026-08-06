@@ -1,6 +1,6 @@
 # Development Guide for cutter2
 
-**Last Updated**: August 5, 2026
+**Last Updated**: August 6, 2026
 **Status**: ✅ Active and Maintained
 
 ---
@@ -26,15 +26,17 @@
 ### Prerequisites
 
 - **macOS**: 14.0 or later
-- **Xcode**: 16.0 or later (Swift 6.0 requires Xcode 16+; currently using Xcode 26.6, Swift 6.3.3)
-- **Swift**: 6.0
+- **Xcode**: 16.0 or later
+- **Swift language mode**: 6.0 (`SWIFT_VERSION = 6.0`)
 - **Git**: For version control
 - **Command Line Tools**: Install via `xcode-select --install`
+
+The documentation was verified on August 6, 2026 with macOS 26.6 (build 25G72), Xcode 26.6 (build 17F113), and Swift compiler 6.3.3. These are verification values, not minimum requirements.
 
 ### Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/MyCometG3/cutter2.git
 cd cutter2
 ```
 
@@ -114,7 +116,9 @@ Or double-click `cutter2.xcodeproj` in Finder.
 xcodebuild build \
   -project cutter2.xcodeproj \
   -scheme cutter2 \
-  -destination 'platform=macOS'
+  -destination 'platform=macOS' \
+  CODE_SIGN_IDENTITY='' \
+  CODE_SIGNING_REQUIRED=NO
 ```
 
 **Build for Testing**:
@@ -122,7 +126,9 @@ xcodebuild build \
 xcodebuild build-for-testing \
   -project cutter2.xcodeproj \
   -scheme cutter2 \
-  -destination 'platform=macOS'
+  -destination 'platform=macOS' \
+  CODE_SIGN_IDENTITY='' \
+  CODE_SIGNING_REQUIRED=NO
 ```
 
 **Clean Build**:
@@ -130,7 +136,9 @@ xcodebuild build-for-testing \
 xcodebuild clean build \
   -project cutter2.xcodeproj \
   -scheme cutter2 \
-  -destination 'platform=macOS'
+  -destination 'platform=macOS' \
+  CODE_SIGN_IDENTITY='' \
+  CODE_SIGNING_REQUIRED=NO
 ```
 
 ### Build Configuration
@@ -178,7 +186,9 @@ xcodebuild build \
 xcodebuild test \
   -project cutter2.xcodeproj \
   -scheme cutter2 \
-  -destination 'platform=macOS'
+  -destination 'platform=macOS' \
+  CODE_SIGN_IDENTITY='' \
+  CODE_SIGNING_REQUIRED=NO
 ```
 
 **Run Tests with Coverage**:
@@ -187,7 +197,9 @@ xcodebuild test \
   -project cutter2.xcodeproj \
   -scheme cutter2 \
   -destination 'platform=macOS' \
-  -enableCodeCoverage YES
+  -enableCodeCoverage YES \
+  CODE_SIGN_IDENTITY='' \
+  CODE_SIGNING_REQUIRED=NO
 ```
 
 **Using Test Script** (includes coverage report):
@@ -197,7 +209,7 @@ xcodebuild test \
 
 ### Test Organization
 
-**Test Files** (16 files, 197 test methods):
+**Test directory contents** (16 files: 15 test source files + 1 helper; 197 statically declared test methods):
 ```
 cutter2Tests/
 ├── cutter2Tests.swift                    # Integration tests (20 tests)
@@ -214,8 +226,11 @@ cutter2Tests/
 ├── ViewControllerTests.swift             # ViewController tests (15 tests)
 ├── ViewControllerKeyEventTests.swift     # Key event tests (14 tests)
 ├── PerformanceTests.swift                # Performance tests (12 tests)
-└── UtilitiesTests.swift                  # Utility tests (20 tests)
+├── UtilitiesTests.swift                  # Utility tests (20 tests)
+└── TestMovieFixtureWriter.swift          # Test helper (0 tests)
 ```
+
+The static count is derived from `func test...` declarations. Runtime results depend on the current build and test run.
 
 See [TESTING_GUIDE.md](TESTING_GUIDE.md) for detailed testing information.
 
@@ -342,15 +357,19 @@ class ViewController: NSViewController {
 
 **Use async/await for I/O operations**:
 ```swift
-// Note: AVMutableMovie is not Sendable. Creating it inside a detached task
-// and returning it as the task value is safe because the value is transferred
-// back to the caller, not captured by the @Sendable closure.
-func loadMovie(from url: URL) async throws -> AVMutableMovie {
+func loadMovieData(from url: URL) async throws -> Data {
     try await Task.detached(priority: .userInitiated) {
-        try AVMutableMovie(url: url)
+        try Data(contentsOf: url)
     }.value
 }
+
+@MainActor
+func makeMovie(from data: Data) -> AVMutableMovie {
+    AVMutableMovie(data: data, options: nil)
+}
 ```
+
+`AVMutableMovie` is not a `Sendable` value in this project. Keep the detached task boundary on `Data` or another `Sendable` value, then create or mutate the movie on the appropriate actor.
 
 **Synchronize callbacks properly**:
 ```swift
@@ -950,5 +969,5 @@ If you encounter issues:
 ---
 
 **Document Status**: ✅ Active
-**Last Updated**: August 5, 2026
+**Last Updated**: August 6, 2026
 **Maintained By**: cutter2 development team

@@ -1,18 +1,30 @@
 # Testing Guide for cutter2
 
-**Status**: ✅ **Active - Test Infrastructure Operational** *(Updated: August 5, 2026)*
+**Status**: Active — test instructions and infrastructure reference *(Updated: August 6, 2026)*
 
 This guide provides instructions for running and writing tests for the cutter2 application.
 
 ## Quick Start
 
-The test infrastructure is fully configured and operational:
-- ✅ Test suite covers Models, ViewControllers, Utilities, Localization, Performance, and Logging
-- ✅ XCTest framework integrated
-- ✅ Code coverage enabled
-- ✅ CI/CD pipeline active (GitHub Actions)
+The test target is configured with XCTest and currently contains:
+- 15 test source files
+- 1 test helper file
+- 197 statically declared `func test...` methods
+- Code coverage support in the command-line and CI workflows
 
-To run tests: Press `⌘U` in Xcode or run `xcodebuild test` from command line.
+Run the complete suite with:
+
+```bash
+xcodebuild test \
+  -project cutter2.xcodeproj \
+  -scheme cutter2 \
+  -destination 'platform=macOS' \
+  -enableCodeCoverage YES \
+  CODE_SIGN_IDENTITY='' \
+  CODE_SIGNING_REQUIRED=NO
+```
+
+The recorded run on August 5, 2026 reported 197 passing tests. A fresh run on August 6, 2026 at commit `78f1d00e140afb2e2ce7ce030781895e0d981e5c` did not reach test execution because the build failed on a duplicate `writeSampleMovie(to:duration:timescale:frameRate:)` declaration in `MovieMutatorTransformExportTests.swift:19` and `TestMovieFixtureWriter.swift:32`.
 
 ## Table of Contents
 
@@ -29,15 +41,17 @@ To run tests: Press `⌘U` in Xcode or run `xcodebuild test` from command line.
 
 ### Prerequisites
 
-- Xcode 16.0 or later (Swift 6.0 requires Xcode 16+; currently using Xcode 26.6, Swift 6.3.3)
+- Xcode 16.0 or later
 - macOS 14.0 or later
-- Swift 6.0
+- Swift language mode 6.0 (`SWIFT_VERSION = 6.0`)
+
+The documentation was verified on August 6, 2026 with macOS 26.6 (build 25G72), Xcode 26.6 (build 17F113), and Swift compiler 6.3.3.
 
 ### Initial Setup
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/MyCometG3/cutter2.git
    cd cutter2
    ```
 
@@ -68,14 +82,13 @@ cutter2Tests/
 ├── ViewControllerTests.swift             # ViewController tests (15 tests)
 ├── ViewControllerKeyEventTests.swift     # Key event tests (14 tests)
 ├── PerformanceTests.swift                # Performance tests (12 tests)
-└── UtilitiesTests.swift                  # Utility class tests (20 tests)
+├── UtilitiesTests.swift                  # Utility class tests (20 tests)
+└── TestMovieFixtureWriter.swift          # Test helper (0 tests)
 ```
 
-**Total**: 16 files (15 test + 1 helper), **197 test methods**
+**Static suite size**: 16 files total (15 test source files + 1 helper), **197 statically declared test methods**.
 
-**Current Status**:
-- Full test suite implemented covering core functionality, localization, logging, and performance
-- Run `./scripts/test.sh` or `xcodebuild test` for current results
+Runtime results must be taken from the specific `xcodebuild test` or Xcode run being reported.
 
 ---
 
@@ -102,23 +115,35 @@ cutter2Tests/
    xcodebuild test \
      -project cutter2.xcodeproj \
      -scheme cutter2 \
-     -destination 'platform=macOS'
+     -destination 'platform=macOS' \
+     -enableCodeCoverage YES \
+     CODE_SIGN_IDENTITY='' \
+     CODE_SIGNING_REQUIRED=NO
    ```
 
-2. **Build for testing only**
+2. **Build for testing and run without rebuilding**
+
+   `test-without-building` requires a successful `build-for-testing` run with the same project, scheme, destination, configuration, and DerivedData path.
+
    ```bash
+   DERIVED_DATA=.build-test
+
    xcodebuild build-for-testing \
      -project cutter2.xcodeproj \
      -scheme cutter2 \
-     -destination 'platform=macOS'
-   ```
+     -destination 'platform=macOS' \
+     -derivedDataPath "$DERIVED_DATA" \
+     CODE_SIGN_IDENTITY='' \
+     CODE_SIGNING_REQUIRED=NO
 
-3. **Run tests without building**
-   ```bash
    xcodebuild test-without-building \
      -project cutter2.xcodeproj \
      -scheme cutter2 \
-     -destination 'platform=macOS'
+     -destination 'platform=macOS' \
+     -derivedDataPath "$DERIVED_DATA" \
+     -enableCodeCoverage YES \
+     CODE_SIGN_IDENTITY='' \
+     CODE_SIGNING_REQUIRED=NO
    ```
 
 ### Quick Test Script
@@ -253,6 +278,8 @@ func testPerformanceOfCriticalPath() { }
    - Check "Code Coverage" checkbox
    - Select "cutter2.app" target for coverage
 
+   For command-line runs, pass `-enableCodeCoverage YES` explicitly; the command-line option is independent of the Xcode scheme checkbox.
+
 2. **View Coverage Report**
    - Run tests
    - Open Report Navigator (⌘9)
@@ -279,13 +306,13 @@ Use the test script which includes coverage report generation:
 
 ### GitHub Actions
 
-✅ **Active**: Tests run automatically on:
+**Workflow**: Tests are configured to run on:
 - Push to `main`, `work`, or `develop` branches
 - Pull requests to these branches
 
 Workflow file: `.github/workflows/test.yml`
 
-**Status**: CI/CD pipeline configured and operational as of August 2026.
+The workflow runs Build → Test → Analyze and attempts to publish an LCOV artifact. The current workflow does not pin the Xcode image and treats coverage artifact generation as optional; confirm the result from the specific GitHub Actions run.
 
 ### Local Pre-commit Testing
 
@@ -408,6 +435,6 @@ Based on Phase 2-3 of the improvement plan:
 
 ---
 
-**Last Updated**: August 5, 2026
-**Version**: 1.3
-**Status**: ✅ Test Infrastructure Operational - 197 tests passing
+**Last Updated**: August 6, 2026
+**Version**: 1.4
+**Status**: Static suite size: 197 test methods; runtime status depends on the specific test run

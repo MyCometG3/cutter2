@@ -1,6 +1,6 @@
 # Contributing to cutter2
 
-**Last Updated**: August 5, 2026
+**Last Updated**: August 6, 2026
 
 Thank you for your interest in contributing to cutter2! This document provides guidelines and instructions for contributing to the project.
 
@@ -48,34 +48,37 @@ We are committed to providing a welcoming and inspiring community for all. Pleas
 Before contributing, ensure you have:
 
 1. **macOS** 14.0 or later
-2. **Xcode** 16.0 or later (Swift 6.0 requires Xcode 16+; currently using Xcode 26.6, Swift 6.3.3)
-3. **Swift** 6.0
+2. **Xcode** 16.0 or later
+3. **Swift language mode** 6.0 (`SWIFT_VERSION = 6.0`)
 4. **Git** installed and configured
 5. **GitHub account** for submitting contributions
+
+The documentation was verified on August 6, 2026 with macOS 26.6, Xcode 26.6 (build 17F113), and Swift compiler 6.3.3. These are verification values, not minimum requirements.
 
 ### Fork and Clone
 
 1. **Fork the repository** on GitHub
-   - Click "Fork" button on the repository page
+   - Open [MyCometG3/cutter2](https://github.com/MyCometG3/cutter2) and click **Fork**.
 
 2. **Clone your fork**
+   - Replace `<YOUR-USERNAME>` with your GitHub account name.
    ```bash
-   git clone https://github.com/YOUR-USERNAME/cutter2.git
+   git clone https://github.com/<YOUR-USERNAME>/cutter2.git
    cd cutter2
    ```
 
-3. **Add upstream remote**
+3. **Add the upstream remote**
    ```bash
-   git remote add upstream https://github.com/ORIGINAL-OWNER/cutter2.git
+   git remote add upstream https://github.com/MyCometG3/cutter2.git
    ```
 
 4. **Verify remotes**
    ```bash
    git remote -v
-   # origin    https://github.com/YOUR-USERNAME/cutter2.git (fetch)
-   # origin    https://github.com/YOUR-USERNAME/cutter2.git (push)
-   # upstream  https://github.com/ORIGINAL-OWNER/cutter2.git (fetch)
-   # upstream  https://github.com/ORIGINAL-OWNER/cutter2.git (push)
+   # origin    https://github.com/<YOUR-USERNAME>/cutter2.git (fetch)
+   # origin    https://github.com/<YOUR-USERNAME>/cutter2.git (push)
+   # upstream  https://github.com/MyCometG3/cutter2.git (fetch)
+   # upstream  https://github.com/MyCometG3/cutter2.git (push)
    ```
 
 ### Set Up Development Environment
@@ -139,12 +142,13 @@ We welcome various types of contributions:
 
 ### 1. Sync with Upstream
 
-Before starting work, sync your fork:
+Before starting work, sync your fork. `work` is the integration branch used by the current project workflow; confirm it exists on the upstream remote before merging:
 
 ```bash
-git checkout work
 git fetch upstream
-git merge upstream/work
+git ls-remote --exit-code --heads upstream work
+git checkout work
+git merge --ff-only upstream/work
 git push origin work
 ```
 
@@ -648,5 +652,5 @@ Your contributions help make video editing on macOS better for everyone.
 ---
 
 **Document Status**: ✅ Active
-**Last Updated**: August 5, 2026
+**Last Updated**: August 6, 2026
 **Maintained By**: cutter2 project maintainers

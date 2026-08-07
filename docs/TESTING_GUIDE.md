@@ -24,7 +24,7 @@ xcodebuild test \
   CODE_SIGNING_REQUIRED=NO
 ```
 
-The recorded run on August 5, 2026 reported 197 passing tests. A fresh run on August 6, 2026 at commit `78f1d00e140afb2e2ce7ce030781895e0d981e5c` did not reach test execution because the build failed on a duplicate `writeSampleMovie(to:duration:timescale:frameRate:)` declaration in `MovieMutatorTransformExportTests.swift:19` and `TestMovieFixtureWriter.swift:32`.
+The August 6, 2026 rerun completed successfully after removing the duplicate local `writeSampleMovie(to:duration:timescale:frameRate:)` helper from `MovieMutatorTransformExportTests.swift`. It executed 197 test cases with 197 passed and 0 failed. The subsequent `xcodebuild analyze` also succeeded.
 
 ## Table of Contents
 

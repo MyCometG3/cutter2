@@ -3,9 +3,9 @@
 **Date:** 2026-08-06
 **Reviewer:** Source-level documentation and code review
 **Scope:** Source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
-**Reviewed commit:** `78f1d00e140afb2e2ce7ce030781895e0d981e5c` (`work`)
+**Reviewed baseline:** `78f1d00e140afb2e2ce7ce030781895e0d981e5c` (`work`)
 **Verification environment:** macOS 26.6 (build 25G72), Xcode 26.6 (build 17F113), Swift compiler 6.3.3
-**Status:** Updated; current test verification is blocked by a duplicate test helper declaration
+**Status:** Updated; follow-up verification passed after consolidating the shared test helper
 
 ---
 
@@ -13,18 +13,20 @@
 
 This document records a source-level review of the **cutter2** project — a macOS video editor application built with Swift and AVFoundation. The review covers project structure, architecture, concurrency model, code quality, test coverage, documentation accuracy, and build/CI configuration.
 
-This revision was checked against the current `work` branch at commit `78f1d00e140afb2e2ce7ce030781895e0d981e5c`. Source files, test files, Markdown documentation, build configuration, CI workflow, and test scripts were inspected. The following test command was also attempted:
+This revision was checked against the current `work` branch at commit `78f1d00e140afb2e2ce7ce030781895e0d981e5c`. Source files, test files, Markdown documentation, build configuration, CI workflow, and test scripts were inspected. The initial test attempt failed before execution because `MovieMutatorTransformExportTests.swift` duplicated the shared `writeSampleMovie(to:duration:timescale:frameRate:)` helper from `TestMovieFixtureWriter.swift`. The local helper was removed so the test class uses the shared implementation.
+
+The verification command was rerun after that fix:
 
 ```bash
-xcodebuild test -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS' -derivedDataPath .build-current -enableCodeCoverage YES CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO
+xcodebuild test -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS' -derivedDataPath .build-full-fix -enableCodeCoverage YES CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO
 ```
 
-The command did not reach test execution because the build failed with a duplicate `writeSampleMovie(to:duration:timescale:frameRate:)` declaration at `cutter2Tests/MovieMutatorTransformExportTests.swift:19` and `cutter2Tests/TestMovieFixtureWriter.swift:32`. Therefore, this document distinguishes static source counts from runtime test results.
+The rerun completed successfully with 197 passed test cases and 0 failed test cases. The subsequent `xcodebuild analyze` also completed successfully. The helper consolidation and this verification record are included in the same follow-up commit.
 
 **Current verification facts:**
 
 - **Static test suite size:** 16 files total (15 test source files + 1 helper), with 197 statically declared `func test...` methods.
-- **Recorded historical run:** The August 5, 2026 review recorded 197 passing tests; that result is not a passing result for the current HEAD until the duplicate declaration is fixed and the suite is rerun.
+- **Runtime test result:** After removing the duplicate local helper, the August 6, 2026 rerun reported 197 passed test cases and 0 failed test cases.
 - **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps. The workflow uses `macos-latest` and does not pin a specific Xcode image.
 - **Strict concurrency:** `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` are enabled across all four app/test configurations.
 - **Swift language mode:** `SWIFT_VERSION = 6.0` is pinned in the app and test targets.
@@ -149,7 +151,7 @@ cutter2Tests/
 
 ### 2.3 Test Execution Results
 
-The static suite contains 197 `func test...` methods and no `XCTSkip` usage was found in the current source. The August 5, 2026 recorded run reported 197 passing tests. The fresh August 6, 2026 run for the reviewed commit did not reach test execution because the build failed on the duplicate `writeSampleMovie` declaration described in §1. The runtime result for the current HEAD is therefore **not verified as passing**.
+The static suite contains 197 `func test...` methods and no `XCTSkip` usage was found in the current source. After the duplicate local `writeSampleMovie` helper was removed, the August 6, 2026 rerun executed all 197 test cases successfully with 0 failures. The initial compile failure and its resolution are recorded in §1.
 
 ---
 
@@ -238,13 +240,13 @@ Security-scoped resource access is properly wrapped with `NSFileCoordinator` and
 | **LoggingSystem** | `LoggingSystemTests.swift` | 17 | ✅ Covered |
 | **cutter2 (integration)** | `cutter2Tests.swift` | 20 | ✅ Covered |
 | **MovieHeaderValidator** | `MovieHeaderValidatorTests.swift` | 3 | ✅ Covered |
-| **Overall** | 16 files (15 test source + 1 helper) | **197 statically declared methods** | Runtime status not verified for current HEAD |
+| **Overall** | 16 files (15 test source + 1 helper) | **197 statically declared methods** | ✅ 197 passed, 0 failed |
 
 ### 5.2 Test Execution
 
 - `scripts/test.sh` orchestrates build → test → analyze via `xcodebuild`
 - CI workflow (`.github/workflows/test.yml`) runs on push/PR to `main`, `work`, and `develop` branches (Build → Test → Analyze, using `build-for-testing` + `test-without-building` to avoid double compilation)
-- The current source contains 197 statically declared test methods and no `XCTSkip` usage; runtime success is not established for the reviewed HEAD because the build currently fails on the duplicate test helper declaration
+- The current source contains 197 statically declared test methods and no `XCTSkip` usage; the August 6, 2026 rerun passed all 197 test cases with 0 failures after consolidating the shared fixture helper
 - The `scripts/test.sh` summary distinguishes 15 test source files from 1 helper file and reports 197 test methods
 
 ### 5.3 Test Coverage Gaps

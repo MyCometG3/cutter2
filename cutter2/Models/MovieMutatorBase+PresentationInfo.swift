@@ -9,17 +9,32 @@
 import Foundation
 import AVFoundation
 
-/// Sample Presentation Info.
+/// Presentation information for a movie sample or time segment.
 ///
-/// NOTE: At final sample of segment, end position could be after end of segment.
+/// Positions are calculated relative to the movie duration when it is positive.
+/// For a zero-duration movie, both relative positions remain 0.0. The values are
+/// not clamped, so a range outside the movie can produce a position outside 0.0 to
+/// 1.0. The sample's end position may extend beyond the queried segment's end when
+/// the final sample spans that boundary.
 public struct PresentationInfo {
+    /// The sample or segment time range in the movie's timescale.
     public private(set) var timeRange: CMTimeRange = CMTimeRange.zero
+    /// The start of `timeRange` in seconds.
     public private(set) var startSecond: Float64 = 0.0
+    /// The end of `timeRange` in seconds.
     public private(set) var endSecond: Float64 = 0.0
+    /// The movie duration in seconds.
     public private(set) var movieDuration: Float64 = 0.0
+    /// The start position relative to the movie duration.
     public private(set) var startPosition: Float64 = 0.0
+    /// The end position relative to the movie duration.
     public private(set) var endPosition: Float64 = 0.0
     
+    /// Creates presentation information for a time range in a movie.
+    ///
+    /// - Parameters:
+    ///   - range: The sample or segment time range.
+    ///   - movie: The movie used to calculate the duration-relative positions.
     public init(range: CMTimeRange, of movie: AVMutableMovie) {
         timeRange = range
         startSecond = CMTimeGetSeconds(range.start)

@@ -82,7 +82,10 @@ extension MovieMutator {
     // MARK: - public method - clap/pasp
     /* ============================================ */
     
-    //
+    /// Returns the current video dimensions, clean-aperture, and pixel-aspect-ratio settings.
+    ///
+    /// - Returns: A dictionary containing the four CAPAR settings, or `nil` when the movie
+    ///   has no usable video format description.
     public func clappaspDictionary() -> [AnyHashable: Any]? {
         var dict: [AnyHashable:Any] = [:]
         
@@ -129,7 +132,15 @@ extension MovieMutator {
         return dict
     }
     
-    //
+    /// Applies clean-aperture and pixel-aspect-ratio settings to compatible video tracks.
+    ///
+    /// The operation registers an undo record and skips tracks whose encoded dimensions
+    /// do not match the supplied dimensions.
+    ///
+    /// - Parameters:
+    ///   - dict: A CAPAR settings dictionary produced by `clappaspDictionary()`.
+    ///   - undoManager: The undo manager used to register the transformation.
+    /// - Returns: `true` when the settings are applied to at least one compatible track.
     public func applyClapPasp(_ dict: [AnyHashable:Any], using undoManager: UndoManagerWrapper) -> Bool {
         guard let clapSize = dict[clapSizeKey] as? NSSize else { return false }
         guard let clapOffset = dict[clapOffsetKey] as? NSPoint else { return false }

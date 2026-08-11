@@ -19,6 +19,10 @@ extension ViewController {
     // MARK: - Validate menu
     /* ============================================ */
     
+    /// Determines whether an edit menu item is currently enabled.
+    ///
+    /// - Parameter menuItem: The menu item whose action is being validated.
+    /// - Returns: `true` when the delegate reports that the action can be performed.
     public func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         guard let document = delegate else { return false }
         if menuItem.action == #selector(ViewController.cut(_:)) {

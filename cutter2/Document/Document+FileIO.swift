@@ -166,15 +166,17 @@ extension Document {
         }
     }
     
+    /// Allows AppKit to perform document reads concurrently.
+    ///
+    /// This method returns `true` unconditionally. The custom `DocumentController` open
+    /// and reopen paths are required: using AppKit's default document-opening path can
+    /// invoke the `@MainActor` document creation method off the main actor and crash.
+    /// The custom paths prepare file metadata off the main actor and apply the result
+    /// through `readAsync(from:openPreparation:)`.
+    ///
+    /// - Parameter typeName: The document type being opened.
+    /// - Returns: Always `true`.
     override class func canConcurrentlyReadDocuments(ofType typeName: String) -> Bool {
-        /*
-         NOTE: This feature seems to be incompatible with Swift Concurrency and will cause a crash.
-         Returning `true` causes `makeDocument(withContentsOf:ofType:)` to be called off the main thread,
-         but that method is marked with `@MainActor`, so invoking it on a background thread crashes immediately.
-         
-         Instead, we override `NSDocumentController`'s `openDocument()` and `reopenDocument()` methods
-         and use custom `OpenPreparation` + `readAsync()` implementations to support Swift Concurrency properly.
-         */
         return true
     }
     

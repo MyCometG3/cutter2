@@ -19,6 +19,10 @@ extension Document {
     // MARK: - Resize window
     /* ============================================ */
     
+    /// Calculates the scale ratio used to display the movie in the player view.
+    ///
+    /// - Parameter baseSize: An optional source size; when `nil`, the current movie dimensions are used.
+    /// - Returns: The smaller width-to-height scale ratio, or 1.0 when the movie or player view is unavailable.
     public func displayRatio(_ baseSize: CGSize?) -> CGFloat {
         
         guard let mutator = self.movieMutator else { return 1.0 }

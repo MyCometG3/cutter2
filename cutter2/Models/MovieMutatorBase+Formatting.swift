@@ -18,12 +18,12 @@ extension MovieMutatorBase {
         return timestampFormatter.string(from: Date())
     }
     
-    /// Return string representation of CMTime
+    /// Returns a clock-style string representation of a CMTime value.
     ///
     /// - Parameters:
-    ///   - time: source time
-    ///   - flag: includes 3rd decimals of second.
-    /// - Returns: Format in "01:02:03" or "01:02:03.004"
+    ///   - time: The source time.
+    ///   - flag: Whether to include the fractional second as three decimal digits.
+    /// - Returns: A string formatted as `"01:02:03"` or `"01:02:03.004"`.
     public func shortTimeString(_ time: CMTime, withDecimals flag: Bool) -> String {
         var string: String = ""
         let timeInSec: Float64 = CMTimeGetSeconds(time)

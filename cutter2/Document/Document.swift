@@ -100,55 +100,70 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     // MARK: - Public properties
     /* ============================================ */
     
-    /// Strong reference to MovieMutator
+    /// Strong reference to the document's movie mutator.
     public var movieMutator: MovieMutator? = nil
     
-    // Computed properties
+    /// The window of the document's first window controller.
+    ///
+    /// Access this property after a window controller has been created.
     public var window: Window? {
         return self.windowControllers[0].window as? Window
     }
+
+    /// The document's view controller, or `nil` when the window content is unavailable.
     public var viewController: ViewController? {
         return window?.contentViewController as? ViewController
     }
+
+    /// The document's player view, or `nil` when the view controller is unavailable.
     public var playerView: AVPlayerView? {
         return viewController?.playerView
     }
+
+    /// The player associated with the document's player view.
     public var player: AVPlayer? {
         return playerView?.player
     }
+
+    /// The current player item, or `nil` when no player is attached.
     public var playerItem: AVPlayerItem? {
         return player?.currentItem
     }
-    
-    // Polling timer
+
+    /// The timer used for periodic playback-position polling.
     public var timer: Timer? = nil
+
+    /// The interval between playback-position polls, in seconds.
     public var pollingInterval: TimeInterval = 1.0/15
-    
-    // KVO Context
+
+    /// Storage used as the KVO context for document observations.
     public var kvoContext = 0
-    
-    // SavePanel with Accessory View support
+
+    /// The save panel currently associated with the document.
     public weak var savePanel: NSSavePanel? = nil
-    
-    /// Alert for progress dialog
+
+    /// The alert used to display progress or error information.
     public var alert: NSAlert? = nil
-    
-    /// Progress indicator for visual feedback
+
+    /// The progress indicator used for visual feedback.
     public var progressIndicator: NSProgressIndicator? = nil
-    
-    /// Timestamp of last progress update (nanoseconds)
+
+    /// The timestamp of the last progress update, in nanoseconds.
     public var lastUpdateAt: UInt64 = 0
-    
-    /// Last reported progress value for smooth animation
-    /// Used for exponential smoothing to avoid jarring progress jumps
+
+    /// The last progress value reported after exponential smoothing.
     public var lastReportedProgress: Float = 0.0
-    
-    // NSProgress support for save/export operations
+
+    /// The current save or export progress object.
     public var saveProgress: Progress? = nil
-    
-    //
+
+    /// The most recently queried movie time.
     public var cachedTime = CMTime.invalid
+
+    /// Whether `cachedTime` lies within the cached last-sample range.
     public var cachedWithinLastSampleRange: Bool = false
+
+    /// The last sample range used by playback-position queries.
     public var cachedLastSampleRange: CMTimeRange? = nil
     
     //

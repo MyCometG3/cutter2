@@ -21,6 +21,7 @@ class AccessoryViewController: NSViewController {
     // MARK: - Public properties
     /* ============================================ */
     
+    /// The delegate notified when the selected file type or containment changes.
     public weak var delegate: AccessoryViewDelegate? = nil
     
     @IBOutlet weak var fileTypePopUp: NSPopUpButton!
@@ -58,6 +59,10 @@ class AccessoryViewController: NSViewController {
         document.didUpdateFileType(fileType, selfContained: selfContained)
     }
     
+    /// Whether the selected output should include sample data in the movie.
+    ///
+    /// Returns `false` when the reference-movie item (tag -1) is selected. Setting the
+    /// value to `false` selects that item.
     public var selfContained: Bool {
         get {
             if fileTypePopUp.selectedTag() == -1 {
@@ -75,6 +80,9 @@ class AccessoryViewController: NSViewController {
             }
         }
     }
+    /// The output file type represented by the selected popup item.
+    ///
+    /// Unsupported or unselected popup tags fall back to `.mov`.
     public var fileType: AVFileType {
         get {
             let tag = fileTypePopUp.selectedTag()
@@ -111,6 +119,11 @@ class AccessoryViewController: NSViewController {
         }
     }
     
+    /// Updates the accessory view with movie header and track-size information.
+    ///
+    /// Sizes are displayed in kilobytes and track counts are displayed per media type.
+    ///
+    /// - Parameter size: The header, sample-data, and track-count information to display.
     public func updateDataSizeText(_ size: boxSize) throws {
         let headerSize: Int64 = size.headerSize
         let videoSize: Int64 = size.videoSize, videoCount: Int64 = size.videoCount

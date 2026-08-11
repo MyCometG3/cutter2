@@ -34,11 +34,16 @@ class SampleBufferChannel: @unchecked Sendable {
     // MARK: - Public properties
     /* ============================================ */
     
+    /// The reader output supplying sample buffers.
     public let arOutput: AVAssetReaderOutput
+    /// The writer input receiving sample buffers.
     public let awInput: AVAssetWriterInput
+    /// The media track ID associated with this channel.
     public let trackID: CMPersistentTrackID
+    /// Whether the channel has finished and its writer input has been marked finished.
     public private(set) var finished: Bool = false
     
+    /// The media type of the reader output.
     public var mediaType: String {
         return arOutput.mediaType.rawValue
     }
@@ -55,6 +60,14 @@ class SampleBufferChannel: @unchecked Sendable {
     // MARK: - Public functions
     /* ============================================ */
     
+    /// Starts reading sample buffers and forwarding them to the delegate on the channel queue.
+    ///
+    /// The completion handler is called when input is exhausted, appending fails, the
+    /// delegate is unavailable, or the channel is cancelled.
+    ///
+    /// - Parameters:
+    ///   - delegate: The object that receives each sample buffer.
+    ///   - completionHandler: The closure called once when the channel finishes.
     public func start(with delegate: SampleBufferChannelDelegate,
                       completionHandler: @escaping ()->Void) {
         self.delegate = delegate
@@ -95,6 +108,7 @@ class SampleBufferChannel: @unchecked Sendable {
         }
     }
     
+    /// Cancels the channel on its serial queue and completes its writer input.
     public func cancel() {
         queue.async { [weak self] in
             do {

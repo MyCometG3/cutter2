@@ -17,6 +17,7 @@ class TranscodeViewController: NSViewController {
     // MARK: - Properties
     /* ============================================ */
     
+    /// The window that owns the transcode sheet.
     public var parentWindow: NSWindow? = nil
     
     /* ============================================ */
@@ -34,6 +35,11 @@ class TranscodeViewController: NSViewController {
     // MARK: - Public functions
     /* ============================================ */
     
+    /// Presents the transcode sheet for a parent window.
+    ///
+    /// - Parameters:
+    ///   - parentWindow: The window that owns the sheet.
+    ///   - handler: The closure called with the sheet's modal response.
     public func beginSheetModal(for parentWindow: NSWindow, handler: @escaping (NSApplication.ModalResponse) -> Void) {
         self.parentWindow = parentWindow
         guard let sheet = self.view.window else { return }
@@ -41,6 +47,9 @@ class TranscodeViewController: NSViewController {
         parentWindow.beginSheet(sheet, completionHandler: handler)
     }
     
+    /// Ends the transcode sheet.
+    ///
+    /// - Parameter response: The modal response returned to the sheet presenter.
     public func endSheet(_ response: NSApplication.ModalResponse) {
         guard let parent = self.parentWindow else { return }
         guard let sheet = self.view.window else { return }

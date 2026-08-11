@@ -377,9 +377,12 @@ extension MovieWriter {
         return true
     }
     
-    /// Get progress info of current exportSession
+    /// Returns progress and status information for the current or most recent export session.
     ///
-    /// - Returns: Dictionary of progress info
+    /// The dictionary includes progress and status values and may include elapsed,
+    /// estimated-total, and estimated-remaining durations in seconds.
+    ///
+    /// - Returns: Export-session progress information keyed by the writer's progress constants.
     public func exportSessionProgressInfo() -> [String: Any] {
         var result: [String:Any] = [:]
         

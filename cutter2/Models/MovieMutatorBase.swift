@@ -15,6 +15,9 @@ class MovieMutatorBase: NSObject {
     // MARK: - public init
     /* ============================================ */
     
+    /// Creates a mutator with a mutable copy of the supplied movie.
+    ///
+    /// - Parameter movie: The movie to copy into the mutator.
     init(with movie:AVMutableMovie) {
         guard let copy = movie.mutableCopy() as? AVMutableMovie else {
             preconditionFailure("mutableCopy() of AVMutableMovie returned non-AVMutableMovie")
@@ -30,31 +33,34 @@ class MovieMutatorBase: NSObject {
     // MARK: - public properties
     /* ============================================ */
     
-    /// Wrapped AVMutableMovie object
+    /// The mutable movie being edited.
+    ///
+    /// Replacing the movie also clears cached inspector values.
     public var internalMovie: AVMutableMovie {
         didSet {
             flushCachedValues() // Reset inspector properties cache
         }
     }
     
-    /// Current Marker
+    /// The current insertion marker time in the movie's timescale.
     public var insertionTime: CMTime = CMTime.zero
     
-    /// Selection Marker Range
+    /// The selected time range in the movie's timescale.
     public var selectedTimeRange: CMTimeRange = CMTimeRange()
     
-    /// Timestamp formatter
+    /// The formatter used for diagnostic timestamps.
     public var timestampFormatter: DateFormatter
     
+    /// Callback used to restore user interaction after an asynchronous operation.
     public var unblockUserInteraction: (@Sendable () -> Void)? = nil
     
-    /// Progress stream continuation for async progress reporting
+    /// Progress stream continuation for asynchronous progress reporting.
     internal var progressContinuation: AsyncStream<Float>.Continuation?
     
-    /// Current MovieWriter instance (for cancellation support)
+    /// The current movie writer used to cancel an export or write operation.
     public var currentMovieWriter: MovieWriter? = nil
     
-    /// Respect tapt atom on clean aperture detection
+    /// Whether clean-aperture detection should respect the `tapt` atom.
     public var acceptTapt: Bool = true
     
     /* ============================================ */
@@ -73,20 +79,41 @@ class MovieMutatorBase: NSObject {
     // MARK: - public method - validation and clamp
     /* ============================================ */
     
+    /// Validates movie clip data by creating a movie and checking that it has a positive duration.
+    ///
+    /// - Parameter data: Serialized movie data to validate.
+    /// - Returns: `true` when the data describes a clip with a positive duration.
     @inline(__always) public func validateClipData(_ data: Data) -> Bool {
         let clip = AVMutableMovie(data: data, options: nil)
         return validateClip(clip)
     }
     
+    /// Validates that a movie has a positive duration.
+    ///
+    /// - Parameter clip: The movie clip to validate.
+    /// - Returns: `true` when the clip duration is greater than zero.
     @inline(__always) public func validateClip(_ clip: AVMutableMovie) -> Bool {
         return clip.range.duration > CMTime.zero
     }
     
+    /// Checks whether a time lies within the internal movie range, including its boundaries.
+    ///
+    /// - Parameter time: The movie time to validate.
+    /// - Returns: `true` when `time` is within the movie range.
     @inline(__always) public func validateTime (_ time: CMTime) -> Bool {
         let movieRange: CMTimeRange = self.movieRange()
         return (movieRange.start <= time && time <= movieRange.end)
     }
     
+    /// Checks whether a time range lies within the internal movie range.
+    ///
+    /// A non-positive-duration range is valid only when `needsDuration` is `false` and its
+    /// start time lies within the movie range.
+    ///
+    /// - Parameters:
+    ///   - range: The movie time range to validate.
+    ///   - needsDuration: Whether a positive duration is required.
+    /// - Returns: `true` when the range satisfies the movie-boundary and duration rules.
     @inline(__always) public func validateRange(_ range: CMTimeRange, _ needsDuration: Bool) -> Bool {
         let movieRange: CMTimeRange = self.movieRange()
         return ((range.duration > CMTime.zero)
@@ -94,11 +121,22 @@ class MovieMutatorBase: NSObject {
                 : (needsDuration ? false : validateTime(range.start)))
     }
     
+    /// Clamps a time to the internal movie range, including its boundaries.
+    ///
+    /// - Parameter time: The time to clamp.
+    /// - Returns: The clamped time.
     @inline(__always) public func clampTime(_ time: CMTime) -> CMTime {
         let movieRange: CMTimeRange = self.movieRange()
         return CMTimeClampToRange(time, range: movieRange)
     }
     
+    /// Clamps a time range to the internal movie range.
+    ///
+    /// Positive-duration ranges are intersected with the movie range. Non-positive-duration
+    /// ranges retain zero duration and clamp only their start time.
+    ///
+    /// - Parameter range: The time range to clamp.
+    /// - Returns: The clamped time range.
     @inline(__always) public func clampRange(_ range: CMTimeRange) -> CMTimeRange {
         let movieRange: CMTimeRange = self.movieRange()
         return ((range.duration > CMTime.zero)
@@ -106,20 +144,36 @@ class MovieMutatorBase: NSObject {
                 : (CMTimeRange(start: clampTime(range.start), duration: .zero)))
     }
     
+    /// Checks whether a relative movie position is within the inclusive 0.0 to 1.0 range.
+    ///
+    /// - Parameter position: The relative movie position to validate.
+    /// - Returns: `true` when the position is between 0.0 and 1.0.
     @inline(__always) public func validatePosition(_ position: Float64) -> Bool {
         return (position >= 0.0 && position <= 1.0) ? true : false
     }
     
+    /// Clamps a relative movie position to the inclusive 0.0 to 1.0 range.
+    ///
+    /// - Parameter position: The relative movie position to clamp.
+    /// - Returns: The clamped relative position.
     @inline(__always) public func clampPosition(_ position: Float64) -> Float64 {
         return min(max(position, 0.0), 1.0)
     }
     
+    /// Checks whether a size has positive width and height that are not NaN.
+    ///
+    /// - Parameter size: The size to validate.
+    /// - Returns: `true` when both dimensions are positive and not NaN.
     @inline(__always) public func validSize(_ size: NSSize) -> Bool {
         if size.width.isNaN || size.height.isNaN { return false }
         if size.width <= 0 || size.height <= 0 { return false }
         return true
     }
     
+    /// Checks whether a point has non-NaN coordinates.
+    ///
+    /// - Parameter point: The point to validate.
+    /// - Returns: `true` when neither coordinate is NaN.
     @inline(__always) public func validPoint(_ point: NSPoint) -> Bool {
         if point.x.isNaN || point.y.isNaN { return false }
         return true
@@ -255,7 +309,13 @@ class MovieMutatorBase: NSObject {
     // MARK: - public method - properties (headerSize, movieRange, etc.)
     /* ============================================ */
     
-    /// Calculate movie header size information
+    /// Calculates the movie header and sample-data size information.
+    ///
+    /// The returned byte sizes are grouped by video, audio, and other tracks; the
+    /// corresponding counts contain the number of tracks in each group. When the
+    /// movie header cannot be read, all fields remain zero.
+    ///
+    /// - Returns: Header and per-track sample-data sizes and track counts in bytes.
     public func headerSize() -> boxSize {
         let movie = internalMovie
         let tracks = movie.tracks
@@ -293,17 +353,17 @@ class MovieMutatorBase: NSObject {
         return size
     }
     
-    /// Get Internal movie timeRange
+    /// Returns the union of all track time ranges in the internal movie.
     ///
-    /// - Returns: CMTimeRange
+    /// - Returns: The internal movie's track range in its movie timescale.
     public func movieRange() -> CMTimeRange {
         let range: CMTimeRange = internalMovie.range
         return range
     }
     
-    /// Get Internal movie duration (calculated)
+    /// Returns the duration of the internal movie's union of track ranges.
     ///
-    /// - Returns: CMTime
+    /// - Returns: The internal movie range duration in its movie timescale.
     public func movieDuration() -> CMTime {
         let duration: CMTime = internalMovie.range.duration
         return duration

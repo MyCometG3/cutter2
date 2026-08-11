@@ -22,15 +22,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - NSApplicationDelegate protocol
     /* ============================================ */
     
+    /// Clears bookmarks when the reset modifier is active, then starts security-scoped access.
+    ///
+    /// - Parameter aNotification: The application launch notification.
     public func applicationDidFinishLaunching(_ aNotification: Notification) {
         clearBookmarks(false)
         startBookmarkAccess()
     }
     
+    /// Stops security-scoped access before the application terminates.
+    ///
+    /// - Parameter aNotification: The application termination notification.
     public func applicationWillTerminate(_ aNotification: Notification) {
         stopBookmarkAccess()
     }
     
+    /// Prevents the application from creating an untitled document at launch.
+    ///
+    /// - Parameter sender: The application requesting the decision.
+    /// - Returns: Always `false`.
     public func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
         return false
     }
@@ -114,16 +124,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         })
     }
     
-    /// Validate bookmarks with block
+    /// Validates all stored security-scoped bookmarks and refreshes them when required.
     ///
-    /// - Parameter block: block to process bookmark url
+    /// Only valid or successfully renewed bookmark data is retained and written back
+    /// to `UserDefaults`. Stale bookmarks that cannot be renewed and invalid bookmarks
+    /// are discarded. The block is called once for each retained bookmark's resolved URL.
+    ///
+    /// - Parameters:
+    ///   - verbose: Whether to enable bookmark validation logging.
+    ///   - block: A closure called with the resolved URL of each retained bookmark.
     private func validateBookmarks(_ verbose: Bool, using block: ((URL) -> Void)) {
         var validItems: [Data] = []
         let defaults = UserDefaults.standard
         if let bookmarks = defaults.array(forKey: bookmarksKey) as? [Data] {
             for item: Data in bookmarks {
                 /*
-                 Preserve souce movie file information as security scoped bookmark data.
+                 Preserve source movie file information as security-scoped bookmark data.
                  
                  Restriction:
                  Different from legacy QuickTime framework, AVMovie does not use bookmark/alias for
@@ -139,12 +155,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         defaults.set(validItems, forKey: bookmarksKey)
     }
     
-    /// Validate bookmark data and refresh if required.
+    /// Validates bookmark data and renews it when the resolved bookmark is stale.
+    ///
+    /// A stale bookmark is returned unchanged when `acceptStale` is `true` and renewal
+    /// fails; otherwise, renewal failure returns a `nil` data value. Invalid bookmark
+    /// data returns `(nil, nil)`. The URL may still be returned when stale bookmark data
+    /// is rejected, allowing callers to distinguish an invalid bookmark from an
+    /// unrenewable stale bookmark.
+    ///
     /// - Parameters:
-    ///   - item: bookmark data to be validated
-    ///   - acceptStale: accept stale bookmark or not
-    ///   - verbose: enable verbose logging
-    /// - Returns: resulted bookmark data and resolved URL
+    ///   - item: The bookmark data to validate.
+    ///   - acceptStale: Whether to retain stale bookmark data when renewal fails.
+    ///   - verbose: Whether to enable validation logging.
+    /// - Returns: A tuple containing retained or renewed bookmark data and its resolved URL.
     private func refreshBookmarkIfRequired(_ item: Data, acceptStale: Bool, verbose: Bool = false) -> (data: Data?, url: URL?) {
         // Validate bookmark item
         do {
@@ -188,9 +211,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
-    /// Create security scoped bookmark data from the url
-    /// - Parameter url: source url
-    /// - Returns: resulted bookmark data
+    /// Creates security-scoped bookmark data for a URL.
+    ///
+    /// - Parameter url: The source URL.
+    /// - Returns: The generated bookmark data, or `nil` when creation fails.
     private func createBookmark(for url: URL) -> Data? {
         let data: Data? = try? url.bookmarkData(options: .withSecurityScope,
                                                 includingResourceValuesForKeys: nil,

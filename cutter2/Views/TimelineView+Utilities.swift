@@ -15,6 +15,9 @@ extension TimelineView {
     // MARK: - Utilities public
     /* ============================================ */
     
+    /// Returns the marker currently selected in the timeline.
+    ///
+    /// - Returns: The selected marker, or `.none` when no known marker is selected.
     public func marker() -> marker {
         guard let selectedMarker = selectedMarker else { return .none }
         guard let cMark = currentMarker else { return .none }
@@ -33,7 +36,18 @@ extension TimelineView {
         }
     }
     
-    /// Update 3 marker positions
+    /// Updates the current, start, and end marker positions and validity state.
+    ///
+    /// If any position is NaN, all marker positions are reset to zero and the timeline
+    /// is marked invalid. A valid timeline with no selected marker selects the current
+    /// marker automatically.
+    ///
+    /// - Parameters:
+    ///   - curPosition: The current marker position as a relative value from 0.0 to 1.0.
+    ///   - startPosition: The selection start position as a relative value from 0.0 to 1.0.
+    ///   - endPosition: The selection end position as a relative value from 0.0 to 1.0.
+    ///   - valid: Whether the supplied timeline state is valid.
+    /// - Returns: `true` when the timeline state changed; otherwise, `false`.
     public func updateTimeline(current curPosition: Float64,
                                from startPosition: Float64,
                                to endPosition: Float64,
@@ -75,7 +89,9 @@ extension TimelineView {
         return true
     }
     
-    /// Update Time label string
+    /// Updates the timeline's time label when the label layer has been initialized.
+    ///
+    /// - Parameter newLabel: The string to display in the time label.
     public func updateTimeLabel(to newLabel: String) {
         if let timeLabel = timeLabel {
             timeLabel.string = newLabel
@@ -86,10 +102,10 @@ extension TimelineView {
     // MARK: - Utilities
     /* ============================================ */
     
-    /// Quantize position to the sample timerange boundary
+    /// Quantizes a relative position to the nearest sample time-range boundary.
     ///
-    /// - Parameter input: position in Float64
-    /// - Returns: quantized position in Float64
+    /// - Parameter input: The relative position to quantize.
+    /// - Returns: The nearest sample boundary, or `input` when sample information is unavailable.
     func quantize(_ input :Float64) -> Float64 {
         guard let vc = delegate, let info = vc.presentationInfo(at: input) else { return input }
         guard (info.endPosition - info.startPosition) > 0 else { return input }
@@ -98,12 +114,12 @@ extension TimelineView {
         return (ratio < 0.5) ? info.startPosition : info.endPosition
     }
     
-    /// Convert mouse click event to position value in timeLine
+    /// Converts a mouse click event to a relative timeline position.
     ///
     /// - Parameters:
-    ///   - event: mouse event
-    ///   - toGrid: set true to quantize
-    /// - Returns: position in Float64
+    ///   - event: The mouse event whose location is converted.
+    ///   - toGrid: Whether to quantize the position to a sample time-range boundary.
+    /// - Returns: A clamped relative position from 0.0 to 1.0.
     func position(from event: NSEvent, snap toGrid: Bool) -> Float64 {
         let point = self.convert(event.locationInWindow, from: nil)
         let width: CGFloat = self.bounds.width - (leftMargin + rightMargin)
@@ -112,10 +128,10 @@ extension TimelineView {
         return (toGrid ? quantize(pos) : pos)
     }
     
-    /// Convert position value in timeLine to point
+    /// Converts a relative timeline position to a point in the timeline view.
     ///
-    /// - Parameter position: position in timeLine
-    /// - Returns: CGPoint on timeLine relative to position value
+    /// - Parameter position: The relative timeline position.
+    /// - Returns: A point on the timeline corresponding to `position`.
     func point(of position: Float64) -> CGPoint {
         let width: CGFloat = self.bounds.width - (leftMargin + rightMargin)
         let x: CGFloat = leftMargin + width * CGFloat(position)

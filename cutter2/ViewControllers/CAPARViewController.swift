@@ -39,8 +39,10 @@ class CAPARViewController: NSViewController {
     // MARK: - Public properties
     /* ============================================ */
     
-    public var initialContent: [AnyHashable:Any] = [:] // 4 Keys for source video
-    public var resultContent: [AnyHashable:Any] = [:] // 4 Keys for target video
+    /// The four CAPAR values loaded from the source video.
+    public var initialContent: [AnyHashable:Any] = [:]
+    /// The four CAPAR values produced by the sheet for the target video.
+    public var resultContent: [AnyHashable:Any] = [:]
     
     @IBOutlet weak var objectController: NSObjectController!
     
@@ -78,7 +80,14 @@ class CAPARViewController: NSViewController {
         ])
     }
     
-    //
+    /// Presents the CAPAR editing sheet for a parent window.
+    ///
+    /// The sheet is not presented when `initialContent` is empty. Text-change
+    /// notifications are observed until the sheet completes.
+    ///
+    /// - Parameters:
+    ///   - parent: The window that owns the sheet.
+    ///   - handler: The closure called with the sheet's modal response.
     public func beginSheetModal(for parent: NSWindow, handler: @escaping (NSApplication.ModalResponse) -> Void) {
         
         guard initialContent.count > 0 else { NSSound.beep(); return }
@@ -119,7 +128,9 @@ class CAPARViewController: NSViewController {
         }
     }
     
-    //
+    /// Ends the CAPAR sheet and removes its text-change observer.
+    ///
+    /// - Parameter response: The modal response returned to the sheet presenter.
     public func endSheet(_ response: NSApplication.ModalResponse) {
         
         guard let parent = self.parentWindow else { return }
@@ -322,6 +333,10 @@ class CAPARViewController: NSViewController {
     /* ============================================ */
     
     // Refresh movie source settings - Should be called prior to beginSheet()
+    /// Loads source dimensions, clean-aperture, and pixel-aspect-ratio values into the sheet.
+    ///
+    /// - Parameter dict: A dictionary containing the four CAPAR values.
+    /// - Returns: `true` when all required values can be loaded; otherwise, `false`.
     public func applySource(_ dict: [AnyHashable:Any]) -> Bool {
         
         guard checkDict(dict) else { NSSound.beep(); return false}

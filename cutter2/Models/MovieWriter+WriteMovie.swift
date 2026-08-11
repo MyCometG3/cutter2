@@ -27,13 +27,15 @@ extension MovieWriter {
         case refreshMovieHeader
     }
     
-    /// Write internalMovie to destination url (as self-contained or reference movie)
+    /// Writes the internal movie as a self-contained or reference movie.
+    ///
+    /// MOV output uses movie flattening. Other file types use the export-session path.
     ///
     /// - Parameters:
-    ///   - url: destination to write
-    ///   - type: AVFileType. If it is not .mov, exportSession will be triggered.
-    ///   - selfContained: Other than AVFileType.mov should be true.
-    /// - Throws: Misc Error while exporting AVMovie
+    ///   - url: The destination file URL.
+    ///   - type: The destination AVFoundation file type.
+    ///   - selfContained: Whether MOV output should include the referenced sample data.
+    /// - Throws: A writer error produced while writing or exporting the movie.
     public func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) async throws {
         //     selfContained ? "selfContained movie" : "reference movie")
         

@@ -15,7 +15,9 @@ import AVFoundation
 
 extension Document: TimelineUpdateDelegate {
     
-    /// called on mouse down/drag event
+    /// Updates the insertion marker from a relative timeline position.
+    ///
+    /// - Parameter position: The relative movie position from 0.0 to 1.0.
     public func didUpdateCursor(to position: Float64) {
         
         guard let mutator = self.movieMutator else { return }
@@ -23,7 +25,9 @@ extension Document: TimelineUpdateDelegate {
         updateGUI(time, mutator.selectedTimeRange, false)
     }
     
-    /// called on mouse down/drag event
+    /// Updates the selection start marker from a relative timeline position.
+    ///
+    /// - Parameter position: The relative movie position from 0.0 to 1.0.
     public func didUpdateStart(to position: Float64) {
         
         guard let mutator = self.movieMutator else { return }
@@ -33,7 +37,9 @@ extension Document: TimelineUpdateDelegate {
         updateGUI(mutator.insertionTime, newRange, false)
     }
     
-    /// called on mouse down/drag event
+    /// Updates the selection end marker from a relative timeline position.
+    ///
+    /// - Parameter position: The relative movie position from 0.0 to 1.0.
     public func didUpdateEnd(to position: Float64) {
         
         guard let mutator = self.movieMutator else { return }
@@ -43,7 +49,11 @@ extension Document: TimelineUpdateDelegate {
         updateGUI(mutator.insertionTime, newRange, false)
     }
     
-    /// called on mouse down/drag event
+    /// Updates the selection range from two relative timeline positions.
+    ///
+    /// - Parameters:
+    ///   - fromPos: The relative selection start position from 0.0 to 1.0.
+    ///   - toPos: The relative selection end position from 0.0 to 1.0.
     public func didUpdateSelection(from fromPos: Float64, to toPos: Float64) {
         
         guard let mutator = self.movieMutator else { return }
@@ -53,28 +63,39 @@ extension Document: TimelineUpdateDelegate {
         updateGUI(mutator.insertionTime, newRange, false)
     }
     
-    /// get PresentationInfo at specified position
+    /// Returns presentation information at a relative movie position.
+    ///
+    /// - Parameter position: The relative movie position from 0.0 to 1.0.
+    /// - Returns: Presentation information, or `nil` when no movie mutator is available.
     public func presentationInfo(at position: Float64) -> PresentationInfo? {
         
         guard let mutator = self.movieMutator else { return nil }
         return mutator.presentationInfoAtPosition(position)
     }
     
-    /// get PresentationInfo at prior to specified range
+    /// Returns presentation information for the sample immediately before a range.
+    ///
+    /// - Parameter range: The range whose preceding sample is requested.
+    /// - Returns: Presentation information, or `nil` when no preceding sample is available.
     public func previousInfo(of range: CMTimeRange) -> PresentationInfo? {
         
         guard let mutator = self.movieMutator else { return nil }
         return mutator.previousInfo(of: range)
     }
     
-    /// get PresentationInfo at next to specified range
+    /// Returns presentation information for the sample immediately after a range.
+    ///
+    /// - Parameter range: The range whose following sample is requested.
+    /// - Returns: Presentation information, or `nil` when no following sample is available.
     public func nextInfo(of range: CMTimeRange) -> PresentationInfo? {
         
         guard let mutator = self.movieMutator else { return nil }
         return mutator.nextInfo(of: range)
     }
     
-    /// Move current marker to specified anchor point
+    /// Moves the current marker to the specified anchor and updates the timeline.
+    ///
+    /// - Parameter anchor: The anchor describing the destination.
     public func doSetCurrent(to anchor: anchor) {
         
         guard let mutator = self.movieMutator else { return }
@@ -130,7 +151,9 @@ extension Document: TimelineUpdateDelegate {
         self.updateGUI(newCurrent, newRange, false)
     }
     
-    /// Move selection start marker to specified anchor point
+    /// Moves the selection start marker to the specified anchor and updates the timeline.
+    ///
+    /// - Parameter anchor: The anchor describing the destination.
     public func doSetStart(to anchor: anchor) {
         
         guard let mutator = self.movieMutator else { return }
@@ -167,7 +190,9 @@ extension Document: TimelineUpdateDelegate {
         updateTimeline(current, range: newRange)
     }
     
-    /// Move selection end marker to specified anchor point
+    /// Moves the selection end marker to the specified anchor and updates the timeline.
+    ///
+    /// - Parameter anchor: The anchor describing the destination.
     public func doSetEnd(to anchor: anchor) {
         
         guard let mutator = self.movieMutator else { return }

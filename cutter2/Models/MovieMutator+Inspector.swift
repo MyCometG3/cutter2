@@ -15,9 +15,12 @@ import AVFoundation
 
 extension MovieMutatorBase {
     
-    /// Inspector - mediaDataURLs
+    /// Returns the paths of files referenced by the movie's tracks.
     ///
-    /// - Returns: all referenced file URLs by every track samples
+    /// The result is cached after the first query. When no referenced files are found,
+    /// the returned array contains the placeholder string `"-"`.
+    ///
+    /// - Returns: Referenced file paths formatted for inspector display.
     public func mediaDataPaths() -> [String]? {
         if let cache = cachedMediaDataPaths {
             return cache
@@ -33,9 +36,12 @@ extension MovieMutatorBase {
     }
     
     
-    /// Inspector - VideoFPS Description
+    /// Returns formatted nominal frame-rate information for each video track.
     ///
-    /// - Returns: human readable description
+    /// The result is cached after the first query; `"-"` is returned when no video
+    /// tracks are present.
+    ///
+    /// - Returns: One string per video track containing its track ID and FPS.
     public func videoFPSs() -> [String]? {
         if let cache = cachedVideoFPSs {
             return cache
@@ -52,9 +58,12 @@ extension MovieMutatorBase {
         return cachedVideoFPSs
     }
     
-    /// Inspector - VideoDataSize/Rate Description
+    /// Returns formatted sample-data size and estimated data-rate information for video tracks.
     ///
-    /// - Returns: human readable description
+    /// The result is cached after the first query; `"-"` is returned when no video
+    /// tracks are present.
+    ///
+    /// - Returns: One string per video track containing its track ID, size in MB, and rate in Mbps.
     public func videoDataSizes() -> [String]? {
         if let cache = cachedVideoDataSizes {
             return cache
@@ -74,9 +83,12 @@ extension MovieMutatorBase {
         return cachedVideoDataSizes
     }
     
-    /// Inspector - AudioDataSize/Rate Description
+    /// Returns formatted sample-data size and estimated data-rate information for audio tracks.
     ///
-    /// - Returns: human readable description
+    /// The result is cached after the first query; `"-"` is returned when no audio
+    /// tracks are present.
+    ///
+    /// - Returns: One string per audio track containing its track ID, size in MB, and rate in Mbps.
     public func audioDataSizes() -> [String]? {
         if let cache = cachedAudioDataSizes {
             return cache
@@ -96,9 +108,12 @@ extension MovieMutatorBase {
         return cachedAudioDataSizes
     }
     
-    /// Inspector - VideoFormats Description
+    /// Returns formatted codec and presentation-dimension information for video tracks.
     ///
-    /// - Returns: human readable description
+    /// The result is cached after the first query; reference tracks are marked as
+    /// `Reference`, and `"-"` is returned when no video formats are available.
+    ///
+    /// - Returns: One formatted string for each video format description.
     public func videoFormats() -> [String]? {
         if let cache = cachedVideoFormats {
             return cache
@@ -158,9 +173,12 @@ extension MovieMutatorBase {
         return cachedVideoFormats
     }
     
-    /// Inspector - AudioFormats Description
+    /// Returns formatted codec, sample-rate, and channel-layout information for audio tracks.
     ///
-    /// - Returns: human readable description
+    /// The result is cached after the first query; reference tracks are marked as
+    /// `Reference`, and `"-"` is returned when no audio formats are available.
+    ///
+    /// - Returns: One formatted string for each audio format description.
     public func audioFormats() -> [String]? {
         if let cache = cachedAudioFormats {
             return cache

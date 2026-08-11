@@ -60,12 +60,13 @@ extension MovieMutatorBase {
         return size
     }
     
-    /// visual size of media in a track using either FormatDescription or tapt atom
+    /// Returns the visual size of a media track using its format description or `tapt` atom.
+    ///
     /// - Parameters:
-    ///   - type: dimensionsType
-    ///   - track: AVMutableMovieTrack
-    ///   - useTapt: Bool
-    /// - Returns: visual size of media in a track
+    ///   - type: The dimensions to return.
+    ///   - track: The movie track whose dimensions are queried.
+    ///   - useTapt: Whether to prefer dimensions from the `tapt` atom.
+    /// - Returns: The visual size of the media track.
     public func mediaDimensions(of type: dimensionsType, in track: AVMutableMovieTrack, useTapt: Bool) -> NSSize {
         var size: NSSize
         if useTapt {
@@ -79,9 +80,11 @@ extension MovieMutatorBase {
         return size
     }
     
-    /// visual size of movie
-    /// - Parameter type: dimensionsType
-    /// - Returns: visual size of the movie
+    /// Returns the visual size of the movie's video tracks.
+    ///
+    /// - Parameter type: The dimensions to return.
+    /// - Returns: The union of valid video-track bounds, a 320-by-180 fallback when no
+    ///   video tracks are present, or `.zero` when all video tracks are invalid.
     public func dimensions(of type: dimensionsType) -> NSSize {
         let movie = internalMovie
         let tracks = movie.tracks(withMediaType: .video)

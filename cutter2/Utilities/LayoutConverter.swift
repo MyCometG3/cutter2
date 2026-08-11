@@ -9,11 +9,13 @@
 import Cocoa
 import AVFoundation
 
+/// Serialized audio channel layout data.
 public typealias AudioChannelLayoutData = Data
 
 /// LayoutConverter uses AudioChannelLabel as primary channel position.
 public struct LayoutConverter: Sendable {
     
+    /// Creates an empty layout converter.
     public init() {}
     
     typealias LayoutPtr = UnsafePointer<AudioChannelLayout>

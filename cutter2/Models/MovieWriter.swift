@@ -126,6 +126,9 @@ struct MovieWriterParams: @unchecked Sendable {
 
 actor MovieWriter: SampleBufferChannelDelegate {
     
+    /// Creates a writer actor for the supplied movie and progress callbacks.
+    ///
+    /// - Parameter params: The movie and callbacks used by the writer.
     public init(params: MovieWriterParams) {
         self.internalMovie = params.movie
         self.unblockUserInteraction = params.unblockUserInteraction
@@ -144,25 +147,25 @@ actor MovieWriter: SampleBufferChannelDelegate {
     /// Progress stream continuation
     private(set) var progressContinuation: AsyncStream<Float>.Continuation?
     
-    /// Flag if writer is running
+    /// Whether a save or export operation is currently running.
     public internal(set) var writeInProgress: Bool = false
     
-    /// Flag if writer finished successfully
+    /// Whether the most recent save or export operation completed successfully.
     public internal(set) var writeSuccess: Bool = false
     
-    /// Flag if cancelled while writing
+    /// Whether the current save or export operation was cancelled.
     public internal(set) var writeCancelled: Bool = false
     
-    /// Error result while writing
+    /// The error produced by the current or most recent save/export operation.
     public internal(set) var writeError: Error? = nil
     
-    /// Date when save/export operation start
+    /// The start date of the current or most recent save/export operation.
     public internal(set) var writeStart: Date? = nil
     
-    /// Date when save/export operation finish
+    /// The completion date of the current or most recent save/export operation.
     public internal(set) var writeEnd: Date? = nil
     
-    /// Progress ratio of save/export operation
+    /// The current save/export progress as a value from 0.0 to 1.0.
     public internal(set) var writeProgress: Float = 0.0
     /* ============================================ */
     // MARK: - exportSession properties

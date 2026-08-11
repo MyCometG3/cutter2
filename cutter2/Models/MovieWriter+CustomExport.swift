@@ -512,6 +512,17 @@ extension MovieWriter {
         }
     }
     
+    /// Exports the internal movie with custom AVAssetReader/AVAssetWriter settings.
+    ///
+    /// Reference media is accessed for the duration of the export. The writer state and
+    /// progress notifications are updated throughout the operation.
+    ///
+    /// - Parameters:
+    ///   - url: The destination file URL.
+    ///   - type: The destination AVFoundation file type.
+    ///   - param: The custom reader/writer settings.
+    /// - Throws: A writer error when another export is running, setup fails, the operation
+    ///   is cancelled, or the export fails.
     public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String: any Sendable]) async throws {
         
         // Check that no export is already running.
@@ -663,7 +674,11 @@ extension MovieWriter {
         let channels: [SampleBufferChannel]
     }
     
-    // SampleBufferChannelDelegate
+    /// Receives a sample buffer from a custom-export channel and schedules progress updates.
+    ///
+    /// - Parameters:
+    ///   - channel: The channel that supplied the sample buffer.
+    ///   - buffer: The sample buffer that was read.
     nonisolated public func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer) {
         let params = didReadParams(channel: channel, buffer: buffer)
         Task { @Sendable in

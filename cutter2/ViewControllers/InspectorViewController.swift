@@ -15,6 +15,7 @@ class InspectorViewController: NSViewController {
     // MARK: - Public properties
     /* ============================================ */
     
+    /// The interval between inspector refreshes, in seconds.
     public var refreshInterval: TimeInterval = 1.0/10
     
     @IBOutlet var objectController: NSObjectController!

@@ -374,9 +374,9 @@ The Markdown set contains 7 files when `README.md` and `.github/copilot-instruct
 
 ## 10. Conclusion
 
-The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 197 statically declared test methods. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Runtime test status for the reviewed HEAD remains blocked by the duplicate `writeSampleMovie` declaration; the historical August 5 passing result must not be treated as current until the build is repaired and the suite is rerun. Remaining documented coverage gaps include Document+UI window resize, Document+SavePanel flow, MovieMutator clipboard, and Document+PositionControl scrubbing.
+The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 197 statically declared test methods. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. The initial test attempt for the reviewed baseline was blocked by the duplicate `writeSampleMovie` declaration; after the duplicate helper was removed, the August 6, 2026 rerun completed with 197 passed test cases and 0 failures, followed by a successful `xcodebuild analyze`. Remaining documented coverage gaps include Document+UI window resize, Document+SavePanel flow, MovieMutator clipboard, and Document+PositionControl scrubbing.
 
-The concurrency model, typed error propagation, and security-scoped resource cleanup align with the implementation inspected. The next verification step is to remove or rename the duplicate test helper, then rerun build, test, and analyze.
+The concurrency model, typed error propagation, and security-scoped resource cleanup align with the implementation inspected. The duplicate test helper has been consolidated into the shared fixture, so no further helper-related repair is required.
 
 ---
 

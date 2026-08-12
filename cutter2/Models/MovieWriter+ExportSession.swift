@@ -201,7 +201,7 @@ extension MovieWriter {
     ///   export errors surfaced by the active platform path.
     public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws {
         
-        guard writeInProgress == false else {
+        guard !writeInProgress else {
             let reason = "Please wait until the current export session finishes."
             try throwError(.anotherExportSessionRunning, reason: reason)
         }
@@ -310,7 +310,7 @@ extension MovieWriter {
         }
         
         //
-        if writeSuccess == false {
+        if !writeSuccess {
             if writeCancelled {
                 try throwError(.operationCancelled, reason: "Export was cancelled by the user.")
             } else if let error = writeError {

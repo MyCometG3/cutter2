@@ -88,7 +88,7 @@ extension MovieMutatorBase {
     public func dimensions(of type: dimensionsType) -> NSSize {
         let movie = internalMovie
         let tracks = movie.tracks(withMediaType: .video)
-        guard tracks.count > 0 else {
+        guard !tracks.isEmpty else {
             // use dummy size for 16:9 (commonly used for .m4a format)
             return NSSize(width: 320, height: 180)
         }

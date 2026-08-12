@@ -149,9 +149,9 @@ extension LayoutConverter {
             // descriptions beyond the first. Guard the arithmetic so malformed
             // count values from untrusted buffers cannot trap on Int overflow.
             let (extraBytes, multiplyOverflow) = (count - 1).multipliedReportingOverflow(by: acDescSize)
-            guard multiplyOverflow == false else { return 0 }
+            guard !multiplyOverflow else { return 0 }
             let (totalSize, addOverflow) = MemoryLayout<AudioChannelLayout>.size.addingReportingOverflow(extraBytes)
-            guard addOverflow == false else { return 0 }
+            guard !addOverflow else { return 0 }
             return totalSize
         }
     }

@@ -53,7 +53,7 @@ extension Document {
     
     /// Cleanup for close document
     public func cleanup() {
-        guard didCleanup == false else { return }
+        guard !didCleanup else { return }
         didCleanup = true
         
         //

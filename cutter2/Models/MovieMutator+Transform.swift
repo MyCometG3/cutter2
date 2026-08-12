@@ -90,7 +90,7 @@ extension MovieMutator {
         var dict: [AnyHashable:Any] = [:]
         
         let vTracks: [AVMutableMovieTrack] = internalMovie.tracks(withMediaType: .video)
-        guard vTracks.count > 0 else { NSSound.beep(); return nil }
+        guard !vTracks.isEmpty else { NSSound.beep(); return nil }
         
         let formats: [Any] = (vTracks[0]).formatDescriptions
         guard !formats.isEmpty else { NSSound.beep(); return nil }
@@ -232,12 +232,9 @@ extension MovieMutator {
                                                             height: dimensions.height,
                                                             extensions: dict,
                                                             formatDescriptionOut: &newFormat)
-                if result == noErr, let newFormat = newFormat {
-                    track.replaceFormatDescription(format, with: newFormat)
-                    count += 1
-                } else {
-                    //
-                }
+                guard result == noErr, let newFormat = newFormat else { continue }
+                track.replaceFormatDescription(format, with: newFormat)
+                count += 1
             }
         }
         

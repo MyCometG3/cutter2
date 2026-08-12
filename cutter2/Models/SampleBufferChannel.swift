@@ -90,7 +90,7 @@ class SampleBufferChannel: @unchecked Sendable {
             let awInput: AVAssetWriterInput = self.awInput
             
             var needsCompletion: Bool = false
-            while awInput.isReadyForMoreMediaData && needsCompletion == false {
+            while awInput.isReadyForMoreMediaData && !needsCompletion {
                 let sb: CMSampleBuffer? = arOutput.copyNextSampleBuffer()
                 if let sb = sb {
                     delegate.didRead(from: self, buffer: sb)
@@ -119,7 +119,7 @@ class SampleBufferChannel: @unchecked Sendable {
     }
     
     private func callCompletionHandlerIfNecessary() {
-        if self.finished == false {
+        if !self.finished {
             self.finished = true
             
             self.awInput.markAsFinished()

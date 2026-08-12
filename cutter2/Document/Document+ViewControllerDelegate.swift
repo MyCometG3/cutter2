@@ -22,7 +22,7 @@ extension Document: ViewControllerDelegate {
     public func hasSelection() -> Bool {
         
         guard let mutator = self.movieMutator else { return false }
-        return (mutator.selectedTimeRange.duration > CMTime.zero) ? true : false
+        return mutator.selectedTimeRange.duration > CMTime.zero
     }
     
     /// Indicates whether the document's movie has a positive duration.
@@ -31,7 +31,7 @@ extension Document: ViewControllerDelegate {
     public func hasDuration() -> Bool {
         
         guard let mutator = self.movieMutator else { return false }
-        return (mutator.movieDuration() > CMTime.zero) ? true : false
+        return mutator.movieDuration() > CMTime.zero
     }
     
     /// Indicates whether the pasteboard contains a valid movie clip.
@@ -40,7 +40,7 @@ extension Document: ViewControllerDelegate {
     public func hasClipOnPBoard() -> Bool {
         
         guard let mutator = self.movieMutator else { return false }
-        return (mutator.validateClipFromPBoard()) ? true : false
+        return mutator.validateClipFromPBoard()
     }
     
     /// Logs diagnostic movie, playback, and sample information in DEBUG builds.
@@ -301,7 +301,7 @@ extension Document: ViewControllerDelegate {
         guard let player = self.player else { return }
         
         // Mute/Unmute handling
-        player.isMuted = (percent < -100) ? true : false
+        player.isMuted = percent < -100
         
         // Update AVPlayer.volume
         if percent >= -100 && percent <= +100 {

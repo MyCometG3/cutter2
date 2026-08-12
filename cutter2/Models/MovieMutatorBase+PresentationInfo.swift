@@ -67,7 +67,7 @@ extension MovieMutatorBase {
     ///   - mapping: timeMapping
     /// - Returns: PresentationInfo (trackTime)
     private func samplePresentationInfo(_ startPTS: CMTime, _ endPTS: CMTime, from mapping: CMTimeMapping) -> PresentationInfo? {
-        if (mapping.source.duration > CMTime.zero) == false {
+        if !(mapping.source.duration > CMTime.zero) {
             return nil
         }
         
@@ -164,7 +164,7 @@ extension MovieMutatorBase {
     /// - Returns: PresentationInfo of the position
     public func presentationInfoAtTime(_ time: CMTime) -> PresentationInfo? {
         var time: CMTime = CMTimeClampToRange(time, range: internalMovie.range)
-        let lastSample: Bool = (time == internalMovie.range.end) ? true : false
+        let lastSample: Bool = time == internalMovie.range.end
         if lastSample {
             // Adjust micro difference from tail of movie
             time = time - movieResolution()
@@ -180,7 +180,7 @@ extension MovieMutatorBase {
             else { continue }
             guard let segment: AVAssetTrackSegment = track.segment(forTrackTime: time)
             else { continue }
-            guard (segment.isEmpty == false) else { continue }
+            guard !segment.isEmpty else { continue }
             // Prepare
             let mapping: CMTimeMapping = segment.timeMapping
             let startPTS: CMTime = cursor.presentationTimeStamp
@@ -219,7 +219,7 @@ extension MovieMutatorBase {
             else { continue }
             guard let segment: AVAssetTrackSegment = track.segment(forTrackTime: range.start)
             else { continue }
-            guard (segment.isEmpty == false) else { continue }
+            guard !segment.isEmpty else { continue }
             // Prepare
             let mapping = segment.timeMapping
             let trackSegmentMin: CMTime = mapping.target.start
@@ -278,7 +278,7 @@ extension MovieMutatorBase {
             else { continue }
             guard let segment: AVAssetTrackSegment = track.segment(forTrackTime: range.start)
             else { continue }
-            guard (segment.isEmpty == false) else { continue }
+            guard !segment.isEmpty else { continue }
             // Prepare
             let mapping = segment.timeMapping
             let trackSegmentMax: CMTime = mapping.target.end

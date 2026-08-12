@@ -150,7 +150,7 @@ extension LayoutConverter {
     public func convertAsDescriptions(from aclData: AudioChannelLayoutData) -> AudioChannelLayoutData? {
         guard let pos = extractChannelLabelSet(from: aclData) else { return nil }
         let descs: [AudioChannelDescription] = channelDescriptionsForChannelLabelSet(pos)
-        if descs.count > 0 {
+        if !descs.isEmpty {
             guard let data = dataFor(descriptions: descs) else { return nil }
             return data
         } else {

@@ -235,7 +235,7 @@ extension Document {
         // Verify if user is attemping to overwrite sourceMovieFile with ReferenceMovieFile
         let fileType: AVFileType = AVFileType.init(rawValue: typeName)
         if fileType == .mov {
-            if overwriteFlag && selfcontainedFlag && copyData == false {
+            if overwriteFlag && selfcontainedFlag && !copyData {
                 // Reset cached accessoryVCselfContained to avoid unexpected behavior
                 self.accessoryVCselfContained = true
                 

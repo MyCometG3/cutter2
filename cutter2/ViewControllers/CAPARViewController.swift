@@ -90,7 +90,7 @@ class CAPARViewController: NSViewController {
     ///   - handler: The closure called with the sheet's modal response.
     public func beginSheetModal(for parent: NSWindow, handler: @escaping (NSApplication.ModalResponse) -> Void) {
         
-        guard initialContent.count > 0 else { NSSound.beep(); return }
+        guard !initialContent.isEmpty else { NSSound.beep(); return }
         
         // Prepare sheet
         modifyClapPasp(self)

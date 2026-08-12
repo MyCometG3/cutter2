@@ -60,7 +60,7 @@ extension MovieWriter {
     private func prepareAudioChannels(_ movie: AVMutableMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) throws {
         let numAudioEncode = customParam[kAudioEncodeKey] as? NSNumber
         let audioEncode: Bool = numAudioEncode?.boolValue ?? true
-        if audioEncode == false {
+        if !audioEncode {
             prepareCopyChannels(movie, ar, aw, .audio)
             return
         }
@@ -92,7 +92,7 @@ extension MovieWriter {
             
             do {
                 let descArray: [Any] = track.formatDescriptions
-                guard descArray.count > 0 else { continue }
+                guard !descArray.isEmpty else { continue }
                 let desc: CMFormatDescription = descArray[0] as! CMFormatDescription // CF typealias
                 
                 let asbdPtr: ASBDPtr? = CMAudioFormatDescriptionGetStreamBasicDescription(desc)
@@ -190,7 +190,7 @@ extension MovieWriter {
                     try throwError(.movieWriterFailed, reason: "Invalid audio format/converter settings")
                 }
                 let bitrateArray = bitrates.map { $0.intValue }
-                if bitrateArray.contains(targetBitRate) == false {
+                if !bitrateArray.contains(targetBitRate) {
                     // bitrate adjustment
                     var prev = bitrateArray.first!
                     for item in bitrateArray {
@@ -215,7 +215,7 @@ extension MovieWriter {
     
     private func hasFieldModeSupport(of track: AVMutableMovieTrack) -> Bool {
         let descArray: [Any] = track.formatDescriptions
-        guard descArray.count > 0 else { return false }
+        guard !descArray.isEmpty else { return false }
         let desc: CMFormatDescription = descArray[0] as! CMFormatDescription // CF typealias
         var dict: CFDictionary? = nil
         do {
@@ -275,7 +275,7 @@ extension MovieWriter {
     private func prepareVideoChannels(_ movie: AVMutableMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) throws {
         let numVideoEncode = customParam[kVideoEncodeKey] as? NSNumber
         let videoEncode: Bool = numVideoEncode?.boolValue ?? true
-        if videoEncode == false {
+        if !videoEncode {
             prepareCopyChannels(movie, ar, aw, .video)
             return
         }
@@ -316,7 +316,7 @@ extension MovieWriter {
             
             var trackDimensions = track.naturalSize
             let descArray: [Any] = track.formatDescriptions
-            if descArray.count > 0 {
+            if !descArray.isEmpty {
                 let desc: CMFormatDescription = descArray[0] as! CMFormatDescription // CF typealias
                 trackDimensions = CMVideoFormatDescriptionGetPresentationDimensions(desc,
                                                                                     usePixelAspectRatio: false,
@@ -526,7 +526,7 @@ extension MovieWriter {
     public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String: any Sendable]) async throws {
         
         // Check that no export is already running.
-        guard writeInProgress == false else {
+        guard !writeInProgress else {
             let reason = "Please wait until the current export session finishes."
             try throwError(.anotherExportSessionRunning, reason: reason)
         }
@@ -595,7 +595,7 @@ extension MovieWriter {
                 let readyReader: Bool = ar.startReading()
                 let readyWriter: Bool = aw.startWriting()
                 guard readyReader && readyWriter else {
-                    let error = (readyReader == false) ? ar.error : aw.error
+                    let error = !readyReader ? ar.error : aw.error
                     ar.cancelReading()
                     aw.cancelWriting()
                     try throwError(.assetReaderWriterFailed, reason: error.debugDescription)
@@ -607,7 +607,7 @@ extension MovieWriter {
         }
         
         // If export failed, throw the error.
-        if writeSuccess == false {
+        if !writeSuccess {
             if writeCancelled {
                 try throwError(.operationCancelled, reason: "Export was cancelled by the user.")
             } else if let error = writeError {
@@ -640,7 +640,7 @@ extension MovieWriter {
     /// Design Notes:
     /// - writeCancelled is set BEFORE dispatching channel cancellations for two
     ///   reasons:
-    ///     1. It suppresses duplicate dispatches: the `if writeCancelled == false`
+    ///     1. It suppresses duplicate dispatches: the `if !writeCancelled`
     ///        check inside cancelCustomMovie() short-circuits repeated Cancel
     ///        button presses, so the SampleBufferChannel queue only sees one
     ///        cancel pass.
@@ -654,7 +654,7 @@ extension MovieWriter {
     public func cancelCustomMovie() {
         // Only proceed if a custom export is actually in progress
         guard let customQueue = customQueue else { return }
-        if writeCancelled == false {
+        if !writeCancelled {
             writeCancelled = true
             let params = cancelParams(channels: customSampleBufferChannels)
             customQueue.async { @Sendable in // @escaping

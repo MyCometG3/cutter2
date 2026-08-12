@@ -55,7 +55,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBAction func nextDocument(_ sender: Any) {
         
         let docList: [Document] = NSApp.orderedDocuments.compactMap { $0 as? Document }
-        if docList.count > 0 {
+        if !docList.isEmpty {
             if let doc = docList.last, let window = doc.window {
                 window.makeKeyAndOrderFront(self)
             }

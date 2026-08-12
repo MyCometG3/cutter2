@@ -31,7 +31,7 @@ extension MovieMutatorBase {
         if let urls = urls {
             urlStrings = urls.map { $0.path }
         }
-        cachedMediaDataPaths = (urlStrings.count > 0 ? urlStrings : ["-"])
+        cachedMediaDataPaths = (urlStrings.isEmpty ? ["-"] : urlStrings)
         return cachedMediaDataPaths
     }
     
@@ -54,7 +54,7 @@ extension MovieMutatorBase {
             let trackString: String = String(format:"%d: %.2f fps", trackID, fps)
             trackStrings.append(trackString)
         }
-        cachedVideoFPSs = (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedVideoFPSs = trackStrings.isEmpty ? ["-"] : trackStrings
         return cachedVideoFPSs
     }
     
@@ -79,7 +79,7 @@ extension MovieMutatorBase {
                                              rate/1000000.0)
             trackStrings.append(trackString)
         }
-        cachedVideoDataSizes = (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedVideoDataSizes = trackStrings.isEmpty ? ["-"] : trackStrings
         return cachedVideoDataSizes
     }
     
@@ -104,7 +104,7 @@ extension MovieMutatorBase {
                                              rate/1000000.0)
             trackStrings.append(trackString)
         }
-        cachedAudioDataSizes = (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedAudioDataSizes = trackStrings.isEmpty ? ["-"] : trackStrings
         return cachedAudioDataSizes
     }
     
@@ -169,7 +169,7 @@ extension MovieMutatorBase {
             }
             trackStrings.append(contentsOf: trackString)
         }
-        cachedVideoFormats = (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedVideoFormats = trackStrings.isEmpty ? ["-"] : trackStrings
         return cachedVideoFormats
     }
     
@@ -278,7 +278,7 @@ extension MovieMutatorBase {
             }
             trackStrings.append(contentsOf: trackString)
         }
-        cachedAudioFormats = (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedAudioFormats = trackStrings.isEmpty ? ["-"] : trackStrings
         return cachedAudioFormats
     }
     

@@ -93,14 +93,14 @@ extension ViewController {
     
     override func moveWordLeftAndModifySelection(_ sender: Any?) {
         // Shift + Option + left
-        let option: Bool = ignoreOptionWhenShift ? false : true
+        let option: Bool = !ignoreOptionWhenShift
         let shift: Bool = true
         doMoveLeft(option, shift)
     }
     
     override func moveWordRightAndModifySelection(_ sender: Any?) {
         // Shift + Option + right
-        let option: Bool = ignoreOptionWhenShift ? false : true
+        let option: Bool = !ignoreOptionWhenShift
         let shift: Bool = true
         doMoveRight(option, shift)
     }

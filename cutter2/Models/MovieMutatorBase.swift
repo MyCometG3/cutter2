@@ -149,7 +149,7 @@ class MovieMutatorBase: NSObject {
     /// - Parameter position: The relative movie position to validate.
     /// - Returns: `true` when the position is between 0.0 and 1.0.
     @inline(__always) public func validatePosition(_ position: Float64) -> Bool {
-        return (position >= 0.0 && position <= 1.0) ? true : false
+        return position >= 0.0 && position <= 1.0
     }
     
     /// Clamps a relative movie position to the inclusive 0.0 to 1.0 range.

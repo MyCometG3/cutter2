@@ -65,10 +65,7 @@ class AccessoryViewController: NSViewController {
     /// value to `false` selects that item.
     public var selfContained: Bool {
         get {
-            if fileTypePopUp.selectedTag() == -1 {
-                return false
-            }
-            return true
+            return fileTypePopUp.selectedTag() != -1
         }
         set(newValue) {
             if newValue == false {

@@ -79,7 +79,7 @@ class TranscodeViewController: NSViewController {
                                                                 encoderSpecification: encoderSpecification as CFDictionary,
                                                                 encoderIDOut: nil,
                                                                 supportedPropertiesOut: nil)
-        return error == kVTCouldNotFindVideoEncoderErr ? false : true
+        return error != kVTCouldNotFindVideoEncoderErr
     }
     
     private func updateUserDefaults() {

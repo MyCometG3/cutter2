@@ -44,7 +44,7 @@ final class MovieMutatorTests: XCTestCase {
         // Even an empty movie should generate a header
         XCTAssertNotNil(header)
         if let headerData = header {
-            XCTAssertTrue(headerData.count > 0)
+            XCTAssertFalse(headerData.isEmpty)
         }
     }
     

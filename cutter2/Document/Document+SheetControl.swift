@@ -161,7 +161,7 @@ extension Document {
             let err :NSError = error as NSError
             var text :String? = nil
             let userInfo: [String:Any] = err.userInfo // Can be empty dictionary
-            if userInfo.count > 0 {
+            if !userInfo.isEmpty {
                 let keys = userInfo.keys
                 if keys.contains(NSUnderlyingErrorKey) || keys.contains(NSDebugDescriptionErrorKey) {
                     text = err.description

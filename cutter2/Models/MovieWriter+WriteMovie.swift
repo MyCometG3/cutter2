@@ -57,7 +57,7 @@ extension MovieWriter {
     ///   - mode: FlattenMode
     private func flattenMovie(to url: URL, with mode: FlattenMode) async throws {
         
-        guard writeInProgress == false else {
+        guard !writeInProgress else {
             let reason = "Please wait until the current export session finishes."
             try throwError(.anotherExportSessionRunning, reason: reason)
         }

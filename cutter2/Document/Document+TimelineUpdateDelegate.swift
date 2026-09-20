@@ -13,7 +13,7 @@ import AVFoundation
 // MARK: - TimelineUpdateDelegate Protocol
 /* ============================================ */
 
-extension Document: TimelineUpdateDelegate {
+extension Document {
     
     /// Updates the insertion marker from a relative timeline position.
     ///

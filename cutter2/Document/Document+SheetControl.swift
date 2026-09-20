@@ -86,7 +86,7 @@ extension Document {
         lastUpdateAt = 0
         lastReportedProgress = 0.0
         
-        Task { @MainActor in
+        Task { @MainActor [self] in
             
             guard let window = self.window else { return }
             

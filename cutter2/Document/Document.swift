@@ -94,7 +94,7 @@ extension Document {
 /* ============================================ */
 
 @MainActor
-class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
+class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, ViewControllerDelegate {
     
     /* ============================================ */
     // MARK: - Public properties

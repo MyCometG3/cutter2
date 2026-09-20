@@ -14,7 +14,7 @@ import os.log
 // MARK: - ViewControllerDelegate Protocol
 /* ============================================ */
 
-extension Document: ViewControllerDelegate {
+extension Document {
     
     /// Indicates whether the document has a positive-duration selection.
     ///

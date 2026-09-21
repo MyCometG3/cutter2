@@ -80,9 +80,20 @@ extension Document {
             // Force redraw when AVPlayer.status is updated
             guard let newStatus = change[.newKey] as? NSNumber else { return }
             if newStatus.intValue == AVPlayer.Status.readyToPlay.rawValue {
-                // Seek and refresh View
+                // While a reload's seek is in flight, suppressQueryPosition is
+                // held on. Starting the re-seek here would interrupt that seek
+                // (its completion fires with finished == false) and lift
+                // suppression before the player settles, so queryPosition() can
+                // write a transient currentTime() back into insertionTime. Skip
+                // the competing seek and just re-assert the marker. MainActor
+                // state reads must happen inside performSyncOnMainActor.
                 ActorUtilities.performSyncOnMainActor {
                     guard let mutator = self.movieMutator else { return }
+                    if self.suppressQueryPosition {
+                        updateTimeline(mutator.insertionTime, range: mutator.selectedTimeRange)
+                        return
+                    }
+                    // Seek and refresh View
                     let time = mutator.insertionTime
                     let range = mutator.selectedTimeRange
                     updateGUI(time, range, false)

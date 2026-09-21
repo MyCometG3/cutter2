@@ -211,7 +211,7 @@ extension Document {
                         self.playerReloadTask = nil
                     }
                 }
-                await self.updatePlayer()
+                await self.updatePlayer(generation: generation)
             }
             self.playerReloadTask = reloadTask
         } else {
@@ -231,11 +231,29 @@ extension Document {
         guard let player = self.player else { return }
         
         updateRate(player, 0.0)
-        let handler: @Sendable (Bool) -> Void = {[weak self, weak player, weak mutator] (_) in // @escaping
+        // Snapshots taken at seek start. playerSeekGeneration tracks every
+        // seek, so a stale completion (interrupted or delayed — even by a
+        // newer seek within the same reload generation) is a full no-op. The
+        // reload generation gates the release: if it is still current when a
+        // completed seek reports back, no newer reload owns the suppression,
+        // so this seek — the newest one, since any newer seek would have made
+        // this callback stale — may release it. Otherwise lifting would release
+        // the newest reload's suppression early (letting queryPosition() clobber
+        // the corrected insertionTime), and updateRate/updateTimeline would
+        // overwrite the newer state this seek no longer owns.
+        self.playerSeekGeneration += 1
+        let seekGeneration = self.playerSeekGeneration
+        let reloadGeneration = self.playerReloadGeneration
+        let handler: @Sendable (Bool) -> Void = {[weak self, weak player, weak mutator] (finished: Bool) in // @escaping
             guard let self else { return }
             guard let player = player else { return }
             guard let mutator = mutator else { return }
             ActorUtilities.performSyncOnMainActor {
+                guard self.playerSeekGeneration == seekGeneration else { return }
+                if finished {
+                    guard self.playerReloadGeneration == reloadGeneration else { return }
+                    self.suppressQueryPosition = false
+                }
                 updateRate(player, rate)
                 updateTimeline(time, range: mutator.selectedTimeRange)
             }
@@ -276,26 +294,62 @@ extension Document {
     /// video-composition derivation fails, so this method surfaces the error
     /// via `showErrorSheet(_:)`. Cancelled reload tasks exit quietly without
     /// mutating the current player item.
-    private func updatePlayer() async {
-        
-        // Clear suppression on all exit paths.
-        defer { self.suppressQueryPosition = false }
-        
-        guard let mutator = movieMutator, let pv = playerView else { return }
+    ///
+    /// `suppressQueryPosition` stays held for the whole in-flight seek and is
+    /// released only once the newest seek reports `finished == true`. Reload
+    /// completions must additionally belong to the newest reload generation
+    /// (see `liftSuppression(for:)`). The `readyToPlay` re-seek is suppressed
+    /// while this seek is in flight; a user-initiated seek (marker drag, JKL)
+    /// may interrupt it instead, in which case this completion reports
+    /// `finished == false` and the user seek's own completion releases the
+    /// suppression once it settles. Every seek completion snapshots
+    /// `playerSeekGeneration` when its seek starts, so a delayed or superseded
+    /// callback — even one within the same reload generation — is a full no-op
+    /// that neither lifts the suppression nor overwrites the newer state.
+    /// Together this stops `queryPosition()` from adopting a pre-seek
+    /// `currentTime()` and clobbering the corrected `insertionTime` (the
+    /// delete-key position regression) without ever leaving the polling timer
+    /// suppressed after an interrupted reload.
+    private func updatePlayer(generation: UInt64) async {
+
+        guard let mutator = movieMutator, let pv = playerView else {
+            self.liftSuppression(for: generation)
+            return
+        }
         
         do {
             let playerItem = try await mutator.makePlayerItem()
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else {
+                self.liftSuppression(for: generation)
+                return
+            }
             
             if let player = pv.player {
+                // Bump the seek generation before replacing the item: the
+                // replacement cancels any in-flight seek, and its completion
+                // (interrupted, or delayed with finished == true) must run as
+                // a no-op, so it must always observe the already-advanced
+                // counter.
+                self.playerSeekGeneration += 1
+                let seekGeneration = self.playerSeekGeneration
+
                 // Apply modified source movie
                 player.replaceCurrentItem(with: playerItem)
                 
-                // seek
-                let handler: @Sendable (Bool) -> Void = {[weak pv] (_) in // @escaping
+                // seek - hold suppression until this reports finished == true so
+                // queryPosition() cannot overwrite insertionTime with the
+                // pre-seek currentTime(). The completion must be both the
+                // newest seek and this (newest) reload generation's: a delayed
+                // finished == true from an interrupted seek, or a newer reload
+                // task that has not started its seek yet, must not lift early.
+                let handler: @Sendable (Bool) -> Void = {[weak self, weak pv] (finished: Bool) in // @escaping
                     
-                    guard let pv = pv else { return }
+                    guard let self, let pv = pv else { return }
                     ActorUtilities.performSyncOnMainActor {
+                        guard self.playerSeekGeneration == seekGeneration else { return }
+                        if finished {
+                            self.liftSuppression(for: generation)
+                        }
                         pv.needsDisplay = true
                     }
                 }
@@ -311,14 +365,26 @@ extension Document {
                 
                 // Start polling timer
                 self.useUpdateTimer(true)
+
+                // No in-flight seek here, so release immediately.
+                self.liftSuppression(for: generation)
             }
         } catch is CancellationError {
-            return
+            self.liftSuppression(for: generation)
         } catch {
+            self.liftSuppression(for: generation)
             self.showErrorSheet(error)
         }
     }
     
+    /// Release the `queryPosition` suppression iff `generation` is the newest
+    /// reload task, so a cancelled stale task never lifts it while a newer seek
+    /// is still in flight.
+    private func liftSuppression(for generation: UInt64) {
+        guard self.playerReloadGeneration == generation else { return }
+        self.suppressQueryPosition = false
+    }
+
     /// Setup polling timer - queryPosition()
     func useUpdateTimer(_ enable: Bool) {
         

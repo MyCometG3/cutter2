@@ -1,11 +1,11 @@
 # Codebase Review — cutter2
 
-**Date:** 2026-08-06
+**Date:** 2026-09-21 (revision 2; original review 2026-08-06)
 **Reviewer:** Source-level documentation and code review
 **Scope:** Source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
-**Reviewed baseline:** `78f1d00e140afb2e2ce7ce030781895e0d981e5c` (`work`)
-**Verification environment:** macOS 26.6 (build 25G72), Xcode 26.6 (build 17F113), Swift compiler 6.3.3
-**Status:** Updated; follow-up verification passed after consolidating the shared test helper
+**Reviewed baseline:** `4d372782d068f5e5358ba6229f0696f11567c8e1` (`work`)
+**Verification environment:** macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
+**Status:** Updated for the 2026-09-21 baseline; clean build / clean analyze / full test passed; one remaining P2 finding documented in §8.6
 
 ---
 
@@ -13,26 +13,36 @@
 
 This document records a source-level review of the **cutter2** project — a macOS video editor application built with Swift and AVFoundation. The review covers project structure, architecture, concurrency model, code quality, test coverage, documentation accuracy, and build/CI configuration.
 
-This revision was checked against the current `work` branch at commit `78f1d00e140afb2e2ce7ce030781895e0d981e5c`. Source files, test files, Markdown documentation, build configuration, CI workflow, and test scripts were inspected. The initial test attempt failed before execution because `MovieMutatorTransformExportTests.swift` duplicated the shared `writeSampleMovie(to:duration:timescale:frameRate:)` helper from `TestMovieFixtureWriter.swift`. The local helper was removed so the test class uses the shared implementation.
+Revision 2 (2026-09-21) re-reviewed the tree at commit `4d372782d068f5e5358ba6229f0696f11567c8e1`, covering the 7 commits landed since the originally reviewed baseline `78f1d00e140afb2e2ce7ce030781895e0d981e5c`:
 
-The verification command was rerun after that fix:
+- `ad0ecd0` docs: refresh cutter2 documentation
+- `b96bc98` fix: consolidate shared test fixture helper
+- `5799f8e` docs: complete Swift docComment audit
+- `884d8e2` refactor: remove redundant Swift expressions
+- `e7e05e8` docs: correct codebase review conclusion
+- `55a9a6d` Fix Swift 6 Sendable conformance placement
+- `4d37278` fix: prevent stale position after movie deletion
+
+Verification for the new baseline was run with DerivedData outside the worktree:
 
 ```bash
-xcodebuild test -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS' -derivedDataPath .build-full-fix -enableCodeCoverage YES CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO
+xcodebuild clean build   -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS' CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO
+xcodebuild clean analyze -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS' CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO
+xcodebuild test          -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS' -enableCodeCoverage YES CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO
 ```
 
-The rerun completed successfully with 197 passed test cases and 0 failed test cases. The subsequent `xcodebuild analyze` also completed successfully. The helper consolidation and this verification record are included in the same follow-up commit.
+All three steps succeeded; the full test run passed 200 test cases with 0 failures. The build and test results were re-confirmed after the fix was fast-forward merged into `work`. One new P2 finding (a residual race window in the reload/seek suppression, §8.6) is documented and must be read together with the otherwise sound baseline.
 
 **Current verification facts:**
 
-- **Static test suite size:** 16 files total (15 test source files + 1 helper), with 197 statically declared `func test...` methods.
-- **Runtime test result:** After removing the duplicate local helper, the August 6, 2026 rerun reported 197 passed test cases and 0 failed test cases.
-- **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps. The workflow uses `macos-latest` and does not pin a specific Xcode image.
+- **Static test suite size:** 16 files total (15 test source files + 1 helper), with 200 statically declared `func test...` methods.
+- **Runtime test result:** The September 21, 2026 run passed 200 test cases with 0 failures on `4d37278`.
+- **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps plus coverage report generation/upload. The workflow uses `macos-latest` and does not pin a specific Xcode image.
 - **Strict concurrency:** `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` are enabled across all four app/test configurations.
 - **Swift language mode:** `SWIFT_VERSION = 6.0` is pinned in the app and test targets.
-- **Version:** `MARKETING_VERSION = 0.8.19`, `CURRENT_PROJECT_VERSION = 20260802`; these values are committed in the reviewed project state.
-- **Force casts:** The earlier review recorded 14 `as!` lines (10 code lines and 4 comment lines); this count is a historical review metric and should be rechecked when the code is changed.
-- **Main-thread guards:** `AsyncBridge.perform` contains an intentional main-thread precondition, while `MovieMutatorBase.swift:20` guards an impossible `mutableCopy()` type result.
+- **Version:** `MARKETING_VERSION = 0.8.19`, `CURRENT_PROJECT_VERSION = 20260802` (app target); these values are committed in the reviewed project state.
+- **Force casts:** Rechecked at this baseline — 14 `as!` lines (10 code lines: 8 CF typealias casts + 2 NSDictionary casts, plus 4 whole-line comment lines), unchanged from the earlier review.
+- **Intentional crash/assertion sites:** Three executable sites remain: `MovieMutatorBase.swift:23` (impossible `mutableCopy()` result), `AsyncBridge.swift:103` (deliberate main-thread API-contract guard), and `Document+ActorIsolation.swift:53` (fatalError in the non-throwing `performAsync` overload, indicating an internal bridge bug).
 
 ---
 
@@ -131,7 +141,7 @@ cutter2/
 cutter2Tests/
 ├── cutter2Tests.swift                    # Integration tests (20 tests)
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
-├── MovieMutatorEditTests.swift           # Edit operation tests (5 tests)
+├── MovieMutatorEditTests.swift           # Edit operation tests (8 tests)
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
 ├── MovieHeaderValidatorTests.swift       # Header validation tests (3 tests)
 ├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
@@ -147,11 +157,11 @@ cutter2Tests/
 └── TestMovieFixtureWriter.swift          # Test helper (0 tests, fixture writer)
 ```
 
-**Total:** 16 files (15 test source files + 1 helper), **197 statically declared test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`).
+**Total:** 16 files (15 test source files + 1 helper), **200 statically declared test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`). The three tests added to `MovieMutatorEditTests.swift` by `4d37278` lock in the delete marker position-correction behavior (marker at range end snaps to range start; marker before range stays; marker after range shifts backward by the selection duration).
 
 ### 2.3 Test Execution Results
 
-The static suite contains 197 `func test...` methods and no `XCTSkip` usage was found in the current source. After the duplicate local `writeSampleMovie` helper was removed, the August 6, 2026 rerun executed all 197 test cases successfully with 0 failures. The initial compile failure and its resolution are recorded in §1.
+The static suite contains 200 `func test...` methods and no `XCTSkip` usage was found in the current source. The September 21, 2026 full-suite run on `4d37278` (macOS 27.0, Xcode 27.0) executed all 200 test cases successfully with 0 failures; the previous August 6, 2026 rerun passed the then-197 cases after the duplicate local `writeSampleMovie` helper was consolidated into the shared fixture (`b96bc98`).
 
 ---
 
@@ -180,6 +190,8 @@ The project uses Swift's modern concurrency model with a clear isolation strateg
 
 - **`ActorUtilities.performSyncOnMainActor`**: A utility for safely calling main-actor-isolated code from synchronous contexts.
 
+- **Reload/seek generation gating (added by `4d37278`)**: Two monotonic counters serialize the player-reload pipeline — `playerReloadGeneration` (bumped per `updateGUI(reload: true)` request) and `playerSeekGeneration` (bumped before every seek start, both user seeks in `resumeAfterSeek` and the post-reload seek in `updatePlayer(generation:)`). Every seek completion snapshots both counters at seek start; a callback observing an advanced counter is a full no-op. While a reload is in flight, `suppressQueryPosition` holds the polling timer off; it is released only by the newest seek reporting `finished == true` for the newest reload generation. `replaceCurrentItem` bumps the seek generation *before* the swap so a completion cancelled by the item replacement always observes the advanced counter. The `readyToPlay` KVO handler skips its competing re-seek while suppression is held (reads routed through `performSyncOnMainActor` because `observeValue` is `nonisolated`).
+
 ### 3.3 Data Flow
 
 ```
@@ -198,14 +210,15 @@ User Input (ViewController)
 
 ### 4.1 Force Unwraps (`as!`) — RESOLVED (CF typealias casts remain)
 
-All 54 force-unwraps (`as!`) identified in the initial review have been replaced with `guard-let` statements. The 14 remaining `as!` lines consist of 10 code lines (8 CF typealias casts + 2 NSDictionary casts) plus 4 comment lines explaining safety. CF typealias casts (e.g., `track.formatDescriptions as! [CMFormatDescription]` in `MovieMutator+Inspector.swift`, `MovieMutator+Transform.swift`, `MovieWriter+CustomExport.swift`, `MovieMutatorBase+FormatDescriptions.swift`) are guaranteed to succeed by Swift. NSDictionary casts (`dict.copy() as! NSDictionary` in `MovieWriter+CustomExport.swift:262,268`) copy an `NSMutableDictionary` to its immutable counterpart.
+All 54 force-unwraps (`as!`) identified in the initial review have been replaced with `guard-let` statements. The 14 remaining `as!` lines consist of 10 code lines (8 CF typealias casts + 2 NSDictionary casts) plus 4 whole-line comment lines explaining safety. Rechecked at the 2026-09-21 baseline: unchanged (the `884d8e2` refactor touched nearby expressions but removed no `as!` casts). CF typealias casts (e.g., `track.formatDescriptions as! [CMFormatDescription]` in `MovieMutator+Inspector.swift`, `MovieMutator+Transform.swift`, `MovieWriter+CustomExport.swift`, `MovieMutatorBase+FormatDescriptions.swift`) are guaranteed to succeed by Swift. NSDictionary casts (`dict.copy() as! NSDictionary` in `MovieWriter+CustomExport.swift:262,268`) copy an `NSMutableDictionary` to its immutable counterpart.
 
-### 4.2 `preconditionFailure` / `precondition` — PARTIALLY RESOLVED
+### 4.2 `preconditionFailure` / `precondition` / `fatalError` — PARTIALLY RESOLVED
 
-The user-reachable `preconditionFailure` paths in `MovieMutatorBase.swift` have been replaced with graceful error return paths (S-08 fix, lines 153–159). Two guard-style calls remain, both on non-user-reachable or intentional paths:
+The user-reachable `preconditionFailure` paths in `MovieMutatorBase.swift` have been replaced with graceful error return paths (S-08 fix). Three intentional executable sites remain, all on non-user-reachable or deliberate paths:
 
-- **`MovieMutatorBase.swift:20`** — `preconditionFailure("mutableCopy() of AVMutableMovie returned non-AVMutableMovie")`. Guards an impossible condition (AVFoundation's `mutableCopy()` should never return a non-`AVMutableMovie` type) and is not on a user-reachable path.
-- **`AsyncBridge.swift:100`** — `precondition(allowMainThread || !Thread.isMainThread, ...)`. This is a deliberate API contract guard: `AsyncBridge.perform` must not be called on the main thread unless the caller explicitly opts into the deadlock risk via `allowMainThread: true`.
+- **`MovieMutatorBase.swift:23`** — `preconditionFailure("mutableCopy() of AVMutableMovie returned non-AVMutableMovie")`. Guards an impossible condition (AVFoundation's `mutableCopy()` should never return a non-`AVMutableMovie` type) and is not on a user-reachable path.
+- **`AsyncBridge.swift:103-105`** — `precondition(allowMainThread || !Thread.isMainThread, ...)`. This is a deliberate API contract guard: `AsyncBridge.perform` must not be called on the main thread unless the caller explicitly opts into the deadlock risk via `allowMainThread: true`.
+- **`Document+ActorIsolation.swift:53`** — `fatalError("Non-throwing performAsync unexpectedly threw: ...")` in the non-throwing `performAsync` overload. The catch is intentionally fatal: a non-throwing block cannot produce a `PerformAsyncError` under normal operation, so reaching it indicates an internal bridge bug rather than a recoverable caller error. Pre-existing since `871bcd9`; documented here for completeness.
 
 ### 4.3 Security-Scoped Access
 
@@ -227,7 +240,7 @@ Security-scoped resource access is properly wrapped with `NSFileCoordinator` and
 |------|-----------|------------|-----------------|
 | **AsyncBridge** | `AsyncBridgeTests.swift` | 4 | ✅ Covered |
 | **MovieMutator (core)** | `MovieMutatorTests.swift` | 22 | ✅ Covered |
-| **MovieMutator (edit)** | `MovieMutatorEditTests.swift` | 5 | ✅ Covered |
+| **MovieMutator (edit)** | `MovieMutatorEditTests.swift` | 8 | ✅ Covered |
 | **MovieMutator (transform/export)** | `MovieMutatorTransformExportTests.swift` | 8 | ✅ Covered |
 | **TimelineView rendering/mouse input** | `TimelineViewRenderingTests.swift` | 15 | ✅ Covered |
 | **ViewController key events** | `ViewControllerKeyEventTests.swift` | 14 | ✅ Covered |
@@ -240,14 +253,14 @@ Security-scoped resource access is properly wrapped with `NSFileCoordinator` and
 | **LoggingSystem** | `LoggingSystemTests.swift` | 17 | ✅ Covered |
 | **cutter2 (integration)** | `cutter2Tests.swift` | 20 | ✅ Covered |
 | **MovieHeaderValidator** | `MovieHeaderValidatorTests.swift` | 3 | ✅ Covered |
-| **Overall** | 16 files (15 test source + 1 helper) | **197 statically declared methods** | ✅ 197 passed, 0 failed |
+| **Overall** | 16 files (15 test source + 1 helper) | **200 statically declared methods** | ✅ 200 passed, 0 failed |
 
 ### 5.2 Test Execution
 
 - `scripts/test.sh` orchestrates build → test → analyze via `xcodebuild`
 - CI workflow (`.github/workflows/test.yml`) runs on push/PR to `main`, `work`, and `develop` branches (Build → Test → Analyze, using `build-for-testing` + `test-without-building` to avoid double compilation)
-- The current source contains 197 statically declared test methods and no `XCTSkip` usage; the August 6, 2026 rerun passed all 197 test cases with 0 failures after consolidating the shared fixture helper
-- The `scripts/test.sh` summary distinguishes 15 test source files from 1 helper file and reports 197 test methods
+- The current source contains 200 statically declared test methods and no `XCTSkip` usage; the September 21, 2026 full-suite run on `4d37278` passed all 200 test cases with 0 failures (the August 6, 2026 rerun passed the then-197 cases)
+- The `scripts/test.sh` summary distinguishes 15 test source files from 1 helper file; its hardcoded total still reads 197 and is now stale (see §9.2)
 
 ### 5.3 Test Coverage Gaps
 
@@ -255,12 +268,14 @@ Security-scoped resource access is properly wrapped with `NSFileCoordinator` and
 |------|-----------------|-----|
 | **Document+FileIO** | Revert/read error paths (`readAsync` UTI + header validation) | ✅ Covered by T-14 (`validateMovieType` / `MovieHeaderValidator` tests). Full revert sheet-display flow still untested (requires Document instance, which crashes in test env — see §5.4 note) |
 | **TimelineView+Input** | Mouse event handling (`mouseDown`, `mouseDragged`) | ✅ Covered by T-14 (marker selection → `doSetCurrent`, drag updates `startPosition`/`currentPosition`, no-op when unselected) |
+| **MovieMutator edit marker correction** | `doRemove` position-correction branches | ✅ Covered by `4d37278` (3 regression tests in `MovieMutatorEditTests.swift`) |
+| **Document+UI reload/seek ordering** | `playerReloadGeneration` / `playerSeekGeneration` / `suppressQueryPosition` interplay, interrupted-seek callbacks, `readyToPlay` KVO during reload | ❌ Not tested — requires async ordering of `updatePlayer` / KVO / polling timer against a live `Document`, which cannot be instantiated in the test environment (§5.4). The residual P2 window in §8.6 is therefore unprotected by automation |
 | **Document+UI** | Window resize handling (`windowDidResize`) | ❌ Not tested — layout update propagation on window resize |
 | **Document+SavePanel** | Export save panel flow | ❌ Not tested — save panel presentation and cancellation paths |
 | **MovieMutator+Clipboard** | Copy/paste operations | ❌ Not tested — clipboard serialization and deserialization |
 | **Document+PositionControl** | Playback position scrubbing | ❌ Not tested — position updates during playback |
 
-> **Recommendation:** Document+FileIO revert and TimelineView+Input mouse handling are now covered by T-14. Remaining priorities are Document+UI window resize and Document+PositionControl scrubbing.
+> **Recommendation:** Document+FileIO revert, TimelineView+Input mouse handling, and the delete marker position correction are now covered. Highest-value remaining gap is the Document+UI reload/seek ordering (§8.6); it needs a player/reload seam (injected fake player + seek) or a UI/integration test to be automatable. Window resize, save panel, clipboard, and scrubbing coverage remain open as before.
 
 ### 5.4 Skipped Test — RESOLVED
 
@@ -316,7 +331,7 @@ The Markdown set contains 7 files when `README.md` and `.github/copilot-instruct
 - Each step is guarded with `if ! ...; then exit 1; fi` so failures are reported with a custom message (works with `set -e`)
 - Uses color-coded echo statements for output formatting
 - Generates coverage reports via `xcrun llvm-cov`
-- Reports a summary; its static counts distinguish 15 test source files from 1 helper and report 197 methods
+- Reports a summary; its static counts distinguish 15 test source files from 1 helper and report 197 methods (hardcoded; stale — the suite now declares 200, see §9.2)
 
 ---
 
@@ -324,9 +339,11 @@ The Markdown set contains 7 files when `README.md` and `.github/copilot-instruct
 
 ### 8.1 Concurrency Correctness
 
-**Finding:** The `@MainActor` isolation on `MovieMutatorBase` ensures all mutations are serialized on the main thread. The `actor MovieWriter` correctly isolates export state. The `AsyncBridge` pattern is used appropriately for NSDocument overrides.
+**Finding:** The `@MainActor` isolation on `MovieMutatorBase` ensures all mutations are serialized on the main thread. The `actor MovieWriter` correctly isolates export state. The `AsyncBridge` pattern is used appropriately for NSDocument overrides. The reload/seek generation gating added by `4d37278` (§3.2) was reviewed scenario-by-scenario: interrupted seeks (`finished == false`), delayed stale completions (`finished == true` arriving after a newer seek or item replacement), consecutive user seeks within one reload generation, and the suppressed `readyToPlay` re-seek — each closes its prior window, and every escaping completion captures `self`/player/mutator weakly, so no retain cycles were found.
 
-**Assessment:** Concurrency model is sound. No race conditions or isolation violations detected.
+**Placement of `Document` protocol conformances (verified after `55a9a6d`):** `Document` now declares `ViewControllerDelegate` in its class declaration (`Document.swift:96-97`) and keeps only plain extensions for the delegate method bodies. Because `ViewControllerDelegate` refines `TimelineUpdateDelegate, Sendable` (`ViewController.swift:19-20`), the single conformance site satisfies both protocols, eliminating the Swift 6 "conformance must be declared in the same file" split.
+
+**Assessment:** Concurrency model is sound except for one residual window documented in §8.6 (P2). No isolation violations detected.
 
 ### 8.2 Error Handling
 
@@ -352,6 +369,26 @@ The Markdown set contains 7 files when `README.md` and `.github/copilot-instruct
 
 **Assessment:** Performance tooling is present (`PerformanceMetrics` with `measure`/`measureAsync`/`recordMeasurement`) and `PerformanceTests.swift` covers 12 scenarios (metrics measurement/report/reset, export progress, timeline marker/position, memory allocation). However, most are functional assertions; genuine timing-baseline coverage is limited. The overhead test, previously flaky, was stabilized by M-22 (§5.5).
 
+### 8.6 Residual Race Window in Reload Suppression — P2 (should-fix)
+
+**Finding:** A user-initiated seek that *completes* while a reload task is still awaiting `makePlayerItem()` releases `suppressQueryPosition`, and the reload does not re-assert it before applying the new player item.
+
+**Sequence (`Document+UI.swift`):**
+
+1. `updateGUI(reload: true)` sets `suppressQueryPosition = true` (`:198`), bumps `playerReloadGeneration`, and spawns the reload task, which awaits `mutator.makePlayerItem()` (`:321`).
+2. While that await is in flight, the user seeks (`resumeAfterSeek`, `:224`). The seek snapshots the *current* reload generation — which is still newest because the reload task has not bumped anything else — and its `finished == true` completion passes both the seek-generation and reload-generation gates, setting `suppressQueryPosition = false` (`:252-255`).
+3. The reload task then resumes, replaces the player item (`:337`), and starts the post-reload seek — but `updatePlayer(generation:)` only *lifts* suppression (via `liftSuppression(for:)`, `:383-386`); it never sets `suppressQueryPosition = true` again.
+4. From step 2 until the post-reload seek's completion, the polling timer's `queryPosition()` (`:408-431`) runs unsuppressed. Once the replaced item becomes ready with a non-empty buffer, a poll can read the pre-seek `currentTime()` and write it back through `updateTimeline` (`mutator.insertionTime = time`, `:270`) — reintroducing the stale-marker class of bug this mechanism exists to prevent. The post-reload seek's completion cannot repair the model because it only lifts suppression and marks the view dirty.
+
+The window is narrow (it requires a completed user seek overlapping the `makePlayerItem()` await, then a poll landing between item readiness and seek completion), and pre-replacement polls on the *old* item are benign (their `currentTime()` equals the user's intended seek target). It is nonetheless the same failure class as the delete-key regression fixed in `4d37278`.
+
+**Suggested fix (either suffices; do not apply both blindly):**
+
+- Re-assert `self.suppressQueryPosition = true` in `updatePlayer(generation:)` inside the same main-actor turn as `replaceCurrentItem` (before the swap, after the `Task.isCancelled` guard). The existing cancellation/`catch` paths already lift via `liftSuppression(for:)`, so re-assertion cannot strand the timer. Keeping the bump of `playerSeekGeneration` before the swap (as today) preserves stale-callback no-op behavior.
+- Or gate the user-seek release on the absence of a pending reload: in `resumeAfterSeek`'s completion, only set `suppressQueryPosition = false` when `playerReloadTask == nil` (in addition to the current generation checks); a reload in flight then keeps ownership of the release.
+
+**Tracking:** Not covered by automated tests (§5.3); field reproduction (delete → immediate marker drag/JKL during reload) is the current check.
+
 ---
 
 ## 9. Recommendations
@@ -359,24 +396,26 @@ The Markdown set contains 7 files when `README.md` and `.github/copilot-instruct
 ### 9.1 High Priority
 
 1. ~~**Update documentation** (`ARCHITECTURE.md`, `API_REFERENCE.md`)~~ — Resolved (2026-08-05): Both documents removed. Information is now maintained in this review document.
-2. **Add tests** for remaining untested areas: Document+UI window resize, Document+SavePanel flow, MovieMutator+Clipboard, Document+PositionControl scrubbing.
+2. **Close the residual race window (§8.6)** — Re-assert `suppressQueryPosition = true` in `updatePlayer(generation:)` before applying the replaced player item (or gate the user-seek release on `playerReloadTask == nil`). Small, localized change; should land with a field-reproduction pass of the delete → drag/JKL-during-reload scenario.
+3. **Add tests** for remaining untested areas: Document+UI reload/seek ordering (needs a player/reload seam — injected fake player and seek completion — to be automatable; this would also let §8.6 be regression-tested), Document+UI window resize, Document+SavePanel flow, MovieMutator+Clipboard, Document+PositionControl scrubbing.
 
 ### 9.2 Medium Priority
 
-3. **Unify date formatter usage** between `LoggingSystem` and `DateFormatter+Factory.swift`.
-4. **Expand performance tests** to cover TimelineView rendering and MovieMutator operations.
+4. **Update the hardcoded counts in `scripts/test.sh`** — its summary still prints "197 tests"; the suite now declares 200 (§5.2). Prefer deriving the count from the source (e.g., `grep -rE 'func test'`) over another hardcoded constant.
+5. **Unify date formatter usage** between `LoggingSystem` and `DateFormatter+Factory.swift`.
+6. **Expand performance tests** to cover TimelineView rendering and MovieMutator operations.
 
 ### 9.3 Low Priority
 
-5. **Add documentation comments** to public APIs in `Utilities/` that lack them.
+7. **Add documentation comments** to public APIs in `Utilities/` that lack them.
 
 ---
 
 ## 10. Conclusion
 
-The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 197 statically declared test methods. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. The initial test attempt for the reviewed baseline was blocked by the duplicate `writeSampleMovie` declaration; after the duplicate helper was removed, the August 6, 2026 rerun completed with 197 passed test cases and 0 failures, followed by a successful `xcodebuild analyze`. Remaining documented coverage gaps include Document+UI window resize, Document+SavePanel flow, MovieMutator clipboard, and Document+PositionControl scrubbing.
+The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 200 statically declared test methods. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. The 2026-09-21 revision verified baseline `4d37278` with a clean build, clean analyze, and a full test run passing 200 test cases with 0 failures (DerivedData outside the worktree), and re-confirmed the results after the fix was fast-forward merged into `work`.
 
-The concurrency model, typed error propagation, and security-scoped resource cleanup align with the implementation inspected. The duplicate test helper has been consolidated into the shared fixture, so no further helper-related repair is required.
+The 7 commits since the previous baseline are sound: the shared test fixture consolidation (`b96bc98`), the behavior-preserving expression simplifications (`884d8e2`), the Sendable conformance placement fix (`55a9a6d`), and the delete→seek race fix (`4d37278`). The generation-gated suppression mechanism closes the stale-callback scenarios it was designed for; one residual window remains — a user seek completing during the reload's item-preparation phase releases suppression and the reload does not re-assert it (§8.6, P2 should-fix). Remaining documented coverage gaps include the async reload/seek ordering itself (blocked on a test seam), Document+UI window resize, Document+SavePanel flow, MovieMutator clipboard, and Document+PositionControl scrubbing; `scripts/test.sh` also carries a stale hardcoded test count.
 
 ---
 
@@ -384,15 +423,15 @@ The concurrency model, typed error propagation, and security-scoped resource cle
 
 ### Source Files (65 files)
 - Application: `AppDelegate.swift`, `DocumentController.swift`
-- Document: `Document.swift` + 12 extensions (including `Document+ViewControllerDelegate.swift`)
+- Document: `Document.swift` + 12 extensions (conformance to `ViewControllerDelegate` declared in the class body since `55a9a6d`; `Document+ViewControllerDelegate.swift` and `Document+TimelineUpdateDelegate.swift` hold the delegate method implementations)
 - Models: `MovieMutator.swift` (subclass of MovieMutatorBase), `MovieMutatorBase.swift` + 4 extensions (`+FormatDescriptions`, `+Formatting`, `+PresentationInfo`, `+Progress`), `MovieMutator+Clipboard.swift`, `MovieMutator+Edit.swift`, `MovieMutator+Transform.swift`, `MovieMutator+Export.swift`, `MovieMutator+Inspector.swift`, `MovieMutator+Player.swift`, `MovieMutatorTypes.swift`, `MovieWriter.swift` + 3 extensions (`+CustomExport`, `+ExportSession`, `+WriteMovie`), `SampleBufferChannel.swift`, `Notifications.swift`, `AVMutableMovie+Extensions.swift`
 - ViewControllers: `ViewController.swift` + 5 extensions, `CAPARViewController.swift`, `TranscodeViewController.swift`, `WindowController.swift`, `AccessoryViewController.swift`, `InspectorViewController.swift`
 - Views: `TimelineView.swift` + 3 extensions, `MyPlayerView.swift`, `Window.swift`
 - Utilities: `AsyncBridge.swift`, `ActorUtilities.swift`, `LayoutConverter.swift` + 3 extensions (`+Convert`, `+LayoutData`, `+Mapping`), `MovieHeaderValidator.swift`, `PerformanceMetrics.swift`, `ErrorUtilities.swift`, `Constants.swift`, `LocalizationHelper.swift`, `LoggingSystem.swift`, `DateFormatter+Factory.swift`
 - Resources: `Info.plist`, `cutter2.entitlements`, `Localizable.xcstrings`
 
-### Test Files (16 files: 15 test source files + 1 helper; 197 statically declared methods)
-- `cutter2Tests.swift` (20 tests), `MovieMutatorTests.swift` (22 tests), `MovieMutatorEditTests.swift` (5 tests), `MovieMutatorTransformExportTests.swift` (8 tests)
+### Test Files (16 files: 15 test source files + 1 helper; 200 statically declared methods)
+- `cutter2Tests.swift` (20 tests), `MovieMutatorTests.swift` (22 tests), `MovieMutatorEditTests.swift` (8 tests; +3 delete-marker regression tests from `4d37278`), `MovieMutatorTransformExportTests.swift` (8 tests)
 - `MovieHeaderValidatorTests.swift` (3 tests), `AsyncBridgeTests.swift` (4 tests)
 - `TimelineViewRenderingTests.swift` (15 tests), `ViewControllerTests.swift` (15 tests), `ViewControllerKeyEventTests.swift` (14 tests)
 - `DocumentTests.swift` (6 tests), `ModelTests.swift` (25 tests)
@@ -410,6 +449,6 @@ The concurrency model, typed error propagation, and security-scoped resource cle
 - `docs/TESTING_GUIDE.md` (test structure and commands)
 
 ### Configuration
-- `cutter2.xcodeproj/project.pbxproj` (version 0.8.19 / build 20260802 — committed in the reviewed state)
+- `cutter2.xcodeproj/project.pbxproj` (version 0.8.19 / build 20260802 — app target, committed in the reviewed state; the test target carries placeholder `1.0` / `1`)
 - `.github/workflows/test.yml` (build/test/analyze, branches `main`/`work`/`develop`; coverage artifact generation is optional)
-- `scripts/test.sh` (build/test/analyze; static suite count: 15 test source files + 1 helper, 197 methods)
+- `scripts/test.sh` (build/test/analyze; its hardcoded summary still reports 197 methods — stale, see §9.2)

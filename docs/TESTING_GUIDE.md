@@ -1,6 +1,6 @@
 # Testing Guide for cutter2
 
-**Status**: Active — test instructions and infrastructure reference *(Updated: August 6, 2026)*
+**Status**: Active — test instructions and infrastructure reference *(Updated: September 21, 2026)*
 
 This guide provides instructions for running and writing tests for the cutter2 application.
 
@@ -9,7 +9,7 @@ This guide provides instructions for running and writing tests for the cutter2 a
 The test target is configured with XCTest and currently contains:
 - 15 test source files
 - 1 test helper file
-- 197 statically declared `func test...` methods
+- 200 statically declared `func test...` methods
 - Code coverage support in the command-line and CI workflows
 
 Run the complete suite with:
@@ -24,7 +24,7 @@ xcodebuild test \
   CODE_SIGNING_REQUIRED=NO
 ```
 
-The August 6, 2026 rerun completed successfully after removing the duplicate local `writeSampleMovie(to:duration:timescale:frameRate:)` helper from `MovieMutatorTransformExportTests.swift`. It executed 197 test cases with 197 passed and 0 failed. The subsequent `xcodebuild analyze` also succeeded.
+The September 21, 2026 full-suite run on commit `4d37278` (macOS 27.0, Xcode 27.0) executed 200 test cases with 200 passed and 0 failed. The earlier August 6, 2026 rerun passed the then-197 cases after removing the duplicate local `writeSampleMovie(to:duration:timescale:frameRate:)` helper from `MovieMutatorTransformExportTests.swift`.
 
 ## Table of Contents
 
@@ -45,7 +45,7 @@ The August 6, 2026 rerun completed successfully after removing the duplicate loc
 - macOS 14.0 or later
 - Swift language mode 6.0 (`SWIFT_VERSION = 6.0`)
 
-The documentation was verified on August 6, 2026 with macOS 26.6 (build 25G72), Xcode 26.6 (build 17F113), and Swift compiler 6.3.3.
+The documentation was verified on September 21, 2026 with macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), and Swift compiler 6.4.
 
 ### Initial Setup
 
@@ -74,7 +74,7 @@ cutter2Tests/
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
 ├── ModelTests.swift                      # Additional model tests (25 tests)
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
-├── MovieMutatorEditTests.swift           # Edit operation tests (5 tests)
+├── MovieMutatorEditTests.swift           # Edit operation tests (8 tests)
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
 ├── MovieHeaderValidatorTests.swift       # Header validation tests (3 tests)
 ├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
@@ -86,7 +86,7 @@ cutter2Tests/
 └── TestMovieFixtureWriter.swift          # Test helper (0 tests)
 ```
 
-**Static suite size**: 16 files total (15 test source files + 1 helper), **197 statically declared test methods**.
+**Static suite size**: 16 files total (15 test source files + 1 helper), **200 statically declared test methods**.
 
 Runtime results must be taken from the specific `xcodebuild test` or Xcode run being reported.
 
@@ -435,6 +435,6 @@ Based on Phase 2-3 of the improvement plan:
 
 ---
 
-**Last Updated**: August 6, 2026
-**Version**: 1.4
-**Status**: Static suite size: 197 test methods; runtime status depends on the specific test run
+**Last Updated**: September 21, 2026
+**Version**: 1.5
+**Status**: Static suite size: 200 test methods; runtime status depends on the specific test run

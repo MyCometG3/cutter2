@@ -1,6 +1,6 @@
 # Contributing to cutter2
 
-**Last Updated**: August 6, 2026
+**Last Updated**: September 21, 2026
 
 Thank you for your interest in contributing to cutter2! This document provides guidelines and instructions for contributing to the project.
 
@@ -53,7 +53,7 @@ Before contributing, ensure you have:
 4. **Git** installed and configured
 5. **GitHub account** for submitting contributions
 
-The documentation was verified on August 6, 2026 with macOS 26.6, Xcode 26.6 (build 17F113), and Swift compiler 6.3.3. These are verification values, not minimum requirements.
+The documentation was verified on September 21, 2026 with macOS 27.0, Xcode 27.0 (build 27A266a), and Swift compiler 6.4. These are verification values, not minimum requirements.
 
 ### Fork and Clone
 
@@ -399,8 +399,7 @@ LoggingSystem.video.debug("Detailed state: \(complexObject)")
 **Log levels**:
 - `debug()` - Development debugging (wrap in `#if DEBUG`)
 - `info()` - Informational messages
-- `notice()` - Significant events
-- `warning()` - Potential issues, non-fatal problems (e.g., `LoggingSystem.document.warning("...")`)
+- `notice()` - Significant events and warning-like issues (use for potential, non-fatal problems; there is no `warning()` on `os.Logger`)
 - `error()` - Error conditions
 - `fault()` - Critical failures
 
@@ -652,5 +651,5 @@ Your contributions help make video editing on macOS better for everyone.
 ---
 
 **Document Status**: ✅ Active
-**Last Updated**: August 6, 2026
+**Last Updated**: September 21, 2026
 **Maintained By**: cutter2 project maintainers

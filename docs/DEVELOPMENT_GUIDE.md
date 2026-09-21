@@ -1,6 +1,6 @@
 # Development Guide for cutter2
 
-**Last Updated**: August 6, 2026
+**Last Updated**: September 21, 2026
 **Status**: ✅ Active and Maintained
 
 ---
@@ -31,7 +31,7 @@
 - **Git**: For version control
 - **Command Line Tools**: Install via `xcode-select --install`
 
-The documentation was verified on August 6, 2026 with macOS 26.6 (build 25G72), Xcode 26.6 (build 17F113), and Swift compiler 6.3.3. These are verification values, not minimum requirements.
+The documentation was verified on September 21, 2026 with macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), and Swift compiler 6.4. These are verification values, not minimum requirements.
 
 ### Clone the Repository
 
@@ -209,7 +209,7 @@ xcodebuild test \
 
 ### Test Organization
 
-**Test directory contents** (16 files: 15 test source files + 1 helper; 197 statically declared test methods):
+**Test directory contents** (16 files: 15 test source files + 1 helper; 200 statically declared test methods):
 ```
 cutter2Tests/
 ├── cutter2Tests.swift                    # Integration tests (20 tests)
@@ -218,7 +218,7 @@ cutter2Tests/
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
 ├── ModelTests.swift                      # Model layer tests (25 tests)
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
-├── MovieMutatorEditTests.swift           # Edit operation tests (5 tests)
+├── MovieMutatorEditTests.swift           # Edit operation tests (8 tests)
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
 ├── MovieHeaderValidatorTests.swift       # Header validation tests (3 tests)
 ├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
@@ -969,5 +969,5 @@ If you encounter issues:
 ---
 
 **Document Status**: ✅ Active
-**Last Updated**: August 6, 2026
+**Last Updated**: September 21, 2026
 **Maintained By**: cutter2 development team

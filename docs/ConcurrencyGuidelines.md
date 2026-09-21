@@ -1,7 +1,7 @@
 # Concurrency Guidelines for cutter2
 
-**Version**: 1.1
-**Last Updated**: August 6, 2026
+**Version**: 1.2
+**Last Updated**: September 21, 2026
 **Swift Version**: 6.0
 
 ---
@@ -90,7 +90,7 @@ Task.detached(priority: .userInitiated) {
 
 ```swift
 NotificationCenter.default.addObserver(forName: .foo, object: nil, queue: nil) { _ in
-    Task { @MainActor in
+    Task { @MainActor [self] in
         self.handleNotification()
     }
 }
@@ -144,7 +144,7 @@ nonisolated func performAsync<T: Sendable>(
 
 **Allowed ONLY for:**
 - `SampleBufferChannel` internal queue (created at `SampleBufferChannel.swift:30`, used by `requestMediaDataWhenReady`)
-- `MovieWriter+CustomExport.swift:539` (`exportCustomMovie` dedicated queue, passed to `SampleBufferChannel`)
+- `MovieWriter+CustomExport.swift:550` (`exportCustomMovie` dedicated queue, passed to `SampleBufferChannel`)
 - AVFoundation `requestMediaDataWhenReady(on:using:)` API (AVFoundation interop)
 - `OperationQueue.main` for `NotificationCenter` (AppKit requirement)
 - `Timer.scheduledTimer` (Foundation API)
@@ -156,11 +156,35 @@ nonisolated func performAsync<T: Sendable>(
 The `requestMediaDataWhenReady(on:using:)` API in AVFoundation asynchronously notifies on the specified `DispatchQueue` when media data is ready for writing. This is an official AVFoundation API that requires a `DispatchQueue` parameter.
 
 - **Usage locations:**
-  - `SampleBufferChannel.swift:30` — each `SampleBufferChannel` creates its own queue (`SBC-<mediaType>`) in its `init`, used by `requestMediaDataWhenReady` at line 63
-  - `MovieWriter+CustomExport.swift:539` — `MovieWriter` creates a separate `exportCustomMovie` queue stored as `customQueue`, passed to `SampleBufferChannel` for custom export
+  - `SampleBufferChannel.swift:30` — each `SampleBufferChannel` creates its own queue (`SBC-<mediaType>`) in its `init`, used by `requestMediaDataWhenReady` at line 76
+  - `MovieWriter+CustomExport.swift:550` — `MovieWriter` creates a separate `exportCustomMovie` queue stored as `customQueue`, passed to `SampleBufferChannel` for custom export
 - **Reason:** AVFoundation API contract requires `DispatchQueue` — cannot be replaced with `Task` / `async`.
 - **Safety:** `requestMediaDataWhenReady` processes sequentially on the queue, so no data races occur. Queue cleanup happens at `stopRequestingMediaData` call.
 - **Note:** This API is called from the `SampleBufferChannel` (not from within an actor), with data passed back via `@Sendable` closure.
+
+### 8. Generation Counters + Completion Gating (Reload/Seek Pipeline)
+
+**Use for:** Async pipelines whose callbacks can arrive late, out of order, or after a newer request has superseded them (player reload/seek completions, KVO-triggered work, polling timers gated on in-flight work).
+
+```swift
+// Producer: bump the counter BEFORE starting the work, and snapshot it
+self.playerSeekGeneration += 1
+let seekGeneration = self.playerSeekGeneration
+player.seek(to: time, completionHandler: { finished in
+    ActorUtilities.performSyncOnMainActor {
+        // Stale callback (a newer request advanced the counter) → full no-op:
+        // no state writes, no releases of gated flags.
+        guard self.playerSeekGeneration == seekGeneration else { return }
+        // ... apply effects; only the newest request may act
+    }
+})
+```
+
+**Rules:**
+- Bump the counter **before** starting the superseding operation (e.g., before `replaceCurrentItem` cancels an in-flight seek) so callbacks cancelled by it always observe the advanced counter
+- A completion that fails the generation check must be a **full no-op** — including skipping releases of gated flags such as `suppressQueryPosition`
+- Multi-level pipelines use one counter per level and gate on all of them (`playerReloadGeneration` for reload requests, `playerSeekGeneration` for seeks)
+- Reference implementation: `Document+UI.swift` (`resumeAfterSeek`, `updatePlayer(generation:)`, `liftSuppression(for:)`) — see `CODEBASE_REVIEW.md` §3.2/§8.6 for the reviewed semantics and a known residual window
 
 ---
 
@@ -186,6 +210,7 @@ Every public type crossing isolation boundaries MUST document:
 2. **Sendable Conformance**: Whether the type is `Sendable` and why
 3. **Reentrancy**: Whether methods can be called reentrantly
 4. **Thread Safety**: What synchronization callers must provide
+5. **Conformance Placement**: If a protocol refines `Sendable`, its conformance MUST be declared in the same source file as the type declaration (Swift 6 requirement). Prefer the class declaration line over an extension; extension files then hold only the method implementations. (Example: `Document` declares `ViewControllerDelegate` — which refines `TimelineUpdateDelegate, Sendable` — on the class declaration in `Document.swift`, with `Document+ViewControllerDelegate.swift` holding only the methods.)
 
 **Example:**
 ```swift
@@ -225,5 +250,6 @@ When touching a file, verify:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.2 | 2026-09-21 | — | Added the generation-gated completion pattern (reload/seek pipeline), documented the `Sendable`-refining conformance placement rule, made the main-actor-hop capture list explicit in the example, and refreshed the `DispatchQueue` usage line references. |
 | 1.1 | 2026-08-06 | — | Clarified `MovieMutatorBase` `@MainActor` isolation and synchronized the documented concurrency examples with the current implementation. |
 | 1.0 | 2026-06-21 | — | Initial version based on post-PR#33/34/37/39/40/41 codebase |

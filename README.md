@@ -65,7 +65,7 @@ For architecture, development, testing, concurrency, and contribution guidance, 
 
 - **Minimum**: macOS 14.0; Xcode 16.0 or later
 - **Swift language mode**: 6.0 (`SWIFT_VERSION = 6.0`)
-- **Verified on 2026-08-06**: macOS 26.6 (build 25G72), Xcode 26.6 (build 17F113), Swift compiler 6.3.3
+- **Verified on 2026-09-21**: macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
 
 ## License
 

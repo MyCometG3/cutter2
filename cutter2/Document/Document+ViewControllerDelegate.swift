@@ -182,15 +182,21 @@ extension Document {
     ///   - resetEnd: Whether to reset the selection end marker while stepping.
     public func doStepByCount(_ count: Int64, _ resetStart: Bool, _ resetEnd: Bool) {
         
-        var target: CMTime? = nil
-        doStepByCount(count, resetStart, resetEnd, &target)
+        // Discarded on purpose: the public step API does not use the resulting time.
+        // The type annotation is required to resolve the overload in favor of the
+        // private CMTime?-returning implementation.
+        let discarded: CMTime? = doStepByCount(count, resetStart, resetEnd)
+        _ = discarded
     }
     
     /// offset current marker by specified step (private)
-    private func doStepByCount(_ count: Int64, _ resetStart: Bool, _ resetEnd: Bool, _ target: inout CMTime?) {
+    ///
+    /// - Returns: The time the marker was moved to, or `nil` when no step occurred
+    ///   (no mutator/player, or sample info unavailable).
+    private func doStepByCount(_ count: Int64, _ resetStart: Bool, _ resetEnd: Bool) -> CMTime? {
         
-        guard let mutator = self.movieMutator else { return }
-        guard let player = player, let item = playerItem else { return }
+        guard let mutator = self.movieMutator else { return nil }
+        guard let player = player, let item = playerItem else { return nil }
         
         // pause first
         let rate = player.rate
@@ -204,15 +210,13 @@ extension Document {
                 resetSelection(lastRange.end, resetStart, resetEnd)
                 updateTimeline(lastRange.end, range: mutator.selectedTimeRange)
                 cachedTime = lastRange.start
-                target = lastRange.start
-                return
+                return lastRange.start
             }
             if count < 0 && mutator.insertionTime > lastRange.start {
                 resetSelection(lastRange.start, resetStart, resetEnd)
                 updateTimeline(lastRange.start, range: mutator.selectedTimeRange)
                 cachedTime = lastRange.start
-                target = lastRange.start
-                return
+                return lastRange.start
             }
         }
         
@@ -221,21 +225,21 @@ extension Document {
         let okForward = (count > 0 && item.canStepForward && nowTime < duration)
         let okBackward = (count < 0 && item.canStepBackward && CMTime.zero < nowTime)
         if okForward {
-            guard let info = mutator.presentationInfoAtTime(nowTime) else { return }
+            guard let info = mutator.presentationInfoAtTime(nowTime) else { return nil }
             let newTime = CMTimeClampToRange(info.timeRange.end, range: mutator.movieRange())
             resetSelection(newTime, resetStart, resetEnd)
             resumeAfterSeek(to: newTime, with: rate)
-            target = newTime
+            return newTime
         } else if okBackward {
-            guard let info = mutator.presentationInfoAtTime(nowTime) else { return }
-            guard let prev = mutator.previousInfo(of: info.timeRange) else { return }
+            guard let info = mutator.presentationInfoAtTime(nowTime) else { return nil }
+            guard let prev = mutator.previousInfo(of: info.timeRange) else { return nil }
             let newTime = CMTimeClampToRange(prev.timeRange.start, range: mutator.movieRange())
             resetSelection(newTime, resetStart, resetEnd)
             resumeAfterSeek(to: newTime, with: rate)
-            target = newTime
+            return newTime
         } else {
             self.updateGUI(nowTime, mutator.selectedTimeRange, false)
-            target = nowTime
+            return nowTime
         }
     }
     
@@ -247,15 +251,20 @@ extension Document {
     ///   - resetEnd: Whether to reset the selection end marker while stepping.
     public func doStepBySecond(_ offset: Float64, _ resetStart: Bool, _ resetEnd: Bool) {
         
-        var target: CMTime? = nil
-        doStepBySecond(offset, resetStart, resetEnd, &target)
+        // Discarded on purpose: the public step API does not use the resulting time.
+        // The type annotation is required to resolve the overload in favor of the
+        // private CMTime?-returning implementation.
+        let discarded: CMTime? = doStepBySecond(offset, resetStart, resetEnd)
+        _ = discarded
     }
     
     /// offset current marker by specified seconds (private)
-    private func doStepBySecond(_ offset: Float64, _ resetStart: Bool, _ resetEnd: Bool, _ target: inout CMTime?) {
+    ///
+    /// - Returns: The time the marker was moved to, or `nil` when no mutator/player is available.
+    private func doStepBySecond(_ offset: Float64, _ resetStart: Bool, _ resetEnd: Bool) -> CMTime? {
         
-        guard let mutator = self.movieMutator else { return }
-        guard let player = self.player else { return }
+        guard let mutator = self.movieMutator else { return nil }
+        guard let player = self.player else { return nil }
         let movieRange: CMTimeRange = mutator.movieRange()
         
         // pause first
@@ -287,7 +296,7 @@ extension Document {
         // seek and resume
         resetSelection(newTime, resetStart, resetEnd)
         resumeAfterSeek(to: newTime, with: rate)
-        target = newTime
+        return newTime
     }
     
     /// Adjusts the player volume by a signed percentage offset.
@@ -336,7 +345,7 @@ extension Document {
             updateGUI(current, selection, false)
             target = current
         } else {
-            doStepByCount(-1, resetStart, resetEnd, &target)
+            target = doStepByCount(-1, resetStart, resetEnd)
         }
         if shiftKey, let target = target {
             syncSelection(target)
@@ -368,7 +377,7 @@ extension Document {
             updateGUI(current, selection, false)
             target = current
         } else {
-            doStepByCount(+1, resetStart, resetEnd, &target)
+            target = doStepByCount(+1, resetStart, resetEnd)
         }
         if shiftKey, let target = target {
             syncSelection(target)

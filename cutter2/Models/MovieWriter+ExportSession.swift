@@ -168,27 +168,26 @@ extension MovieWriter {
         // Note: For custom exports, cancelCustomMovie must be called separately
     }
     
-    /// Status string representation.
+    /// Display names for `AVAssetExportSession.Status` cases.
     ///
-    /// - Parameter status: `AVAssetExportSession.Status`
-    /// - Returns: String representation of status
+    /// String interpolation of an imported C enum does not yield the case
+    /// name on current Swift runtimes (`"\(status)"` renders as
+    /// `"AVAssetExportSessionStatus(rawValue: N)"`), so the names are held
+    /// here explicitly. Unknown cases (including future SDK additions) fall
+    /// back to "unknown", matching the former `@unknown default` behavior.
+    private static let statusNames: [AVAssetExportSession.Status: String] = [
+        .unknown: "unknown",
+        .waiting: "waiting",
+        .exporting: "exporting",
+        .completed: "completed",
+        .failed: "failed",
+        .cancelled: "cancelled"
+    ]
+
+    /// Status string representation in "name(rawValue)" form without spaces,
+    /// e.g. "completed(3)". The numeric suffix is derived from `rawValue`.
     private func statusString(of status: AVAssetExportSession.Status) -> String {
-        switch status {
-        case .unknown:
-            return "unknown(0)"
-        case .waiting:
-            return "waiting(1)"
-        case .exporting:
-            return "exporting(2)"
-        case .completed:
-            return "completed(3)"
-        case .failed:
-            return "failed(4)"
-        case .cancelled:
-            return "cancelled(5)"
-        @unknown default:
-            return "unknown(\(status.rawValue))"
-        }
+        return "\(Self.statusNames[status] ?? "unknown")(\(status.rawValue))"
     }
     
     /// Export as specified file type using AVAssetExportSessionPreset.

@@ -15,7 +15,7 @@ import os.log
 // MARK: - MovieWriterError
 /* ============================================ */
 
-enum MovieWriterError: Error, NSErrorConvertible {
+enum MovieWriterError: Error, NSErrorConvertible, Hashable, CaseIterable {
     case compatibilityError
     case assetReaderWriterUnavailable
     case anotherExportSessionRunning
@@ -26,47 +26,49 @@ enum MovieWriterError: Error, NSErrorConvertible {
     
     static let errorDomain = "MovieWriterError"
     
+    /// Per-case NSError metadata: (code, localization key, localization comment).
+    ///
+    /// The domain ("MovieWriterError") and these codes are an external contract:
+    /// `.operationCancelled` (NSUserCancelledError) is matched by
+    /// Document+FileIO.write() to suppress the error sheet on user cancellation,
+    /// and MovieWriter+ExportSession compares `code == NSUserCancelledError`.
+    ///
+    /// Declared internal (not private) so the test target can verify
+    /// `Set(MovieWriterError.allCases) == Set(errorInfo.keys)` directly.
+    static let errorInfo: [MovieWriterError: (code: Int, key: String, comment: String)] = [
+        .compatibilityError: (code: 1,
+                              key: "error.writer.compatibility",
+                              comment: "Error when file type or preset is not compatible"),
+        .assetReaderWriterUnavailable: (code: 2,
+                                        key: "error.writer.reader_writer_unavailable",
+                                        comment: "Error when AVAssetReader or AVAssetWriter cannot be created"),
+        .anotherExportSessionRunning: (code: 3,
+                                       key: "error.writer.export_in_progress",
+                                       comment: "Error when trying to start export while another is running"),
+        .movieWriterFailed: (code: 4,
+                             key: "error.writer.write_failed",
+                             comment: "Error when movie writer encounters an error"),
+        .assetReaderWriterFailed: (code: 5,
+                                   key: "error.writer.reader_writer_failed",
+                                   comment: "Error when asset reader or writer encounters an error"),
+        // --- Special cases (non-sequential codes; keep exactly as-is) ---
+        // Note: This uses the custom domain internally. Document.write() converts it
+        // to NSCocoaErrorDomain before rethrowing to conform to system conventions.
+        .operationCancelled: (code: NSUserCancelledError,
+                              key: "error.writer.operation_cancelled",
+                              comment: "Error when user cancels an operation"),
+        .unknown: (code: -1,
+                   key: "error.writer.unknown",
+                   comment: "Unknown error message")
+    ]
+    
     var nsError: NSError {
-        let domain = MovieWriterError.errorDomain
-        switch self {
-        case .compatibilityError:
-            let message = NSLocalizedString("error.writer.compatibility",
-                                            comment: "Error when file type or preset is not compatible")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: 1, userInfo: info)
-        case .assetReaderWriterUnavailable:
-            let message = NSLocalizedString("error.writer.reader_writer_unavailable",
-                                            comment: "Error when AVAssetReader or AVAssetWriter cannot be created")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: 2, userInfo: info)
-        case .anotherExportSessionRunning:
-            let message = NSLocalizedString("error.writer.export_in_progress",
-                                            comment: "Error when trying to start export while another is running")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: 3, userInfo: info)
-        case .movieWriterFailed:
-            let message = NSLocalizedString("error.writer.write_failed",
-                                            comment: "Error when movie writer encounters an error")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: 4, userInfo: info)
-        case .assetReaderWriterFailed:
-            let message = NSLocalizedString("error.writer.reader_writer_failed",
-                                            comment: "Error when asset reader or writer encounters an error")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: 5, userInfo: info)
-        case .operationCancelled:
-            // Note: This uses the custom domain internally. Document.write() converts it
-            // to NSCocoaErrorDomain before rethrowing to conform to system conventions.
-            let message = NSLocalizedString("error.writer.operation_cancelled",
-                                            comment: "Error when user cancels an operation")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: NSUserCancelledError, userInfo: info)
-        case .unknown:
-            let message = NSLocalizedString("error.writer.unknown",
-                                            comment: "Unknown error message")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: -1, userInfo: info)
+        guard let info = Self.errorInfo[self] else {
+            preconditionFailure("MovieWriterError.errorInfo has no entry for \(self)")
         }
+        let message = NSLocalizedString(info.key, comment: info.comment)
+        return NSError(domain: Self.errorDomain, code: info.code,
+                       userInfo: [NSLocalizedDescriptionKey: message])
     }
 }
 

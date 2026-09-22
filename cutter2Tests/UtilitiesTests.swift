@@ -188,6 +188,50 @@ final class UtilitiesTests: XCTestCase {
         }
     }
     
+    // MARK: - MovieWriterError table (L-23)
+    
+    func testMovieWriterErrorInfoCompleteness() {
+        // The former switch gave compile-time exhaustiveness; the table lookup is
+        // guarded by this structural check instead. Requires Hashable (Set / keys)
+        // and CaseIterable (allCases) adopted on the enum declaration.
+        let allCases = Set(MovieWriterError.allCases)
+        let tableKeys = Set(MovieWriterError.errorInfo.keys)
+        XCTAssertEqual(tableKeys, allCases,
+                       "errorInfo keys diverged from MovieWriterError.allCases")
+        XCTAssertEqual(MovieWriterError.errorInfo.count, MovieWriterError.allCases.count,
+                       "errorInfo entry count diverged from MovieWriterError.allCases")
+    }
+
+    func testMovieWriterErrorNSErrorContract() throws {
+        // Domain and codes are an external contract (Document+FileIO cancellation
+        // handling). Codes: sequential 1...5, then the two special codes.
+        // NOTE: when adding a new case, update three places: (1) the enum case
+        // list, (2) the errorInfo table, (3) this expected list.
+        // testMovieWriterErrorInfoCompleteness follows allCases automatically.
+        let expectedCodes: [(error: MovieWriterError, code: Int)] = [
+            (.compatibilityError, 1),
+            (.assetReaderWriterUnavailable, 2),
+            (.anotherExportSessionRunning, 3),
+            (.movieWriterFailed, 4),
+            (.assetReaderWriterFailed, 5),
+            (.operationCancelled, NSUserCancelledError), // 3072
+            (.unknown, -1)
+        ]
+
+        for (error, expectedCode) in expectedCodes {
+            let nsError = error.nsError
+            XCTAssertEqual(nsError.domain, MovieWriterError.errorDomain, "domain mismatch for \(error)")
+            XCTAssertEqual(nsError.code, expectedCode, "code mismatch for \(error)")
+            XCTAssertNotNil(nsError.userInfo[NSLocalizedDescriptionKey])
+
+            // nsError(with:) must preserve domain + code and add the failure reason.
+            let withReason = error.nsError(with: "Custom reason")
+            XCTAssertEqual(withReason.domain, nsError.domain)
+            XCTAssertEqual(withReason.code, nsError.code)
+            XCTAssertEqual(withReason.userInfo[NSLocalizedFailureReasonErrorKey] as? String, "Custom reason")
+        }
+    }
+    
     // MARK: - Actor Utilities Tests
     
     func testMainActorExecution() throws {

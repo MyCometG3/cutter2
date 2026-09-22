@@ -90,6 +90,33 @@ extension Document {
 }
 
 /* ============================================ */
+// MARK: - KVO context token (L-33)
+/* ============================================ */
+
+/// Identity-only reference type used as the per-document KVO context.
+///
+/// The instance is never dereferenced and has no stored state; only its
+/// identity (address) is compared. A stateless `final` class conforms to
+/// `Sendable` directly, so no `@unchecked` opt-out is needed. Internal (not
+/// `private`) so both `Document` (token storage) and `Document+Observers.swift`
+/// (registration / callback) can refer to it within the module, and the unit
+/// tests (`DocumentKVOContextTests`) can verify the pointer contract directly.
+final class PlayerKVOContextToken: Sendable {
+
+    /// Raw `context` pointer derived from this token's identity. Single
+    /// derivation site shared by registration, callback comparison, and the
+    /// unit tests (internal test helper).
+    ///
+    /// `Unmanaged.passUnretained` performs no memory management and allocates
+    /// nothing. Usage contract: do not store the pointer in stored or global
+    /// state, pass it as a `Sendable` argument, capture it in a `Task`, or
+    /// keep it beyond this token's lifetime — derive and compare it in place.
+    var contextPointer: UnsafeMutableRawPointer {
+        Unmanaged.passUnretained(self).toOpaque()
+    }
+}
+
+/* ============================================ */
 // MARK: -
 /* ============================================ */
 
@@ -136,7 +163,37 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     /// The interval between playback-position polls, in seconds.
     public var pollingInterval: TimeInterval = 1.0/15
 
+    /// Per-document KVO context token (L-33).
+    ///
+    /// `nonisolated` + `Sendable` so the nonisolated `observeValue` override can
+    /// derive the context pointer without a MainActor hop. The address is stable
+    /// for the lifetime of the Document instance — the same per-instance
+    /// stability contract the legacy `kvoContext` storage provided. Never
+    /// weakified, regenerated, or shared outside this instance.
+    nonisolated private let playerKVOContextToken = PlayerKVOContextToken()
+
+    /// Raw `context` pointer identifying this document's KVO registrations (L-33).
+    ///
+    /// Forwards to the token's `contextPointer` derivation at each use site and
+    /// allocates nothing. (The pointer is not precomputed into stored state: raw
+    /// pointer types are non-`Sendable`, so they cannot be kept in nonisolated
+    /// stored state at all.)
+    ///
+    /// - Usage contract: the returned pointer must not be stored in stored or
+    ///   global state, passed as a `Sendable` argument, captured in a `Task`, or
+    ///   kept beyond the token lifetime. It is consumed in place by the
+    ///   `addObserver`/`removeObserver` calls and the callback comparison.
+    nonisolated var playerKVOContext: UnsafeMutableRawPointer {
+        playerKVOContextToken.contextPointer
+    }
+
     /// Storage used as the KVO context for document observations.
+    ///
+    /// Retained for source compatibility: this member is `public` and may be
+    /// referenced by code outside this repository. It is no longer used as the
+    /// context for document observations (see L-33). Complete removal is a
+    /// public API change tracked as a separate issue.
+    @available(*, deprecated, message: "KVO context is managed internally.")
     public var kvoContext = 0
 
     /// The save panel currently associated with the document.

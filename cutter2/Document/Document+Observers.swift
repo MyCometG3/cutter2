@@ -24,11 +24,11 @@ extension Document {
         player.addObserver(self,
                            forKeyPath: #keyPath(AVPlayer.status),
                            options: [.old, .new],
-                           context: &(self.kvoContext))
+                           context: playerKVOContext)
         player.addObserver(self,
                            forKeyPath: #keyPath(AVPlayer.rate),
                            options: [.old, .new],
-                           context: &(self.kvoContext))
+                           context: playerKVOContext)
     }
     
     /// Remove AVPlayer properties observer
@@ -38,27 +38,29 @@ extension Document {
         
         player.removeObserver(self,
                               forKeyPath: #keyPath(AVPlayer.status),
-                              context: &(self.kvoContext))
+                              context: playerKVOContext)
         player.removeObserver(self,
                               forKeyPath: #keyPath(AVPlayer.rate),
-                              context: &(self.kvoContext))
-    }
-    
-    /// compare KVO context address as UInt
-    @MainActor func checkKVOContext(_ contextAddress: UInt) -> Bool {
-        return withUnsafePointer(to: &self.kvoContext) { kvoPointer in
-            let kvoAddress = UInt(bitPattern: kvoPointer)
-            return (contextAddress == kvoAddress)
-        }
+                              context: playerKVOContext)
     }
     
     // NSKeyValueObserving protocol - observeValue(forKeyPath:of:change:context:)
     override nonisolated func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey:Any]?,
                                            context: UnsafeMutableRawPointer?) {
         
-        guard
-            let context = context, let object = object as? AVPlayer, let keyPath = keyPath, let change = change
-        else {
+        // L-33: match this document's KVO context token by direct pointer
+        // comparison. The token is a per-instance property (its address is
+        // stable for the Document lifetime) and no isolated state is touched
+        // here, so foreign notifications are forwarded to super without a
+        // MainActor hop.
+        guard let context = context, context == playerKVOContext else {
+            super.observeValue(forKeyPath: keyPath,
+                               of: object,
+                               change: change,
+                               context: context)
+            return
+        }
+        guard let object = object as? AVPlayer, let keyPath = keyPath, let change = change else {
             super.observeValue(forKeyPath: keyPath,
                                of: object,
                                change: change,
@@ -66,13 +68,11 @@ extension Document {
             return
         }
         
-        let contextAddress = UInt(bitPattern: context) // Cast UnsafeMutableRawPointer to UInt for actor isolation
         let (objectIsPlayer, keyPathIsAVPlayerStatus, keyPathIsAVPlayerRate) = ActorUtilities.performSyncOnMainActor {
-            let contextMatch: Bool = checkKVOContext(contextAddress)
             let objectIsPlayer: Bool = (object === self.player)
             let keyPathIsAVPlayerStatus: Bool = (keyPath == #keyPath(AVPlayer.status))
             let keyPathIsAVPlayerRate: Bool = (keyPath == #keyPath(AVPlayer.rate))
-            return (contextMatch && objectIsPlayer, keyPathIsAVPlayerStatus, keyPathIsAVPlayerRate)
+            return (objectIsPlayer, keyPathIsAVPlayerStatus, keyPathIsAVPlayerRate)
         }
         
         if objectIsPlayer && keyPathIsAVPlayerStatus {

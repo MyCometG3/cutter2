@@ -57,26 +57,12 @@ extension MovieWriter {
     ///   - mode: FlattenMode
     private func flattenMovie(to url: URL, with mode: FlattenMode) async throws {
         
-        guard !writeInProgress else {
-            let reason = "Please wait until the current export session finishes."
-            try throwError(.anotherExportSessionRunning, reason: reason)
-        }
+        let dateStart: Date = try beginWrite()
         defer {
             writeInProgress = false
         }
         
         /* ============================================ */
-        
-        // Update Properties
-        self.writeInProgress = true
-        self.writeSuccess = false
-        self.writeError = nil
-        self.writeCancelled = false
-        
-        let dateStart: Date = Date()
-        self.writeStart = dateStart
-        self.writeEnd = nil
-        self.writeProgress = 0.0
         
         //
         self.unblockUserInteraction?()
@@ -106,10 +92,7 @@ extension MovieWriter {
         }
         
         // Issue start notification
-        let userInfoStart: [AnyHashable:Any] = [urlInfoKey:url,
-                                              startInfoKey:dateStart]
-        let notificationStart = Notification(name: before, object: self, userInfo: userInfoStart)
-        NotificationCenter.default.post(notificationStart)
+        issueStartNotification(before, url: url, dateStart: dateStart)
         
         /* ============================================ */
         
@@ -177,14 +160,6 @@ extension MovieWriter {
         /* ============================================ */
         
         // Issue end notification
-        var userInfoEnd: [AnyHashable:Any] = [urlInfoKey:url,
-                                            startInfoKey:dateStart,
-                                        completedInfoKey:self.writeSuccess]
-        if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
-            userInfoEnd[endInfoKey] = dateEnd
-            userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)
-        }
-        let notificationEnd = Notification(name: after, object: self, userInfo: userInfoEnd)
-        NotificationCenter.default.post(notificationEnd)
+        issueEndNotification(after, url: url, dateStart: dateStart)
     }
 }

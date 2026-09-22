@@ -525,27 +525,12 @@ extension MovieWriter {
     ///   is cancelled, or the export fails.
     public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String: any Sendable]) async throws {
         
-        // Check that no export is already running.
-        guard !writeInProgress else {
-            let reason = "Please wait until the current export session finishes."
-            try throwError(.anotherExportSessionRunning, reason: reason)
-        }
+        let dateStart: Date = try beginWrite()
         defer {
             writeInProgress = false
         }
         
         /* ============================================ */
-        
-        // Set up initial export state.
-        self.writeInProgress = true
-        self.writeSuccess = false
-        self.writeError = nil
-        self.writeCancelled = false
-        
-        let dateStart: Date = Date()
-        self.writeStart = dateStart
-        self.writeEnd = nil
-        self.writeProgress = 0.0
         
         let dgQueue: DispatchQueue = DispatchQueue(label: "exportCustomMovie")
         self.customParam = param
@@ -556,11 +541,7 @@ extension MovieWriter {
         self.unblockUserInteraction?()
         
         // Notify that export is starting.
-        let userInfoStart: [AnyHashable:Any] = [urlInfoKey:url,
-                                              startInfoKey:dateStart]
-        let notificationStart = Notification(name: .movieWillExportCustom,
-                                             object: self, userInfo: userInfoStart)
-        NotificationCenter.default.post(notificationStart)
+        issueStartNotification(.movieWillExportCustom, url: url, dateStart: dateStart)
         
         /* ============================================ */
         
@@ -620,16 +601,7 @@ extension MovieWriter {
         /* ============================================ */
         
         // Notify that export has finished.
-        var userInfoEnd: [AnyHashable:Any] = [urlInfoKey:url,
-                                            startInfoKey:dateStart,
-                                        completedInfoKey:self.writeSuccess]
-        if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
-            userInfoEnd[endInfoKey] = dateEnd
-            userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)
-        }
-        let notificationEnd = Notification(name: .movieDidExportCustom,
-                                           object: self, userInfo: userInfoEnd)
-        NotificationCenter.default.post(notificationEnd)
+        issueEndNotification(.movieDidExportCustom, url: url, dateStart: dateStart)
     }
     
     /// Cancel ongoing custom export operation

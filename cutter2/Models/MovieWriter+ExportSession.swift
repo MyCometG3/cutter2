@@ -201,26 +201,12 @@ extension MovieWriter {
     ///   export errors surfaced by the active platform path.
     public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws {
         
-        guard !writeInProgress else {
-            let reason = "Please wait until the current export session finishes."
-            try throwError(.anotherExportSessionRunning, reason: reason)
-        }
+        let dateStart: Date = try beginWrite()
         defer {
             writeInProgress = false
         }
         
         /* ============================================ */
-        
-        // Update Properties
-        self.writeInProgress = true
-        self.writeSuccess = false
-        self.writeError = nil
-        self.writeCancelled = false
-        
-        let dateStart: Date = Date()
-        self.writeStart = dateStart
-        self.writeEnd = nil
-        self.writeProgress = 0.0
         
         self.exportSession = nil
         self.exportSessionStatus = .unknown
@@ -229,11 +215,7 @@ extension MovieWriter {
         self.unblockUserInteraction?()
         
         // Issue start notification
-        let userInfoStart: [AnyHashable:Any] = [urlInfoKey:url,
-                                              startInfoKey:dateStart]
-        let notificationStart = Notification(name: .movieWillExportSession,
-                                             object: self, userInfo: userInfoStart)
-        NotificationCenter.default.post(notificationStart)
+        issueStartNotification(.movieWillExportSession, url: url, dateStart: dateStart)
         
         /* ============================================ */
         
@@ -323,16 +305,7 @@ extension MovieWriter {
         /* ============================================ */
         
         // Issue end notification
-        var userInfoEnd: [AnyHashable:Any] = [urlInfoKey:url,
-                                            startInfoKey:dateStart,
-                                        completedInfoKey:self.writeSuccess]
-        if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
-            userInfoEnd[endInfoKey] = dateEnd
-            userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)
-        }
-        let notificationEnd = Notification(name: .movieDidExportSession,
-                                           object: self, userInfo: userInfoEnd)
-        NotificationCenter.default.post(notificationEnd)
+        issueEndNotification(.movieDidExportSession, url: url, dateStart: dateStart)
     }
     
     /// Check compatibility of preset + asset + output file type.

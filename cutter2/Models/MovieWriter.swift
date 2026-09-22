@@ -88,6 +88,77 @@ extension MovieWriter {
 }
 
 /* ============================================ */
+// MARK: - common write phases
+/* ============================================ */
+
+extension MovieWriter {
+    /// Begin a write/export phase with mutual exclusion and shared state reset.
+    ///
+    /// - Throws `anotherExportSessionRunning` when a write/export is already running.
+    /// - Resets the shared write state (`writeInProgress`, `writeSuccess`, `writeError`,
+    ///   `writeCancelled`, `writeStart`, `writeEnd`, `writeProgress`).
+    ///
+    /// The caller must keep `defer { writeInProgress = false }` at its own scope.
+    /// Moving the defer into this method would release the flag as soon as this
+    /// method returns (see S-15 plan §2.5).
+    ///
+    /// - Returns: The operation start date (also stored into `writeStart`).
+    /// - Throws: `MovieWriterError.anotherExportSessionRunning` when busy.
+    func beginWrite() throws -> Date {
+        guard !writeInProgress else {
+            let reason = "Please wait until the current export session finishes."
+            try throwError(.anotherExportSessionRunning, reason: reason)
+        }
+        
+        // Update Properties
+        self.writeInProgress = true
+        self.writeSuccess = false
+        self.writeError = nil
+        self.writeCancelled = false
+        
+        let dateStart: Date = Date()
+        self.writeStart = dateStart
+        self.writeEnd = nil
+        self.writeProgress = 0.0
+        
+        return dateStart
+    }
+
+    /// Post the start-phase notification with the standard userInfo keys.
+    ///
+    /// - Parameters:
+    ///   - name: Entry-specific notification name (`movieWill*`).
+    ///   - url: The destination file URL (`urlInfoKey`).
+    ///   - dateStart: The operation start date (`startInfoKey`).
+    func issueStartNotification(_ name: Notification.Name, url: URL, dateStart: Date) {
+        let userInfoStart: [AnyHashable:Any] = [urlInfoKey:url,
+                                              startInfoKey:dateStart]
+        let notificationStart = Notification(name: name, object: self, userInfo: userInfoStart)
+        NotificationCenter.default.post(notificationStart)
+    }
+
+    /// Post the end-phase notification with the standard userInfo keys.
+    ///
+    /// `endInfoKey` / `intervalInfoKey` are appended only when `writeEnd` is set.
+    ///
+    /// - Parameters:
+    ///   - name: Entry-specific notification name (`movieDid*`).
+    ///   - url: The destination file URL (`urlInfoKey`).
+    ///   - dateStart: The operation start date (`startInfoKey`).
+    func issueEndNotification(_ name: Notification.Name, url: URL, dateStart: Date) {
+        var userInfoEnd: [AnyHashable:Any] = [urlInfoKey:url,
+                                            startInfoKey:dateStart,
+                                        completedInfoKey:self.writeSuccess]
+        if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
+            userInfoEnd[endInfoKey] = dateEnd
+            userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)
+        }
+        let notificationEnd = Notification(name: name, object: self, userInfo: userInfoEnd)
+        NotificationCenter.default.post(notificationEnd)
+    }
+}
+
+/* ============================================ */
 // MARK: -
 /* ============================================ */
 

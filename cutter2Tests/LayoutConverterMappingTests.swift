@@ -112,6 +112,15 @@ final class LayoutConverterMappingTests: XCTestCase {
         (kAudioChannelLayoutTag_Atmos_5_1_2, [1, 2, 3, 4, 5, 6, 52, 54]),
     ]
 
+    private static let sdkTagAliases: [(AudioChannelLayoutTag, AudioChannelLayoutTag)] = [
+        (kAudioChannelLayoutTag_Quadraphonic, kAudioChannelLayoutTag_AAC_Quadraphonic),
+        (kAudioChannelLayoutTag_MPEG_3_0_B, kAudioChannelLayoutTag_AAC_3_0),
+        (kAudioChannelLayoutTag_MPEG_4_0_B, kAudioChannelLayoutTag_AAC_4_0),
+        (kAudioChannelLayoutTag_MPEG_5_0_D, kAudioChannelLayoutTag_AAC_5_0),
+        (kAudioChannelLayoutTag_MPEG_5_1_D, kAudioChannelLayoutTag_AAC_5_1),
+        (kAudioChannelLayoutTag_MPEG_7_1_B, kAudioChannelLayoutTag_AAC_7_1),
+    ]
+
     private static let lpcmExceptions: [(AudioChannelLayoutTag, AudioChannelLayoutTag)] = [
         (kAudioChannelLayoutTag_ITU_2_2, kAudioChannelLayoutTag_Quadraphonic),
         (kAudioChannelLayoutTag_AAC_Quadraphonic, kAudioChannelLayoutTag_Quadraphonic),
@@ -208,6 +217,10 @@ final class LayoutConverterMappingTests: XCTestCase {
     func testChannelLabelSetForTagMatchesForwardTable() {
         XCTAssertEqual(Self.allTags.count, 96)
         XCTAssertEqual(Set(Self.allTags.map(\.tag)).count, 90)
+        XCTAssertEqual(Self.sdkTagAliases.count, 6)
+        for (first, alias) in Self.sdkTagAliases {
+            XCTAssertEqual(first, alias)
+        }
         let converter = LayoutConverter()
         for (tag, expected) in Self.allTags {
             XCTAssertEqual(converter.channelLabelSet(forTag: tag), expected,

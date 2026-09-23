@@ -1,6 +1,6 @@
 # Codebase Review — cutter2
 
-**Date:** 2026-09-21 (revision 2; original review 2026-08-06)
+**Date:** 2026-09-23 (revision 3; original review 2026-08-06)
 **Reviewer:** Source-level documentation and code review
 **Scope:** Source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
 **Reviewed baseline:** `4d372782d068f5e5358ba6229f0696f11567c8e1` (`work`)
@@ -35,7 +35,7 @@ All three steps succeeded; the full test run passed 200 test cases with 0 failur
 
 **Current verification facts:**
 
-- **Static test suite size:** 16 files total (15 test source files + 1 helper), with 200 statically declared `func test...` methods.
+- **Current static test suite size:** 19 files total (18 test source files + 1 helper), with 222 statically declared `func test...` methods (after T-16/S-17).
 - **Runtime test result:** The September 21, 2026 run passed 200 test cases with 0 failures on `4d37278`.
 - **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps plus coverage report generation/upload. The workflow uses `macos-latest` and does not pin a specific Xcode image.
 - **Strict concurrency:** `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` are enabled across all four app/test configurations.
@@ -70,7 +70,8 @@ cutter2/
 │   ├── Document+TimelineUpdateDelegate.swift
 │   ├── Document+UI.swift
 │   ├── Document+Utilities.swift
-│   └── Document+ViewControllerDelegate.swift
+│   ├── Document+ViewControllerDelegate.swift
+│   └── PlayerSeekSequencer.swift
 ├── Models/
 │   ├── MovieMutator.swift              // Subclass of MovieMutatorBase
 │   ├── MovieMutatorBase.swift          // Base class (NSObject subclass)
@@ -131,7 +132,7 @@ cutter2/
     └── Localizable.xcstrings
 ```
 
-**Total source files:** 65 Swift files across 6 source directories (plus Resources).
+**Total source files:** 66 Swift files across 6 source directories (plus Resources), including the S-17 `PlayerSeekSequencer` extraction.
 
 **Note:** `MovieMutator` (in `MovieMutator.swift`) is a subclass of `MovieMutatorBase` (in `MovieMutatorBase.swift`). All functional extensions (`+Edit`, `+Transform`, `+Export`, etc.) are on the `MovieMutator` subclass, not on `MovieMutatorBase` directly.
 
@@ -139,29 +140,32 @@ cutter2/
 
 ```
 cutter2Tests/
-├── cutter2Tests.swift                    # Integration tests (20 tests)
-├── MovieMutatorTests.swift               # Model layer tests (22 tests)
-├── MovieMutatorEditTests.swift           # Edit operation tests (8 tests)
-├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
-├── MovieHeaderValidatorTests.swift       # Header validation tests (3 tests)
 ├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
-├── TimelineViewRenderingTests.swift      # Timeline rendering tests (15 tests)
-├── ViewControllerTests.swift             # ViewController tests (15 tests)
-├── ViewControllerKeyEventTests.swift     # Key event tests (14 tests)
+├── cutter2Tests.swift                    # Integration tests (20 tests)
+├── DocumentKVOContextTests.swift         # KVO context tests (3 tests)
 ├── DocumentTests.swift                   # Document tests (6 tests)
-├── ModelTests.swift                      # Model layer tests (25 tests)
-├── UtilitiesTests.swift                  # Utility class tests (20 tests)
-├── PerformanceTests.swift                # Performance tests (12 tests)
+├── LayoutConverterMappingTests.swift     # Layout mapping tests (5 tests)
 ├── LocalizationTests.swift               # Localization tests (11 tests)
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
-└── TestMovieFixtureWriter.swift          # Test helper (0 tests, fixture writer)
+├── ModelTests.swift                      # Model layer tests (26 tests)
+├── MovieHeaderValidatorTests.swift       # Header validation tests (3 tests)
+├── MovieMutatorEditTests.swift           # Edit operation tests (8 tests)
+├── MovieMutatorTests.swift               # Model layer tests (22 tests)
+├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
+├── PerformanceTests.swift                # Performance tests (12 tests)
+├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (11 tests)
+├── TestMovieFixtureWriter.swift          # Test helper (0 tests, fixture writer)
+├── TimelineViewRenderingTests.swift      # Timeline rendering tests (15 tests)
+├── UtilitiesTests.swift                  # Utility tests (22 tests)
+├── ViewControllerKeyEventTests.swift     # Key event tests (14 tests)
+└── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Total:** 16 files (15 test source files + 1 helper), **200 statically declared test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`). The three tests added to `MovieMutatorEditTests.swift` by `4d37278` lock in the delete marker position-correction behavior (marker at range end snaps to range start; marker before range stays; marker after range shifts backward by the selection duration).
+**Current total:** 19 files (18 test source files + 1 helper), **222 statically declared test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`). The three tests added to `MovieMutatorEditTests.swift` by `4d37278` lock in the delete marker position-correction behavior (marker at range end snaps to range start; marker before range stays; marker after range shifts backward by the selection duration). T-16 adds mapping coverage and S-17 adds direct tests for the extracted reload/seek state transitions.
 
 ### 2.3 Test Execution Results
 
-The static suite contains 200 `func test...` methods and no `XCTSkip` usage was found in the current source. The September 21, 2026 full-suite run on `4d37278` (macOS 27.0, Xcode 27.0) executed all 200 test cases successfully with 0 failures; the previous August 6, 2026 rerun passed the then-197 cases after the duplicate local `writeSampleMovie` helper was consolidated into the shared fixture (`b96bc98`).
+The current source contains 222 statically declared `func test...` methods and no `XCTSkip` usage was found. The September 21, 2026 full-suite run on the earlier commit `4d37278` (macOS 27.0, Xcode 27.0) executed all 200 then-existing test cases successfully with 0 failures; the previous August 6, 2026 rerun passed the then-197 cases after the duplicate local `writeSampleMovie` helper was consolidated into the shared fixture (`b96bc98`).
 
 ---
 
@@ -190,7 +194,7 @@ The project uses Swift's modern concurrency model with a clear isolation strateg
 
 - **`ActorUtilities.performSyncOnMainActor`**: A utility for safely calling main-actor-isolated code from synchronous contexts.
 
-- **Reload/seek generation gating (added by `4d37278`)**: Two monotonic counters serialize the player-reload pipeline — `playerReloadGeneration` (bumped per `updateGUI(reload: true)` request) and `playerSeekGeneration` (bumped before every seek start, both user seeks in `resumeAfterSeek` and the post-reload seek in `updatePlayer(generation:)`). Every seek completion snapshots both counters at seek start; a callback observing an advanced counter is a full no-op. While a reload is in flight, `suppressQueryPosition` holds the polling timer off; it is released only by the newest seek reporting `finished == true` for the newest reload generation. `replaceCurrentItem` bumps the seek generation *before* the swap so a completion cancelled by the item replacement always observes the advanced counter. The `readyToPlay` KVO handler skips its competing re-seek while suppression is held (reads routed through `performSyncOnMainActor` because `observeValue` is `nonisolated`).
+- **Reload/seek generation gating (extracted by S-17)**: `PlayerSeekSequencer` owns the reload and seek generations, the reload task handle, suppression state, token snapshots, and stale-completion gates. `Document+UI.swift` retains AVPlayer and UI side effects and obtains a seek token before each seek or item replacement. The `readyToPlay` KVO handler reads suppression through the sequencer inside `performSyncOnMainActor` because `observeValue` is `nonisolated`. The state transitions are covered by `PlayerSeekSequencerTests`; integration ordering against a live AVPlayer, KVO delivery, and polling timer remains untested.
 
 ### 3.3 Data Flow
 
@@ -246,21 +250,24 @@ Security-scoped resource access is properly wrapped with `NSFileCoordinator` and
 | **ViewController key events** | `ViewControllerKeyEventTests.swift` | 14 | ✅ Covered |
 | **ViewController (general)** | `ViewControllerTests.swift` | 15 | ✅ Covered |
 | **Document** | `DocumentTests.swift` | 6 | ✅ Covered |
-| **Model** | `ModelTests.swift` | 25 | ✅ Covered |
-| **Utilities** | `UtilitiesTests.swift` | 20 | ✅ Covered |
+| **Document KVO context** | `DocumentKVOContextTests.swift` | 3 | ✅ Covered |
+| **LayoutConverter mappings** | `LayoutConverterMappingTests.swift` | 5 | ✅ Covered (T-16) |
+| **Player seek sequencing** | `PlayerSeekSequencerTests.swift` | 11 | ✅ State transitions covered (S-17); live player integration remains untested |
+| **Model** | `ModelTests.swift` | 26 | ✅ Covered |
+| **Utilities** | `UtilitiesTests.swift` | 22 | ✅ Covered |
 | **Performance** | `PerformanceTests.swift` | 12 | ✅ Covered |
 | **Localization** | `LocalizationTests.swift` | 11 | ✅ Covered |
 | **LoggingSystem** | `LoggingSystemTests.swift` | 17 | ✅ Covered |
 | **cutter2 (integration)** | `cutter2Tests.swift` | 20 | ✅ Covered |
 | **MovieHeaderValidator** | `MovieHeaderValidatorTests.swift` | 3 | ✅ Covered |
-| **Overall** | 16 files (15 test source + 1 helper) | **200 statically declared methods** | ✅ 200 passed, 0 failed |
+| **Overall** | 19 files (18 test source + 1 helper) | **222 statically declared methods** | ✅ 200 passed, 0 failed on 2026-09-21 baseline; T-16/S-17 targeted tests pass |
 
 ### 5.2 Test Execution
 
 - `scripts/test.sh` orchestrates build → test → analyze via `xcodebuild`
 - CI workflow (`.github/workflows/test.yml`) runs on push/PR to `main`, `work`, and `develop` branches (Build → Test → Analyze, using `build-for-testing` + `test-without-building` to avoid double compilation)
-- The current source contains 200 statically declared test methods and no `XCTSkip` usage; the September 21, 2026 full-suite run on `4d37278` passed all 200 test cases with 0 failures (the August 6, 2026 rerun passed the then-197 cases)
-- The `scripts/test.sh` summary distinguishes 15 test source files from 1 helper file; its hardcoded total still reads 197 and is now stale (see §9.2)
+- The current source contains 222 statically declared test methods and no `XCTSkip` usage; the September 21, 2026 full-suite run on `4d37278` passed all 200 test cases present at that earlier baseline (the August 6, 2026 rerun passed the then-197 cases)
+- `scripts/test.sh` reports the current static inventory of 18 test source files + 1 helper and 222 methods; the verified 211-test run after T-16 preceded the 11 S-17 tests
 
 ### 5.3 Test Coverage Gaps
 
@@ -269,13 +276,14 @@ Security-scoped resource access is properly wrapped with `NSFileCoordinator` and
 | **Document+FileIO** | Revert/read error paths (`readAsync` UTI + header validation) | ✅ Covered by T-14 (`validateMovieType` / `MovieHeaderValidator` tests). Full revert sheet-display flow still untested (requires Document instance, which crashes in test env — see §5.4 note) |
 | **TimelineView+Input** | Mouse event handling (`mouseDown`, `mouseDragged`) | ✅ Covered by T-14 (marker selection → `doSetCurrent`, drag updates `startPosition`/`currentPosition`, no-op when unselected) |
 | **MovieMutator edit marker correction** | `doRemove` position-correction branches | ✅ Covered by `4d37278` (3 regression tests in `MovieMutatorEditTests.swift`) |
-| **Document+UI reload/seek ordering** | `playerReloadGeneration` / `playerSeekGeneration` / `suppressQueryPosition` interplay, interrupted-seek callbacks, `readyToPlay` KVO during reload | ❌ Not tested — requires async ordering of `updatePlayer` / KVO / polling timer against a live `Document`, which cannot be instantiated in the test environment (§5.4). The residual P2 window in §8.6 is therefore unprotected by automation |
+| **PlayerSeekSequencer state transitions** | Reload/seek generations, task cancellation gates, suppression transitions, stale tokens, cleanup preservation | ✅ Unit-tested by 11 cases in `PlayerSeekSequencerTests.swift`; CODEBASE_REVIEW §8.6 residual race is pinned as current behavior, not fixed |
+| **Document × live AVPlayer integration** | Async ordering of `updatePlayer`, KVO delivery, and polling timer | ❌ Not tested — requires a live `Document`/AVPlayer integration seam, which the unit-test environment does not provide (§5.4). The residual P2 window in §8.6 remains unprotected by an integration test |
 | **Document+UI** | Window resize handling (`windowDidResize`) | ❌ Not tested — layout update propagation on window resize |
 | **Document+SavePanel** | Export save panel flow | ❌ Not tested — save panel presentation and cancellation paths |
 | **MovieMutator+Clipboard** | Copy/paste operations | ❌ Not tested — clipboard serialization and deserialization |
 | **Document+PositionControl** | Playback position scrubbing | ❌ Not tested — position updates during playback |
 
-> **Recommendation:** Document+FileIO revert, TimelineView+Input mouse handling, and the delete marker position correction are now covered. Highest-value remaining gap is the Document+UI reload/seek ordering (§8.6); it needs a player/reload seam (injected fake player + seek) or a UI/integration test to be automatable. Window resize, save panel, clipboard, and scrubbing coverage remain open as before.
+> **Recommendation:** Document+FileIO revert, TimelineView+Input mouse handling, delete marker correction, and the extracted PlayerSeekSequencer state transitions are covered. Highest-value remaining gap is integration ordering between `Document`, a live AVPlayer, KVO, and the polling timer; it needs a player/reload seam or UI/integration test. The §8.6 residual race remains intentionally unfixed by S-17 and needs a separate behavior-change decision. Window resize, save panel, clipboard, and scrubbing coverage remain open as before.
 
 ### 5.4 Skipped Test — RESOLVED
 
@@ -331,7 +339,7 @@ The Markdown set contains 7 files when `README.md` and `.github/copilot-instruct
 - Each step is guarded with `if ! ...; then exit 1; fi` so failures are reported with a custom message (works with `set -e`)
 - Uses color-coded echo statements for output formatting
 - Generates coverage reports via `xcrun llvm-cov`
-- Reports a summary; its static counts distinguish 15 test source files from 1 helper and report 197 methods (hardcoded; stale — the suite now declares 200, see §9.2)
+- Reports a summary; its static counts distinguish 18 test source files from 1 helper and report 222 methods
 
 ---
 
@@ -369,23 +377,23 @@ The Markdown set contains 7 files when `README.md` and `.github/copilot-instruct
 
 **Assessment:** Performance tooling is present (`PerformanceMetrics` with `measure`/`measureAsync`/`recordMeasurement`) and `PerformanceTests.swift` covers 12 scenarios (metrics measurement/report/reset, export progress, timeline marker/position, memory allocation). However, most are functional assertions; genuine timing-baseline coverage is limited. The overhead test, previously flaky, was stabilized by M-22 (§5.5).
 
-### 8.6 Residual Race Window in Reload Suppression — P2 (should-fix)
+### 8.6 Residual Race Window in Reload Suppression — P2 (open; not changed by S-17)
 
 **Finding:** A user-initiated seek that *completes* while a reload task is still awaiting `makePlayerItem()` releases `suppressQueryPosition`, and the reload does not re-assert it before applying the new player item.
 
-**Sequence (`Document+UI.swift`):**
+**Sequence (`Document+UI.swift` + `PlayerSeekSequencer.swift`):**
 
-1. `updateGUI(reload: true)` sets `suppressQueryPosition = true` (`:198`), bumps `playerReloadGeneration`, and spawns the reload task, which awaits `mutator.makePlayerItem()` (`:321`).
-2. While that await is in flight, the user seeks (`resumeAfterSeek`, `:224`). The seek snapshots the *current* reload generation — which is still newest because the reload task has not bumped anything else — and its `finished == true` completion passes both the seek-generation and reload-generation gates, setting `suppressQueryPosition = false` (`:252-255`).
-3. The reload task then resumes, replaces the player item (`:337`), and starts the post-reload seek — but `updatePlayer(generation:)` only *lifts* suppression (via `liftSuppression(for:)`, `:383-386`); it never sets `suppressQueryPosition = true` again.
-4. From step 2 until the post-reload seek's completion, the polling timer's `queryPosition()` (`:408-431`) runs unsuppressed. Once the replaced item becomes ready with a non-empty buffer, a poll can read the pre-seek `currentTime()` and write it back through `updateTimeline` (`mutator.insertionTime = time`, `:270`) — reintroducing the stale-marker class of bug this mechanism exists to prevent. The post-reload seek's completion cannot repair the model because it only lifts suppression and marks the view dirty.
+1. `updateGUI(reload: true)` asserts suppression, calls `beginReload()` to advance the reload generation and cancel the previous task, then spawns and registers the reload task. That task awaits `mutator.makePlayerItem()`.
+2. While that await is in flight, the user seeks (`resumeAfterSeek`). The seek snapshots the current reload generation, and its `finished == true` completion passes both generation gates and calls `releaseSuppression()`.
+3. The reload task resumes, replaces the player item, and starts the post-reload seek. The current implementation does not re-assert suppression between the user seek completion and the post-reload seek completion.
+4. In that interval, `queryPosition()` can poll the new item and adopt a pre-seek `currentTime()`, reintroducing the stale-marker class of bug this mechanism exists to prevent. The post-reload seek completion only lifts suppression and marks the view dirty, so it cannot repair the model.
 
 The window is narrow (it requires a completed user seek overlapping the `makePlayerItem()` await, then a poll landing between item readiness and seek completion), and pre-replacement polls on the *old* item are benign (their `currentTime()` equals the user's intended seek target). It is nonetheless the same failure class as the delete-key regression fixed in `4d37278`.
 
 **Suggested fix (either suffices; do not apply both blindly):**
 
-- Re-assert `self.suppressQueryPosition = true` in `updatePlayer(generation:)` inside the same main-actor turn as `replaceCurrentItem` (before the swap, after the `Task.isCancelled` guard). The existing cancellation/`catch` paths already lift via `liftSuppression(for:)`, so re-assertion cannot strand the timer. Keeping the bump of `playerSeekGeneration` before the swap (as today) preserves stale-callback no-op behavior.
-- Or gate the user-seek release on the absence of a pending reload: in `resumeAfterSeek`'s completion, only set `suppressQueryPosition = false` when `playerReloadTask == nil` (in addition to the current generation checks); a reload in flight then keeps ownership of the release.
+- Re-assert suppression through `PlayerSeekSequencer.suppressForReload()` in `updatePlayer(generation:)` in the same main-actor turn as `replaceCurrentItem` (before the swap, after the `Task.isCancelled` guard). The existing cancellation/`catch` paths already call `liftSuppression(for:)`, so re-assertion cannot strand the timer. Keep the seek-generation bump before the swap to preserve stale-callback no-op behavior.
+- Or change suppression-release ownership so a user-seek completion cannot release suppression while a reload is pending; this requires exposing or modeling the pending-reload state in the sequencer.
 
 **Tracking:** Not covered by automated tests (§5.3); field reproduction (delete → immediate marker drag/JKL during reload) is the current check.
 
@@ -396,12 +404,12 @@ The window is narrow (it requires a completed user seek overlapping the `makePla
 ### 9.1 High Priority
 
 1. ~~**Update documentation** (`ARCHITECTURE.md`, `API_REFERENCE.md`)~~ — Resolved (2026-08-05): Both documents removed. Information is now maintained in this review document.
-2. **Close the residual race window (§8.6)** — Re-assert `suppressQueryPosition = true` in `updatePlayer(generation:)` before applying the replaced player item (or gate the user-seek release on `playerReloadTask == nil`). Small, localized change; should land with a field-reproduction pass of the delete → drag/JKL-during-reload scenario.
-3. **Add tests** for remaining untested areas: Document+UI reload/seek ordering (needs a player/reload seam — injected fake player and seek completion — to be automatable; this would also let §8.6 be regression-tested), Document+UI window resize, Document+SavePanel flow, MovieMutator+Clipboard, Document+PositionControl scrubbing.
+2. **Close the residual race window (§8.6)** — Re-assert query-position suppression in `updatePlayer(generation:)` before applying the replaced player item, or change suppression-release ownership. S-17 intentionally preserves current behavior; this requires a separate behavior-change decision and a field-reproduction pass of delete → drag/JKL during reload.
+3. **Add integration tests** for ordering between `Document`, a live AVPlayer, KVO, and the polling timer. `PlayerSeekSequencer` state transitions are now unit-tested; exercising the integration requires a player/reload seam or UI/integration harness. Window resize, save panel, clipboard, and scrubbing tests also remain open.
 
 ### 9.2 Medium Priority
 
-4. **Update the hardcoded counts in `scripts/test.sh`** — its summary still prints "197 tests"; the suite now declares 200 (§5.2). Prefer deriving the count from the source (e.g., `grep -rE 'func test'`) over another hardcoded constant.
+4. ~~**Synchronize test counts in `scripts/test.sh`**~~ — Resolved by T-16/S-17: the script reports 18 test source files + 1 helper and 222 statically declared methods.
 5. **Unify date formatter usage** between `LoggingSystem` and `DateFormatter+Factory.swift`.
 6. **Expand performance tests** to cover TimelineView rendering and MovieMutator operations.
 
@@ -413,9 +421,9 @@ The window is narrow (it requires a completed user seek overlapping the `makePla
 
 ## 10. Conclusion
 
-The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 200 statically declared test methods. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. The 2026-09-21 revision verified baseline `4d37278` with a clean build, clean analyze, and a full test run passing 200 test cases with 0 failures (DerivedData outside the worktree), and re-confirmed the results after the fix was fast-forward merged into `work`.
+The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 222 statically declared test methods across 18 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. The 2026-09-21 revision verified baseline `4d37278` with a clean build, clean analyze, and a full test run passing 200 test cases with 0 failures (DerivedData outside the worktree), and re-confirmed the results after the fix was fast-forward merged into `work`.
 
-The 7 commits since the previous baseline are sound: the shared test fixture consolidation (`b96bc98`), the behavior-preserving expression simplifications (`884d8e2`), the Sendable conformance placement fix (`55a9a6d`), and the delete→seek race fix (`4d37278`). The generation-gated suppression mechanism closes the stale-callback scenarios it was designed for; one residual window remains — a user seek completing during the reload's item-preparation phase releases suppression and the reload does not re-assert it (§8.6, P2 should-fix). Remaining documented coverage gaps include the async reload/seek ordering itself (blocked on a test seam), Document+UI window resize, Document+SavePanel flow, MovieMutator clipboard, and Document+PositionControl scrubbing; `scripts/test.sh` also carries a stale hardcoded test count.
+The 7 commits since the previous baseline remain documented above. T-16 adds full tag/label mapping tests, and S-17 extracts the reload/seek state transitions into `PlayerSeekSequencer` with 11 unit tests. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer. The §8.6 residual race remains open and intentionally unchanged by S-17; window resize, save panel, clipboard, and scrubbing coverage also remain open. Test counts in `scripts/test.sh` and the test guides now match the current static inventory.
 
 ---
 
@@ -430,13 +438,12 @@ The 7 commits since the previous baseline are sound: the shared test fixture con
 - Utilities: `AsyncBridge.swift`, `ActorUtilities.swift`, `LayoutConverter.swift` + 3 extensions (`+Convert`, `+LayoutData`, `+Mapping`), `MovieHeaderValidator.swift`, `PerformanceMetrics.swift`, `ErrorUtilities.swift`, `Constants.swift`, `LocalizationHelper.swift`, `LoggingSystem.swift`, `DateFormatter+Factory.swift`
 - Resources: `Info.plist`, `cutter2.entitlements`, `Localizable.xcstrings`
 
-### Test Files (16 files: 15 test source files + 1 helper; 200 statically declared methods)
-- `cutter2Tests.swift` (20 tests), `MovieMutatorTests.swift` (22 tests), `MovieMutatorEditTests.swift` (8 tests; +3 delete-marker regression tests from `4d37278`), `MovieMutatorTransformExportTests.swift` (8 tests)
-- `MovieHeaderValidatorTests.swift` (3 tests), `AsyncBridgeTests.swift` (4 tests)
-- `TimelineViewRenderingTests.swift` (15 tests), `ViewControllerTests.swift` (15 tests), `ViewControllerKeyEventTests.swift` (14 tests)
-- `DocumentTests.swift` (6 tests), `ModelTests.swift` (25 tests)
-- `UtilitiesTests.swift` (20 tests), `PerformanceTests.swift` (12 tests)
-- `LocalizationTests.swift` (11 tests), `LoggingSystemTests.swift` (17 tests)
+### Test Files (19 files: 18 test source files + 1 helper; 222 statically declared methods)
+- `AsyncBridgeTests.swift` (4 tests), `cutter2Tests.swift` (20 tests), `DocumentKVOContextTests.swift` (3 tests), `DocumentTests.swift` (6 tests)
+- `LayoutConverterMappingTests.swift` (5 tests), `LocalizationTests.swift` (11 tests), `LoggingSystemTests.swift` (17 tests), `ModelTests.swift` (26 tests)
+- `MovieHeaderValidatorTests.swift` (3 tests), `MovieMutatorEditTests.swift` (8 tests), `MovieMutatorTests.swift` (22 tests), `MovieMutatorTransformExportTests.swift` (8 tests)
+- `PerformanceTests.swift` (12 tests), `PlayerSeekSequencerTests.swift` (11 tests), `TimelineViewRenderingTests.swift` (15 tests)
+- `UtilitiesTests.swift` (22 tests), `ViewControllerKeyEventTests.swift` (14 tests), `ViewControllerTests.swift` (15 tests)
 - `TestMovieFixtureWriter.swift` (0 tests, fixture writer helper)
 
 ### Markdown Documentation (7 files)
@@ -451,4 +458,4 @@ The 7 commits since the previous baseline are sound: the shared test fixture con
 ### Configuration
 - `cutter2.xcodeproj/project.pbxproj` (version 0.8.19 / build 20260802 — app target, committed in the reviewed state; the test target carries placeholder `1.0` / `1`)
 - `.github/workflows/test.yml` (build/test/analyze, branches `main`/`work`/`develop`; coverage artifact generation is optional)
-- `scripts/test.sh` (build/test/analyze; its hardcoded summary still reports 197 methods — stale, see §9.2)
+- `scripts/test.sh` (build/test/analyze; summary reports 18 test source files + 1 helper and 222 statically declared methods)

@@ -89,7 +89,7 @@ extension Document {
                 // state reads must happen inside performSyncOnMainActor.
                 ActorUtilities.performSyncOnMainActor {
                     guard let mutator = self.movieMutator else { return }
-                    if self.suppressQueryPosition {
+                    if self.playerSeekSequencer.suppressQueryPosition {
                         updateTimeline(mutator.insertionTime, range: mutator.selectedTimeRange)
                         return
                     }

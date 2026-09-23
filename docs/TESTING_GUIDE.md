@@ -1,15 +1,15 @@
 # Testing Guide for cutter2
 
-**Status**: Active — test instructions and infrastructure reference *(Updated: September 21, 2026)*
+**Status**: Active — test instructions and infrastructure reference *(Updated: September 23, 2026)*
 
 This guide provides instructions for running and writing tests for the cutter2 application.
 
 ## Quick Start
 
 The test target is configured with XCTest and currently contains:
-- 15 test source files
+- 18 test source files
 - 1 test helper file
-- 200 statically declared `func test...` methods
+- 222 statically declared `func test...` methods
 - Code coverage support in the command-line and CI workflows
 
 Run the complete suite with:
@@ -24,7 +24,7 @@ xcodebuild test \
   CODE_SIGNING_REQUIRED=NO
 ```
 
-The September 21, 2026 full-suite run on commit `4d37278` (macOS 27.0, Xcode 27.0) executed 200 test cases with 200 passed and 0 failed. The earlier August 6, 2026 rerun passed the then-197 cases after removing the duplicate local `writeSampleMovie(to:duration:timescale:frameRate:)` helper from `MovieMutatorTransformExportTests.swift`.
+The September 21, 2026 full-suite run on commit `4d37278` (macOS 27.0, Xcode 27.0) executed 200 test cases with 200 passed and 0 failed. The earlier August 6, 2026 rerun passed the then-197 cases after removing the duplicate local `writeSampleMovie(to:duration:timescale:frameRate:)` helper from `MovieMutatorTransformExportTests.swift`. The current source declares 222 static test methods; runtime results remain tied to each specific test run.
 
 ## Table of Contents
 
@@ -68,25 +68,28 @@ The documentation was verified on September 21, 2026 with macOS 27.0 (build 26A4
 
 ```
 cutter2Tests/
+├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
 ├── cutter2Tests.swift                    # Base test class and integration tests (20 tests)
+├── DocumentKVOContextTests.swift         # KVO context tests (3 tests)
 ├── DocumentTests.swift                   # Document tests (6 tests)
+├── LayoutConverterMappingTests.swift     # Layout mapping tests (5 tests)
 ├── LocalizationTests.swift               # Localization tests (11 tests)
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
-├── ModelTests.swift                      # Additional model tests (25 tests)
-├── MovieMutatorTests.swift               # Model layer tests (22 tests)
-├── MovieMutatorEditTests.swift           # Edit operation tests (8 tests)
-├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
+├── ModelTests.swift                      # Additional model tests (26 tests)
 ├── MovieHeaderValidatorTests.swift       # Header validation tests (3 tests)
-├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
-├── TimelineViewRenderingTests.swift      # Timeline rendering tests (15 tests)
-├── ViewControllerTests.swift             # ViewController tests (15 tests)
-├── ViewControllerKeyEventTests.swift     # Key event tests (14 tests)
+├── MovieMutatorEditTests.swift           # Edit operation tests (8 tests)
+├── MovieMutatorTests.swift               # Model layer tests (22 tests)
+├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
 ├── PerformanceTests.swift                # Performance tests (12 tests)
-├── UtilitiesTests.swift                  # Utility class tests (20 tests)
-└── TestMovieFixtureWriter.swift          # Test helper (0 tests)
+├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (11 tests)
+├── TestMovieFixtureWriter.swift          # Test helper (0 tests)
+├── TimelineViewRenderingTests.swift      # Timeline rendering tests (15 tests)
+├── UtilitiesTests.swift                  # Utility class tests (22 tests)
+├── ViewControllerKeyEventTests.swift     # Key event tests (14 tests)
+└── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Static suite size**: 16 files total (15 test source files + 1 helper), **200 statically declared test methods**.
+**Static suite size**: 19 files total (18 test source files + 1 helper), **222 statically declared test methods**.
 
 Runtime results must be taken from the specific `xcodebuild test` or Xcode run being reported.
 
@@ -435,6 +438,6 @@ Based on Phase 2-3 of the improvement plan:
 
 ---
 
-**Last Updated**: September 21, 2026
-**Version**: 1.5
-**Status**: Static suite size: 200 test methods; runtime status depends on the specific test run
+**Last Updated**: September 23, 2026
+**Version**: 1.6
+**Status**: Static suite size: 222 test methods across 18 test source files + 1 helper; runtime status depends on the specific test run

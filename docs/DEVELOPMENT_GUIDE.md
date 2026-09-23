@@ -209,25 +209,28 @@ xcodebuild test \
 
 ### Test Organization
 
-**Test directory contents** (16 files: 15 test source files + 1 helper; 200 statically declared test methods):
+**Test directory contents** (19 files: 18 test source files + 1 helper; 222 statically declared test methods):
 ```
 cutter2Tests/
+├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
 ├── cutter2Tests.swift                    # Integration tests (20 tests)
+├── DocumentKVOContextTests.swift         # KVO context tests (3 tests)
 ├── DocumentTests.swift                   # Document tests (6 tests)
+├── LayoutConverterMappingTests.swift     # Layout mapping tests (5 tests)
 ├── LocalizationTests.swift               # Localization tests (11 tests)
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
-├── ModelTests.swift                      # Model layer tests (25 tests)
-├── MovieMutatorTests.swift               # Model layer tests (22 tests)
-├── MovieMutatorEditTests.swift           # Edit operation tests (8 tests)
-├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
+├── ModelTests.swift                      # Model layer tests (26 tests)
 ├── MovieHeaderValidatorTests.swift       # Header validation tests (3 tests)
-├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
-├── TimelineViewRenderingTests.swift      # Timeline rendering tests (15 tests)
-├── ViewControllerTests.swift             # ViewController tests (15 tests)
-├── ViewControllerKeyEventTests.swift     # Key event tests (14 tests)
+├── MovieMutatorEditTests.swift           # Edit operation tests (8 tests)
+├── MovieMutatorTests.swift               # Model layer tests (22 tests)
+├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
 ├── PerformanceTests.swift                # Performance tests (12 tests)
-├── UtilitiesTests.swift                  # Utility tests (20 tests)
-└── TestMovieFixtureWriter.swift          # Test helper (0 tests)
+├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (11 tests)
+├── TestMovieFixtureWriter.swift          # Test helper (0 tests)
+├── TimelineViewRenderingTests.swift      # Timeline rendering tests (15 tests)
+├── UtilitiesTests.swift                  # Utility tests (22 tests)
+├── ViewControllerKeyEventTests.swift     # Key event tests (14 tests)
+└── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
 The static count is derived from `func test...` declarations. Runtime results depend on the current build and test run.

@@ -252,30 +252,8 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     //
     internal var mutationObserver: NSObjectProtocol? = nil
     
-    /// The latest scheduled player reload task. Replaced/cancelled when a new
-    /// reload request arrives so stale AVPlayerItems are never applied after a
-    /// newer edit has already requested another refresh.
-    internal var playerReloadTask: Task<Void, Never>? = nil
-    
-    /// Monotonic generation counter for player reload requests. Used so only
-    /// the newest in-flight reload task may clear `playerReloadTask`.
-    internal var playerReloadGeneration: UInt64 = 0
-    
-    /// Monotonic generation counter for every seek the document starts (user
-    /// seeks via `resumeAfterSeek` and post-reload seeks via
-    /// `updatePlayer(generation:)`). Each completion snapshots it at seek
-    /// start and runs only while it is still the newest, so a stale callback
-    /// (interrupted or delayed, even by a newer seek within the same reload
-    /// generation) is a full no-op.
-    internal var playerSeekGeneration: UInt64 = 0
-
-    /// Suppress queryPosition while a reload is in flight.
-    ///
-    /// Held until the post-reload seek settles, and released only by the newest
-    /// reload task (see `updatePlayer(generation:)`), so `queryPosition()` can
-    /// never adopt a pre-seek `currentTime()` and clobber the corrected
-    /// `insertionTime` (the delete-key position regression).
-    internal var suppressQueryPosition: Bool = false
+    /// Reload/seek suppression state machine (S-17).
+    internal let playerSeekSequencer = PlayerSeekSequencer()
     
     /* ============================================ */
     // MARK: - NSDocument methods/properties

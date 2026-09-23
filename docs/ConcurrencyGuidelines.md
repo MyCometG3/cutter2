@@ -167,14 +167,12 @@ The `requestMediaDataWhenReady(on:using:)` API in AVFoundation asynchronously no
 **Use for:** Async pipelines whose callbacks can arrive late, out of order, or after a newer request has superseded them (player reload/seek completions, KVO-triggered work, polling timers gated on in-flight work).
 
 ```swift
-// Producer: bump the counter BEFORE starting the work, and snapshot it
-self.playerSeekGeneration += 1
-let seekGeneration = self.playerSeekGeneration
+// Producer: advance the generation BEFORE starting the work, and keep a token snapshot.
+let token = self.playerSeekSequencer.beginUserSeek()
 player.seek(to: time, completionHandler: { finished in
     ActorUtilities.performSyncOnMainActor {
-        // Stale callback (a newer request advanced the counter) → full no-op:
-        // no state writes, no releases of gated flags.
-        guard self.playerSeekGeneration == seekGeneration else { return }
+        // Stale callback → full no-op, including gated releases.
+        guard self.playerSeekSequencer.isCurrent(token) else { return }
         // ... apply effects; only the newest request may act
     }
 })
@@ -183,8 +181,8 @@ player.seek(to: time, completionHandler: { finished in
 **Rules:**
 - Bump the counter **before** starting the superseding operation (e.g., before `replaceCurrentItem` cancels an in-flight seek) so callbacks cancelled by it always observe the advanced counter
 - A completion that fails the generation check must be a **full no-op** — including skipping releases of gated flags such as `suppressQueryPosition`
-- Multi-level pipelines use one counter per level and gate on all of them (`playerReloadGeneration` for reload requests, `playerSeekGeneration` for seeks)
-- Reference implementation: `Document+UI.swift` (`resumeAfterSeek`, `updatePlayer(generation:)`, `liftSuppression(for:)`) — see `CODEBASE_REVIEW.md` §3.2/§8.6 for the reviewed semantics and a known residual window
+- Multi-level pipelines use one counter per level and gate on all of them (`reloadGeneration` for reload requests, `seekGeneration` for seeks)
+- Reference implementation: `PlayerSeekSequencer.swift` owns generation snapshots and suppression gates; `Document+UI.swift` keeps AVPlayer and UI side effects — see `CODEBASE_REVIEW.md` §3.2/§8.6 for the reviewed semantics and known residual window
 
 ---
 
@@ -250,6 +248,7 @@ When touching a file, verify:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.3 | 2026-09-23 | — | Updated the generation-gated example and reference implementation to use `PlayerSeekSequencer` after S-17 extraction. |
 | 1.2 | 2026-09-21 | — | Added the generation-gated completion pattern (reload/seek pipeline), documented the `Sendable`-refining conformance placement rule, made the main-actor-hop capture list explicit in the example, and refreshed the `DispatchQueue` usage line references. |
 | 1.1 | 2026-08-06 | — | Clarified `MovieMutatorBase` `@MainActor` isolation and synchronized the documented concurrency examples with the current implementation. |
 | 1.0 | 2026-06-21 | — | Initial version based on post-PR#33/34/37/39/40/41 codebase |

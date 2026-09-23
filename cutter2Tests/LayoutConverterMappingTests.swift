@@ -275,11 +275,54 @@ final class LayoutConverterMappingTests: XCTestCase {
         XCTAssertEqual(converter.channelBitmapForChannelLabelSet(converter.channelLabelSet(forBitmap: [])), [])
     }
 
+    func testBitmapIgnoresUnknownBits() {
+        let converter = LayoutConverter()
+        let knownBit: AudioChannelBitmap = .bit_Left
+        let unknownBit = AudioChannelBitmap(rawValue: 1 << 31)
+        let unknownLabels = converter.channelLabelSet(forBitmap: unknownBit)
+        XCTAssertTrue(unknownLabels.isEmpty)
+        XCTAssertEqual(converter.channelBitmapForChannelLabelSet(unknownLabels), [])
+
+        let mixedLabels = converter.channelLabelSet(forBitmap: knownBit.union(unknownBit))
+        XCTAssertEqual(mixedLabels, [kAudioChannelLabel_Left])
+        XCTAssertEqual(converter.channelBitmapForChannelLabelSet(mixedLabels), knownBit)
+    }
+
+    func testConvertAsAACTagRetriesWithFallbackMapping() {
+        let converter = LayoutConverter()
+        let labels: Set<AudioChannelLabel> = [301, 302]
+        let descriptions = labels.map { label in
+            AudioChannelDescription(mChannelLabel: label,
+                                    mChannelFlags: [],
+                                    mCoordinates: (0.0, 0.0, 0.0))
+        }
+        guard let sourceData = converter.dataFor(descriptions: descriptions) else {
+            XCTFail("Expected dataFor(descriptions:) to return non-nil")
+            return
+        }
+        XCTAssertEqual(converter.channelLayoutTagAACForChannelLabelSet(labels, true),
+                       kAudioChannelLayoutTag_Unknown | AudioChannelLayoutTag(labels.count))
+
+        guard let convertedData = converter.convertAsAACTag(from: sourceData) else {
+            XCTFail("Expected strict-to-fallback AAC conversion to succeed")
+            return
+        }
+        let convertedTag = convertedData.withUnsafeBytes { rawBuffer -> AudioChannelLayoutTag in
+            guard let baseAddress = rawBuffer.baseAddress else { return 0 }
+            var tag: AudioChannelLayoutTag = 0
+            memcpy(&tag, baseAddress, MemoryLayout<AudioChannelLayoutTag>.size)
+            return tag
+        }
+        XCTAssertEqual(convertedTag, kAudioChannelLayoutTag_Stereo)
+    }
+
     func testDiscreteInOrderAndUnknownTagRoundTrip() {
         let converter = LayoutConverter()
         for n: UInt32 in 1...16 {
             let discreteTag = kAudioChannelLayoutTag_DiscreteInOrder | n
             let labels = converter.channelLabelSet(forTag: discreteTag)
+            let expectedLabels = Set((0..<n).map { kAudioChannelLabel_Discrete_0 | $0 })
+            XCTAssertEqual(labels, expectedLabels)
             XCTAssertEqual(labels.count, Int(n))
             XCTAssertEqual(converter.channelLayoutTagLPCMForChannelLabelSet(labels), discreteTag)
 

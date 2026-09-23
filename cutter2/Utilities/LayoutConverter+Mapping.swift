@@ -26,6 +26,269 @@ import AVFoundation
 //   documented by Apple. Until these are confirmed, the tags are kept commented-out
 //   in both the forward (tag -> label set) and reverse (label set -> tag) mapping functions.
 
+private enum LayoutMappingTables {
+    // Keep table order aligned with the original switch cases.
+    static let tagToLabels: [(AudioChannelLayoutTag, [AudioChannelLabel])] = [
+        (kAudioChannelLayoutTag_Mono, [42]),
+        (kAudioChannelLayoutTag_Stereo, [1, 2]),
+        (kAudioChannelLayoutTag_StereoHeadphones, [301, 302]),
+        (kAudioChannelLayoutTag_MatrixStereo, [38, 39]),
+        (kAudioChannelLayoutTag_MidSide, [204, 205]),
+        (kAudioChannelLayoutTag_XY, [206, 207]),
+        (kAudioChannelLayoutTag_Binaural, [208, 209]),
+        (kAudioChannelLayoutTag_Ambisonic_B_Format, [200, 201, 202, 203]),
+        (kAudioChannelLayoutTag_Quadraphonic, [1, 2, 5, 6]),
+        (kAudioChannelLayoutTag_Pentagonal, [1, 2, 5, 6, 3]),
+        (kAudioChannelLayoutTag_Hexagonal, [1, 2, 5, 6, 3, 9]),
+        (kAudioChannelLayoutTag_Octagonal, [1, 2, 5, 6, 3, 9, 35, 36]),
+        (kAudioChannelLayoutTag_Cube, [1, 2, 33, 34, 13, 15, 16, 18]),
+        (kAudioChannelLayoutTag_MPEG_3_0_A, [1, 2, 3]),
+        (kAudioChannelLayoutTag_MPEG_3_0_B, [3, 1, 2]),
+        (kAudioChannelLayoutTag_MPEG_4_0_A, [1, 2, 3, 9]),
+        (kAudioChannelLayoutTag_MPEG_4_0_B, [3, 1, 2, 9]),
+        (kAudioChannelLayoutTag_MPEG_5_0_A, [1, 2, 3, 5, 6]),
+        (kAudioChannelLayoutTag_MPEG_5_0_B, [1, 2, 5, 6, 3]),
+        (kAudioChannelLayoutTag_MPEG_5_0_C, [1, 3, 2, 5, 6]),
+        (kAudioChannelLayoutTag_MPEG_5_0_D, [3, 1, 2, 5, 6]),
+        (kAudioChannelLayoutTag_MPEG_5_1_A, [1, 2, 3, 4, 5, 6]),
+        (kAudioChannelLayoutTag_MPEG_5_1_B, [1, 2, 5, 6, 3, 4]),
+        (kAudioChannelLayoutTag_MPEG_5_1_C, [1, 3, 2, 5, 6, 4]),
+        (kAudioChannelLayoutTag_MPEG_5_1_D, [3, 1, 2, 5, 6, 4]),
+        (kAudioChannelLayoutTag_MPEG_6_1_A, [1, 2, 3, 4, 5, 6, 9]),
+        (kAudioChannelLayoutTag_MPEG_7_1_A, [1, 2, 3, 4, 5, 6, 7, 8]),
+        (kAudioChannelLayoutTag_MPEG_7_1_B, [3, 7, 8, 1, 2, 5, 6, 4]),
+        (kAudioChannelLayoutTag_MPEG_7_1_C, [1, 2, 3, 4, 5, 6, 33, 34]),
+        (kAudioChannelLayoutTag_Emagic_Default_7_1, [1, 2, 5, 6, 3, 4, 7, 8]),
+        (kAudioChannelLayoutTag_SMPTE_DTV, [1, 2, 3, 4, 5, 6, 38, 39]),
+        (kAudioChannelLayoutTag_ITU_2_1, [1, 2, 9]),
+        (kAudioChannelLayoutTag_ITU_2_2, [1, 2, 5, 6]),
+        (kAudioChannelLayoutTag_DVD_4, [1, 2, 4]),
+        (kAudioChannelLayoutTag_DVD_5, [1, 2, 4, 9]),
+        (kAudioChannelLayoutTag_DVD_6, [1, 2, 4, 5, 6]),
+        (kAudioChannelLayoutTag_DVD_10, [1, 2, 3, 4]),
+        (kAudioChannelLayoutTag_DVD_11, [1, 2, 3, 4, 9]),
+        (kAudioChannelLayoutTag_DVD_18, [1, 2, 5, 6, 4]),
+        (kAudioChannelLayoutTag_AudioUnit_6_0, [1, 2, 5, 6, 3, 9]),
+        (kAudioChannelLayoutTag_AudioUnit_7_0, [1, 2, 5, 6, 3, 33, 34]),
+        (kAudioChannelLayoutTag_AudioUnit_7_0_Front, [1, 2, 5, 6, 3, 7, 8]),
+        (kAudioChannelLayoutTag_AAC_3_0, [3, 1, 2]),
+        (kAudioChannelLayoutTag_AAC_Quadraphonic, [1, 2, 5, 6]),
+        (kAudioChannelLayoutTag_AAC_4_0, [3, 1, 2, 9]),
+        (kAudioChannelLayoutTag_AAC_5_0, [3, 1, 2, 5, 6]),
+        (kAudioChannelLayoutTag_AAC_5_1, [3, 1, 2, 5, 6, 4]),
+        (kAudioChannelLayoutTag_AAC_6_0, [3, 1, 2, 5, 6, 9]),
+        (kAudioChannelLayoutTag_AAC_6_1, [3, 1, 2, 5, 6, 9, 4]),
+        (kAudioChannelLayoutTag_AAC_7_1, [3, 7, 8, 1, 2, 5, 6, 4]),
+        (kAudioChannelLayoutTag_AAC_7_0, [3, 1, 2, 5, 6, 33, 34]),
+        (kAudioChannelLayoutTag_AAC_7_1_B, [3, 1, 2, 5, 6, 33, 34, 4]),
+        (kAudioChannelLayoutTag_AAC_7_1_C, [3, 1, 2, 5, 6, 4, 13, 15]),
+        (kAudioChannelLayoutTag_AAC_Octagonal, [3, 1, 2, 5, 6, 33, 34, 9]),
+        (kAudioChannelLayoutTag_AC3_1_0_1, [3, 4]),
+        (kAudioChannelLayoutTag_AC3_3_0, [1, 3, 2]),
+        (kAudioChannelLayoutTag_AC3_3_1, [1, 3, 2, 9]),
+        (kAudioChannelLayoutTag_AC3_3_0_1, [1, 3, 2, 4]),
+        (kAudioChannelLayoutTag_AC3_2_1_1, [1, 2, 9, 4]),
+        (kAudioChannelLayoutTag_AC3_3_1_1, [1, 3, 2, 9, 4]),
+        (kAudioChannelLayoutTag_EAC_6_0_A, [1, 3, 2, 5, 6, 9]),
+        (kAudioChannelLayoutTag_EAC_7_0_A, [1, 3, 2, 5, 6, 33, 34]),
+        (kAudioChannelLayoutTag_EAC3_6_1_A, [1, 3, 2, 5, 6, 4, 9]),
+        (kAudioChannelLayoutTag_EAC3_6_1_B, [1, 3, 2, 5, 6, 4, 12]),
+        (kAudioChannelLayoutTag_EAC3_6_1_C, [1, 3, 2, 5, 6, 4, 14]),
+        (kAudioChannelLayoutTag_EAC3_7_1_A, [1, 3, 2, 5, 6, 4, 33, 34]),
+        (kAudioChannelLayoutTag_EAC3_7_1_B, [1, 3, 2, 5, 6, 4, 7, 8]),
+        (kAudioChannelLayoutTag_EAC3_7_1_C, [1, 3, 2, 5, 6, 4, 10, 11]),
+        (kAudioChannelLayoutTag_EAC3_7_1_D, [1, 3, 2, 5, 6, 4, 35, 36]),
+        (kAudioChannelLayoutTag_EAC3_7_1_E, [1, 3, 2, 5, 6, 4, 13, 15]),
+        (kAudioChannelLayoutTag_EAC3_7_1_F, [1, 3, 2, 5, 6, 4, 9, 12]),
+        (kAudioChannelLayoutTag_EAC3_7_1_G, [1, 3, 2, 5, 6, 4, 9, 14]),
+        (kAudioChannelLayoutTag_EAC3_7_1_H, [1, 3, 2, 5, 6, 4, 12, 14]),
+        (kAudioChannelLayoutTag_DTS_3_1, [3, 1, 2, 4]),
+        (kAudioChannelLayoutTag_DTS_4_1, [3, 1, 2, 9, 4]),
+        (kAudioChannelLayoutTag_DTS_6_0_A, [7, 8, 1, 2, 5, 6]),
+        (kAudioChannelLayoutTag_DTS_6_0_B, [3, 1, 2, 33, 34, 12]),
+        (kAudioChannelLayoutTag_DTS_6_0_C, [3, 9, 1, 2, 33, 34]),
+        (kAudioChannelLayoutTag_DTS_6_1_A, [7, 8, 1, 2, 5, 6, 4]),
+        (kAudioChannelLayoutTag_DTS_6_1_B, [3, 1, 2, 33, 34, 12, 4]),
+        (kAudioChannelLayoutTag_DTS_6_1_C, [3, 9, 1, 2, 33, 34, 4]),
+        (kAudioChannelLayoutTag_DTS_7_0, [7, 3, 8, 1, 2, 5, 6]),
+        (kAudioChannelLayoutTag_DTS_7_1, [7, 3, 8, 1, 2, 5, 6, 4]),
+        (kAudioChannelLayoutTag_DTS_8_0_A, [7, 8, 1, 2, 5, 6, 33, 34]),
+        (kAudioChannelLayoutTag_DTS_8_0_B, [7, 3, 8, 1, 2, 5, 9, 6]),
+        (kAudioChannelLayoutTag_DTS_8_1_A, [7, 8, 1, 2, 5, 6, 33, 34, 4]),
+        (kAudioChannelLayoutTag_DTS_8_1_B, [7, 3, 8, 1, 2, 5, 9, 6, 4]),
+        (kAudioChannelLayoutTag_DTS_6_1_D, [3, 1, 2, 5, 6, 4, 9]),
+        (kAudioChannelLayoutTag_WAVE_4_0_B, [1, 2, 33, 34]),
+        (kAudioChannelLayoutTag_WAVE_5_0_B, [1, 2, 3, 33, 34]),
+        (kAudioChannelLayoutTag_WAVE_5_1_B, [1, 2, 3, 4, 33, 34]),
+        (kAudioChannelLayoutTag_WAVE_6_1, [1, 2, 3, 4, 9, 5, 6]),
+        (kAudioChannelLayoutTag_WAVE_7_1, [1, 2, 3, 4, 33, 34, 5, 6]),
+        (kAudioChannelLayoutTag_Atmos_7_1_4, [1, 2, 3, 4, 5, 6, 33, 34, 13, 15, 52, 54]),
+        (kAudioChannelLayoutTag_Atmos_9_1_6, [1, 2, 3, 4, 5, 6, 33, 34, 35, 36, 13, 15, 49, 51, 52, 54]),
+        (kAudioChannelLayoutTag_Atmos_5_1_2, [1, 2, 3, 4, 5, 6, 52, 54]),
+    ]
+
+    static let aacDirect: [([AudioChannelLabel], AudioChannelLayoutTag)] = [
+        ([42], kAudioChannelLayoutTag_Mono),
+        ([3], kAudioChannelLayoutTag_Mono),
+        ([1, 2], kAudioChannelLayoutTag_Stereo),
+        ([3, 1, 2], kAudioChannelLayoutTag_AAC_3_0),
+        ([1, 2, 5, 6], kAudioChannelLayoutTag_AAC_Quadraphonic),
+        ([3, 1, 2, 9], kAudioChannelLayoutTag_AAC_4_0),
+        ([3, 1, 2, 5, 6], kAudioChannelLayoutTag_AAC_5_0),
+        ([3, 1, 2, 5, 6, 4], kAudioChannelLayoutTag_AAC_5_1),
+        ([3, 1, 2, 5, 6, 9], kAudioChannelLayoutTag_AAC_6_0),
+        ([3, 1, 2, 5, 6, 9, 4], kAudioChannelLayoutTag_AAC_6_1),
+        ([3, 1, 2, 5, 6, 33, 34], kAudioChannelLayoutTag_AAC_7_0),
+        ([3, 7, 8, 1, 2, 5, 6, 4], kAudioChannelLayoutTag_AAC_7_1),
+        ([3, 1, 2, 5, 6, 33, 34, 4], kAudioChannelLayoutTag_AAC_7_1_B),
+        ([3, 1, 2, 5, 6, 4, 13, 15], kAudioChannelLayoutTag_AAC_7_1_C),
+        ([3, 1, 2, 5, 6, 33, 34, 9], kAudioChannelLayoutTag_AAC_Octagonal),
+    ]
+
+    static let aacFallback: [([AudioChannelLabel], AudioChannelLayoutTag)] = [
+        ([301, 302], kAudioChannelLayoutTag_Stereo),
+        ([38, 39], kAudioChannelLayoutTag_Stereo),
+        ([204, 205], kAudioChannelLayoutTag_Stereo),
+        ([206, 207], kAudioChannelLayoutTag_Stereo),
+        ([208, 209], kAudioChannelLayoutTag_Stereo),
+        ([200, 201, 202, 203], kAudioChannelLayoutTag_AAC_7_1_C),
+        ([1, 2, 5, 6, 3, 9, 35, 36], kAudioChannelLayoutTag_AAC_Octagonal),
+        ([1, 2, 33, 34, 13, 15, 16, 18], kAudioChannelLayoutTag_AAC_7_1_C),
+        ([1, 2, 3, 4, 5, 6, 38, 39], kAudioChannelLayoutTag_AAC_Octagonal),
+        ([1, 2, 9], kAudioChannelLayoutTag_AAC_4_0),
+        ([1, 2, 4], kAudioChannelLayoutTag_AAC_5_1),
+        ([1, 2, 4, 9], kAudioChannelLayoutTag_AAC_6_1),
+        ([1, 2, 4, 5, 6], kAudioChannelLayoutTag_AAC_5_1),
+        ([1, 2, 3, 4], kAudioChannelLayoutTag_AAC_5_1),
+        ([1, 2, 3, 4, 9], kAudioChannelLayoutTag_AAC_6_1),
+        ([1, 2, 5, 6, 3, 7, 8], kAudioChannelLayoutTag_AAC_Octagonal),
+    ]
+
+    static let lpcmReverse: [([AudioChannelLabel], AudioChannelLayoutTag)] = [
+        ([42], kAudioChannelLayoutTag_Mono),
+        ([3], kAudioChannelLayoutTag_Mono),
+        ([1, 2], kAudioChannelLayoutTag_Stereo),
+        ([301, 302], kAudioChannelLayoutTag_StereoHeadphones),
+        ([38, 39], kAudioChannelLayoutTag_MatrixStereo),
+        ([204, 205], kAudioChannelLayoutTag_MidSide),
+        ([206, 207], kAudioChannelLayoutTag_XY),
+        ([208, 209], kAudioChannelLayoutTag_Binaural),
+        ([200, 201, 202, 203], kAudioChannelLayoutTag_Ambisonic_B_Format),
+        ([1, 2, 5, 6], kAudioChannelLayoutTag_Quadraphonic),
+        ([1, 2, 5, 6, 3], kAudioChannelLayoutTag_Pentagonal),
+        ([1, 2, 5, 6, 3, 9], kAudioChannelLayoutTag_Hexagonal),
+        ([1, 2, 5, 6, 3, 9, 35, 36], kAudioChannelLayoutTag_Octagonal),
+        ([1, 2, 33, 34, 13, 15, 16, 18], kAudioChannelLayoutTag_Cube),
+        ([1, 2, 3], kAudioChannelLayoutTag_MPEG_3_0_A),
+        ([3, 1, 2], kAudioChannelLayoutTag_MPEG_3_0_B),
+        ([1, 2, 3, 9], kAudioChannelLayoutTag_MPEG_4_0_A),
+        ([3, 1, 2, 9], kAudioChannelLayoutTag_MPEG_4_0_B),
+        ([1, 2, 3, 5, 6], kAudioChannelLayoutTag_MPEG_5_0_A),
+        ([1, 2, 5, 6, 3], kAudioChannelLayoutTag_MPEG_5_0_B),
+        ([1, 3, 2, 5, 6], kAudioChannelLayoutTag_MPEG_5_0_C),
+        ([3, 1, 2, 5, 6], kAudioChannelLayoutTag_MPEG_5_0_D),
+        ([1, 2, 3, 4, 5, 6], kAudioChannelLayoutTag_MPEG_5_1_A),
+        ([1, 2, 5, 6, 3, 4], kAudioChannelLayoutTag_MPEG_5_1_B),
+        ([1, 3, 2, 5, 6, 4], kAudioChannelLayoutTag_MPEG_5_1_C),
+        ([3, 1, 2, 5, 6, 4], kAudioChannelLayoutTag_MPEG_5_1_D),
+        ([1, 2, 3, 4, 5, 6, 9], kAudioChannelLayoutTag_MPEG_6_1_A),
+        ([1, 2, 3, 4, 5, 6, 7, 8], kAudioChannelLayoutTag_MPEG_7_1_A),
+        ([3, 7, 8, 1, 2, 5, 6, 4], kAudioChannelLayoutTag_MPEG_7_1_B),
+        ([1, 2, 3, 4, 5, 6, 33, 34], kAudioChannelLayoutTag_MPEG_7_1_C),
+        ([1, 2, 5, 6, 3, 4, 7, 8], kAudioChannelLayoutTag_Emagic_Default_7_1),
+        ([1, 2, 3, 4, 5, 6, 38, 39], kAudioChannelLayoutTag_SMPTE_DTV),
+        ([1, 2, 9], kAudioChannelLayoutTag_ITU_2_1),
+        ([1, 2, 5, 6], kAudioChannelLayoutTag_ITU_2_2),
+        ([1, 2, 4], kAudioChannelLayoutTag_DVD_4),
+        ([1, 2, 4, 9], kAudioChannelLayoutTag_DVD_5),
+        ([1, 2, 4, 5, 6], kAudioChannelLayoutTag_DVD_6),
+        ([1, 2, 3, 4], kAudioChannelLayoutTag_DVD_10),
+        ([1, 2, 3, 4, 9], kAudioChannelLayoutTag_DVD_11),
+        ([1, 2, 5, 6, 4], kAudioChannelLayoutTag_DVD_18),
+        ([1, 2, 5, 6, 3, 9], kAudioChannelLayoutTag_AudioUnit_6_0),
+        ([1, 2, 5, 6, 3, 33, 34], kAudioChannelLayoutTag_AudioUnit_7_0),
+        ([1, 2, 5, 6, 3, 7, 8], kAudioChannelLayoutTag_AudioUnit_7_0_Front),
+        ([3, 1, 2, 5, 6, 9], kAudioChannelLayoutTag_AAC_6_0),
+        ([3, 1, 2, 5, 6, 9, 4], kAudioChannelLayoutTag_AAC_6_1),
+        ([3, 1, 2, 5, 6, 33, 34], kAudioChannelLayoutTag_AAC_7_0),
+        ([3, 1, 2, 5, 6, 33, 34, 4], kAudioChannelLayoutTag_AAC_7_1_B),
+        ([3, 1, 2, 5, 6, 4, 13, 15], kAudioChannelLayoutTag_AAC_7_1_C),
+        ([3, 1, 2, 5, 6, 33, 34, 9], kAudioChannelLayoutTag_AAC_Octagonal),
+        ([3, 4], kAudioChannelLayoutTag_AC3_1_0_1),
+        ([1, 3, 2], kAudioChannelLayoutTag_AC3_3_0),
+        ([1, 3, 2, 9], kAudioChannelLayoutTag_AC3_3_1),
+        ([1, 3, 2, 4], kAudioChannelLayoutTag_AC3_3_0_1),
+        ([1, 2, 9, 4], kAudioChannelLayoutTag_AC3_2_1_1),
+        ([1, 3, 2, 9, 4], kAudioChannelLayoutTag_AC3_3_1_1),
+        ([1, 3, 2, 5, 6, 9], kAudioChannelLayoutTag_EAC_6_0_A),
+        ([1, 3, 2, 5, 6, 33, 34], kAudioChannelLayoutTag_EAC_7_0_A),
+        ([1, 3, 2, 5, 6, 4, 9], kAudioChannelLayoutTag_EAC3_6_1_A),
+        ([1, 3, 2, 5, 6, 4, 12], kAudioChannelLayoutTag_EAC3_6_1_B),
+        ([1, 3, 2, 5, 6, 4, 14], kAudioChannelLayoutTag_EAC3_6_1_C),
+        ([1, 3, 2, 5, 6, 4, 33, 34], kAudioChannelLayoutTag_EAC3_7_1_A),
+        ([1, 3, 2, 5, 6, 4, 7, 8], kAudioChannelLayoutTag_EAC3_7_1_B),
+        ([1, 3, 2, 5, 6, 4, 10, 11], kAudioChannelLayoutTag_EAC3_7_1_C),
+        ([1, 3, 2, 5, 6, 4, 35, 36], kAudioChannelLayoutTag_EAC3_7_1_D),
+        ([1, 3, 2, 5, 6, 4, 13, 15], kAudioChannelLayoutTag_EAC3_7_1_E),
+        ([1, 3, 2, 5, 6, 4, 9, 12], kAudioChannelLayoutTag_EAC3_7_1_F),
+        ([1, 3, 2, 5, 6, 4, 9, 14], kAudioChannelLayoutTag_EAC3_7_1_G),
+        ([1, 3, 2, 5, 6, 4, 12, 14], kAudioChannelLayoutTag_EAC3_7_1_H),
+        ([3, 1, 2, 4], kAudioChannelLayoutTag_DTS_3_1),
+        ([3, 1, 2, 9, 4], kAudioChannelLayoutTag_DTS_4_1),
+        ([7, 8, 1, 2, 5, 6], kAudioChannelLayoutTag_DTS_6_0_A),
+        ([3, 1, 2, 33, 34, 12], kAudioChannelLayoutTag_DTS_6_0_B),
+        ([3, 9, 1, 2, 33, 34], kAudioChannelLayoutTag_DTS_6_0_C),
+        ([7, 8, 1, 2, 5, 6, 4], kAudioChannelLayoutTag_DTS_6_1_A),
+        ([3, 1, 2, 33, 34, 12, 4], kAudioChannelLayoutTag_DTS_6_1_B),
+        ([3, 9, 1, 2, 33, 34, 4], kAudioChannelLayoutTag_DTS_6_1_C),
+        ([7, 3, 8, 1, 2, 5, 6], kAudioChannelLayoutTag_DTS_7_0),
+        ([7, 3, 8, 1, 2, 5, 6, 4], kAudioChannelLayoutTag_DTS_7_1),
+        ([7, 8, 1, 2, 5, 6, 33, 34], kAudioChannelLayoutTag_DTS_8_0_A),
+        ([7, 3, 8, 1, 2, 5, 9, 6], kAudioChannelLayoutTag_DTS_8_0_B),
+        ([7, 8, 1, 2, 5, 6, 33, 34, 4], kAudioChannelLayoutTag_DTS_8_1_A),
+        ([7, 3, 8, 1, 2, 5, 9, 6, 4], kAudioChannelLayoutTag_DTS_8_1_B),
+        ([3, 1, 2, 5, 6, 4, 9], kAudioChannelLayoutTag_DTS_6_1_D),
+        ([1, 2, 33, 34], kAudioChannelLayoutTag_WAVE_4_0_B),
+        ([1, 2, 3, 33, 34], kAudioChannelLayoutTag_WAVE_5_0_B),
+        ([1, 2, 3, 4, 33, 34], kAudioChannelLayoutTag_WAVE_5_1_B),
+        ([1, 2, 3, 4, 9, 5, 6], kAudioChannelLayoutTag_WAVE_6_1),
+        ([1, 2, 3, 4, 33, 34, 5, 6], kAudioChannelLayoutTag_WAVE_7_1),
+        ([1, 2, 3, 4, 5, 6, 33, 34, 13, 15, 52, 54], kAudioChannelLayoutTag_Atmos_7_1_4),
+        ([1, 2, 3, 4, 5, 6, 33, 34, 35, 36, 13, 15, 49, 51, 52, 54], kAudioChannelLayoutTag_Atmos_9_1_6),
+        ([1, 2, 3, 4, 5, 6, 52, 54], kAudioChannelLayoutTag_Atmos_5_1_2),
+    ]
+
+    static let bitmapMappings: [(UInt32, AudioChannelLabel)] = [
+        (AudioChannelBitmap.bit_Left.rawValue, kAudioChannelLabel_Left),
+        (AudioChannelBitmap.bit_Right.rawValue, kAudioChannelLabel_Right),
+        (AudioChannelBitmap.bit_Center.rawValue, kAudioChannelLabel_Center),
+        (AudioChannelBitmap.bit_LFEScreen.rawValue, kAudioChannelLabel_LFEScreen),
+        (AudioChannelBitmap.bit_LeftSurround.rawValue, kAudioChannelLabel_LeftSurround),
+        (AudioChannelBitmap.bit_RightSurround.rawValue, kAudioChannelLabel_RightSurround),
+        (AudioChannelBitmap.bit_LeftCenter.rawValue, kAudioChannelLabel_LeftCenter),
+        (AudioChannelBitmap.bit_RightCenter.rawValue, kAudioChannelLabel_RightCenter),
+        (AudioChannelBitmap.bit_CenterSurround.rawValue, kAudioChannelLabel_CenterSurround),
+        (AudioChannelBitmap.bit_LeftSurroundDirect.rawValue, kAudioChannelLabel_LeftSurroundDirect),
+        (AudioChannelBitmap.bit_RightSurroundDirect.rawValue, kAudioChannelLabel_RightSurroundDirect),
+        (AudioChannelBitmap.bit_TopCenterSurround.rawValue, kAudioChannelLabel_TopCenterSurround),
+        (AudioChannelBitmap.bit_VerticalHeightLeft.rawValue, kAudioChannelLabel_VerticalHeightLeft),
+        (AudioChannelBitmap.bit_VerticalHeightCenter.rawValue, kAudioChannelLabel_VerticalHeightCenter),
+        (AudioChannelBitmap.bit_VerticalHeightRight.rawValue, kAudioChannelLabel_VerticalHeightRight),
+        (AudioChannelBitmap.bit_TopBackLeft.rawValue, kAudioChannelLabel_TopBackLeft),
+        (AudioChannelBitmap.bit_TopBackCenter.rawValue, kAudioChannelLabel_TopBackCenter),
+        (AudioChannelBitmap.bit_TopBackRight.rawValue, kAudioChannelLabel_TopBackRight),
+        (AudioChannelBitmap.bit_LeftTopFront.rawValue, kAudioChannelLabel_LeftTopFront),
+        (AudioChannelBitmap.bit_CenterTopFront.rawValue, kAudioChannelLabel_CenterTopFront),
+        (AudioChannelBitmap.bit_RightTopFront.rawValue, kAudioChannelLabel_RightTopFront),
+        (AudioChannelBitmap.bit_LeftTopMiddle.rawValue, kAudioChannelLabel_LeftTopMiddle),
+        (AudioChannelBitmap.bit_CenterTopMiddle.rawValue, kAudioChannelLabel_CenterTopMiddle),
+        (AudioChannelBitmap.bit_RightTopMiddle.rawValue, kAudioChannelLabel_RightTopMiddle),
+        (AudioChannelBitmap.bit_LeftTopRear.rawValue, kAudioChannelLabel_LeftTopRear),
+        (AudioChannelBitmap.bit_CenterTopRear.rawValue, kAudioChannelLabel_CenterTopRear),
+        (AudioChannelBitmap.bit_RightTopRear.rawValue, kAudioChannelLabel_RightTopRear),
+    ]
+}
+
 extension LayoutConverter {
     
     /* ============================================ */
@@ -33,39 +296,9 @@ extension LayoutConverter {
     /* ============================================ */
     
     func channelLabelSet(forBitmap bitmap: AudioChannelBitmap) -> Set<AudioChannelLabel> {
-        // translate ChannelBitmap to AudioChannelLabel Set
-        var pos: Set<AudioChannelLabel> = []
-        if bitmap.contains(.bit_Left)                   { pos.insert(kAudioChannelLabel_Left) }
-        if bitmap.contains(.bit_Right)                  { pos.insert(kAudioChannelLabel_Right) }
-        if bitmap.contains(.bit_Center)                 { pos.insert(kAudioChannelLabel_Center) }
-        if bitmap.contains(.bit_LFEScreen)              { pos.insert(kAudioChannelLabel_LFEScreen) }
-        if bitmap.contains(.bit_LeftSurround)           { pos.insert(kAudioChannelLabel_LeftSurround) }
-        if bitmap.contains(.bit_RightSurround)          { pos.insert(kAudioChannelLabel_RightSurround) }
-        if bitmap.contains(.bit_LeftCenter)             { pos.insert(kAudioChannelLabel_LeftCenter) }
-        if bitmap.contains(.bit_RightCenter)            { pos.insert(kAudioChannelLabel_RightCenter) }
-        if bitmap.contains(.bit_CenterSurround)         { pos.insert(kAudioChannelLabel_CenterSurround) }
-        if bitmap.contains(.bit_LeftSurroundDirect)     { pos.insert(kAudioChannelLabel_LeftSurroundDirect) }
-        if bitmap.contains(.bit_RightSurroundDirect)    { pos.insert(kAudioChannelLabel_RightSurroundDirect) }
-        if bitmap.contains(.bit_TopCenterSurround)      { pos.insert(kAudioChannelLabel_TopCenterSurround) }
-        if bitmap.contains(.bit_VerticalHeightLeft)     { pos.insert(kAudioChannelLabel_VerticalHeightLeft) }
-        if bitmap.contains(.bit_VerticalHeightCenter)   { pos.insert(kAudioChannelLabel_VerticalHeightCenter) }
-        if bitmap.contains(.bit_VerticalHeightRight)    { pos.insert(kAudioChannelLabel_VerticalHeightRight) }
-        
-        if bitmap.contains(.bit_TopBackLeft)            { pos.insert(kAudioChannelLabel_TopBackLeft) }
-        if bitmap.contains(.bit_TopBackCenter)          { pos.insert(kAudioChannelLabel_TopBackCenter) }
-        if bitmap.contains(.bit_TopBackRight)           { pos.insert(kAudioChannelLabel_TopBackRight) }
-        
-        if bitmap.contains(.bit_LeftTopFront)           { pos.insert(kAudioChannelLabel_LeftTopFront) }
-        if bitmap.contains(.bit_CenterTopFront)         { pos.insert(kAudioChannelLabel_CenterTopFront) }
-        if bitmap.contains(.bit_RightTopFront)          { pos.insert(kAudioChannelLabel_RightTopFront) }
-        if bitmap.contains(.bit_LeftTopMiddle)          { pos.insert(kAudioChannelLabel_LeftTopMiddle) }
-        if bitmap.contains(.bit_CenterTopMiddle)        { pos.insert(kAudioChannelLabel_CenterTopMiddle) }
-        if bitmap.contains(.bit_RightTopMiddle)         { pos.insert(kAudioChannelLabel_RightTopMiddle) }
-        if bitmap.contains(.bit_LeftTopRear)            { pos.insert(kAudioChannelLabel_LeftTopRear) }
-        if bitmap.contains(.bit_CenterTopRear)          { pos.insert(kAudioChannelLabel_CenterTopRear) }
-        if bitmap.contains(.bit_RightTopRear)           { pos.insert(kAudioChannelLabel_RightTopRear) }
-        
-        return pos
+        Set(LayoutMappingTables.bitmapMappings.compactMap { bit, label in
+            bitmap.contains(AudioChannelBitmap(rawValue: bit)) ? label : nil
+        })
     }
     
     func channelLabelSet(forDescriptions layoutPtr: LayoutPtr, count acDescCount: Int) -> Set<AudioChannelLabel> {
@@ -97,349 +330,44 @@ extension LayoutConverter {
     }
     
     func channelLabelSet(forTag tag: AudioChannelLayoutTag) -> Set<AudioChannelLabel> {
-        // translate Channel Layout Tag to AudioChannelLabel Set
-        var pos: Set<AudioChannelLabel> = []
-        
-        switch tag {
-        case kAudioChannelLayoutTag_Mono:           pos = [42] // kAudioChannelLabel_Mono
-        case kAudioChannelLayoutTag_Stereo:         pos = [1,2]
-        case kAudioChannelLayoutTag_StereoHeadphones:   pos = [301,302]
-        case kAudioChannelLayoutTag_MatrixStereo:   pos = [38,39]
-        case kAudioChannelLayoutTag_MidSide:        pos = [204,205]
-        case kAudioChannelLayoutTag_XY:             pos = [206,207]
-        case kAudioChannelLayoutTag_Binaural:       pos = [208,209]
-        case kAudioChannelLayoutTag_Ambisonic_B_Format: pos = [200,201,202,203] // vertical
-        case kAudioChannelLayoutTag_Quadraphonic:   pos = [1,2,5,6]
-        case kAudioChannelLayoutTag_Pentagonal:     pos = [1,2,5,6,3]
-        case kAudioChannelLayoutTag_Hexagonal:      pos = [1,2,5,6,3,9]
-        case kAudioChannelLayoutTag_Octagonal:      pos = [1,2,5,6,3,9,35,36]
-        case kAudioChannelLayoutTag_Cube:           pos = [1,2,33,34,13,15,16,18] // vertical
-            
-        case kAudioChannelLayoutTag_MPEG_3_0_A:     pos = [1,2,3]
-        case kAudioChannelLayoutTag_MPEG_3_0_B:     pos = [3,1,2]
-        case kAudioChannelLayoutTag_MPEG_4_0_A:     pos = [1,2,3,9]
-        case kAudioChannelLayoutTag_MPEG_4_0_B:     pos = [3,1,2,9]
-        case kAudioChannelLayoutTag_MPEG_5_0_A:     pos = [1,2,3,5,6]
-        case kAudioChannelLayoutTag_MPEG_5_0_B:     pos = [1,2,5,6,3]
-        case kAudioChannelLayoutTag_MPEG_5_0_C:     pos = [1,3,2,5,6]
-        case kAudioChannelLayoutTag_MPEG_5_0_D:     pos = [3,1,2,5,6]
-        case kAudioChannelLayoutTag_MPEG_5_1_A:     pos = [1,2,3,4,5,6]
-        case kAudioChannelLayoutTag_MPEG_5_1_B:     pos = [1,2,5,6,3,4]
-        case kAudioChannelLayoutTag_MPEG_5_1_C:     pos = [1,3,2,5,6,4]
-        case kAudioChannelLayoutTag_MPEG_5_1_D:     pos = [3,1,2,5,6,4]
-        case kAudioChannelLayoutTag_MPEG_6_1_A:     pos = [1,2,3,4,5,6,9]
-        case kAudioChannelLayoutTag_MPEG_7_1_A:     pos = [1,2,3,4,5,6,7,8]
-        case kAudioChannelLayoutTag_MPEG_7_1_B:     pos = [3,7,8,1,2,5,6,4]
-        case kAudioChannelLayoutTag_MPEG_7_1_C:     pos = [1,2,3,4,5,6,33,34]
-        case kAudioChannelLayoutTag_Emagic_Default_7_1: pos = [1,2,5,6,3,4,7,8]
-        case kAudioChannelLayoutTag_SMPTE_DTV:      pos = [1,2,3,4,5,6,38,39]
-            
-        case kAudioChannelLayoutTag_ITU_2_1:        pos = [1,2,9]
-        case kAudioChannelLayoutTag_ITU_2_2:        pos = [1,2,5,6]
-            
-        case kAudioChannelLayoutTag_DVD_4:          pos = [1,2,4]
-        case kAudioChannelLayoutTag_DVD_5:          pos = [1,2,4,9]
-        case kAudioChannelLayoutTag_DVD_6:          pos = [1,2,4,5,6]
-        case kAudioChannelLayoutTag_DVD_10:         pos = [1,2,3,4]
-        case kAudioChannelLayoutTag_DVD_11:         pos = [1,2,3,4,9]
-        case kAudioChannelLayoutTag_DVD_18:         pos = [1,2,5,6,4]
-            
-        case kAudioChannelLayoutTag_AudioUnit_6_0:  pos = [1,2,5,6,3,9]
-        case kAudioChannelLayoutTag_AudioUnit_7_0:  pos = [1,2,5,6,3,33,34]
-        case kAudioChannelLayoutTag_AudioUnit_7_0_Front: pos = [1,2,5,6,3,7,8]
-            
-        case kAudioChannelLayoutTag_AAC_3_0:        pos = [3,1,2]
-        case kAudioChannelLayoutTag_AAC_Quadraphonic: pos = [1,2,5,6]
-        case kAudioChannelLayoutTag_AAC_4_0:        pos = [3,1,2,9]
-        case kAudioChannelLayoutTag_AAC_5_0:        pos = [3,1,2,5,6]
-        case kAudioChannelLayoutTag_AAC_5_1:        pos = [3,1,2,5,6,4]
-        case kAudioChannelLayoutTag_AAC_6_0:        pos = [3,1,2,5,6,9]
-        case kAudioChannelLayoutTag_AAC_6_1:        pos = [3,1,2,5,6,9,4]
-        case kAudioChannelLayoutTag_AAC_7_1:        pos = [3,7,8,1,2,5,6,4]
-        case kAudioChannelLayoutTag_AAC_7_0:        pos = [3,1,2,5,6,33,34]
-        case kAudioChannelLayoutTag_AAC_7_1_B:      pos = [3,1,2,5,6,33,34,4]
-        case kAudioChannelLayoutTag_AAC_7_1_C:      pos = [3,1,2,5,6,4,13,15] // vertical
-        case kAudioChannelLayoutTag_AAC_Octagonal:  pos = [3,1,2,5,6,33,34,9]
-            
-        case kAudioChannelLayoutTag_AC3_1_0_1:      pos = [3,4]
-        case kAudioChannelLayoutTag_AC3_3_0:        pos = [1,3,2]
-        case kAudioChannelLayoutTag_AC3_3_1:        pos = [1,3,2,9]
-        case kAudioChannelLayoutTag_AC3_3_0_1:      pos = [1,3,2,4]
-        case kAudioChannelLayoutTag_AC3_2_1_1:      pos = [1,2,9,4]
-        case kAudioChannelLayoutTag_AC3_3_1_1:      pos = [1,3,2,9,4]
-            
-        case kAudioChannelLayoutTag_EAC_6_0_A:      pos = [1,3,2,5,6,9]
-        case kAudioChannelLayoutTag_EAC_7_0_A:      pos = [1,3,2,5,6,33,34]
-        case kAudioChannelLayoutTag_EAC3_6_1_A:     pos = [1,3,2,5,6,4,9]
-        case kAudioChannelLayoutTag_EAC3_6_1_B:     pos = [1,3,2,5,6,4,12]
-        case kAudioChannelLayoutTag_EAC3_6_1_C:     pos = [1,3,2,5,6,4,14]
-        case kAudioChannelLayoutTag_EAC3_7_1_A:     pos = [1,3,2,5,6,4,33,34]
-        case kAudioChannelLayoutTag_EAC3_7_1_B:     pos = [1,3,2,5,6,4,7,8]
-        case kAudioChannelLayoutTag_EAC3_7_1_C:     pos = [1,3,2,5,6,4,10,11]
-        case kAudioChannelLayoutTag_EAC3_7_1_D:     pos = [1,3,2,5,6,4,35,36]
-        case kAudioChannelLayoutTag_EAC3_7_1_E:     pos = [1,3,2,5,6,4,13,15]
-        case kAudioChannelLayoutTag_EAC3_7_1_F:     pos = [1,3,2,5,6,4,9,12]
-        case kAudioChannelLayoutTag_EAC3_7_1_G:     pos = [1,3,2,5,6,4,9,14]
-        case kAudioChannelLayoutTag_EAC3_7_1_H:     pos = [1,3,2,5,6,4,12,14]
-            
-        case kAudioChannelLayoutTag_DTS_3_1:        pos = [3,1,2,4]
-        case kAudioChannelLayoutTag_DTS_4_1:        pos = [3,1,2,9,4]
-        case kAudioChannelLayoutTag_DTS_6_0_A:      pos = [7,8,1,2,5,6]
-        case kAudioChannelLayoutTag_DTS_6_0_B:      pos = [3,1,2,33,34,12]
-        case kAudioChannelLayoutTag_DTS_6_0_C:      pos = [3,9,1,2,33,34]
-        case kAudioChannelLayoutTag_DTS_6_1_A:      pos = [7,8,1,2,5,6,4]
-        case kAudioChannelLayoutTag_DTS_6_1_B:      pos = [3,1,2,33,34,12,4]
-        case kAudioChannelLayoutTag_DTS_6_1_C:      pos = [3,9,1,2,33,34,4]
-        case kAudioChannelLayoutTag_DTS_7_0:        pos = [7,3,8,1,2,5,6]
-        case kAudioChannelLayoutTag_DTS_7_1:        pos = [7,3,8,1,2,5,6,4]
-        case kAudioChannelLayoutTag_DTS_8_0_A:      pos = [7,8,1,2,5,6,33,34]
-        case kAudioChannelLayoutTag_DTS_8_0_B:      pos = [7,3,8,1,2,5,9,6]
-        case kAudioChannelLayoutTag_DTS_8_1_A:      pos = [7,8,1,2,5,6,33,34,4]
-        case kAudioChannelLayoutTag_DTS_8_1_B:      pos = [7,3,8,1,2,5,9,6,4]
-        case kAudioChannelLayoutTag_DTS_6_1_D:      pos = [3,1,2,5,6,4,9]
-            
-        case kAudioChannelLayoutTag_WAVE_4_0_B:     pos = [1,2,33,34]
-        case kAudioChannelLayoutTag_WAVE_5_0_B:     pos = [1,2,3,33,34]
-        case kAudioChannelLayoutTag_WAVE_5_1_B:     pos = [1,2,3,4,33,34]
-        case kAudioChannelLayoutTag_WAVE_6_1:       pos = [1,2,3,4,9,5,6]
-        case kAudioChannelLayoutTag_WAVE_7_1:       pos = [1,2,3,4,33,34,5,6]
-            
-        case kAudioChannelLayoutTag_Atmos_7_1_4:    pos = [1,2,3,4,5,6,33,34,13,15,52,54]
-        case kAudioChannelLayoutTag_Atmos_9_1_6:    pos = [1,2,3,4,5,6,33,34,35,36,13,15,49,51,52,54]
-        case kAudioChannelLayoutTag_Atmos_5_1_2:    pos = [1,2,3,4,5,6,52,54]
-        default:
-            // Unknown / DiscreteInOrder-style tags fall back to numbered
-            // discrete channels using the low 16-bit channel count payload.
-            let discrete: AudioChannelLabel = kAudioChannelLabel_Discrete_0
-            let numChannels: UInt32 = tag & 0x0000FFFF
-            for id: AudioChannelLabel in 0..<numChannels {
-                pos.insert(discrete | id)
-            }
+        if let (_, labels) = LayoutMappingTables.tagToLabels.first(where: { $0.0 == tag }) {
+            return Set(labels)
         }
-        
-        return pos
+        // Unknown / DiscreteInOrder-style tags use the low 16-bit channel count payload.
+        let discrete: AudioChannelLabel = kAudioChannelLabel_Discrete_0
+        let numChannels: UInt32 = tag & 0x0000FFFF
+        return Set((0..<numChannels).map { discrete | $0 })
     }
     
     func channelLayoutTagAACForChannelLabelSet(_ pos: Set<AudioChannelLabel>, _ strict: Bool) -> AudioChannelLayoutTag {
-        switch pos {
-        case [42]:                  return kAudioChannelLayoutTag_Mono
-        case [3]:                   return kAudioChannelLayoutTag_Mono
-        case [1,2]:                 return kAudioChannelLayoutTag_Stereo
-        case [3,1,2]:               return kAudioChannelLayoutTag_AAC_3_0
-        case [1,2,5,6]:             return kAudioChannelLayoutTag_AAC_Quadraphonic
-        case [3,1,2,9]:             return kAudioChannelLayoutTag_AAC_4_0
-        case [3,1,2,5,6]:           return kAudioChannelLayoutTag_AAC_5_0
-        case [3,1,2,5,6,4]:         return kAudioChannelLayoutTag_AAC_5_1
-        case [3,1,2,5,6,9]:         return kAudioChannelLayoutTag_AAC_6_0
-        case [3,1,2,5,6,9,4]:       return kAudioChannelLayoutTag_AAC_6_1
-        case [3,1,2,5,6,33,34]:     return kAudioChannelLayoutTag_AAC_7_0
-        case [3,7,8,1,2,5,6,4]:     return kAudioChannelLayoutTag_AAC_7_1
-        case [3,1,2,5,6,33,34,4]:   return kAudioChannelLayoutTag_AAC_7_1_B
-        case [3,1,2,5,6,4,13,15]:   return kAudioChannelLayoutTag_AAC_7_1_C // vertical
-        case [3,1,2,5,6,33,34,9]:   return kAudioChannelLayoutTag_AAC_Octagonal
-        default:
-            break
+        if let (_, tag) = LayoutMappingTables.aacDirect.first(where: { Set($0.0) == pos }) {
+            return tag
         }
         if strict {
-            // Incompatible w/ AAC
-            let unknown = kAudioChannelLayoutTag_Unknown
-            let numChannels = AudioChannelLayoutTag(pos.count) // The actual number of channels
-            let tag: AudioChannelLayoutTag = (unknown | numChannels)
-            return tag
-        } else {
-            return channelLayoutTagAACForChannelLabelSetFallback(pos)
+            // Incompatible with AAC.
+            return kAudioChannelLayoutTag_Unknown | AudioChannelLayoutTag(pos.count)
         }
-    }
-    
-    func channelLayoutTagAACForChannelLabelSetFallback(_ pos :Set<AudioChannelLabel>) -> AudioChannelLayoutTag {
-        switch pos {
-        case [301,302]:                 return kAudioChannelLayoutTag_Stereo
-        case [38,39]:                   return kAudioChannelLayoutTag_Stereo
-        case [204,205]:                 return kAudioChannelLayoutTag_Stereo
-        case [206,207]:                 return kAudioChannelLayoutTag_Stereo
-        case [208,209]:                 return kAudioChannelLayoutTag_Stereo
-        case [200,201,202,203]:         return kAudioChannelLayoutTag_AAC_7_1_C // vertical
-        case [1,2,5,6,3,9,35,36]:       return kAudioChannelLayoutTag_AAC_Octagonal // horizontal
-        case [1,2,33,34,13,15,16,18]:   return kAudioChannelLayoutTag_AAC_7_1_C // vertical
-            
-        case [1,2,3,4,5,6,38,39]:       return kAudioChannelLayoutTag_AAC_Octagonal // horizontal
-            
-        case [1,2,9]:                   return kAudioChannelLayoutTag_AAC_4_0
-            
-        case [1,2,4]:                   return kAudioChannelLayoutTag_AAC_5_1
-        case [1,2,4,9]:                 return kAudioChannelLayoutTag_AAC_6_1
-        case [1,2,4,5,6]:               return kAudioChannelLayoutTag_AAC_5_1
-        case [1,2,3,4]:                 return kAudioChannelLayoutTag_AAC_5_1
-        case [1,2,3,4,9]:               return kAudioChannelLayoutTag_AAC_6_1
-            
-        case [1,2,5,6,3,7,8]:           return kAudioChannelLayoutTag_AAC_Octagonal // horizontal
-            
-        default:
-            // Incompatible w/ AAC
-            let unknown = kAudioChannelLayoutTag_Unknown
-            let numChannels = AudioChannelLayoutTag(pos.count) // The actual number of channels
-            let tag: AudioChannelLayoutTag = (unknown | numChannels)
+        if let (_, tag) = LayoutMappingTables.aacFallback.first(where: { Set($0.0) == pos }) {
             return tag
         }
+        return kAudioChannelLayoutTag_Unknown | AudioChannelLayoutTag(pos.count)
     }
     
     func channelLayoutTagLPCMForChannelLabelSet(_ pos: Set<AudioChannelLabel>) -> AudioChannelLayoutTag {
-        switch pos {
-        case [42]:                      return kAudioChannelLayoutTag_Mono
-        case [3]:                       return kAudioChannelLayoutTag_Mono
-        case [1,2]:                     return kAudioChannelLayoutTag_Stereo
-        case [301,302]:                 return kAudioChannelLayoutTag_StereoHeadphones
-        case [38,39]:                   return kAudioChannelLayoutTag_MatrixStereo
-        case [204,205]:                 return kAudioChannelLayoutTag_MidSide
-        case [206,207]:                 return kAudioChannelLayoutTag_XY
-        case [208,209]:                 return kAudioChannelLayoutTag_Binaural
-        case [200,201,202,203]:         return kAudioChannelLayoutTag_Ambisonic_B_Format
-        case [1,2,5,6]:                 return kAudioChannelLayoutTag_Quadraphonic
-        case [1,2,5,6,3]:               return kAudioChannelLayoutTag_Pentagonal
-        case [1,2,5,6,3,9]:             return kAudioChannelLayoutTag_Hexagonal
-        case [1,2,5,6,3,9,35,36]:       return kAudioChannelLayoutTag_Octagonal
-        case [1,2,33,34,13,15,16,18]:   return kAudioChannelLayoutTag_Cube
-            
-        case [1,2,3]:                   return kAudioChannelLayoutTag_MPEG_3_0_A
-        case [3,1,2]:                   return kAudioChannelLayoutTag_MPEG_3_0_B
-        case [1,2,3,9]:                 return kAudioChannelLayoutTag_MPEG_4_0_A
-        case [3,1,2,9]:                 return kAudioChannelLayoutTag_MPEG_4_0_B
-        case [1,2,3,5,6]:               return kAudioChannelLayoutTag_MPEG_5_0_A
-        case [1,2,5,6,3]:               return kAudioChannelLayoutTag_MPEG_5_0_B
-        case [1,3,2,5,6]:               return kAudioChannelLayoutTag_MPEG_5_0_C
-        case [3,1,2,5,6]:               return kAudioChannelLayoutTag_MPEG_5_0_D
-        case [1,2,3,4,5,6]:             return kAudioChannelLayoutTag_MPEG_5_1_A
-        case [1,2,5,6,3,4]:             return kAudioChannelLayoutTag_MPEG_5_1_B
-        case [1,3,2,5,6,4]:             return kAudioChannelLayoutTag_MPEG_5_1_C
-        case [3,1,2,5,6,4]:             return kAudioChannelLayoutTag_MPEG_5_1_D
-        case [1,2,3,4,5,6,9]:           return kAudioChannelLayoutTag_MPEG_6_1_A
-        case [1,2,3,4,5,6,7,8]:         return kAudioChannelLayoutTag_MPEG_7_1_A
-        case [3,7,8,1,2,5,6,4]:         return kAudioChannelLayoutTag_MPEG_7_1_B
-        case [1,2,3,4,5,6,33,34]:       return kAudioChannelLayoutTag_MPEG_7_1_C
-        case [1,2,5,6,3,4,7,8]:         return kAudioChannelLayoutTag_Emagic_Default_7_1
-        case [1,2,3,4,5,6,38,39]:       return kAudioChannelLayoutTag_SMPTE_DTV
-            
-        case [1,2,9]:                   return kAudioChannelLayoutTag_ITU_2_1
-        case [1,2,5,6]:                 return kAudioChannelLayoutTag_ITU_2_2
-            
-        case [1,2,4]:                   return kAudioChannelLayoutTag_DVD_4
-        case [1,2,4,9]:                 return kAudioChannelLayoutTag_DVD_5
-        case [1,2,4,5,6]:               return kAudioChannelLayoutTag_DVD_6
-        case [1,2,3,4]:                 return kAudioChannelLayoutTag_DVD_10
-        case [1,2,3,4,9]:               return kAudioChannelLayoutTag_DVD_11
-        case [1,2,5,6,4]:               return kAudioChannelLayoutTag_DVD_18
-            
-        case [1,2,5,6,3,9]:             return kAudioChannelLayoutTag_AudioUnit_6_0
-        case [1,2,5,6,3,33,34]:         return kAudioChannelLayoutTag_AudioUnit_7_0
-        case [1,2,5,6,3,7,8]:           return kAudioChannelLayoutTag_AudioUnit_7_0_Front
-            
-        case [3,1,2,5,6,9]:             return kAudioChannelLayoutTag_AAC_6_0
-        case [3,1,2,5,6,9,4]:           return kAudioChannelLayoutTag_AAC_6_1
-        case [3,1,2,5,6,33,34]:         return kAudioChannelLayoutTag_AAC_7_0
-        case [3,1,2,5,6,33,34,4]:       return kAudioChannelLayoutTag_AAC_7_1_B
-        case [3,1,2,5,6,4,13,15]:       return kAudioChannelLayoutTag_AAC_7_1_C
-        case [3,1,2,5,6,33,34,9]:       return kAudioChannelLayoutTag_AAC_Octagonal
-            
-            // kAudioChannelLayoutTag_TMH_10_2_std — see unsupported tags table at top of file
-            // kAudioChannelLayoutTag_TMH_10_2_full — see unsupported tags table at top of file
-            
-        case [3,4]:                     return kAudioChannelLayoutTag_AC3_1_0_1
-        case [1,3,2]:                   return kAudioChannelLayoutTag_AC3_3_0
-        case [1,3,2,9]:                 return kAudioChannelLayoutTag_AC3_3_1
-        case [1,3,2,4]:                 return kAudioChannelLayoutTag_AC3_3_0_1
-        case [1,2,9,4]:                 return kAudioChannelLayoutTag_AC3_2_1_1
-        case [1,3,2,9,4]:               return kAudioChannelLayoutTag_AC3_3_1_1
-            
-        case [1,3,2,5,6,9]:             return kAudioChannelLayoutTag_EAC_6_0_A
-        case [1,3,2,5,6,33,34]:         return kAudioChannelLayoutTag_EAC_7_0_A
-        case [1,3,2,5,6,4,9]:           return kAudioChannelLayoutTag_EAC3_6_1_A
-        case [1,3,2,5,6,4,12]:          return kAudioChannelLayoutTag_EAC3_6_1_B
-        case [1,3,2,5,6,4,14]:          return kAudioChannelLayoutTag_EAC3_6_1_C
-        case [1,3,2,5,6,4,33,34]:       return kAudioChannelLayoutTag_EAC3_7_1_A
-        case [1,3,2,5,6,4,7,8]:         return kAudioChannelLayoutTag_EAC3_7_1_B
-        case [1,3,2,5,6,4,10,11]:       return kAudioChannelLayoutTag_EAC3_7_1_C
-        case [1,3,2,5,6,4,35,36]:       return kAudioChannelLayoutTag_EAC3_7_1_D
-        case [1,3,2,5,6,4,13,15]:       return kAudioChannelLayoutTag_EAC3_7_1_E
-        case [1,3,2,5,6,4,9,12]:        return kAudioChannelLayoutTag_EAC3_7_1_F
-        case [1,3,2,5,6,4,9,14]:        return kAudioChannelLayoutTag_EAC3_7_1_G
-        case [1,3,2,5,6,4,12,14]:       return kAudioChannelLayoutTag_EAC3_7_1_H
-            
-        case [3,1,2,4]:                 return kAudioChannelLayoutTag_DTS_3_1
-        case [3,1,2,9,4]:               return kAudioChannelLayoutTag_DTS_4_1
-        case [7,8,1,2,5,6]:             return kAudioChannelLayoutTag_DTS_6_0_A
-        case [3,1,2,33,34,12]:          return kAudioChannelLayoutTag_DTS_6_0_B
-        case [3,9,1,2,33,34]:           return kAudioChannelLayoutTag_DTS_6_0_C
-        case [7,8,1,2,5,6,4]:           return kAudioChannelLayoutTag_DTS_6_1_A
-        case [3,1,2,33,34,12,4]:        return kAudioChannelLayoutTag_DTS_6_1_B
-        case [3,9,1,2,33,34,4]:         return kAudioChannelLayoutTag_DTS_6_1_C
-        case [7,3,8,1,2,5,6]:           return kAudioChannelLayoutTag_DTS_7_0
-        case [7,3,8,1,2,5,6,4]:         return kAudioChannelLayoutTag_DTS_7_1
-        case [7,8,1,2,5,6,33,34]:       return kAudioChannelLayoutTag_DTS_8_0_A
-        case [7,3,8,1,2,5,9,6]:         return kAudioChannelLayoutTag_DTS_8_0_B
-        case [7,8,1,2,5,6,33,34,4]:     return kAudioChannelLayoutTag_DTS_8_1_A
-        case [7,3,8,1,2,5,9,6,4]:       return kAudioChannelLayoutTag_DTS_8_1_B
-        case [3,1,2,5,6,4,9]:           return kAudioChannelLayoutTag_DTS_6_1_D
-        case [1,2,33,34]:               return kAudioChannelLayoutTag_WAVE_4_0_B
-        case [1,2,3,33,34]:             return kAudioChannelLayoutTag_WAVE_5_0_B
-        case [1,2,3,4,33,34]:           return kAudioChannelLayoutTag_WAVE_5_1_B
-        case [1,2,3,4,9,5,6]:           return kAudioChannelLayoutTag_WAVE_6_1
-        case [1,2,3,4,33,34,5,6]:       return kAudioChannelLayoutTag_WAVE_7_1
-            
-            // kAudioChannelLayoutTag_HOA_ACN_SN3D
-            // needs to be ORed with the actual number of channels (not the HOA order)
-            // kAudioChannelLayoutTag_HOA_ACN_N3D
-            // needs to be ORed with the actual number of channels (not the HOA order)
-            
-        case [1,2,3,4,5,6,33,34,13,15,52,54]:   return kAudioChannelLayoutTag_Atmos_7_1_4
-        case [1,2,3,4,5,6,33,34,35,36,13,15,49,51,52,54]:   return kAudioChannelLayoutTag_Atmos_9_1_6
-        case [1,2,3,4,5,6,52,54]:       return kAudioChannelLayoutTag_Atmos_5_1_2
-            
-            //kAudioChannelLayoutTag_DiscreteInOrder
-            // needs to be ORed with the actual number of channels
-            
-            //kAudioChannelLayoutTag_Unknown
-            // needs to be ORed with the actual number of channels
-            
-        default:
-            // Fallback into numbered discrete channels
-            let discrete = kAudioChannelLayoutTag_DiscreteInOrder
-            let numChannels = AudioChannelLayoutTag(pos.count) // The actual number of channels
-            let tag: AudioChannelLayoutTag = (discrete | numChannels)
+        if let (_, tag) = LayoutMappingTables.lpcmReverse.first(where: { Set($0.0) == pos }) {
             return tag
         }
+        // Fallback into numbered discrete channels.
+        let discrete = kAudioChannelLayoutTag_DiscreteInOrder
+        let numChannels = AudioChannelLayoutTag(pos.count)
+        return discrete | numChannels
     }
     
     func channelBitmapForChannelLabelSet(_ pos: Set<AudioChannelLabel>) -> AudioChannelBitmap {
         var bitmap: AudioChannelBitmap = []
-        if pos.contains(kAudioChannelLabel_Left)                {bitmap.insert(.bit_Left)}
-        if pos.contains(kAudioChannelLabel_Right)               {bitmap.insert(.bit_Right)}
-        if pos.contains(kAudioChannelLabel_Center)              {bitmap.insert(.bit_Center)}
-        if pos.contains(kAudioChannelLabel_LFEScreen)           {bitmap.insert(.bit_LFEScreen)}
-        if pos.contains(kAudioChannelLabel_LeftSurround)        {bitmap.insert(.bit_LeftSurround)}
-        if pos.contains(kAudioChannelLabel_RightSurround)       {bitmap.insert(.bit_RightSurround)}
-        if pos.contains(kAudioChannelLabel_LeftCenter)          {bitmap.insert(.bit_LeftCenter)}
-        if pos.contains(kAudioChannelLabel_RightCenter)         {bitmap.insert(.bit_RightCenter)}
-        if pos.contains(kAudioChannelLabel_CenterSurround)      {bitmap.insert(.bit_CenterSurround)}
-        if pos.contains(kAudioChannelLabel_LeftSurroundDirect)  {bitmap.insert(.bit_LeftSurroundDirect)}
-        if pos.contains(kAudioChannelLabel_RightSurroundDirect) {bitmap.insert(.bit_RightSurroundDirect)}
-        if pos.contains(kAudioChannelLabel_TopCenterSurround)   {bitmap.insert(.bit_TopCenterSurround)}
-        if pos.contains(kAudioChannelLabel_VerticalHeightLeft)  {bitmap.insert(.bit_VerticalHeightLeft)}
-        if pos.contains(kAudioChannelLabel_VerticalHeightCenter)    {bitmap.insert(.bit_VerticalHeightCenter)}
-        if pos.contains(kAudioChannelLabel_VerticalHeightRight) {bitmap.insert(.bit_VerticalHeightRight)}
-        
-        if pos.contains(kAudioChannelLabel_TopBackLeft)         {bitmap.insert(.bit_TopBackLeft)}
-        if pos.contains(kAudioChannelLabel_TopBackCenter)       {bitmap.insert(.bit_TopBackCenter)}
-        if pos.contains(kAudioChannelLabel_TopBackRight)        {bitmap.insert(.bit_TopBackRight)}
-        
-        if pos.contains(kAudioChannelLabel_LeftTopFront)        {bitmap.insert(.bit_LeftTopFront)}
-        if pos.contains(kAudioChannelLabel_CenterTopFront)      {bitmap.insert(.bit_CenterTopFront)}
-        if pos.contains(kAudioChannelLabel_RightTopFront)       {bitmap.insert(.bit_RightTopFront)}
-        if pos.contains(kAudioChannelLabel_LeftTopMiddle)       {bitmap.insert(.bit_LeftTopMiddle)}
-        if pos.contains(kAudioChannelLabel_CenterTopMiddle)     {bitmap.insert(.bit_CenterTopMiddle)}
-        if pos.contains(kAudioChannelLabel_RightTopMiddle)      {bitmap.insert(.bit_RightTopMiddle)}
-        if pos.contains(kAudioChannelLabel_LeftTopRear)         {bitmap.insert(.bit_LeftTopRear)}
-        if pos.contains(kAudioChannelLabel_CenterTopRear)       {bitmap.insert(.bit_CenterTopRear)}
-        if pos.contains(kAudioChannelLabel_RightTopRear)        {bitmap.insert(.bit_RightTopRear)}
+        for (bit, label) in LayoutMappingTables.bitmapMappings where pos.contains(label) {
+            bitmap.insert(AudioChannelBitmap(rawValue: bit))
+        }
         return bitmap
     }
     

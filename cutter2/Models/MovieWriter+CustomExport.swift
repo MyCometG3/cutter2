@@ -303,12 +303,9 @@ extension MovieWriter {
             ar.add(arOutput)
             
             //
-            var compressionProperties: NSDictionary? = nil
-            if ["ap4h","apch","apcn","apcs","apco"].contains(fourcc) {
-                // ProRes family
-            } else {
-                compressionProperties = [AVVideoAverageBitRateKey:targetBitRate]
-            }
+            var compressionProperties: NSDictionary? = VideoChannelMetadataBuilder
+                .makeInitialCompressionProperties(forCodec: fourcc as String,
+                                                  targetBitRate: targetBitRate)
             
             var cleanAperture: NSDictionary? = nil
             var pixelAspectRatio: NSDictionary? = nil
@@ -322,87 +319,37 @@ extension MovieWriter {
                                                                                     usePixelAspectRatio: false,
                                                                                     useCleanAperture: false)
                 
-                var fieldCount: NSNumber? = nil
-                var fieldDetail: NSString? = nil
-                
-                let extCA: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                             extensionKey: kCMFormatDescriptionExtension_CleanAperture)
-                if let extCA = extCA,
-                   let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as? NSNumber,
-                   let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as? NSNumber,
-                   let wOffset = extCA[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] as? NSNumber,
-                   let hOffset = extCA[kCMFormatDescriptionKey_CleanApertureVerticalOffset] as? NSNumber {
-                    
-                    let dict: NSMutableDictionary = NSMutableDictionary()
-                    dict[AVVideoCleanApertureWidthKey] = width
-                    dict[AVVideoCleanApertureHeightKey] = height
-                    dict[AVVideoCleanApertureHorizontalOffsetKey] = wOffset
-                    dict[AVVideoCleanApertureVerticalOffsetKey] = hOffset
-                    
-                    cleanAperture = dict
+                cleanAperture = VideoChannelMetadataBuilder.makeExtensionDict(
+                    from: desc,
+                    keys: [kCMFormatDescriptionExtension_CleanAperture]
+                ) { values in
+                    VideoChannelMetadataBuilder.makeCleanAperture(from: values[0])
                 }
-                
-                let extPA: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                             extensionKey: kCMFormatDescriptionExtension_PixelAspectRatio)
-                if let extPA = extPA,
-                   let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as? NSNumber,
-                   let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as? NSNumber {
-                    
-                    let dict: NSMutableDictionary = NSMutableDictionary()
-                    dict[AVVideoPixelAspectRatioHorizontalSpacingKey] = hSpacing
-                    dict[AVVideoPixelAspectRatioVerticalSpacingKey] = vSpacing
-                    
-                    pixelAspectRatio = dict
+
+                pixelAspectRatio = VideoChannelMetadataBuilder.makeExtensionDict(
+                    from: desc,
+                    keys: [kCMFormatDescriptionExtension_PixelAspectRatio]
+                ) { values in
+                    VideoChannelMetadataBuilder.makePixelAspectRatio(from: values[0])
                 }
-                
-                if copyNCLC {
-                    let extCP: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                                 extensionKey: kCMFormatDescriptionExtension_ColorPrimaries)
-                    let extTF: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                                 extensionKey: kCMFormatDescriptionExtension_TransferFunction)
-                    let extMX: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                                 extensionKey: kCMFormatDescriptionExtension_YCbCrMatrix)
-                    if let extCP  = extCP, let extTF = extTF, let extMX = extMX {
-                        if let colorPrimaries = extCP as? NSString,
-                           let transferFunction = extTF as? NSString,
-                           let ycbcrMatrix = extMX as? NSString {
-                            
-                            let dict: NSMutableDictionary = NSMutableDictionary()
-                            dict[AVVideoColorPrimariesKey] = colorPrimaries
-                            dict[AVVideoTransferFunctionKey] = transferFunction
-                            dict[AVVideoYCbCrMatrixKey] = ycbcrMatrix
-                            
-                            nclc = dict
-                        }
-                    }
+
+                nclc = VideoChannelMetadataBuilder.makeExtensionDict(
+                    from: desc,
+                    keys: VideoChannelMetadataBuilder.nclcExtensionKeys(copyNCLC: copyNCLC)
+                ) { values in
+                    VideoChannelMetadataBuilder.makeNCLC(from: values)
                 }
-                
-                if copyField {
-                    let extFC: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                                 extensionKey: kCMFormatDescriptionExtension_FieldCount)
-                    let extFD: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                                 extensionKey: kCMFormatDescriptionExtension_FieldDetail)
-                    if let extFC = extFC, let extFD = extFD {
-                        fieldCount = (extFC as? NSNumber)
-                        fieldDetail = (extFD as? NSString)
-                    }
-                }
-                
-                if fieldCount != nil || fieldDetail != nil {
-                    let dict: NSMutableDictionary = NSMutableDictionary()
-                    
-                    if copyField, let fieldCount = fieldCount, let fieldDetail = fieldDetail {
-                        dict[kVTCompressionPropertyKey_FieldCount] = fieldCount
-                        dict[kVTCompressionPropertyKey_FieldDetail] = fieldDetail
-                    }
-                    
-                    if let compressionProperties = compressionProperties {
-                        if let props = compressionProperties as? [AnyHashable:Any] {
-                            dict.addEntries(from: props)
-                        }
-                    }
-                    compressionProperties = dict
-                }
+
+                compressionProperties = VideoChannelMetadataBuilder.makeExtensionDict(
+                    from: desc,
+                    keys: VideoChannelMetadataBuilder.fieldExtensionKeys(copyField: copyField)
+                ) { values in
+                    VideoChannelMetadataBuilder.mergeFieldCompressionProperties(
+                        fieldCountExtension: values[0],
+                        fieldDetailExtension: values[1],
+                        initial: compressionProperties
+                    )
+                } ?? compressionProperties
             }
             
             // destination

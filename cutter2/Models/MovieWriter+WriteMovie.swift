@@ -130,6 +130,10 @@ extension MovieWriter {
                                              of: movie,
                                              at: CMTime.zero,
                                              copySampleData: selfContained)
+
+                if self.writeCancelled {
+                    try throwError(.operationCancelled, reason: "Movie write was cancelled by the user.")
+                }
                 
                 // Write movieHeader to a same-directory temporary file. The
                 // destination is finalized only after the complete movie is valid.

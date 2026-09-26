@@ -286,6 +286,7 @@ extension Document {
         
         // Unblock main thread first to work w/ MainActor
         self.unblockUserInteraction()
+        let originalFileURL = self.fileURL
         
         do {
             // Prepare to save
@@ -306,10 +307,19 @@ extension Document {
         
         // Refresh internal movie (to sync selfcontained <> referece movie change)
         if saveOperation == .saveAsOperation {
-            ActorUtilities.performSyncOnMainActor {
-                if !refreshMutator(from: url) {
-                    LoggingSystem.fileIO.warning("SaveAs completed, but the in-memory movie refresh failed")
+            let refreshed = ActorUtilities.performSyncOnMainActor {
+                refreshMutator(from: url)
+            }
+            if !refreshed {
+                ActorUtilities.performSyncOnMainActor {
+                    self.fileURL = originalFileURL
                 }
+                let reason = "The saved movie was written, but the document could not refresh its in-memory movie."
+                throw NSError(
+                    domain: NSCocoaErrorDomain,
+                    code: NSFileWriteUnknownError,
+                    userInfo: [NSLocalizedDescriptionKey: reason]
+                )
             }
         }
     }

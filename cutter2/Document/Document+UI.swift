@@ -316,13 +316,12 @@ extension Document {
                 // (interrupted, or delayed with finished == true) must run as
                 // a no-op, so it must always observe the already-advanced
                 // counter.
-                self.playerSeekSequencer.suppressForReload()
                 guard let token = self.playerSeekSequencer.beginItemReplacement(
                     expectedReloadGeneration: generation
                 ) else {
-                    self.playerSeekSequencer.liftSuppression(for: generation)
                     return
                 }
+                self.playerSeekSequencer.suppressForReload()
                 self.playerSeekSequencer.armSuppressionWatchdog(for: token)
 
                 // Apply modified source movie

@@ -227,6 +227,7 @@ final class PlayerSeekSequencerTests: XCTestCase {
         try? await Task.sleep(nanoseconds: 30_000_000)
 
         XCTAssertFalse(sequencer.suppressQueryPosition)
+        XCTAssertFalse(sequencer.isCurrent(token))
     }
 
     func testStaleReplacementDoesNotLeaveSuppressionHeld() {

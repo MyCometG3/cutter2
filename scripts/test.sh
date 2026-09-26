@@ -5,7 +5,7 @@
 # This script runs all tests for the cutter2 application with code coverage enabled.
 # 
 # Test Suite (as of 2026-09-26):
-#   - 21 test source files + 1 helper
+#   - 20 test source files + 1 helper
 #   - 269 statically declared test methods
 #   - Expected result: 269 tests passing
 #

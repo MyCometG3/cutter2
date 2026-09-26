@@ -35,7 +35,7 @@ All three steps succeeded; the full test run passed 200 test cases with 0 failur
 
 **Current verification facts:**
 
-- **Current static test suite size:** 19 files total (18 test source files + 1 helper), with 222 statically declared `func test...` methods (after T-16/S-17).
+- **Current static test suite size:** 20 files total (19 test source files + 1 helper), with 250 statically declared `func test...` methods.
 - **Runtime test result:** The September 21, 2026 run passed 200 test cases with 0 failures on `4d37278`.
 - **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps plus coverage report generation/upload. The workflow uses `macos-latest` and does not pin a specific Xcode image.
 - **Strict concurrency:** `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` are enabled across all four app/test configurations.
@@ -144,7 +144,7 @@ cutter2Tests/
 ├── cutter2Tests.swift                    # Integration tests (20 tests)
 ├── DocumentKVOContextTests.swift         # KVO context tests (3 tests)
 ├── DocumentTests.swift                   # Document tests (6 tests)
-├── LayoutConverterMappingTests.swift     # Layout mapping tests (5 tests)
+├── LayoutConverterMappingTests.swift     # Layout mapping tests (7 tests)
 ├── LocalizationTests.swift               # Localization tests (11 tests)
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
 ├── ModelTests.swift                      # Model layer tests (26 tests)
@@ -153,7 +153,8 @@ cutter2Tests/
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
 ├── PerformanceTests.swift                # Performance tests (12 tests)
-├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (11 tests)
+├── MovieWriterVideoChannelMetadataTests.swift # Video channel metadata tests (25 tests)
+├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (12 tests)
 ├── TestMovieFixtureWriter.swift          # Test helper (0 tests, fixture writer)
 ├── TimelineViewRenderingTests.swift      # Timeline rendering tests (15 tests)
 ├── UtilitiesTests.swift                  # Utility tests (22 tests)
@@ -161,11 +162,11 @@ cutter2Tests/
 └── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Current total:** 19 files (18 test source files + 1 helper), **222 statically declared test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`). The three tests added to `MovieMutatorEditTests.swift` by `4d37278` lock in the delete marker position-correction behavior (marker at range end snaps to range start; marker before range stays; marker after range shifts backward by the selection duration). T-16 adds mapping coverage and S-17 adds direct tests for the extracted reload/seek state transitions.
+**Current total:** 20 files (19 test source files + 1 helper), **250 statically declared test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`). The three tests added to `MovieMutatorEditTests.swift` by `4d37278` lock in the delete marker position-correction behavior (marker at range end snaps to range start; marker before range stays; marker after range shifts backward by the selection duration). T-16 adds mapping coverage, S-17 adds direct tests for the extracted reload/seek state transitions, and PR #63 adds video-channel metadata coverage plus one reload-generation regression test.
 
 ### 2.3 Test Execution Results
 
-The current source contains 222 statically declared `func test...` methods and no `XCTSkip` usage was found. The September 21, 2026 full-suite run on the earlier commit `4d37278` (macOS 27.0, Xcode 27.0) executed all 200 then-existing test cases successfully with 0 failures; the previous August 6, 2026 rerun passed the then-197 cases after the duplicate local `writeSampleMovie` helper was consolidated into the shared fixture (`b96bc98`).
+The current source contains 250 statically declared `func test...` methods and no `XCTSkip` usage was found. The September 21, 2026 full-suite run on the earlier commit `4d37278` (macOS 27.0, Xcode 27.0) executed all 200 then-existing test cases successfully with 0 failures; the previous August 6, 2026 rerun passed the then-197 cases after the duplicate local `writeSampleMovie` helper was consolidated into the shared fixture (`b96bc98`). The current branch's serial run executed 250 tests with 0 failures.
 
 ---
 
@@ -251,8 +252,8 @@ Security-scoped resource access is properly wrapped with `NSFileCoordinator` and
 | **ViewController (general)** | `ViewControllerTests.swift` | 15 | ✅ Covered |
 | **Document** | `DocumentTests.swift` | 6 | ✅ Covered |
 | **Document KVO context** | `DocumentKVOContextTests.swift` | 3 | ✅ Covered |
-| **LayoutConverter mappings** | `LayoutConverterMappingTests.swift` | 5 | ✅ Covered (T-16) |
-| **Player seek sequencing** | `PlayerSeekSequencerTests.swift` | 11 | ✅ State transitions covered (S-17); live player integration remains untested |
+| **LayoutConverter mappings** | `LayoutConverterMappingTests.swift` | 7 | ✅ Covered (T-16) |
+| **Player seek sequencing** | `PlayerSeekSequencerTests.swift` | 12 | ✅ State transitions covered (S-17/PR #63); live player integration remains untested |
 | **Model** | `ModelTests.swift` | 26 | ✅ Covered |
 | **Utilities** | `UtilitiesTests.swift` | 22 | ✅ Covered |
 | **Performance** | `PerformanceTests.swift` | 12 | ✅ Covered |
@@ -260,14 +261,14 @@ Security-scoped resource access is properly wrapped with `NSFileCoordinator` and
 | **LoggingSystem** | `LoggingSystemTests.swift` | 17 | ✅ Covered |
 | **cutter2 (integration)** | `cutter2Tests.swift` | 20 | ✅ Covered |
 | **MovieHeaderValidator** | `MovieHeaderValidatorTests.swift` | 3 | ✅ Covered |
-| **Overall** | 19 files (18 test source + 1 helper) | **222 statically declared methods** | ✅ 200 passed, 0 failed on 2026-09-21 baseline; T-16/S-17 targeted tests pass |
+| **Overall** | 20 files (19 test source + 1 helper) | **250 statically declared methods** | ✅ 250 passed, 0 failed on the current branch; historical baseline results remain recorded above |
 
 ### 5.2 Test Execution
 
 - `scripts/test.sh` orchestrates build → test → analyze via `xcodebuild`
 - CI workflow (`.github/workflows/test.yml`) runs on push/PR to `main`, `work`, and `develop` branches (Build → Test → Analyze, using `build-for-testing` + `test-without-building` to avoid double compilation)
-- The current source contains 222 statically declared test methods and no `XCTSkip` usage; the September 21, 2026 full-suite run on `4d37278` passed all 200 test cases present at that earlier baseline (the August 6, 2026 rerun passed the then-197 cases)
-- `scripts/test.sh` reports the current static inventory of 18 test source files + 1 helper and 222 methods; the verified 211-test run after T-16 preceded the 11 S-17 tests
+- The current source contains 250 statically declared test methods and no `XCTSkip` usage; the September 21, 2026 full-suite run on `4d37278` passed all 200 test cases present at that earlier baseline (the August 6, 2026 rerun passed the then-197 cases)
+- `scripts/test.sh` reports the current static inventory of 19 test source files + 1 helper and 250 methods; the current serial run passed all 250 tests
 
 ### 5.3 Test Coverage Gaps
 
@@ -339,7 +340,7 @@ The Markdown set contains 7 files when `README.md` and `.github/copilot-instruct
 - Each step is guarded with `if ! ...; then exit 1; fi` so failures are reported with a custom message (works with `set -e`)
 - Uses color-coded echo statements for output formatting
 - Generates coverage reports via `xcrun llvm-cov`
-- Reports a summary; its static counts distinguish 18 test source files from 1 helper and report 222 methods
+- Reports a summary; its static counts distinguish 19 test source files from 1 helper and report 250 methods
 
 ---
 
@@ -405,7 +406,7 @@ The window is narrow (it requires a completed user seek overlapping the `makePla
 
 ### 9.2 Medium Priority
 
-4. ~~**Synchronize test counts in `scripts/test.sh`**~~ — Resolved by T-16/S-17: the script reports 18 test source files + 1 helper and 222 statically declared methods.
+4. ~~**Synchronize test counts in `scripts/test.sh`**~~ — Resolved by T-16/S-17 and subsequent integrations: the script reports 19 test source files + 1 helper and 250 statically declared methods.
 5. **Unify date formatter usage** between `LoggingSystem` and `DateFormatter+Factory.swift`.
 6. **Expand performance tests** to cover TimelineView rendering and MovieMutator operations.
 
@@ -417,9 +418,9 @@ The window is narrow (it requires a completed user seek overlapping the `makePla
 
 ## 10. Conclusion
 
-The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 222 statically declared test methods across 18 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. The 2026-09-21 revision verified baseline `4d37278` with a clean build, clean analyze, and a full test run passing 200 test cases with 0 failures (DerivedData outside the worktree), and re-confirmed the results after the fix was fast-forward merged into `work`.
+The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 250 statically declared test methods across 19 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. The 2026-09-21 revision verified baseline `4d37278` with a clean build, clean analyze, and a full test run passing 200 test cases with 0 failures (DerivedData outside the worktree), and the current branch's serial run passed 250 tests with 0 failures.
 
-The 7 commits since the previous baseline remain documented above. T-16 adds full tag/label mapping tests, and S-17 extracts the reload/seek state transitions into `PlayerSeekSequencer` with 11 unit tests. PR #63 also closes the §8.6 reload suppression race by re-asserting suppression before item replacement and releasing current-generation suppression on both completion outcomes. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer; window resize, save panel, clipboard, and scrubbing coverage also remain open. Test counts in `scripts/test.sh` and the test guides now match the current static inventory.
+The 7 commits since the previous baseline remain documented above. T-16 adds full tag/label mapping tests, S-17 extracts the reload/seek state transitions into `PlayerSeekSequencer`, and PR #63 adds video-channel metadata coverage plus a reload-generation regression test. PR #63 also closes the §8.6 reload suppression race by re-asserting suppression before item replacement and releasing current-generation suppression on both completion outcomes. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer; window resize, save panel, clipboard, and scrubbing coverage also remain open. Test counts in `scripts/test.sh` and the test guides now match the current static inventory.
 
 ---
 
@@ -434,11 +435,11 @@ The 7 commits since the previous baseline remain documented above. T-16 adds ful
 - Utilities: `AsyncBridge.swift`, `ActorUtilities.swift`, `LayoutConverter.swift` + 3 extensions (`+Convert`, `+LayoutData`, `+Mapping`), `MovieHeaderValidator.swift`, `PerformanceMetrics.swift`, `ErrorUtilities.swift`, `Constants.swift`, `LocalizationHelper.swift`, `LoggingSystem.swift`, `DateFormatter+Factory.swift`
 - Resources: `Info.plist`, `cutter2.entitlements`, `Localizable.xcstrings`
 
-### Test Files (19 files: 18 test source files + 1 helper; 222 statically declared methods)
+### Test Files (20 files: 19 test source files + 1 helper; 250 statically declared methods)
 - `AsyncBridgeTests.swift` (4 tests), `cutter2Tests.swift` (20 tests), `DocumentKVOContextTests.swift` (3 tests), `DocumentTests.swift` (6 tests)
-- `LayoutConverterMappingTests.swift` (5 tests), `LocalizationTests.swift` (11 tests), `LoggingSystemTests.swift` (17 tests), `ModelTests.swift` (26 tests)
+- `LayoutConverterMappingTests.swift` (7 tests), `LocalizationTests.swift` (11 tests), `LoggingSystemTests.swift` (17 tests), `ModelTests.swift` (26 tests)
 - `MovieHeaderValidatorTests.swift` (3 tests), `MovieMutatorEditTests.swift` (8 tests), `MovieMutatorTests.swift` (22 tests), `MovieMutatorTransformExportTests.swift` (8 tests)
-- `PerformanceTests.swift` (12 tests), `PlayerSeekSequencerTests.swift` (11 tests), `TimelineViewRenderingTests.swift` (15 tests)
+- `MovieWriterVideoChannelMetadataTests.swift` (25 tests), `PerformanceTests.swift` (12 tests), `PlayerSeekSequencerTests.swift` (12 tests), `TimelineViewRenderingTests.swift` (15 tests)
 - `UtilitiesTests.swift` (22 tests), `ViewControllerKeyEventTests.swift` (14 tests), `ViewControllerTests.swift` (15 tests)
 - `TestMovieFixtureWriter.swift` (0 tests, fixture writer helper)
 
@@ -454,4 +455,4 @@ The 7 commits since the previous baseline remain documented above. T-16 adds ful
 ### Configuration
 - `cutter2.xcodeproj/project.pbxproj` (version 0.8.19 / build 20260802 — app target, committed in the reviewed state; the test target carries placeholder `1.0` / `1`)
 - `.github/workflows/test.yml` (build/test/analyze, branches `main`/`work`/`develop`; coverage artifact generation is optional)
-- `scripts/test.sh` (build/test/analyze; summary reports 18 test source files + 1 helper and 222 statically declared methods)
+- `scripts/test.sh` (build/test/analyze; summary reports 19 test source files + 1 helper and 250 statically declared methods)

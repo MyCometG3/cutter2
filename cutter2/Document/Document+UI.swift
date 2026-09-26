@@ -231,16 +231,14 @@ extension Document {
         // release, and the seek generation prevents stale callbacks from
         // overwriting newer rate or timeline state.
         let token = self.playerSeekSequencer.beginUserSeek()
-        let handler: @Sendable (Bool) -> Void = {[weak self, weak player, weak mutator] (finished: Bool) in // @escaping
+        let handler: @Sendable (Bool) -> Void = {[weak self, weak player, weak mutator] (_: Bool) in // @escaping
             guard let self else { return }
             guard let player = player else { return }
             guard let mutator = mutator else { return }
             ActorUtilities.performSyncOnMainActor {
                 guard self.playerSeekSequencer.isCurrent(token) else { return }
-                if finished {
-                    guard self.playerSeekSequencer.canReleaseSuppression(token) else { return }
-                    self.playerSeekSequencer.releaseSuppression()
-                }
+                guard self.playerSeekSequencer.canReleaseSuppression(token) else { return }
+                self.playerSeekSequencer.releaseSuppression()
                 updateRate(player, rate)
                 updateTimeline(time, range: mutator.selectedTimeRange)
             }

@@ -89,6 +89,18 @@ extension LayoutConverter {
         }
         return pos
     }
+
+    private func convertChannelLabelSet<T>(
+        from aclData: AudioChannelLayoutData,
+        transform: (Set<AudioChannelLabel>) -> T?,
+        isValid: (T) -> Bool,
+        dataFor: (T) -> AudioChannelLayoutData?
+    ) -> AudioChannelLayoutData? {
+        guard let pos = extractChannelLabelSet(from: aclData),
+              let value = transform(pos),
+              isValid(value) else { return nil }
+        return dataFor(value)
+    }
     
     /* ============================================ */
     // MARK: - public Converter
@@ -99,18 +111,18 @@ extension LayoutConverter {
     /// - Parameter aclData: AudioChannelLayoutData
     /// - Returns: AudioChannelLayoutData
     public func convertAsAACTag(from aclData: AudioChannelLayoutData) -> AudioChannelLayoutData? {
-        guard let pos = extractChannelLabelSet(from: aclData) else { return nil }
-        var tag: AudioChannelLayoutTag = channelLayoutTagAACForChannelLabelSet(pos, true)
-        if (tag & 0xFFFF0000) == kAudioChannelLayoutTag_Unknown {
-            let tag1 = channelLayoutTagAACForChannelLabelSet(pos, false)
-            tag = tag1
-        }
-        if (tag & 0xFFFF0000) != kAudioChannelLayoutTag_Unknown {
-            guard let data = dataFor(tag: tag) else { return nil }
-            return data
-        } else {
-            return nil
-        }
+        convertChannelLabelSet(
+            from: aclData,
+            transform: { pos in
+                var tag: AudioChannelLayoutTag = channelLayoutTagAACForChannelLabelSet(pos, true)
+                if (tag & 0xFFFF0000) == kAudioChannelLayoutTag_Unknown {
+                    tag = channelLayoutTagAACForChannelLabelSet(pos, false)
+                }
+                return tag
+            },
+            isValid: { ($0 & 0xFFFF0000) != kAudioChannelLayoutTag_Unknown },
+            dataFor: { dataFor(tag: $0) }
+        )
     }
     
     /// Try to translate AudioChannelLayoutData with kAudioChannelLayoutTag_*
@@ -118,14 +130,12 @@ extension LayoutConverter {
     /// - Parameter aclData: AudioChannelLayoutData
     /// - Returns: AudioChannelLayoutData
     public func convertAsPCMTag(from aclData: AudioChannelLayoutData) -> AudioChannelLayoutData? {
-        guard let pos = extractChannelLabelSet(from: aclData) else { return nil }
-        let tag: AudioChannelLayoutTag = channelLayoutTagLPCMForChannelLabelSet(pos)
-        if (tag & 0xFFFF0000) != kAudioChannelLayoutTag_Unknown {
-            guard let data = dataFor(tag: tag) else { return nil }
-            return data
-        } else {
-            return nil
-        }
+        convertChannelLabelSet(
+            from: aclData,
+            transform: { channelLayoutTagLPCMForChannelLabelSet($0) },
+            isValid: { ($0 & 0xFFFF0000) != kAudioChannelLayoutTag_Unknown },
+            dataFor: { dataFor(tag: $0) }
+        )
     }
     
     /// Try to translate AudioChannelLayoutData with AudioChannelBitmap
@@ -133,14 +143,12 @@ extension LayoutConverter {
     /// - Parameter aclData: AudioChannelLayoutData
     /// - Returns: AudioChannelLayoutData
     public func convertAsBitmap(from aclData: AudioChannelLayoutData) -> AudioChannelLayoutData? {
-        guard let pos = extractChannelLabelSet(from: aclData) else { return nil }
-        let bitmap: AudioChannelBitmap = channelBitmapForChannelLabelSet(pos)
-        if bitmap != [] {
-            guard let data = dataFor(bitmap: bitmap) else { return nil }
-            return data
-        } else {
-            return nil
-        }
+        convertChannelLabelSet(
+            from: aclData,
+            transform: { channelBitmapForChannelLabelSet($0) },
+            isValid: { $0 != [] },
+            dataFor: { dataFor(bitmap: $0) }
+        )
     }
     
     /// Try to translate AudioChannelLayoutData with AudioChannelDescriptions
@@ -148,13 +156,11 @@ extension LayoutConverter {
     /// - Parameter aclData: AudioChannelLayoutData
     /// - Returns: AudioChannelLayoutData
     public func convertAsDescriptions(from aclData: AudioChannelLayoutData) -> AudioChannelLayoutData? {
-        guard let pos = extractChannelLabelSet(from: aclData) else { return nil }
-        let descs: [AudioChannelDescription] = channelDescriptionsForChannelLabelSet(pos)
-        if !descs.isEmpty {
-            guard let data = dataFor(descriptions: descs) else { return nil }
-            return data
-        } else {
-            return nil
-        }
+        convertChannelLabelSet(
+            from: aclData,
+            transform: { channelDescriptionsForChannelLabelSet($0) },
+            isValid: { !$0.isEmpty },
+            dataFor: { dataFor(descriptions: $0) }
+        )
     }
 }

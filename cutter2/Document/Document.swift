@@ -116,10 +116,6 @@ final class PlayerKVOContextToken: Sendable {
     }
 }
 
-/* ============================================ */
-// MARK: -
-/* ============================================ */
-
 @MainActor
 class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, ViewControllerDelegate {
     

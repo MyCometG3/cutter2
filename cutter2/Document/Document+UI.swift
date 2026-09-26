@@ -98,16 +98,14 @@ extension Document {
         
         // Transpose to anchor point
         var origin = window.frame.origin
-        do {
-            if keepTopLeft { // preserve top left corner
-                let newOrigin = NSPoint(x: origin.x,
-                                        y: origin.y - (newWindowSize.height - windowSize.height))
-                origin = newOrigin
-            } else { // preserve top center point
-                let newOrigin = NSPoint(x: origin.x + (windowSize.width/2) - (newWindowSize.width/2) ,
-                                        y: origin.y - (newWindowSize.height - windowSize.height))
-                origin = newOrigin
-            }
+        if keepTopLeft { // preserve top left corner
+            let newOrigin = NSPoint(x: origin.x,
+                                    y: origin.y - (newWindowSize.height - windowSize.height))
+            origin = newOrigin
+        } else { // preserve top center point
+            let newOrigin = NSPoint(x: origin.x + (windowSize.width/2) - (newWindowSize.width/2) ,
+                                    y: origin.y - (newWindowSize.height - windowSize.height))
+            origin = newOrigin
         }
         
         // Transpose into screenRect

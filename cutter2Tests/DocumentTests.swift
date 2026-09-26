@@ -32,14 +32,16 @@ final class DocumentTests: XCTestCase {
         
         XCTAssertTrue(types.contains("com.apple.quicktime-movie"))
     }
+
+    func testWindowIsNilBeforeWindowControllerCreation() {
+        let document = Document()
+
+        XCTAssertNil(document.window)
+    }
     
     // MARK: - Document read error handling (T-14)
     
     /// Verifies that `validateMovieType` throws for an invalid UTI (`incompatibleFileType`).
-    /// Constructing a `Document` directly crashes in the test environment (NSRangeException from
-    /// the `windowControllers[0]` access in the `window` property), so the UTI validation logic
-    /// of `readAsync` (`Self.validateMovieType`) is tested in isolation.
-    ///
     /// Note: `ErrorUtilities.throwError` converts `DocumentError` to `NSError` before throwing.
     /// `DocumentError.incompatibleFileType` maps to `NSOSStatusErrorDomain` / `unimpErr` (-4).
     func testValidateMovieTypeRejectsInvalidUTI() throws {

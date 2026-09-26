@@ -135,9 +135,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     
     /// The window of the document's first window controller.
     ///
-    /// Access this property after a window controller has been created.
+    /// Returns `nil` until a window controller has been created.
     public var window: Window? {
-        return self.windowControllers[0].window as? Window
+        return self.windowControllers.first?.window as? Window
     }
 
     /// The document's view controller, or `nil` when the window content is unavailable.

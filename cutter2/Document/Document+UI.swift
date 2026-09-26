@@ -323,20 +323,17 @@ extension Document {
                 // Apply modified source movie
                 player.replaceCurrentItem(with: playerItem)
                 
-                // seek - hold suppression until this reports finished == true so
+                // Hold suppression until this completion is received so
                 // queryPosition() cannot overwrite insertionTime with the
                 // pre-seek currentTime(). The completion must be both the
-                // newest seek and this (newest) reload generation's: a delayed
-                // finished == true from an interrupted seek, or a newer reload
-                // task that has not started its seek yet, must not lift early.
-                let handler: @Sendable (Bool) -> Void = {[weak self, weak pv] (finished: Bool) in // @escaping
+                // newest seek and this (newest) reload generation's; stale
+                // callbacks must not release suppression.
+                let handler: @Sendable (Bool) -> Void = {[weak self, weak pv] (_: Bool) in // @escaping
                     
                     guard let self, let pv = pv else { return }
                     ActorUtilities.performSyncOnMainActor {
                         guard self.playerSeekSequencer.isCurrent(token) else { return }
-                        if finished {
-                            self.playerSeekSequencer.liftSuppression(for: generation)
-                        }
+                        self.playerSeekSequencer.liftSuppression(for: generation)
                         pv.needsDisplay = true
                     }
                 }

@@ -5,7 +5,7 @@
 **Scope:** Source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
 **Reviewed baseline:** `4d372782d068f5e5358ba6229f0696f11567c8e1` (`work`)
 **Verification environment:** macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
-**Status:** Updated for the 2026-09-21 baseline; clean build / clean analyze / full test passed; one remaining P2 finding documented in §8.6
+**Status:** Updated for the 2026-09-21 baseline; clean build / clean analyze / full test passed; the §8.6 reload-suppression finding was resolved in PR #63, with live integration coverage still open
 
 ---
 
@@ -31,7 +31,7 @@ xcodebuild clean analyze -project cutter2.xcodeproj -scheme cutter2 -destination
 xcodebuild test          -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS' -enableCodeCoverage YES CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO
 ```
 
-All three steps succeeded; the full test run passed 200 test cases with 0 failures. The build and test results were re-confirmed after the fix was fast-forward merged into `work`. One new P2 finding (a residual race window in the reload/seek suppression, §8.6) is documented and must be read together with the otherwise sound baseline.
+All three steps succeeded; the full test run passed 200 test cases with 0 failures. The build and test results were re-confirmed after the fix was fast-forward merged into `work`. The reload-suppression ordering finding documented in §8.6 was resolved in PR #63; live `Document`/AVPlayer integration coverage remains open.
 
 **Current verification facts:**
 
@@ -276,14 +276,14 @@ Security-scoped resource access is properly wrapped with `NSFileCoordinator` and
 | **Document+FileIO** | Revert/read error paths (`readAsync` UTI + header validation) | ✅ Covered by T-14 (`validateMovieType` / `MovieHeaderValidator` tests). Full revert sheet-display flow still untested (requires Document instance, which crashes in test env — see §5.4 note) |
 | **TimelineView+Input** | Mouse event handling (`mouseDown`, `mouseDragged`) | ✅ Covered by T-14 (marker selection → `doSetCurrent`, drag updates `startPosition`/`currentPosition`, no-op when unselected) |
 | **MovieMutator edit marker correction** | `doRemove` position-correction branches | ✅ Covered by `4d37278` (3 regression tests in `MovieMutatorEditTests.swift`) |
-| **PlayerSeekSequencer state transitions** | Reload/seek generations, task cancellation gates, suppression transitions, stale tokens, cleanup preservation | ✅ Unit-tested by 11 cases in `PlayerSeekSequencerTests.swift`; CODEBASE_REVIEW §8.6 residual race is pinned as current behavior, not fixed |
-| **Document × live AVPlayer integration** | Async ordering of `updatePlayer`, KVO delivery, and polling timer | ❌ Not tested — requires a live `Document`/AVPlayer integration seam, which the unit-test environment does not provide (§5.4). The residual P2 window in §8.6 remains unprotected by an integration test |
+| **PlayerSeekSequencer state transitions** | Reload/seek generations, task cancellation gates, suppression transitions, stale tokens, cleanup preservation | ✅ Unit-tested by 12 cases in `PlayerSeekSequencerTests.swift`; reload suppression ordering is resolved in §8.6 |
+| **Document × live AVPlayer integration** | Async ordering of `updatePlayer`, KVO delivery, and polling timer | ❌ Not tested — requires a live `Document`/AVPlayer integration seam, which the unit-test environment does not provide (§5.4). The resolved §8.6 ordering remains unprotected by an integration test |
 | **Document+UI** | Window resize handling (`windowDidResize`) | ❌ Not tested — layout update propagation on window resize |
 | **Document+SavePanel** | Export save panel flow | ❌ Not tested — save panel presentation and cancellation paths |
 | **MovieMutator+Clipboard** | Copy/paste operations | ❌ Not tested — clipboard serialization and deserialization |
 | **Document+PositionControl** | Playback position scrubbing | ❌ Not tested — position updates during playback |
 
-> **Recommendation:** Document+FileIO revert, TimelineView+Input mouse handling, delete marker correction, and the extracted PlayerSeekSequencer state transitions are covered. Highest-value remaining gap is integration ordering between `Document`, a live AVPlayer, KVO, and the polling timer; it needs a player/reload seam or UI/integration test. The §8.6 residual race remains intentionally unfixed by S-17 and needs a separate behavior-change decision. Window resize, save panel, clipboard, and scrubbing coverage remain open as before.
+> **Recommendation:** Document+FileIO revert, TimelineView+Input mouse handling, delete marker correction, and the extracted PlayerSeekSequencer state transitions are covered. Highest-value remaining gap is integration ordering between `Document`, a live AVPlayer, KVO, and the polling timer; it needs a player/reload seam or UI/integration test. The §8.6 ordering fix remains unprotected by an integration test. Window resize, save panel, clipboard, and scrubbing coverage remain open as before.
 
 ### 5.4 Skipped Test — RESOLVED
 
@@ -351,7 +351,7 @@ The Markdown set contains 7 files when `README.md` and `.github/copilot-instruct
 
 **Placement of `Document` protocol conformances (verified after `55a9a6d`):** `Document` now declares `ViewControllerDelegate` in its class declaration (`Document.swift:96-97`) and keeps only plain extensions for the delegate method bodies. Because `ViewControllerDelegate` refines `TimelineUpdateDelegate, Sendable` (`ViewController.swift:19-20`), the single conformance site satisfies both protocols, eliminating the Swift 6 "conformance must be declared in the same file" split.
 
-**Assessment:** Concurrency model is sound except for one residual window documented in §8.6 (P2). No isolation violations detected.
+**Assessment:** Concurrency model is sound; the §8.6 reload-suppression ordering issue is resolved, while live `Document`/AVPlayer integration coverage remains open. No isolation violations detected.
 
 ### 8.2 Error Handling
 
@@ -377,25 +377,22 @@ The Markdown set contains 7 files when `README.md` and `.github/copilot-instruct
 
 **Assessment:** Performance tooling is present (`PerformanceMetrics` with `measure`/`measureAsync`/`recordMeasurement`) and `PerformanceTests.swift` covers 12 scenarios (metrics measurement/report/reset, export progress, timeline marker/position, memory allocation). However, most are functional assertions; genuine timing-baseline coverage is limited. The overhead test, previously flaky, was stabilized by M-22 (§5.5).
 
-### 8.6 Residual Race Window in Reload Suppression — P2 (open; not changed by S-17)
+### 8.6 Reload Suppression Ordering — Resolved in PR #63
 
-**Finding:** A user-initiated seek that *completes* while a reload task is still awaiting `makePlayerItem()` releases `suppressQueryPosition`, and the reload does not re-assert it before applying the new player item.
+**Historical finding:** A user-initiated seek that *completes* while a reload task is still awaiting `makePlayerItem()` could release `suppressQueryPosition`, and the reload could apply the new player item without re-asserting it.
 
 **Sequence (`Document+UI.swift` + `PlayerSeekSequencer.swift`):**
 
 1. `updateGUI(reload: true)` asserts suppression, calls `beginReload()` to advance the reload generation and cancel the previous task, then spawns and registers the reload task. That task awaits `mutator.makePlayerItem()`.
 2. While that await is in flight, the user seeks (`resumeAfterSeek`). The seek snapshots the current reload generation, and its `finished == true` completion passes both generation gates and calls `releaseSuppression()`.
-3. The reload task resumes, replaces the player item, and starts the post-reload seek. The current implementation does not re-assert suppression between the user seek completion and the post-reload seek completion.
-4. In that interval, `queryPosition()` can poll the new item and adopt a pre-seek `currentTime()`, reintroducing the stale-marker class of bug this mechanism exists to prevent. The post-reload seek completion only lifts suppression and marks the view dirty, so it cannot repair the model.
+3. The reload task resumes, re-asserts suppression immediately before replacing the player item, and starts the post-reload seek.
+4. Under the historical implementation, `queryPosition()` could poll the new item and adopt a pre-seek `currentTime()`, reintroducing the stale-marker class of bug this mechanism exists to prevent.
 
-The window is narrow (it requires a completed user seek overlapping the `makePlayerItem()` await, then a poll landing between item readiness and seek completion), and pre-replacement polls on the *old* item are benign (their `currentTime()` equals the user's intended seek target). It is nonetheless the same failure class as the delete-key regression fixed in `4d37278`.
+The window is narrow (it requires a completed user seek overlapping the `makePlayerItem()` await, then a poll landing between item readiness and seek completion), and pre-replacement polls on the *old* item are benign (their `currentTime()` equals the user's intended seek target). It was the same failure class as the delete-key regression fixed in `4d37278`.
 
-**Suggested fix (either suffices; do not apply both blindly):**
+**Resolution:** PR #63 re-asserts suppression immediately before `replaceCurrentItem` and releases it for the current generation on both seek completion outcomes. Stale callbacks remain full no-ops through the generation check.
 
-- Re-assert suppression through `PlayerSeekSequencer.suppressForReload()` in `updatePlayer(generation:)` in the same main-actor turn as `replaceCurrentItem` (before the swap, after the `Task.isCancelled` guard). The existing cancellation/`catch` paths already call `liftSuppression(for:)`, so re-assertion cannot strand the timer. Keep the seek-generation bump before the swap to preserve stale-callback no-op behavior.
-- Or change suppression-release ownership so a user-seek completion cannot release suppression while a reload is pending; this requires exposing or modeling the pending-reload state in the sequencer.
-
-**Tracking:** Not covered by automated tests (§5.3); field reproduction (delete → immediate marker drag/JKL during reload) is the current check.
+**Remaining gap:** The ordering is not covered by a live `Document`/AVPlayer integration test (§5.3); the unit tests cover the sequencer state transitions only.
 
 ---
 
@@ -404,8 +401,7 @@ The window is narrow (it requires a completed user seek overlapping the `makePla
 ### 9.1 High Priority
 
 1. ~~**Update documentation** (`ARCHITECTURE.md`, `API_REFERENCE.md`)~~ — Resolved (2026-08-05): Both documents removed. Information is now maintained in this review document.
-2. **Close the residual race window (§8.6)** — Re-assert query-position suppression in `updatePlayer(generation:)` before applying the replaced player item, or change suppression-release ownership. S-17 intentionally preserves current behavior; this requires a separate behavior-change decision and a field-reproduction pass of delete → drag/JKL during reload.
-3. **Add integration tests** for ordering between `Document`, a live AVPlayer, KVO, and the polling timer. `PlayerSeekSequencer` state transitions are now unit-tested; exercising the integration requires a player/reload seam or UI/integration harness. Window resize, save panel, clipboard, and scrubbing tests also remain open.
+2. **Add integration tests** for ordering between `Document`, a live AVPlayer, KVO, and the polling timer. `PlayerSeekSequencer` state transitions and the reload suppression fix are unit-tested in isolation; exercising the integration requires a player/reload seam or UI/integration harness. Window resize, save panel, clipboard, and scrubbing tests also remain open.
 
 ### 9.2 Medium Priority
 
@@ -423,7 +419,7 @@ The window is narrow (it requires a completed user seek overlapping the `makePla
 
 The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 222 statically declared test methods across 18 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. The 2026-09-21 revision verified baseline `4d37278` with a clean build, clean analyze, and a full test run passing 200 test cases with 0 failures (DerivedData outside the worktree), and re-confirmed the results after the fix was fast-forward merged into `work`.
 
-The 7 commits since the previous baseline remain documented above. T-16 adds full tag/label mapping tests, and S-17 extracts the reload/seek state transitions into `PlayerSeekSequencer` with 11 unit tests. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer. The §8.6 residual race remains open and intentionally unchanged by S-17; window resize, save panel, clipboard, and scrubbing coverage also remain open. Test counts in `scripts/test.sh` and the test guides now match the current static inventory.
+The 7 commits since the previous baseline remain documented above. T-16 adds full tag/label mapping tests, and S-17 extracts the reload/seek state transitions into `PlayerSeekSequencer` with 11 unit tests. PR #63 also closes the §8.6 reload suppression race by re-asserting suppression before item replacement and releasing current-generation suppression on both completion outcomes. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer; window resize, save panel, clipboard, and scrubbing coverage also remain open. Test counts in `scripts/test.sh` and the test guides now match the current static inventory.
 
 ---
 

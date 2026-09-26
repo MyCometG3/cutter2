@@ -182,7 +182,7 @@ player.seek(to: time, completionHandler: { finished in
 - Bump the counter **before** starting the superseding operation (e.g., before `replaceCurrentItem` cancels an in-flight seek) so callbacks cancelled by it always observe the advanced counter
 - A completion that fails the generation check must be a **full no-op** — including skipping releases of gated flags such as `suppressQueryPosition`
 - Multi-level pipelines use one counter per level and gate on all of them (`reloadGeneration` for reload requests, `seekGeneration` for seeks)
-- Reference implementation: `PlayerSeekSequencer.swift` owns generation snapshots and suppression gates; `Document+UI.swift` keeps AVPlayer and UI side effects — see `CODEBASE_REVIEW.md` §3.2/§8.6 for the reviewed semantics and known residual window
+- Reference implementation: `PlayerSeekSequencer.swift` owns generation snapshots and suppression gates; `Document+UI.swift` keeps AVPlayer and UI side effects — see `CODEBASE_REVIEW.md` §3.2/§8.6 for the reviewed semantics and the remaining integration-test gap
 
 ---
 

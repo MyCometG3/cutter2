@@ -60,7 +60,7 @@ extension Document {
         self.removeMutationObserver()
         self.removeAllUndoRecords()
         self.useUpdateTimer(false)
-        self.playerSeekSequencer.cancelReloadTask()
+        self.playerSeekSequencer.invalidate()
         self.removePlayerObserver()
         
         //

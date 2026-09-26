@@ -58,8 +58,18 @@ extension MovieWriter {
     private func flattenMovie(to url: URL, with mode: FlattenMode) async throws {
         
         let dateStart: Date = try beginWrite()
+        let temporaryURL = url.deletingLastPathComponent()
+            .appendingPathComponent(".\(url.deletingPathExtension().lastPathComponent).\(UUID().uuidString).mov")
+        var after: Notification.Name = .movieDidWriteHeaderOnly
         defer {
+            if FileManager.default.fileExists(atPath: temporaryURL.path) {
+                try? FileManager.default.removeItem(at: temporaryURL)
+            }
+            if self.writeEnd == nil {
+                self.writeEnd = Date()
+            }
             writeInProgress = false
+            issueEndNotification(after, url: url, dateStart: dateStart)
         }
         
         /* ============================================ */
@@ -71,7 +81,6 @@ extension MovieWriter {
         var selfContained: Bool = false
         var option: AVMovieWritingOptions = .truncateDestinationToMovieHeaderOnly
         var before: Notification.Name = .movieWillWriteHeaderOnly
-        var after: Notification.Name = .movieDidWriteHeaderOnly
         
         switch mode {
         case .writeSelfContained:
@@ -104,7 +113,7 @@ extension MovieWriter {
             try throwError(.movieWriterFailed, reason: reason)
         }
         newMovie.timescale = movie.timescale // workaround
-        newMovie.defaultMediaDataStorage = selfContained ? AVMediaDataStorage(url: url, options: nil) : nil
+        newMovie.defaultMediaDataStorage = selfContained ? AVMediaDataStorage(url: temporaryURL, options: nil) : nil
         
         /* ============================================ */
         
@@ -121,9 +130,15 @@ extension MovieWriter {
                                              of: movie,
                                              at: CMTime.zero,
                                              copySampleData: selfContained)
+
+                if self.writeCancelled {
+                    try throwError(.operationCancelled, reason: "Movie write was cancelled by the user.")
+                }
                 
-                // Write movieHeader to destination
-                try newMovie.writeHeader(to: url, fileType: AVFileType.mov, options: option)
+                // Write movieHeader to a same-directory temporary file. The
+                // destination is finalized only after the complete movie is valid.
+                try newMovie.writeHeader(to: temporaryURL, fileType: AVFileType.mov, options: option)
+                try finalizeTemporaryMovie(at: temporaryURL, to: url)
                 
                 //
                 success = true
@@ -152,14 +167,24 @@ extension MovieWriter {
                     LoggingSystem.export.notice("Result: \(status), progress: \(progressStr), elapsed: \(intervalStr)")
                 }
             } catch {
-                let reason = "Failed to write movie: \(option)."
-                try throwError(.movieWriterFailed, reason: reason)
+                self.writeEnd = Date()
+                self.writeError = error
+                self.writeSuccess = false
+                throw error
             }
         }
-        
-        /* ============================================ */
-        
-        // Issue end notification
-        issueEndNotification(after, url: url, dateStart: dateStart)
+    }
+
+    func finalizeTemporaryMovie(at temporaryURL: URL, to destinationURL: URL) throws {
+        let fileManager = FileManager.default
+        let destinationExists = fileManager.fileExists(atPath: destinationURL.path)
+        if destinationExists {
+            _ = try fileManager.replaceItemAt(destinationURL,
+                                              withItemAt: temporaryURL,
+                                              backupItemName: nil,
+                                              options: .usingNewMetadataOnly)
+        } else {
+            try fileManager.moveItem(at: temporaryURL, to: destinationURL)
+        }
     }
 }

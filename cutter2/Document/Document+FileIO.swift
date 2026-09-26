@@ -34,6 +34,16 @@ extension Document {
     /* ============================================ */
     // MARK: - Revert
     /* ============================================ */
+
+    /// Returns whether an error represents user cancellation from MovieWriter or AppKit.
+    ///
+    /// MovieWriter cancellation is converted to the Cocoa domain by `write(to:)`; both
+    /// representations must bypass `showErrorSheet` in the outer save path.
+    nonisolated static func isUserCancellationError(_ error: NSError) -> Bool {
+        let isKnownDomain = error.domain == MovieWriterError.errorDomain ||
+            error.domain == NSCocoaErrorDomain
+        return isKnownDomain && error.code == NSUserCancelledError
+    }
     
     override func revert(toContentsOf url: URL, ofType typeName: String) throws {
         LoggingSystem.document.debug("\(#function) called for \(url.lastPathComponent)")
@@ -41,6 +51,7 @@ extension Document {
         try super.revert(toContentsOf: url, ofType: typeName)
         
         // reset GUI when revert
+        self.resetPositionCache()
         self.updateGUI(CMTime.zero, CMTimeRange.zero, true)
         self.doVolumeOffset(100)
     }
@@ -104,6 +115,7 @@ extension Document {
         removeMutationObserver()
         removeAllUndoRecords()
         movieMutator = MovieMutator(with: movie)
+        resetPositionCache()
         addMutationObserver()
     }
     
@@ -203,8 +215,10 @@ extension Document {
     private func preparation(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
         
         do {
-            // Check if current AVMovie reference URL = write target URL
-            let selfContained = validateIfSelfContained(for: url)
+            // Self-contained status describes the source movie, not the Save As target.
+            let selfContained = self.fileURL.map {
+                validateIfSelfContained(for: $0)
+            } ?? false
             
             // Check if current document URL = write target URL
             let overwrite = self.fileURL == url
@@ -272,6 +286,7 @@ extension Document {
         
         // Unblock main thread first to work w/ MainActor
         self.unblockUserInteraction()
+        let originalFileURL = self.fileURL
         
         do {
             // Prepare to save
@@ -282,16 +297,33 @@ extension Document {
             // Trigger actual write operation (saveTo, save/saveAs)
             try super.writeSafely(to: url, ofType: typeName, for: saveOperation)
         } catch {
-            ActorUtilities.performSyncOnMainActor {
-                showErrorSheet(error)
+            if !Self.isUserCancellationError(error as NSError) {
+                ActorUtilities.performSyncOnMainActor {
+                    showErrorSheet(error)
+                }
             }
             throw error // rethrow to abort write operation
         }
         
         // Refresh internal movie (to sync selfcontained <> referece movie change)
         if saveOperation == .saveAsOperation {
-            ActorUtilities.performSyncOnMainActor {
-                refreshMutator()
+            let refreshed = ActorUtilities.performSyncOnMainActor {
+                refreshMutator(from: url)
+            }
+            if !refreshed {
+                ActorUtilities.performSyncOnMainActor {
+                    self.fileURL = originalFileURL
+                }
+                let reason = "The saved movie was written, but the document could not refresh its in-memory movie."
+                let error = NSError(
+                    domain: NSCocoaErrorDomain,
+                    code: NSFileWriteUnknownError,
+                    userInfo: [NSLocalizedDescriptionKey: reason]
+                )
+                ActorUtilities.performSyncOnMainActor {
+                    showErrorSheet(error)
+                }
+                throw error
             }
         }
     }
@@ -343,10 +375,12 @@ extension Document {
             }
         } catch let error as NSError {
             // Handle cancellation specially - don't show error sheet
-            if error.domain == MovieWriterError.errorDomain && error.code == NSUserCancelledError {
+            if Self.isUserCancellationError(error) {
                 // Rethrow as standard user cancellation error
                 // This prevents error sheet and maintains document dirty flag
-                throw NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: error.userInfo)
+                if error.domain == MovieWriterError.errorDomain {
+                    throw NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: error.userInfo)
+                }
             }
             throw error
         }
@@ -386,12 +420,18 @@ extension Document {
         return true
     }
     
-    private func refreshMutator() {
+    private func refreshMutator(from url: URL) -> Bool {
         
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
-        guard let url = self.fileURL else { return }
         let newMovie = AVMutableMovie(url: url, options: nil)
-        guard let mutator = self.movieMutator else { return }
+        guard let mutator = self.movieMutator else {
+            LoggingSystem.fileIO.error("Failed to refresh mutator after SaveAs: movie mutator is unavailable")
+            return false
+        }
+        guard let movieHeader = newMovie.movHeader else {
+            LoggingSystem.fileIO.error("Failed to refresh mutator after SaveAs: movie header is unavailable")
+            return false
+        }
         let time: CMTime = mutator.insertionTime
         let range: CMTimeRange = mutator.selectedTimeRange
         
@@ -400,9 +440,11 @@ extension Document {
         let newRange: CMTimeRange = CMTimeRangeGetIntersection(range, otherRange: newMovieRange)
         newTime = CMTIME_IS_VALID(newTime) ? newTime : CMTime.zero
         
-        guard mutator.reloadAndNotify(from: newMovie.movHeader, range: newRange, time: newTime) else {
+        guard mutator.reloadAndNotify(from: movieHeader, range: newRange, time: newTime) else {
             LoggingSystem.fileIO.error("Failed to refresh mutator after SaveAs")
-            return
+            return false
         }
+        resetPositionCache()
+        return true
     }
 }

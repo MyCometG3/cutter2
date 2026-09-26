@@ -7,9 +7,9 @@ This guide provides instructions for running and writing tests for the cutter2 a
 ## Quick Start
 
 The test target is configured with XCTest and currently contains:
-- 19 test source files
+- 20 test source files
 - 1 test helper file
-- 253 statically declared `func test...` methods
+- 269 test methods
 - Code coverage support in the command-line and CI workflows
 
 Run the complete suite with:
@@ -24,7 +24,7 @@ xcodebuild test \
   CODE_SIGNING_REQUIRED=NO
 ```
 
-The September 21, 2026 full-suite run on commit `4d37278` (macOS 27.0, Xcode 27.0) executed 200 test cases with 200 passed and 0 failed. The earlier August 6, 2026 rerun passed the then-197 cases after removing the duplicate local `writeSampleMovie(to:duration:timescale:frameRate:)` helper from `MovieMutatorTransformExportTests.swift`. The current source declares 253 static test methods; the September 25, 2026 full-suite run after the S-14 integration (commit `9c1700d`, single scheme `cutter2`, Debug) executed 249 test cases with 249 passed and 0 failed (xcresult verified), and the current branch adds one sequencer regression test plus three presentation traversal tests. The earlier September 25 run before the S-14 integration (commit `61afa5c`) executed 247 test cases with 247 passed and 0 failed (xcresult verified). Runtime results remain tied to each specific test run.
+The September 26, 2026 full-suite run on `local/state` after H-11 (single scheme `cutter2`, Debug) executed 269 test cases with 269 passed and 0 failed. The current inventory is 269 tests across 20 test source files and one helper; runtime results remain tied to each specific test run.
 
 ## Table of Contents
 
@@ -82,7 +82,8 @@ cutter2Tests/
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
 ├── MovieWriterVideoChannelMetadataTests.swift # Video channel metadata tests (25 tests)
 ├── PerformanceTests.swift                # Performance tests (12 tests)
-├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (12 tests)
+├── MovieWriterWriteTests.swift           # Movie writer failure-state tests (3 tests)
+├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (19 tests)
 ├── TestMovieFixtureWriter.swift          # Test helper (0 tests)
 ├── TimelineViewRenderingTests.swift      # Timeline rendering tests (15 tests)
 ├── UtilitiesTests.swift                  # Utility class tests (22 tests)
@@ -90,7 +91,7 @@ cutter2Tests/
 └── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Static suite size**: 20 files total (19 test source files + 1 helper), **253 statically declared test methods**.
+**Static suite size**: 21 files total (20 test source files + 1 helper), **269 test methods**.
 
 Runtime results must be taken from the specific `xcodebuild test` or Xcode run being reported.
 
@@ -439,6 +440,6 @@ Based on Phase 2-3 of the improvement plan:
 
 ---
 
-**Last Updated**: September 25, 2026
+**Last Updated**: September 26, 2026
 **Version**: 1.8
-**Status**: Static suite size: 253 test methods across 19 test source files + 1 helper; runtime status depends on the specific test run
+**Status**: Static suite size: 269 test methods across 20 test source files + 1 helper; the latest runtime run passed 269/269

@@ -73,7 +73,9 @@ final class PlayerSeekSequencerTests: XCTestCase {
     func testSeekFromPreviousReloadIsStaleWhenNewReloadStartsBeforeReplacement() {
         let sequencer = PlayerSeekSequencer()
         let firstReloadGeneration = sequencer.beginReload()
-        let token = sequencer.beginItemReplacement(reloadGeneration: firstReloadGeneration)
+        let token = try! XCTUnwrap(
+            sequencer.beginItemReplacement(expectedReloadGeneration: firstReloadGeneration)
+        )
 
         _ = sequencer.beginReload()
 
@@ -93,7 +95,8 @@ final class PlayerSeekSequencerTests: XCTestCase {
     func testReleaseSuppressionClearsFlag() {
         let sequencer = PlayerSeekSequencer()
         sequencer.suppressForReload()
-        sequencer.releaseSuppression()
+        let token = sequencer.beginUserSeek()
+        sequencer.releaseSuppression(for: token)
 
         XCTAssertFalse(sequencer.suppressQueryPosition)
     }
@@ -101,7 +104,9 @@ final class PlayerSeekSequencerTests: XCTestCase {
     func testBeginItemReplacementBumpsSeekGenerationOnly() {
         let sequencer = PlayerSeekSequencer()
         let reloadGeneration = sequencer.beginReload()
-        let token = sequencer.beginItemReplacement(reloadGeneration: reloadGeneration)
+        let token = try! XCTUnwrap(
+            sequencer.beginItemReplacement(expectedReloadGeneration: reloadGeneration)
+        )
 
         XCTAssertEqual(sequencer.seekGeneration, 1)
         XCTAssertEqual(sequencer.reloadGeneration, reloadGeneration)
@@ -148,8 +153,91 @@ final class PlayerSeekSequencerTests: XCTestCase {
 
         XCTAssertTrue(sequencer.isCurrent(token))
         XCTAssertTrue(sequencer.canReleaseSuppression(token))
-        sequencer.releaseSuppression()
+        sequencer.releaseSuppression(for: token)
 
+        XCTAssertFalse(sequencer.suppressQueryPosition)
+    }
+
+    func testStaleReloadCannotBeginItemReplacement() {
+        let sequencer = PlayerSeekSequencer()
+        let staleGeneration = sequencer.beginReload()
+        _ = sequencer.beginReload()
+
+        XCTAssertNil(
+            sequencer.beginItemReplacement(expectedReloadGeneration: staleGeneration)
+        )
+    }
+
+    func testWatchdogTimeoutReleasesCurrentSuppression() async {
+        let sequencer = PlayerSeekSequencer(suppressionWatchdogNanoseconds: 10_000_000)
+        sequencer.suppressForReload()
+        let token = sequencer.beginUserSeek()
+        sequencer.armSuppressionWatchdog(for: token)
+
+        try? await Task.sleep(nanoseconds: 50_000_000)
+
+        XCTAssertFalse(sequencer.suppressQueryPosition)
+    }
+
+    func testStaleWatchdogDoesNotReleaseNewerSuppression() async {
+        let sequencer = PlayerSeekSequencer(suppressionWatchdogNanoseconds: 30_000_000)
+        sequencer.suppressForReload()
+        let first = sequencer.beginUserSeek()
+        sequencer.armSuppressionWatchdog(for: first)
+        let second = sequencer.beginUserSeek()
+        sequencer.suppressForReload()
+        sequencer.armSuppressionWatchdog(for: second)
+
+        try? await Task.sleep(nanoseconds: 10_000_000)
+        XCTAssertTrue(sequencer.suppressQueryPosition)
+        try? await Task.sleep(nanoseconds: 40_000_000)
+
+        XCTAssertFalse(sequencer.suppressQueryPosition)
+    }
+
+    func testReleaseCancelsWatchdog() async {
+        let sequencer = PlayerSeekSequencer(suppressionWatchdogNanoseconds: 50_000_000)
+        sequencer.suppressForReload()
+        let token = sequencer.beginUserSeek()
+        sequencer.armSuppressionWatchdog(for: token)
+        sequencer.releaseSuppression(for: token)
+
+        try? await Task.sleep(nanoseconds: 70_000_000)
+
+        XCTAssertFalse(sequencer.suppressQueryPosition)
+    }
+
+    func testFailureFallbackDoesNotRequireACompletion() {
+        let sequencer = PlayerSeekSequencer()
+        sequencer.suppressForReload()
+        _ = sequencer.beginUserSeek()
+
+        sequencer.releaseCurrentSuppressionAfterFailure()
+
+        XCTAssertFalse(sequencer.suppressQueryPosition)
+    }
+
+    func testInvalidateCancelsWatchdogAndClearsSuppression() async {
+        let sequencer = PlayerSeekSequencer(suppressionWatchdogNanoseconds: 10_000_000)
+        sequencer.suppressForReload()
+        let token = sequencer.beginUserSeek()
+        sequencer.armSuppressionWatchdog(for: token)
+        sequencer.invalidate()
+
+        try? await Task.sleep(nanoseconds: 30_000_000)
+
+        XCTAssertFalse(sequencer.suppressQueryPosition)
+        XCTAssertFalse(sequencer.isCurrent(token))
+    }
+
+    func testStaleReplacementDoesNotLeaveSuppressionHeld() {
+        let sequencer = PlayerSeekSequencer()
+        let staleGeneration = sequencer.beginReload()
+        sequencer.suppressForReload()
+        _ = sequencer.beginReload()
+
+        XCTAssertNil(sequencer.beginItemReplacement(expectedReloadGeneration: staleGeneration))
+        sequencer.liftSuppression(for: sequencer.reloadGeneration)
         XCTAssertFalse(sequencer.suppressQueryPosition)
     }
 }

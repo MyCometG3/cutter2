@@ -135,9 +135,9 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     
     /// The window of the document's first window controller.
     ///
-    /// Access this property after a window controller has been created.
+    /// Returns `nil` until a window controller has been created.
     public var window: Window? {
-        return self.windowControllers[0].window as? Window
+        return self.windowControllers.first?.window as? Window
     }
 
     /// The document's view controller, or `nil` when the window content is unavailable.
@@ -225,6 +225,12 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
 
     /// The last sample range used by playback-position queries.
     public var cachedLastSampleRange: CMTimeRange? = nil
+
+    func resetPositionCache() {
+        cachedTime = .invalid
+        cachedWithinLastSampleRange = false
+        cachedLastSampleRange = nil
+    }
     
     //
     lazy var undoManagerWrapper: UndoManagerWrapper = UndoManagerWrapper(self.undoManager!)

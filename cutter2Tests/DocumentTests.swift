@@ -32,14 +32,68 @@ final class DocumentTests: XCTestCase {
         
         XCTAssertTrue(types.contains("com.apple.quicktime-movie"))
     }
+
+    func testUserCancellationErrorAcceptsMovieWriterDomain() {
+        let error = NSError(
+            domain: MovieWriterError.errorDomain,
+            code: NSUserCancelledError
+        )
+
+        XCTAssertTrue(Document.isUserCancellationError(error))
+    }
+
+    func testUserCancellationErrorAcceptsCocoaDomain() {
+        let error = NSError(
+            domain: NSCocoaErrorDomain,
+            code: NSUserCancelledError
+        )
+
+        XCTAssertTrue(Document.isUserCancellationError(error))
+    }
+
+    func testUserCancellationErrorRejectsWrongCode() {
+        let error = NSError(
+            domain: MovieWriterError.errorDomain,
+            code: MovieWriterError.errorInfo[.movieWriterFailed]?.code ?? 4
+        )
+
+        XCTAssertFalse(Document.isUserCancellationError(error))
+    }
+
+    func testUserCancellationErrorRejectsWrongDomain() {
+        let error = NSError(
+            domain: "UnknownDomain",
+            code: NSUserCancelledError
+        )
+
+        XCTAssertFalse(Document.isUserCancellationError(error))
+    }
+
+    func testWindowIsNilBeforeWindowControllerCreation() {
+        let document = Document()
+
+        XCTAssertNil(document.window)
+    }
+
+    func testResetPositionCacheClearsAllCachedPositionState() {
+        let document = Document()
+        document.cachedTime = CMTime(seconds: 3, preferredTimescale: 600)
+        document.cachedWithinLastSampleRange = true
+        document.cachedLastSampleRange = CMTimeRange(
+            start: .zero,
+            duration: CMTime(seconds: 4, preferredTimescale: 600)
+        )
+
+        document.resetPositionCache()
+
+        XCTAssertEqual(document.cachedTime, .invalid)
+        XCTAssertFalse(document.cachedWithinLastSampleRange)
+        XCTAssertNil(document.cachedLastSampleRange)
+    }
     
     // MARK: - Document read error handling (T-14)
     
     /// Verifies that `validateMovieType` throws for an invalid UTI (`incompatibleFileType`).
-    /// Constructing a `Document` directly crashes in the test environment (NSRangeException from
-    /// the `windowControllers[0]` access in the `window` property), so the UTI validation logic
-    /// of `readAsync` (`Self.validateMovieType`) is tested in isolation.
-    ///
     /// Note: `ErrorUtilities.throwError` converts `DocumentError` to `NSError` before throwing.
     /// `DocumentError.incompatibleFileType` maps to `NSOSStatusErrorDomain` / `unimpErr` (-4).
     func testValidateMovieTypeRejectsInvalidUTI() throws {

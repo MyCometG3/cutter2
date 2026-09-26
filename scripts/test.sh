@@ -20,7 +20,7 @@
 set -e
 
 echo "🧪 Running cutter2 tests..."
-echo "   Test Suite: 22 files (21 test + 1 helper), 267 tests"
+echo "   Test Suite: 21 files (20 test + 1 helper), 267 tests"
 echo ""
 
 # Colors for output

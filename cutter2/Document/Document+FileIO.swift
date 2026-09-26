@@ -315,11 +315,15 @@ extension Document {
                     self.fileURL = originalFileURL
                 }
                 let reason = "The saved movie was written, but the document could not refresh its in-memory movie."
-                throw NSError(
+                let error = NSError(
                     domain: NSCocoaErrorDomain,
                     code: NSFileWriteUnknownError,
                     userInfo: [NSLocalizedDescriptionKey: reason]
                 )
+                ActorUtilities.performSyncOnMainActor {
+                    showErrorSheet(error)
+                }
+                throw error
             }
         }
     }

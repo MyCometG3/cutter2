@@ -305,7 +305,9 @@ extension Document {
         // Refresh internal movie (to sync selfcontained <> referece movie change)
         if saveOperation == .saveAsOperation {
             ActorUtilities.performSyncOnMainActor {
-                refreshMutator()
+                if !refreshMutator(from: url) {
+                    LoggingSystem.fileIO.warning("SaveAs completed, but the in-memory movie refresh failed")
+                }
             }
         }
     }
@@ -402,12 +404,18 @@ extension Document {
         return true
     }
     
-    private func refreshMutator() {
+    private func refreshMutator(from url: URL) -> Bool {
         
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
-        guard let url = self.fileURL else { return }
         let newMovie = AVMutableMovie(url: url, options: nil)
-        guard let mutator = self.movieMutator else { return }
+        guard let mutator = self.movieMutator else {
+            LoggingSystem.fileIO.error("Failed to refresh mutator after SaveAs: movie mutator is unavailable")
+            return false
+        }
+        guard let movieHeader = newMovie.movHeader else {
+            LoggingSystem.fileIO.error("Failed to refresh mutator after SaveAs: movie header is unavailable")
+            return false
+        }
         let time: CMTime = mutator.insertionTime
         let range: CMTimeRange = mutator.selectedTimeRange
         
@@ -416,10 +424,11 @@ extension Document {
         let newRange: CMTimeRange = CMTimeRangeGetIntersection(range, otherRange: newMovieRange)
         newTime = CMTIME_IS_VALID(newTime) ? newTime : CMTime.zero
         
-        guard mutator.reloadAndNotify(from: newMovie.movHeader, range: newRange, time: newTime) else {
+        guard mutator.reloadAndNotify(from: movieHeader, range: newRange, time: newTime) else {
             LoggingSystem.fileIO.error("Failed to refresh mutator after SaveAs")
-            return
+            return false
         }
         resetPositionCache()
+        return true
     }
 }

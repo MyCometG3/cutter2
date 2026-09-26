@@ -9,17 +9,32 @@
 import Foundation
 import AVFoundation
 
-/// Sample Presentation Info.
+/// Presentation information for a movie sample or time segment.
 ///
-/// NOTE: At final sample of segment, end position could be after end of segment.
+/// Positions are calculated relative to the movie duration when it is positive.
+/// For a zero-duration movie, both relative positions remain 0.0. The values are
+/// not clamped, so a range outside the movie can produce a position outside 0.0 to
+/// 1.0. The sample's end position may extend beyond the queried segment's end when
+/// the final sample spans that boundary.
 public struct PresentationInfo {
+    /// The sample or segment time range in the movie's timescale.
     public private(set) var timeRange: CMTimeRange = CMTimeRange.zero
+    /// The start of `timeRange` in seconds.
     public private(set) var startSecond: Float64 = 0.0
+    /// The end of `timeRange` in seconds.
     public private(set) var endSecond: Float64 = 0.0
+    /// The movie duration in seconds.
     public private(set) var movieDuration: Float64 = 0.0
+    /// The start position relative to the movie duration.
     public private(set) var startPosition: Float64 = 0.0
+    /// The end position relative to the movie duration.
     public private(set) var endPosition: Float64 = 0.0
     
+    /// Creates presentation information for a time range in a movie.
+    ///
+    /// - Parameters:
+    ///   - range: The sample or segment time range.
+    ///   - movie: The movie used to calculate the duration-relative positions.
     public init(range: CMTimeRange, of movie: AVMutableMovie) {
         timeRange = range
         startSecond = CMTimeGetSeconds(range.start)
@@ -52,7 +67,7 @@ extension MovieMutatorBase {
     ///   - mapping: timeMapping
     /// - Returns: PresentationInfo (trackTime)
     private func samplePresentationInfo(_ startPTS: CMTime, _ endPTS: CMTime, from mapping: CMTimeMapping) -> PresentationInfo? {
-        if (mapping.source.duration > CMTime.zero) == false {
+        if !(mapping.source.duration > CMTime.zero) {
             return nil
         }
         
@@ -149,7 +164,7 @@ extension MovieMutatorBase {
     /// - Returns: PresentationInfo of the position
     public func presentationInfoAtTime(_ time: CMTime) -> PresentationInfo? {
         var time: CMTime = CMTimeClampToRange(time, range: internalMovie.range)
-        let lastSample: Bool = (time == internalMovie.range.end) ? true : false
+        let lastSample: Bool = time == internalMovie.range.end
         if lastSample {
             // Adjust micro difference from tail of movie
             time = time - movieResolution()
@@ -165,7 +180,7 @@ extension MovieMutatorBase {
             else { continue }
             guard let segment: AVAssetTrackSegment = track.segment(forTrackTime: time)
             else { continue }
-            guard (segment.isEmpty == false) else { continue }
+            guard !segment.isEmpty else { continue }
             // Prepare
             let mapping: CMTimeMapping = segment.timeMapping
             let startPTS: CMTime = cursor.presentationTimeStamp
@@ -186,120 +201,94 @@ extension MovieMutatorBase {
         return nil
     }
     
-    /// Query Previous sample's PresentationInfo
-    ///
-    /// - Parameter range: current sample's Presentation CMTimeRange in TrackTime
-    /// - Returns: PresentationInfo of previous sample
-    public func previousInfo(of range: CMTimeRange) -> PresentationInfo? {
-        // Check if this is initial sample in internalMovie
-        if range.start == CMTime.zero {
-            return nil
+    private enum AdjacentDirection: Equatable {
+        case previous
+        case next
+    }
+
+    private func adjacentInfo(of range: CMTimeRange,
+                              direction: AdjacentDirection) -> PresentationInfo? {
+        let boundary: CMTime
+        let step: Int
+        let sampleRange: CMTimeRange
+        switch direction {
+        case .previous:
+            guard range.start != CMTime.zero else { return nil }
+            boundary = range.start
+            step = -1
+            sampleRange = CMTimeRangeFromTimeToTime(start: range.start, end: range.start)
+        case .next:
+            guard range.end < movieDuration() else { return nil }
+            boundary = range.end
+            step = 1
+            sampleRange = CMTimeRangeFromTimeToTime(start: range.start, end: range.end)
         }
-        
-        for track: AVMutableMovieTrack in orderedTracks() {
-            // Get AVSampleCursor/AVAssetTrackSegment at range.start
-            let pts = track.samplePresentationTime(forTrackTime: range.start)
-            guard CMTIME_IS_VALID(pts) else { continue }
-            guard let cursor: AVSampleCursor = track.makeSampleCursor(presentationTimeStamp: pts)
-            else { continue }
-            guard let segment: AVAssetTrackSegment = track.segment(forTrackTime: range.start)
-            else { continue }
-            guard (segment.isEmpty == false) else { continue }
-            // Prepare
+
+        for track in orderedTracks() {
+            let pts = track.samplePresentationTime(forTrackTime: sampleRange.start)
+            guard CMTIME_IS_VALID(pts),
+                  let cursor = track.makeSampleCursor(presentationTimeStamp: pts),
+                  let segment = track.segment(forTrackTime: sampleRange.start),
+                  !segment.isEmpty else { continue }
+
             let mapping = segment.timeMapping
-            let trackSegmentMin: CMTime = mapping.target.start
-            let mediaSegmentMin: CMTime = mapping.source.start
+            let mediaBoundary = direction == .previous ? mapping.source.start : mapping.source.end
+            let trackBoundary = direction == .previous ? mapping.target.start : mapping.target.end
             let resolution = movieResolution()
-            // Seek by Step AVSampleCursor backward (current segment only)
-            while cursor.presentationTimeStamp > mediaSegmentMin {
-                guard cursor.stepInPresentationOrder(byCount: -1) == -1 else { break }
-                if cursor.presentationTimeStamp > mediaSegmentMin {
-                    let sampleStartPTS: CMTime = cursor.presentationTimeStamp
-                    let sampleStartTT: CMTime = trackTime(of: sampleStartPTS, from: mapping)
-                    if (range.start - sampleStartTT) < resolution { continue }
-                    let pRange: CMTimeRange = CMTimeRangeFromTimeToTime(start: sampleStartTT,
-                                                                        end: range.start)
-                    let info: PresentationInfo = PresentationInfo(range: pRange,
-                                                                  of: internalMovie)
-                    return info
-                } else {
-                    if (range.start - trackSegmentMin) < resolution { break }
-                    let pRange: CMTimeRange = CMTimeRangeFromTimeToTime(start: trackSegmentMin,
-                                                                        end: range.start)
-                    let info: PresentationInfo = PresentationInfo(range: pRange, of: internalMovie)
-                    return info
+            var reachedSegmentBoundary = false
+
+            while (direction == .previous && cursor.presentationTimeStamp > mediaBoundary)
+                    || (direction == .next && cursor.presentationTimeStamp < mediaBoundary) {
+                guard cursor.stepInPresentationOrder(byCount: Int64(step)) == Int64(step) else { break }
+                let crossedBoundary = direction == .previous
+                    ? cursor.presentationTimeStamp <= mediaBoundary
+                    : cursor.presentationTimeStamp >= mediaBoundary
+                reachedSegmentBoundary = crossedBoundary
+                let candidateTime = trackTime(of: cursor.presentationTimeStamp, from: mapping)
+                let distance = direction == .previous
+                    ? boundary - candidateTime
+                    : candidateTime - boundary
+                guard distance >= resolution else {
+                    if crossedBoundary { break }
+                    continue
                 }
+
+                let candidateRange = direction == .previous
+                    ? CMTimeRangeFromTimeToTime(start: candidateTime, end: boundary)
+                    : CMTimeRangeFromTimeToTime(start: boundary, end: candidateTime)
+                return PresentationInfo(range: candidateRange, of: internalMovie)
+            }
+
+            let segmentDistance = direction == .previous
+                ? boundary - trackBoundary
+                : trackBoundary - boundary
+            if reachedSegmentBoundary && segmentDistance >= resolution {
+                let candidateRange = direction == .previous
+                    ? CMTimeRangeFromTimeToTime(start: trackBoundary, end: boundary)
+                    : CMTimeRangeFromTimeToTime(start: boundary, end: trackBoundary)
+                return PresentationInfo(range: candidateRange, of: internalMovie)
             }
         }
-        
-        // Try to handle track segment boundary
-        // Offset 1/movie.timescale as micro difference to test
-        let testTime: CMTime = range.start - movieResolution()
+
+        let testTime = direction == .previous
+            ? range.start - movieResolution()
+            : range.end + movieResolution()
         if let info = presentationInfoAtTime(testTime) {
             return info
         }
-        
-        // S-08 pattern: graceful return instead of preconditionFailure.
-        // public API must not crash user-reachable code paths.
-        LoggingSystem.video.error("\(self.ts()) Cannot find previous sample's PresentationInfo for range: \(self.shortTimeString(range.start, withDecimals: false))..\(self.shortTimeString(range.end, withDecimals: false))")
+
+        let directionName = direction == .previous ? "previous" : "next"
+        LoggingSystem.video.error("\(self.ts()) Cannot find \(directionName) sample's PresentationInfo for range: \(self.shortTimeString(range.start, withDecimals: false))..\(self.shortTimeString(range.end, withDecimals: false))")
         return nil
     }
-    
-    /// Query Next sample's PresentationInfo
-    ///
-    /// - Parameter range: current sample's Presentation CMTimeRange in TrackTime
-    /// - Returns: PresentationInfo of next sample
+
+    /// Query Previous sample's PresentationInfo.
+    public func previousInfo(of range: CMTimeRange) -> PresentationInfo? {
+        adjacentInfo(of: range, direction: .previous)
+    }
+
+    /// Query Next sample's PresentationInfo.
     public func nextInfo(of range: CMTimeRange) -> PresentationInfo? {
-        // Check if this is last sample in internalMovie
-        if range.end >= self.movieDuration() {
-            return nil
-        }
-        
-        for track: AVMutableMovieTrack in orderedTracks() {
-            // Get AVSampleCursor/AVAssetTrackSegment at range.start
-            let pts = track.samplePresentationTime(forTrackTime: range.start)
-            guard CMTIME_IS_VALID(pts) else { continue }
-            guard let cursor: AVSampleCursor = track.makeSampleCursor(presentationTimeStamp: pts)
-            else { continue }
-            guard let segment: AVAssetTrackSegment = track.segment(forTrackTime: range.start)
-            else { continue }
-            guard (segment.isEmpty == false) else { continue }
-            // Prepare
-            let mapping = segment.timeMapping
-            let trackSegmentMax: CMTime = mapping.target.end
-            let mediaSegmentMax: CMTime = mapping.source.end
-            let resolution = movieResolution()
-            // Seek by Step AVSampleCursor forward (current segment only)
-            while cursor.presentationTimeStamp < mediaSegmentMax {
-                guard cursor.stepInPresentationOrder(byCount: +1) == +1 else { break }
-                if cursor.presentationTimeStamp < mediaSegmentMax {
-                    let sampleStartPTS: CMTime = cursor.presentationTimeStamp
-                    let sampleStartTT: CMTime = trackTime(of: sampleStartPTS, from: mapping)
-                    if (sampleStartTT - range.end) < resolution { continue }
-                    let nRange: CMTimeRange = CMTimeRangeFromTimeToTime(start: range.end,
-                                                                        end: sampleStartTT)
-                    let info: PresentationInfo = PresentationInfo(range: nRange, of: internalMovie)
-                    return info
-                } else {
-                    if (trackSegmentMax - range.end) < resolution { break }
-                    let nRange: CMTimeRange = CMTimeRangeFromTimeToTime(start: range.end,
-                                                                        end: trackSegmentMax)
-                    let info: PresentationInfo = PresentationInfo(range: nRange, of: internalMovie)
-                    return info
-                }
-            }
-        }
-        
-        // Try to handle track segment boundary
-        // Offset 1/movie.timescale as micro difference to test
-        let testTime: CMTime = range.end + movieResolution()
-        if let info = presentationInfoAtTime(testTime) {
-            return info
-        }
-        
-        // S-08 pattern: graceful return instead of preconditionFailure.
-        // public API must not crash user-reachable code paths.
-        LoggingSystem.video.error("\(self.ts()) Cannot find next sample's PresentationInfo for range: \(self.shortTimeString(range.start, withDecimals: false))..\(self.shortTimeString(range.end, withDecimals: false))")
-        return nil
+        adjacentInfo(of: range, direction: .next)
     }
 }

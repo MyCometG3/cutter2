@@ -21,6 +21,9 @@ extension Document {
     /// This function implements exponential smoothing for smoother progress bar animation.
     /// It also throttles UI updates to every 100ms to reduce unnecessary redraws.
     ///
+    /// The only caller (the progress-monitoring task in `withBusyProgress`) is already
+    /// MainActor-isolated, so the UI is updated synchronously without spawning a Task.
+    ///
     /// - Parameter progress: The raw progress value (0.0 to 1.0)
     public func updateProgress(_ progress: Float) {
         
@@ -54,21 +57,19 @@ extension Document {
         let smoothedProgress = lastReportedProgress + smoothingFactor * (progress - lastReportedProgress)
         lastReportedProgress = smoothedProgress
         
-        // Update UI in main queue
-        Task { @MainActor in
-            
-            guard let alert = self.alert else { return }
-            guard smoothedProgress.isNormal else { return }
-            
-            // Update progress indicator (visual feedback)
-            if let indicator = self.progressIndicator {
-                indicator.doubleValue = Double(smoothedProgress * 100.0)
-            }
-            
-            // Update text (percentage)
-            let format = NSLocalizedString("progress.format.percent", comment: "Progress percentage format")
-            alert.informativeText = String(format: format, Int(smoothedProgress * 100))
+        // Update UI synchronously: the caller is already MainActor-isolated,
+        // so spawning `Task { @MainActor in }` here would be a redundant hop.
+        guard let alert = self.alert else { return }
+        guard smoothedProgress.isNormal else { return }
+        
+        // Update progress indicator (visual feedback)
+        if let indicator = self.progressIndicator {
+            indicator.doubleValue = Double(smoothedProgress * 100.0)
         }
+        
+        // Update text (percentage)
+        let format = NSLocalizedString("progress.format.percent", comment: "Progress percentage format")
+        alert.informativeText = String(format: format, Int(smoothedProgress * 100))
     }
     
     /// Show busy modalSheet
@@ -86,7 +87,7 @@ extension Document {
         lastUpdateAt = 0
         lastReportedProgress = 0.0
         
-        Task { @MainActor in
+        Task { @MainActor [self] in
             
             guard let window = self.window else { return }
             
@@ -161,7 +162,7 @@ extension Document {
             let err :NSError = error as NSError
             var text :String? = nil
             let userInfo: [String:Any] = err.userInfo // Can be empty dictionary
-            if userInfo.count > 0 {
+            if !userInfo.isEmpty {
                 let keys = userInfo.keys
                 if keys.contains(NSUnderlyingErrorKey) || keys.contains(NSDebugDescriptionErrorKey) {
                     text = err.description

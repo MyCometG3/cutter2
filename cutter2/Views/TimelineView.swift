@@ -38,21 +38,31 @@ public extension NSBezierPath {
     }
 }
 
-/// View to ViewController - Mouse Event related protocol (No CMTime)
+/// Provides relative-position timeline events and sample navigation to a view controller.
+///
+/// All positions are relative values from 0.0 to 1.0. Implementations may update
+/// document state or return `nil` when sample information is unavailable.
 @MainActor
 protocol TimelineUpdateDelegate: AnyObject {
-    // called on mouse down/drag event
+    /// Reports a change to the current marker position.
     func didUpdateCursor(to position: Float64)
+    /// Reports a change to the selection start position.
     func didUpdateStart(to position: Float64)
+    /// Reports a change to the selection end position.
     func didUpdateEnd(to position: Float64)
+    /// Reports a change to the selection range.
     func didUpdateSelection(from fromPos: Float64, to toPos: Float64)
-    //
+    /// Returns sample presentation information at a relative position, if available.
     func presentationInfo(at position: Float64) -> PresentationInfo?
+    /// Returns the presentation information immediately before a range, if available.
     func previousInfo(of range: CMTimeRange) -> PresentationInfo?
+    /// Returns the presentation information immediately after a range, if available.
     func nextInfo(of range: CMTimeRange) -> PresentationInfo?
-    //
+    /// Moves the current marker to the specified anchor.
     func doSetCurrent(to goTo: anchor)
+    /// Moves the selection start marker to the specified anchor.
     func doSetStart(to goTo: anchor)
+    /// Moves the selection end marker to the specified anchor.
     func doSetEnd(to goTo: anchor)
 }
 
@@ -64,7 +74,7 @@ protocol TimelineUpdateDelegate: AnyObject {
 /// - end: end of selection
 /// - tail: tail of movie
 /// - startOrHead: toggle anchor for CurrentMarker
-/// - endOrTail: toggle anchor for CurrentMakrer
+/// - endOrTail: toggle anchor for CurrentMarker
 /// - headOrCurrent: toggle anchor for StartMarker
 /// - tailOrCurrent: toggle anchor for EndMarker
 /// - forward: seek forward anchor
@@ -76,7 +86,7 @@ enum anchor {
     case end
     case tail
     case startOrHead // for current marker
-    case endOrTail // for current makrer
+    case endOrTail // for current marker
     case headOrCurrent // for start marker
     case tailOrCurrent // for end marker
     case forward

@@ -4,23 +4,23 @@
 # 
 # This script runs all tests for the cutter2 application with code coverage enabled.
 # 
-# Test Suite (as of 2026-08-02):
-#   - 15 test files
-#   - 197 total tests (197 passing)
-#   - Expected result: 197/197 passing (100%)
+# Test Suite (as of 2026-09-26):
+#   - 19 test source files + 1 helper
+#   - 253 statically declared test methods
+#   - Expected result: 253 tests passing
 #
 # Usage: ./scripts/test.sh [derivedDataPath]
 #
 # Options:
 #   derivedDataPath - Optional custom derived data path (default: ./.build)
 #
-# Required Test Media:
-#   - scripts/sampleMedia/DL-1115173527.mov (sample movie file for tests)
+# Optional Test Media:
+#   - scripts/sampleMedia/DL-1115173527.mov (sample movie file for specific tests)
 
 set -e
 
 echo "🧪 Running cutter2 tests..."
-echo "   Test Suite: 15 files, 197 tests"
+echo "   Test Suite: 20 files (19 test + 1 helper), 253 tests"
 echo ""
 
 # Colors for output
@@ -30,12 +30,10 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Check for required test media
+# Check for optional test media (tests pass without it)
 SAMPLE_MEDIA="./scripts/sampleMedia/DL-1115173527.mov"
 if [ ! -f "$SAMPLE_MEDIA" ]; then
-  echo -e "${YELLOW}⚠️  Warning: Sample media file not found${NC}"
-  echo "   Expected: $SAMPLE_MEDIA"
-  echo "   Some tests may be skipped or fail without this file."
+  echo -e "${YELLOW}ℹ️  Optional sample media file not found (tests will run without it)${NC}"
   echo ""
 fi
 
@@ -155,8 +153,8 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 echo -e "${GREEN}  Test Run Summary${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}  Status: ✅ All Passed${NC}"
-echo -e "  Test Files: 15"
-echo -e "  Total Tests: 197"
-echo -e "    - Passing: 197"
+echo -e "  Test Files: 19"
+echo -e "  Total Tests: 253"
+echo -e "    - Passing: 253"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""

@@ -19,6 +19,10 @@ extension Document {
     // MARK: - Resize window
     /* ============================================ */
     
+    /// Calculates the scale ratio used to display the movie in the player view.
+    ///
+    /// - Parameter baseSize: An optional source size; when `nil`, the current movie dimensions are used.
+    /// - Returns: The smaller width-to-height scale ratio, or 1.0 when the movie or player view is unavailable.
     public func displayRatio(_ baseSize: CGSize?) -> CGFloat {
         
         guard let mutator = self.movieMutator else { return 1.0 }
@@ -94,16 +98,14 @@ extension Document {
         
         // Transpose to anchor point
         var origin = window.frame.origin
-        do {
-            if keepTopLeft { // preserve top left corner
-                let newOrigin = NSPoint(x: origin.x,
-                                        y: origin.y - (newWindowSize.height - windowSize.height))
-                origin = newOrigin
-            } else { // preserve top center point
-                let newOrigin = NSPoint(x: origin.x + (windowSize.width/2) - (newWindowSize.width/2) ,
-                                        y: origin.y - (newWindowSize.height - windowSize.height))
-                origin = newOrigin
-            }
+        if keepTopLeft { // preserve top left corner
+            let newOrigin = NSPoint(x: origin.x,
+                                    y: origin.y - (newWindowSize.height - windowSize.height))
+            origin = newOrigin
+        } else { // preserve top center point
+            let newOrigin = NSPoint(x: origin.x + (windowSize.width/2) - (newWindowSize.width/2) ,
+                                    y: origin.y - (newWindowSize.height - windowSize.height))
+            origin = newOrigin
         }
         
         // Transpose into screenRect
@@ -191,25 +193,21 @@ extension Document {
         
         // Suppress timer updates until async reload completes.
         if reload {
-            self.suppressQueryPosition = true
+            self.playerSeekSequencer.suppressForReload()
         }
         
         // update GUI
         self.updateTimeline(time, range: timeRange)
         if reload {
-            self.playerReloadGeneration += 1
-            let generation = self.playerReloadGeneration
-            self.playerReloadTask?.cancel()
+            let generation = self.playerSeekSequencer.beginReload()
             let reloadTask = Task { @MainActor [weak self] in
                 guard let self else { return }
                 defer {
-                    if self.playerReloadGeneration == generation {
-                        self.playerReloadTask = nil
-                    }
+                    self.playerSeekSequencer.reloadTaskDidFinish(generation: generation)
                 }
-                await self.updatePlayer()
+                await self.updatePlayer(generation: generation)
             }
-            self.playerReloadTask = reloadTask
+            self.playerSeekSequencer.registerReloadTask(reloadTask)
         } else {
             guard let player = self.player else { return }
             self.resumeAfterSeek(to: time, with: player.rate)
@@ -227,11 +225,20 @@ extension Document {
         guard let player = self.player else { return }
         
         updateRate(player, 0.0)
-        let handler: @Sendable (Bool) -> Void = {[weak self, weak player, weak mutator] (_) in // @escaping
+        // The sequencer snapshots both generations at seek start. A stale
+        // completion (interrupted or delayed, even within the same reload
+        // generation) is a full no-op. The reload generation gates suppression
+        // release, and the seek generation prevents stale callbacks from
+        // overwriting newer rate or timeline state.
+        let token = self.playerSeekSequencer.beginUserSeek()
+        let handler: @Sendable (Bool) -> Void = {[weak self, weak player, weak mutator] (_: Bool) in // @escaping
             guard let self else { return }
             guard let player = player else { return }
             guard let mutator = mutator else { return }
             ActorUtilities.performSyncOnMainActor {
+                guard self.playerSeekSequencer.isCurrent(token) else { return }
+                guard self.playerSeekSequencer.canReleaseSuppression(token) else { return }
+                self.playerSeekSequencer.releaseSuppression()
                 updateRate(player, rate)
                 updateTimeline(time, range: mutator.selectedTimeRange)
             }
@@ -272,26 +279,59 @@ extension Document {
     /// video-composition derivation fails, so this method surfaces the error
     /// via `showErrorSheet(_:)`. Cancelled reload tasks exit quietly without
     /// mutating the current player item.
-    private func updatePlayer() async {
-        
-        // Clear suppression on all exit paths.
-        defer { self.suppressQueryPosition = false }
-        
-        guard let mutator = movieMutator, let pv = playerView else { return }
+    ///
+    /// `suppressQueryPosition` stays held for the whole in-flight seek and is
+    /// released when the current completion settles, regardless of its
+    /// `finished` result. Reload completions must additionally belong to the
+    /// newest reload generation (see `PlayerSeekSequencer.liftSuppression(for:)`).
+    /// The `readyToPlay` re-seek is suppressed while this seek is in flight; a
+    /// user-initiated seek (marker drag, JKL) may interrupt it instead, in
+    /// which case the current completion releases suppression when it settles.
+    /// Every seek completion carries a token captured when its seek starts, so
+    /// a delayed or superseded callback — even one within the same reload
+    /// generation — is a full no-op that neither lifts the suppression nor
+    /// overwrites the newer state.
+    /// Together this stops `queryPosition()` from adopting a pre-seek
+    /// `currentTime()` and clobbering the corrected `insertionTime` (the
+    /// delete-key position regression) without ever leaving the polling timer
+    /// suppressed after an interrupted reload.
+    private func updatePlayer(generation: UInt64) async {
+
+        guard let mutator = movieMutator, let pv = playerView else {
+            self.playerSeekSequencer.liftSuppression(for: generation)
+            return
+        }
         
         do {
             let playerItem = try await mutator.makePlayerItem()
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else {
+                self.playerSeekSequencer.liftSuppression(for: generation)
+                return
+            }
             
             if let player = pv.player {
+                // Bump the seek generation before replacing the item: the
+                // replacement cancels any in-flight seek, and its completion
+                // (interrupted, or delayed with finished == true) must run as
+                // a no-op, so it must always observe the already-advanced
+                // counter.
+                self.playerSeekSequencer.suppressForReload()
+                let token = self.playerSeekSequencer.beginItemReplacement(reloadGeneration: generation)
+
                 // Apply modified source movie
                 player.replaceCurrentItem(with: playerItem)
                 
-                // seek
-                let handler: @Sendable (Bool) -> Void = {[weak pv] (_) in // @escaping
+                // Hold suppression until this completion is received so
+                // queryPosition() cannot overwrite insertionTime with the
+                // pre-seek currentTime(). The completion must be both the
+                // newest seek and this (newest) reload generation's; stale
+                // callbacks must not release suppression.
+                let handler: @Sendable (Bool) -> Void = {[weak self, weak pv] (_: Bool) in // @escaping
                     
-                    guard let pv = pv else { return }
+                    guard let self, let pv = pv else { return }
                     ActorUtilities.performSyncOnMainActor {
+                        guard self.playerSeekSequencer.isCurrent(token) else { return }
+                        self.playerSeekSequencer.liftSuppression(for: generation)
                         pv.needsDisplay = true
                     }
                 }
@@ -307,10 +347,14 @@ extension Document {
                 
                 // Start polling timer
                 self.useUpdateTimer(true)
+
+                // No in-flight seek here, so release immediately.
+                self.playerSeekSequencer.liftSuppression(for: generation)
             }
         } catch is CancellationError {
-            return
+            self.playerSeekSequencer.liftSuppression(for: generation)
         } catch {
+            self.playerSeekSequencer.liftSuppression(for: generation)
             self.showErrorSheet(error)
         }
     }
@@ -338,7 +382,7 @@ extension Document {
     @objc func queryPosition() {
         
         // Skip if a reload/seek is in progress.
-        guard !self.suppressQueryPosition else { return }
+        guard !self.playerSeekSequencer.suppressQueryPosition else { return }
         
         guard let mutator = self.movieMutator else { return }
         guard let player = self.player else { return }

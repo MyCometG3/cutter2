@@ -10,6 +10,11 @@ import Cocoa
 import AVFoundation
 import os.log
 
+private struct CodecOption {
+    let name: String
+    let lpcmDepth: Int
+}
+
 /* ============================================ */
 // MARK: - Export/Transcode Operations
 /* ============================================ */
@@ -137,9 +142,19 @@ extension Document {
         let message = NSLocalizedString("progress.exporting.message", comment: "Message for export progress dialog")
         try await withBusyProgress(title: title, message: message, operationName: "custom export") { mutator in
             let fileType: AVFileType = AVFileType.init(rawValue: typeName)
-            let videoID: [String] = ["avc1","hvc1","apcn","apcs","apco"]
-            let audioID: [String] = ["aac ","lpcm","lpcm","lpcm"]
-            let lpcmBPC: [Int] = [0, 16, 24, 32]
+            let videoOptions: [CodecOption] = [
+                CodecOption(name: "avc1", lpcmDepth: 0),
+                CodecOption(name: "hvc1", lpcmDepth: 0),
+                CodecOption(name: "apcn", lpcmDepth: 0),
+                CodecOption(name: "apcs", lpcmDepth: 0),
+                CodecOption(name: "apco", lpcmDepth: 0)
+            ]
+            let audioOptions: [CodecOption] = [
+                CodecOption(name: "aac ", lpcmDepth: 0),
+                CodecOption(name: "lpcm", lpcmDepth: 16),
+                CodecOption(name: "lpcm", lpcmDepth: 24),
+                CodecOption(name: "lpcm", lpcmDepth: 32)
+            ]
             
             let defaults = UserDefaults.standard
             let audioRate = defaults.integer(forKey: kAudioKbpsKey)
@@ -149,12 +164,10 @@ extension Document {
             let copyOtherMedia = defaults.bool(forKey: kCopyOtherMediaKey)
             let videoEncode = defaults.bool(forKey: kVideoEncodeKey)
             let audioEncode = defaults.bool(forKey: kAudioEncodeKey)
-            let videoCodecIndex = min(max(defaults.integer(forKey: kVideoCodecKey), 0), videoID.count - 1)
-            let audioCodecIndex = min(max(defaults.integer(forKey: kAudioCodecKey), 0), audioID.count - 1)
-            let lpcmDepthIndex = min(audioCodecIndex, lpcmBPC.count - 1)
-            let videoCodec = videoID[videoCodecIndex]
-            let audioCodec = audioID[audioCodecIndex]
-            let lpcmDepth = lpcmBPC[lpcmDepthIndex]
+            let videoCodecIndex = min(max(defaults.integer(forKey: kVideoCodecKey), 0), videoOptions.count - 1)
+            let audioCodecIndex = min(max(defaults.integer(forKey: kAudioCodecKey), 0), audioOptions.count - 1)
+            let videoCodec = videoOptions[videoCodecIndex]
+            let audioCodec = audioOptions[audioCodecIndex]
             
             var param: [String: any Sendable] = [:]
             param[kAudioKbpsKey] = audioRate
@@ -164,9 +177,9 @@ extension Document {
             param[kCopyOtherMediaKey] = copyOtherMedia
             param[kVideoEncodeKey] = videoEncode
             param[kAudioEncodeKey] = audioEncode
-            param[kVideoCodecKey] = videoCodec
-            param[kAudioCodecKey] = audioCodec
-            param[kLPCMDepthKey] = lpcmDepth
+            param[kVideoCodecKey] = videoCodec.name
+            param[kAudioCodecKey] = audioCodec.name
+            param[kLPCMDepthKey] = audioCodec.lpcmDepth
             
             try await mutator.exportCustomMovie(to: url, fileType: fileType, settings: param)
         }

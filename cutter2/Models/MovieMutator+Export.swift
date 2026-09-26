@@ -49,6 +49,13 @@ extension MovieMutator {
         return try await operation(movieWriter)
     }
     
+    /// Exports the current movie using an AVAssetExportSession preset.
+    ///
+    /// - Parameters:
+    ///   - url: The destination file URL.
+    ///   - type: The destination AVFoundation file type.
+    ///   - preset: The export-session preset, or `nil` when the writer selects the default behavior.
+    /// - Throws: An error reported by the underlying movie writer.
     public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws {
         try await PerformanceMetrics.shared.measureAsync(PerformanceMetrics.Operation.videoExport) {
             try await withMovieWriter { movieWriter in
@@ -57,6 +64,13 @@ extension MovieMutator {
         }
     }
     
+    /// Exports the current movie with custom reader/writer settings.
+    ///
+    /// - Parameters:
+    ///   - url: The destination file URL.
+    ///   - type: The destination AVFoundation file type.
+    ///   - param: The custom export settings keyed by the movie-writer setting names.
+    /// - Throws: An error reported by the underlying movie writer.
     public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String: any Sendable]) async throws {
         try await PerformanceMetrics.shared.measureAsync(PerformanceMetrics.Operation.customExport) {
             try await withMovieWriter { movieWriter in
@@ -65,6 +79,13 @@ extension MovieMutator {
         }
     }
     
+    /// Writes the current movie to a file.
+    ///
+    /// - Parameters:
+    ///   - url: The destination file URL.
+    ///   - type: The destination AVFoundation file type.
+    ///   - selfContained: Whether referenced sample data should be copied into the output.
+    /// - Throws: An error reported by the underlying movie writer.
     public func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) async throws {
         try await PerformanceMetrics.shared.measureAsync(PerformanceMetrics.Operation.fileSave) {
             try await withMovieWriter { movieWriter in

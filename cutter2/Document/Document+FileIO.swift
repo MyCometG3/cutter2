@@ -90,10 +90,7 @@ extension Document {
                 LoggingSystem.fileIO.error("Failed to validate movie header: \(url.lastPathComponent)")
                 try throwError(.unableToOpenFile, reason: reason)
             }
-            self.removeMutationObserver()
-            self.removeAllUndoRecords()
-            self.movieMutator = MovieMutator(with: movie)
-            self.addMutationObserver()
+            self.applyOpenedMovie(movie)
             
             LoggingSystem.fileIO.notice("Document opened successfully: \(url.lastPathComponent)")
         } else {
@@ -101,6 +98,13 @@ extension Document {
             LoggingSystem.fileIO.error("Failed to open file: \(url.lastPathComponent)")
             try throwError(.unableToOpenFile, reason: reason)
         }
+    }
+
+    private func applyOpenedMovie(_ movie: AVMutableMovie) {
+        removeMutationObserver()
+        removeAllUndoRecords()
+        movieMutator = MovieMutator(with: movie)
+        addMutationObserver()
     }
     
     override nonisolated func read(from url: URL, ofType typeName: String) throws {
@@ -147,10 +151,7 @@ extension Document {
                         LoggingSystem.fileIO.error("Failed to validate movie header: \(url.lastPathComponent)")
                         try self.throwError(.unableToOpenFile, reason: reason)
                     }
-                    self.removeMutationObserver()
-                    self.removeAllUndoRecords()
-                    self.movieMutator = MovieMutator(with: movie)
-                    self.addMutationObserver()
+                    self.applyOpenedMovie(movie)
                     self.fileType = preparation.typeName
                     self.fileModificationDate = preparation.modificationDate
                     LoggingSystem.fileIO.notice("Document opened successfully: \(url.lastPathComponent)")
@@ -166,15 +167,17 @@ extension Document {
         }
     }
     
+    /// Allows AppKit to perform document reads concurrently.
+    ///
+    /// This method returns `true` unconditionally. The custom `DocumentController` open
+    /// and reopen paths are required: using AppKit's default document-opening path can
+    /// invoke the `@MainActor` document creation method off the main actor and crash.
+    /// The custom paths prepare file metadata off the main actor and apply the result
+    /// through `readAsync(from:openPreparation:)`.
+    ///
+    /// - Parameter typeName: The document type being opened.
+    /// - Returns: Always `true`.
     override class func canConcurrentlyReadDocuments(ofType typeName: String) -> Bool {
-        /*
-         NOTE: This feature seems to be incompatible with Swift Concurrency and will cause a crash.
-         Returning `true` causes `makeDocument(withContentsOf:ofType:)` to be called off the main thread,
-         but that method is marked with `@MainActor`, so invoking it on a background thread crashes immediately.
-         
-         Instead, we override `NSDocumentController`'s `openDocument()` and `reopenDocument()` methods
-         and use custom `OpenPreparation` + `readAsync()` implementations to support Swift Concurrency properly.
-         */
         return true
     }
     
@@ -201,39 +204,38 @@ extension Document {
         
         do {
             // Check if current AVMovie reference URL = write target URL
-            selfcontainedFlag = validateIfSelfContained(for: url)
+            let selfContained = validateIfSelfContained(for: url)
             
             // Check if current document URL = write target URL
-            if let original = self.fileURL, original == url {
-                overwriteFlag = true
-            } else {
-                overwriteFlag = false
-            }
+            let overwrite = self.fileURL == url
             
             // Check if accessory view is presented in SavePanel
-            if saveOperation == .saveAsOperation || saveOperation == .saveToOperation {
-                useAccessory = true
-            } else {
-                useAccessory = false
-            }
+            let useAccessory = saveOperation == .saveAsOperation || saveOperation == .saveToOperation
             
             // Check if user requested to save as ReferenceMovie
+            let copyData: Bool
             if useAccessory {
-                copyData = accessoryVCselfContained
+                copyData = self.accessoryVCselfContained
             } else {
-                copyData = selfcontainedFlag
+                copyData = selfContained
             }
+            self.saveMode = SaveMode(
+                selfContained: selfContained,
+                overwrite: overwrite,
+                useAccessory: useAccessory,
+                copyData: copyData
+            )
             
             #if DEBUG
             LoggingSystem.fileIO.debug("Save operation - source: \(self.displayName ?? "n/a", privacy: .public), target: \(url.lastPathComponent)")
-            LoggingSystem.fileIO.debug("Save flags - selfContained: \(self.selfcontainedFlag), overwrite: \(self.overwriteFlag), useAccessory: \(self.useAccessory), copyData: \(self.copyData)")
+            LoggingSystem.fileIO.debug("Save flags - selfContained: \(self.saveMode.selfContained), overwrite: \(self.saveMode.overwrite), useAccessory: \(self.saveMode.useAccessory), copyData: \(self.saveMode.copyData)")
             #endif
         }
         
         // Verify if user is attemping to overwrite sourceMovieFile with ReferenceMovieFile
         let fileType: AVFileType = AVFileType.init(rawValue: typeName)
         if fileType == .mov {
-            if overwriteFlag && selfcontainedFlag && copyData == false {
+            if saveMode.overwrite && saveMode.selfContained && !saveMode.copyData {
                 // Reset cached accessoryVCselfContained to avoid unexpected behavior
                 self.accessoryVCselfContained = true
                 
@@ -356,7 +358,7 @@ extension Document {
                                    operationName: "write") { mutator in
             let fileType: AVFileType = AVFileType.init(rawValue: typeName)
             if fileType == .mov {
-                try await mutator.writeMovie(to: url, fileType: fileType, copySampleData: self.copyData)
+                try await mutator.writeMovie(to: url, fileType: fileType, copySampleData: self.saveMode.copyData)
             } else {
                 try await mutator.exportMovie(to: url, fileType: fileType, presetName: nil)
             }

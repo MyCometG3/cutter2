@@ -27,13 +27,15 @@ extension MovieWriter {
         case refreshMovieHeader
     }
     
-    /// Write internalMovie to destination url (as self-contained or reference movie)
+    /// Writes the internal movie as a self-contained or reference movie.
+    ///
+    /// MOV output uses movie flattening. Other file types use the export-session path.
     ///
     /// - Parameters:
-    ///   - url: destination to write
-    ///   - type: AVFileType. If it is not .mov, exportSession will be triggered.
-    ///   - selfContained: Other than AVFileType.mov should be true.
-    /// - Throws: Misc Error while exporting AVMovie
+    ///   - url: The destination file URL.
+    ///   - type: The destination AVFoundation file type.
+    ///   - selfContained: Whether MOV output should include the referenced sample data.
+    /// - Throws: A writer error produced while writing or exporting the movie.
     public func writeMovie(to url: URL, fileType type: AVFileType, copySampleData selfContained: Bool) async throws {
         //     selfContained ? "selfContained movie" : "reference movie")
         
@@ -55,26 +57,12 @@ extension MovieWriter {
     ///   - mode: FlattenMode
     private func flattenMovie(to url: URL, with mode: FlattenMode) async throws {
         
-        guard writeInProgress == false else {
-            let reason = "Please wait until the current export session finishes."
-            try throwError(.anotherExportSessionRunning, reason: reason)
-        }
+        let dateStart: Date = try beginWrite()
         defer {
             writeInProgress = false
         }
         
         /* ============================================ */
-        
-        // Update Properties
-        self.writeInProgress = true
-        self.writeSuccess = false
-        self.writeError = nil
-        self.writeCancelled = false
-        
-        let dateStart: Date = Date()
-        self.writeStart = dateStart
-        self.writeEnd = nil
-        self.writeProgress = 0.0
         
         //
         self.unblockUserInteraction?()
@@ -104,10 +92,7 @@ extension MovieWriter {
         }
         
         // Issue start notification
-        let userInfoStart: [AnyHashable:Any] = [urlInfoKey:url,
-                                              startInfoKey:dateStart]
-        let notificationStart = Notification(name: before, object: self, userInfo: userInfoStart)
-        NotificationCenter.default.post(notificationStart)
+        issueStartNotification(before, url: url, dateStart: dateStart)
         
         /* ============================================ */
         
@@ -175,14 +160,6 @@ extension MovieWriter {
         /* ============================================ */
         
         // Issue end notification
-        var userInfoEnd: [AnyHashable:Any] = [urlInfoKey:url,
-                                            startInfoKey:dateStart,
-                                        completedInfoKey:self.writeSuccess]
-        if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
-            userInfoEnd[endInfoKey] = dateEnd
-            userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)
-        }
-        let notificationEnd = Notification(name: after, object: self, userInfo: userInfoEnd)
-        NotificationCenter.default.post(notificationEnd)
+        issueEndNotification(after, url: url, dateStart: dateStart)
     }
 }

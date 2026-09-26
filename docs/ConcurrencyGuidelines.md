@@ -1,8 +1,8 @@
 # Concurrency Guidelines for cutter2
 
-**Version**: 1.0  
-**Last Updated**: June 21, 2026  
-**Swift Version**: 6.2.1  
+**Version**: 1.3
+**Last Updated**: September 23, 2026
+**Swift Version**: 6.0
 
 ---
 
@@ -50,9 +50,14 @@ final class Document: NSDocument {
 actor MovieWriter: SampleBufferChannelDelegate {
     private(set) var writeProgress: Float = 0.0
     private(set) var writeError: Error?
-    
+
     func exportMovie(...) async throws { ... }
-    func progressStream() -> AsyncStream<Float> { ... }
+}
+
+// progressStream() is on MovieMutatorBase, which is @MainActor-isolated, not on MovieWriter
+@MainActor
+class MovieMutatorBase: NSObject {
+    public func progressStream() -> AsyncStream<Float> { ... }
 }
 ```
 
@@ -85,7 +90,7 @@ Task.detached(priority: .userInitiated) {
 
 ```swift
 NotificationCenter.default.addObserver(forName: .foo, object: nil, queue: nil) { _ in
-    Task { @MainActor in
+    Task { @MainActor [self] in
         self.handleNotification()
     }
 }
@@ -117,30 +122,29 @@ try ActorUtilities.performSyncOnMainActor {
 - Two variants: throwing and non-throwing
 - Blocks caller — avoid in hot paths
 
-### 6. `AsyncBridge.perform` (Async-to-Sync Bridge)
+### 6. `Document.performAsync` (Async-to-Sync Bridge)
 
 **Use for:** Running async work synchronously from non-async contexts (e.g., `NSDocument` overrides).
 
 ```swift
 // Document+ActorIsolation.swift
 nonisolated func performAsync<T: Sendable>(
-    timeout: TimeInterval? = nil,
     _ block: @Sendable @escaping () async throws -> T
 ) throws -> T {
-    try AsyncBridge.perform(timeout: timeout, block)
+    try AsyncBridge.perform(block)
 }
 ```
 
 **Rules:**
 - **Must not be called from main thread** (precondition check)
 - Use `allowMainThread: true` ONLY with documented deadlock risk acknowledgment
-- Always set reasonable timeout for user-facing operations
 - Returns `Sendable` result — closure must be `@Sendable`
 
 ### 7. `DispatchQueue` (Legacy / Specific Interop)
 
 **Allowed ONLY for:**
-- `SampleBufferChannel` dispatch queue in `MovieWriter+CustomExport.swift` (AudioToolbox interop)
+- `SampleBufferChannel` internal queue (created at `SampleBufferChannel.swift:30`, used by `requestMediaDataWhenReady`)
+- `MovieWriter+CustomExport.swift:550` (`exportCustomMovie` dedicated queue, passed to `SampleBufferChannel`)
 - AVFoundation `requestMediaDataWhenReady(on:using:)` API (AVFoundation interop)
 - `OperationQueue.main` for `NotificationCenter` (AppKit requirement)
 - `Timer.scheduledTimer` (Foundation API)
@@ -151,10 +155,34 @@ nonisolated func performAsync<T: Sendable>(
 
 The `requestMediaDataWhenReady(on:using:)` API in AVFoundation asynchronously notifies on the specified `DispatchQueue` when media data is ready for writing. This is an official AVFoundation API that requires a `DispatchQueue` parameter.
 
-- **Usage location:** `cutter2/Models/SampleBufferChannel.swift:60` (queue created at `MovieWriter+CustomExport.swift:539`)
+- **Usage locations:**
+  - `SampleBufferChannel.swift:30` — each `SampleBufferChannel` creates its own queue (`SBC-<mediaType>`) in its `init`, used by `requestMediaDataWhenReady` at line 76
+  - `MovieWriter+CustomExport.swift:550` — `MovieWriter` creates a separate `exportCustomMovie` queue stored as `customQueue`, passed to `SampleBufferChannel` for custom export
 - **Reason:** AVFoundation API contract requires `DispatchQueue` — cannot be replaced with `Task` / `async`.
 - **Safety:** `requestMediaDataWhenReady` processes sequentially on the queue, so no data races occur. Queue cleanup happens at `stopRequestingMediaData` call.
-- **Note:** This API must be called outside `actor` isolation. When called from within the `MovieWriter` actor, use `DispatchQueue.global(qos:)` and pass data back to the actor via `@Sendable` closure.
+- **Note:** This API is called from the `SampleBufferChannel` (not from within an actor), with data passed back via `@Sendable` closure.
+
+### 8. Generation Counters + Completion Gating (Reload/Seek Pipeline)
+
+**Use for:** Async pipelines whose callbacks can arrive late, out of order, or after a newer request has superseded them (player reload/seek completions, KVO-triggered work, polling timers gated on in-flight work).
+
+```swift
+// Producer: advance the generation BEFORE starting the work, and keep a token snapshot.
+let token = self.playerSeekSequencer.beginUserSeek()
+player.seek(to: time, completionHandler: { finished in
+    ActorUtilities.performSyncOnMainActor {
+        // Stale callback → full no-op, including gated releases.
+        guard self.playerSeekSequencer.isCurrent(token) else { return }
+        // ... apply effects; only the newest request may act
+    }
+})
+```
+
+**Rules:**
+- Bump the counter **before** starting the superseding operation (e.g., before `replaceCurrentItem` cancels an in-flight seek) so callbacks cancelled by it always observe the advanced counter
+- A completion that fails the generation check must be a **full no-op** — including skipping releases of gated flags such as `suppressQueryPosition`
+- Multi-level pipelines use one counter per level and gate on all of them (`reloadGeneration` for reload requests, `seekGeneration` for seeks)
+- Reference implementation: `PlayerSeekSequencer.swift` owns generation snapshots and suppression gates; `Document+UI.swift` keeps AVPlayer and UI side effects — see `CODEBASE_REVIEW.md` §3.2/§8.6 for the reviewed semantics and the remaining integration-test gap
 
 ---
 
@@ -162,7 +190,8 @@ The `requestMediaDataWhenReady(on:using:)` API in AVFoundation asynchronously no
 
 | Pattern | Problem | Replacement |
 |---------|---------|-------------|
-| `DispatchQueue.main.sync { ... }` (new code) | No `Sendable` checking, no `MainActor.assumeIsolated` | `ActorUtilities.performSyncOnMainActor` |
+| `DispatchQueue.main.sync { ... }` (new code) | No `Sendable` checking, no `MainActor.assumeIsolated` | `ActorUtilities.performSyncOnMainActor` (exception: `ActorUtilities` internally uses `DispatchQueue.main.sync` after checking `Thread.isMainThread`) |
+| `Thread.isMainThread` checks (new code) | Bypasses actor isolation, unreliable | `MainActor.assertIsolated()` or `ActorUtilities.performSyncOnMainActor` (exception: `ActorUtilities` and `AsyncBridge` use `Thread.isMainThread` internally for optimization and precondition checks) |
 | `Task { await MainActor.run { ... } }` (already on main) | Redundant hop, performance penalty | Direct call |
 | `unowned self` in `@Sendable` closure | CRASH risk if self deallocates | `let me = self` + `ActorUtilities` |
 | `preconditionFailure("Unexpected nil")` for teardown | Crashes on normal lifecycle | `return` / `throw` / `NSSound.beep(); return` |
@@ -179,16 +208,17 @@ Every public type crossing isolation boundaries MUST document:
 2. **Sendable Conformance**: Whether the type is `Sendable` and why
 3. **Reentrancy**: Whether methods can be called reentrantly
 4. **Thread Safety**: What synchronization callers must provide
+5. **Conformance Placement**: If a protocol refines `Sendable`, its conformance MUST be declared in the same source file as the type declaration (Swift 6 requirement). Prefer the class declaration line over an extension; extension files then hold only the method implementations. (Example: `Document` declares `ViewControllerDelegate` — which refines `TimelineUpdateDelegate, Sendable` — on the class declaration in `Document.swift`, with `Document+ViewControllerDelegate.swift` holding only the methods.)
 
 **Example:**
 ```swift
 /// `MovieWriter` is a dedicated `actor` isolating all export state.
-/// 
+///
 /// - Actor Isolation: All public methods run on `MovieWriter`'s actor.
 /// - Sendable: The actor itself is `Sendable`; `MovieWriterParams` must be `Sendable`.
-/// - Reentrancy: `exportMovie` and `cancelExport` are NOT reentrant — call `cancelExport` 
+/// - Reentrancy: `exportMovie` and `cancelExport` are NOT reentrant — call `cancelExport`
 ///   before starting a new export on the same instance.
-/// - Progress: Use `progressStream()` BEFORE calling `exportMovie` to avoid missing updates.
+/// - Progress: Progress is reported via `MovieMutatorBase.progressStream()`.
 actor MovieWriter { ... }
 ```
 
@@ -199,19 +229,17 @@ actor MovieWriter { ... }
 When touching a file, verify:
 
 - [ ] No raw `DispatchQueue.main.sync/async` for new logic
-- [ ] No `Thread.isMainThread` checks — use `ActorUtilities`
+- [ ] No `Thread.isMainThread` checks — use `ActorUtilities` (exception: `AsyncBridge.perform` uses `Thread.isMainThread` internally for its main-thread guard precondition)
 - [ ] No force-unwrap on async results
 - [ ] All `@Sendable` closures have explicit captures
 - [ ] Actor-isolated types document their contract (see above)
 - [ ] Progress streams created BEFORE operation starts
-- [ ] Timeouts set on `AsyncBridge.perform` calls
 
 ---
 
 ## Related Documents
 
-- [ARCHITECTURE.md](ARCHITECTURE.md#concurrency-model) — System architecture overview
-- [API_REFERENCE.md](API_REFERENCE.md) — API details for `ActorUtilities`, `AsyncBridge`, `LayoutConverter`
+- [CODEBASE_REVIEW.md](CODEBASE_REVIEW.md) — System architecture overview and detailed code review
 - [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) — Development practices
 
 ---
@@ -220,4 +248,7 @@ When touching a file, verify:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.3 | 2026-09-23 | — | Updated the generation-gated example and reference implementation to use `PlayerSeekSequencer` after S-17 extraction. |
+| 1.2 | 2026-09-21 | — | Added the generation-gated completion pattern (reload/seek pipeline), documented the `Sendable`-refining conformance placement rule, made the main-actor-hop capture list explicit in the example, and refreshed the `DispatchQueue` usage line references. |
+| 1.1 | 2026-08-06 | — | Clarified `MovieMutatorBase` `@MainActor` isolation and synchronized the documented concurrency examples with the current implementation. |
 | 1.0 | 2026-06-21 | — | Initial version based on post-PR#33/34/37/39/40/41 codebase |

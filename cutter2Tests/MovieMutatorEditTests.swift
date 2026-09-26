@@ -163,6 +163,71 @@ final class MovieMutatorEditTests: XCTestCase {
         )
         return mutator
     }
+
+    // MARK: - Presentation traversal
+
+    func testAdjacentPresentationInfoReturnsPreviousAndNextSamples() {
+        guard let mutator = makeMutator(duration: 3.0, insertionTime: 1.0) else { return }
+        let currentTime = CMTime(seconds: 1.0, preferredTimescale: 600)
+        guard let current = mutator.presentationInfoAtTime(currentTime) else {
+            XCTFail("expected a presentation sample at the middle of the fixture")
+            return
+        }
+
+        let previous = mutator.previousInfo(of: current.timeRange)
+        let next = mutator.nextInfo(of: current.timeRange)
+
+        XCTAssertNotNil(previous)
+        XCTAssertNotNil(next)
+        XCTAssertEqual(previous?.timeRange.end, current.timeRange.start)
+        XCTAssertEqual(next?.timeRange.start, current.timeRange.end)
+    }
+
+    func testAdjacentPresentationInfoReturnsNilAtMovieBoundaries() {
+        guard let mutator = makeMutator(duration: 3.0) else { return }
+        guard let first = mutator.presentationInfoAtTime(.zero) else {
+            XCTFail("expected the first presentation sample")
+            return
+        }
+        let lastTime = mutator.movieRange().end - mutator.movieResolution()
+        guard let last = mutator.presentationInfoAtTime(lastTime) else {
+            XCTFail("expected the last presentation sample")
+            return
+        }
+
+        XCTAssertNil(mutator.previousInfo(of: first.timeRange))
+        XCTAssertNil(mutator.nextInfo(of: last.timeRange))
+    }
+
+    func testAdjacentPresentationInfoTraversesAcrossCutSegments() {
+        guard let mutator = makeMutator(duration: 3.0, insertionTime: 1.0) else { return }
+        let undoManager = UndoManager()
+        undoManager.groupsByEvent = false
+        undoManager.beginUndoGrouping()
+        mutator.cutSelection(using: UndoManagerWrapper(undoManager))
+        undoManager.endUndoGrouping()
+
+        let tracks = mutator.internalMovie.tracks(withMediaType: .video)
+        XCTAssertTrue(tracks.contains { $0.segments.count > 1 },
+                      "cut fixture should retain multiple video segments")
+        guard let beforeCut = mutator.presentationInfoAtTime(CMTime(seconds: 0.9,
+                                                                      preferredTimescale: 600)),
+              let afterCut = mutator.presentationInfoAtTime(CMTime(seconds: 1.1,
+                                                                     preferredTimescale: 600))
+        else {
+            XCTFail("expected presentation samples on both sides of the cut")
+            return
+        }
+
+        let next = mutator.nextInfo(of: beforeCut.timeRange)
+        let previous = mutator.previousInfo(of: afterCut.timeRange)
+        XCTAssertNotNil(next)
+        XCTAssertNotNil(previous)
+        XCTAssertGreaterThanOrEqual(next?.timeRange.start ?? .zero,
+                                    beforeCut.timeRange.end)
+        XCTAssertLessThanOrEqual(previous?.timeRange.end ?? .zero,
+                                  afterCut.timeRange.start)
+    }
     
     // MARK: - Cut / Paste / Delete round-trip (T-09)
     
@@ -304,5 +369,47 @@ final class MovieMutatorEditTests: XCTestCase {
         XCTAssertEqual(mutator.movieRange().duration.seconds,
                        durationBefore - selectionBefore, accuracy: 0.01,
                        "redo re-deletes")
+    }
+
+    // MARK: - Delete: marker position correction (regression)
+
+    /// Delete the fixed `[3.0, 4.0]` selection with the marker at `insertionTime`; returns the
+    /// corrected marker in seconds. Locks in the position-correction branches of `doRemove` that
+    /// the async `queryPosition` path must not clobber. Returns `nil` only if the fixture movie
+    /// could not be written (which already records an `XCTFail`).
+    private func deleteSelection_3To4(insertionTime seconds: Double) -> Double? {
+        let timescale: CMTimeScale = 600
+        guard let mutator = makeMutator(duration: 6.0, insertionTime: 3.0, selectionDuration: 1.0) else { return nil }
+        mutator.selectedTimeRange = CMTimeRange(
+            start: CMTime(seconds: 3.0, preferredTimescale: timescale),
+            duration: CMTime(seconds: 1.0, preferredTimescale: timescale))
+        mutator.insertionTime = CMTime(seconds: seconds, preferredTimescale: timescale)
+        let um = UndoManager()
+        um.groupsByEvent = false
+        um.beginUndoGrouping()
+        mutator.deleteSelection(using: UndoManagerWrapper(um))
+        um.endUndoGrouping()
+        return mutator.insertionTime.seconds
+    }
+
+    /// The user's delete-key scenario: marker at the range end must snap to the range start.
+    func testDeleteMarkerAtRangeEndSnapsToRangeStart() {
+        guard let result = deleteSelection_3To4(insertionTime: 4.0) else { return }
+        XCTAssertEqual(result, 3.0, accuracy: 0.01,
+                       "marker at range end must snap to range start (3.0)")
+    }
+
+    /// Marker before the removed range is unaffected.
+    func testDeleteMarkerBeforeRangeStays() {
+        guard let result = deleteSelection_3To4(insertionTime: 2.0) else { return }
+        XCTAssertEqual(result, 2.0, accuracy: 0.01,
+                       "marker before range must stay (2.0)")
+    }
+
+    /// Marker after the removed range shifts backward by selection.
+    func testDeleteMarkerAfterRangeShiftsBackwardBySelection() {
+        guard let result = deleteSelection_3To4(insertionTime: 5.0) else { return }
+        XCTAssertEqual(result, 4.0, accuracy: 0.01,
+                       "marker after range must shift back by selection duration (5.0 -> 4.0)")
     }
 }

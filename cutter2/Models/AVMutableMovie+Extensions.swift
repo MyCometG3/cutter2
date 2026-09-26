@@ -77,8 +77,7 @@ extension AVMutableMovie {
             }
             
             if set.count > 0 {
-                let array: [URL] = Array(set)
-                return array
+                return Array(set)
             }
         }
         return nil

@@ -60,7 +60,7 @@ extension MovieWriter {
     private func prepareAudioChannels(_ movie: AVMutableMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) throws {
         let numAudioEncode = customParam[kAudioEncodeKey] as? NSNumber
         let audioEncode: Bool = numAudioEncode?.boolValue ?? true
-        if audioEncode == false {
+        if !audioEncode {
             prepareCopyChannels(movie, ar, aw, .audio)
             return
         }
@@ -92,7 +92,7 @@ extension MovieWriter {
             
             do {
                 let descArray: [Any] = track.formatDescriptions
-                guard descArray.count > 0 else { continue }
+                guard !descArray.isEmpty else { continue }
                 let desc: CMFormatDescription = descArray[0] as! CMFormatDescription // CF typealias
                 
                 let asbdPtr: ASBDPtr? = CMAudioFormatDescriptionGetStreamBasicDescription(desc)
@@ -190,7 +190,7 @@ extension MovieWriter {
                     try throwError(.movieWriterFailed, reason: "Invalid audio format/converter settings")
                 }
                 let bitrateArray = bitrates.map { $0.intValue }
-                if bitrateArray.contains(targetBitRate) == false {
+                if !bitrateArray.contains(targetBitRate) {
                     // bitrate adjustment
                     var prev = bitrateArray.first!
                     for item in bitrateArray {
@@ -215,7 +215,7 @@ extension MovieWriter {
     
     private func hasFieldModeSupport(of track: AVMutableMovieTrack) -> Bool {
         let descArray: [Any] = track.formatDescriptions
-        guard descArray.count > 0 else { return false }
+        guard !descArray.isEmpty else { return false }
         let desc: CMFormatDescription = descArray[0] as! CMFormatDescription // CF typealias
         var dict: CFDictionary? = nil
         do {
@@ -275,7 +275,7 @@ extension MovieWriter {
     private func prepareVideoChannels(_ movie: AVMutableMovie, _ ar: AVAssetReader, _ aw: AVAssetWriter) throws {
         let numVideoEncode = customParam[kVideoEncodeKey] as? NSNumber
         let videoEncode: Bool = numVideoEncode?.boolValue ?? true
-        if videoEncode == false {
+        if !videoEncode {
             prepareCopyChannels(movie, ar, aw, .video)
             return
         }
@@ -303,12 +303,9 @@ extension MovieWriter {
             ar.add(arOutput)
             
             //
-            var compressionProperties: NSDictionary? = nil
-            if ["ap4h","apch","apcn","apcs","apco"].contains(fourcc) {
-                // ProRes family
-            } else {
-                compressionProperties = [AVVideoAverageBitRateKey:targetBitRate]
-            }
+            var compressionProperties: NSDictionary? = VideoChannelMetadataBuilder
+                .makeInitialCompressionProperties(forCodec: fourcc as String,
+                                                  targetBitRate: targetBitRate)
             
             var cleanAperture: NSDictionary? = nil
             var pixelAspectRatio: NSDictionary? = nil
@@ -316,93 +313,43 @@ extension MovieWriter {
             
             var trackDimensions = track.naturalSize
             let descArray: [Any] = track.formatDescriptions
-            if descArray.count > 0 {
+            if !descArray.isEmpty {
                 let desc: CMFormatDescription = descArray[0] as! CMFormatDescription // CF typealias
                 trackDimensions = CMVideoFormatDescriptionGetPresentationDimensions(desc,
                                                                                     usePixelAspectRatio: false,
                                                                                     useCleanAperture: false)
                 
-                var fieldCount: NSNumber? = nil
-                var fieldDetail: NSString? = nil
-                
-                let extCA: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                             extensionKey: kCMFormatDescriptionExtension_CleanAperture)
-                if let extCA = extCA,
-                   let width = extCA[kCMFormatDescriptionKey_CleanApertureWidth] as? NSNumber,
-                   let height = extCA[kCMFormatDescriptionKey_CleanApertureHeight] as? NSNumber,
-                   let wOffset = extCA[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] as? NSNumber,
-                   let hOffset = extCA[kCMFormatDescriptionKey_CleanApertureVerticalOffset] as? NSNumber {
-                    
-                    let dict: NSMutableDictionary = NSMutableDictionary()
-                    dict[AVVideoCleanApertureWidthKey] = width
-                    dict[AVVideoCleanApertureHeightKey] = height
-                    dict[AVVideoCleanApertureHorizontalOffsetKey] = wOffset
-                    dict[AVVideoCleanApertureVerticalOffsetKey] = hOffset
-                    
-                    cleanAperture = dict
+                cleanAperture = VideoChannelMetadataBuilder.makeExtensionDict(
+                    from: desc,
+                    keys: [kCMFormatDescriptionExtension_CleanAperture]
+                ) { values in
+                    VideoChannelMetadataBuilder.makeCleanAperture(from: values[0])
                 }
-                
-                let extPA: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                             extensionKey: kCMFormatDescriptionExtension_PixelAspectRatio)
-                if let extPA = extPA,
-                   let hSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] as? NSNumber,
-                   let vSpacing = extPA[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] as? NSNumber {
-                    
-                    let dict: NSMutableDictionary = NSMutableDictionary()
-                    dict[AVVideoPixelAspectRatioHorizontalSpacingKey] = hSpacing
-                    dict[AVVideoPixelAspectRatioVerticalSpacingKey] = vSpacing
-                    
-                    pixelAspectRatio = dict
+
+                pixelAspectRatio = VideoChannelMetadataBuilder.makeExtensionDict(
+                    from: desc,
+                    keys: [kCMFormatDescriptionExtension_PixelAspectRatio]
+                ) { values in
+                    VideoChannelMetadataBuilder.makePixelAspectRatio(from: values[0])
                 }
-                
-                if copyNCLC {
-                    let extCP: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                                 extensionKey: kCMFormatDescriptionExtension_ColorPrimaries)
-                    let extTF: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                                 extensionKey: kCMFormatDescriptionExtension_TransferFunction)
-                    let extMX: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                                 extensionKey: kCMFormatDescriptionExtension_YCbCrMatrix)
-                    if let extCP  = extCP, let extTF = extTF, let extMX = extMX {
-                        if let colorPrimaries = extCP as? NSString,
-                           let transferFunction = extTF as? NSString,
-                           let ycbcrMatrix = extMX as? NSString {
-                            
-                            let dict: NSMutableDictionary = NSMutableDictionary()
-                            dict[AVVideoColorPrimariesKey] = colorPrimaries
-                            dict[AVVideoTransferFunctionKey] = transferFunction
-                            dict[AVVideoYCbCrMatrixKey] = ycbcrMatrix
-                            
-                            nclc = dict
-                        }
-                    }
+
+                nclc = VideoChannelMetadataBuilder.makeExtensionDict(
+                    from: desc,
+                    keys: VideoChannelMetadataBuilder.nclcExtensionKeys(copyNCLC: copyNCLC)
+                ) { values in
+                    VideoChannelMetadataBuilder.makeNCLC(from: values)
                 }
-                
-                if copyField {
-                    let extFC: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                                 extensionKey: kCMFormatDescriptionExtension_FieldCount)
-                    let extFD: CFPropertyList? = CMFormatDescriptionGetExtension(desc,
-                                                                                 extensionKey: kCMFormatDescriptionExtension_FieldDetail)
-                    if let extFC = extFC, let extFD = extFD {
-                        fieldCount = (extFC as? NSNumber)
-                        fieldDetail = (extFD as? NSString)
-                    }
-                }
-                
-                if fieldCount != nil || fieldDetail != nil {
-                    let dict: NSMutableDictionary = NSMutableDictionary()
-                    
-                    if copyField, let fieldCount = fieldCount, let fieldDetail = fieldDetail {
-                        dict[kVTCompressionPropertyKey_FieldCount] = fieldCount
-                        dict[kVTCompressionPropertyKey_FieldDetail] = fieldDetail
-                    }
-                    
-                    if let compressionProperties = compressionProperties {
-                        if let props = compressionProperties as? [AnyHashable:Any] {
-                            dict.addEntries(from: props)
-                        }
-                    }
-                    compressionProperties = dict
-                }
+
+                compressionProperties = VideoChannelMetadataBuilder.makeExtensionDict(
+                    from: desc,
+                    keys: VideoChannelMetadataBuilder.fieldExtensionKeys(copyField: copyField)
+                ) { values in
+                    VideoChannelMetadataBuilder.mergeFieldCompressionProperties(
+                        fieldCountExtension: values[0],
+                        fieldDetailExtension: values[1],
+                        initial: compressionProperties
+                    )
+                } ?? compressionProperties
             }
             
             // destination
@@ -512,29 +459,25 @@ extension MovieWriter {
         }
     }
     
+    /// Exports the internal movie with custom AVAssetReader/AVAssetWriter settings.
+    ///
+    /// Reference media is accessed for the duration of the export. The writer state and
+    /// progress notifications are updated throughout the operation.
+    ///
+    /// - Parameters:
+    ///   - url: The destination file URL.
+    ///   - type: The destination AVFoundation file type.
+    ///   - param: The custom reader/writer settings.
+    /// - Throws: A writer error when another export is running, setup fails, the operation
+    ///   is cancelled, or the export fails.
     public func exportCustomMovie(to url: URL, fileType type: AVFileType, settings param: [String: any Sendable]) async throws {
         
-        // Check that no export is already running.
-        guard writeInProgress == false else {
-            let reason = "Please wait until the current export session finishes."
-            try throwError(.anotherExportSessionRunning, reason: reason)
-        }
+        let dateStart: Date = try beginWrite()
         defer {
             writeInProgress = false
         }
         
         /* ============================================ */
-        
-        // Set up initial export state.
-        self.writeInProgress = true
-        self.writeSuccess = false
-        self.writeError = nil
-        self.writeCancelled = false
-        
-        let dateStart: Date = Date()
-        self.writeStart = dateStart
-        self.writeEnd = nil
-        self.writeProgress = 0.0
         
         let dgQueue: DispatchQueue = DispatchQueue(label: "exportCustomMovie")
         self.customParam = param
@@ -545,11 +488,7 @@ extension MovieWriter {
         self.unblockUserInteraction?()
         
         // Notify that export is starting.
-        let userInfoStart: [AnyHashable:Any] = [urlInfoKey:url,
-                                              startInfoKey:dateStart]
-        let notificationStart = Notification(name: .movieWillExportCustom,
-                                             object: self, userInfo: userInfoStart)
-        NotificationCenter.default.post(notificationStart)
+        issueStartNotification(.movieWillExportCustom, url: url, dateStart: dateStart)
         
         /* ============================================ */
         
@@ -584,7 +523,7 @@ extension MovieWriter {
                 let readyReader: Bool = ar.startReading()
                 let readyWriter: Bool = aw.startWriting()
                 guard readyReader && readyWriter else {
-                    let error = (readyReader == false) ? ar.error : aw.error
+                    let error = !readyReader ? ar.error : aw.error
                     ar.cancelReading()
                     aw.cancelWriting()
                     try throwError(.assetReaderWriterFailed, reason: error.debugDescription)
@@ -596,7 +535,7 @@ extension MovieWriter {
         }
         
         // If export failed, throw the error.
-        if writeSuccess == false {
+        if !writeSuccess {
             if writeCancelled {
                 try throwError(.operationCancelled, reason: "Export was cancelled by the user.")
             } else if let error = writeError {
@@ -609,16 +548,7 @@ extension MovieWriter {
         /* ============================================ */
         
         // Notify that export has finished.
-        var userInfoEnd: [AnyHashable:Any] = [urlInfoKey:url,
-                                            startInfoKey:dateStart,
-                                        completedInfoKey:self.writeSuccess]
-        if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
-            userInfoEnd[endInfoKey] = dateEnd
-            userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)
-        }
-        let notificationEnd = Notification(name: .movieDidExportCustom,
-                                           object: self, userInfo: userInfoEnd)
-        NotificationCenter.default.post(notificationEnd)
+        issueEndNotification(.movieDidExportCustom, url: url, dateStart: dateStart)
     }
     
     /// Cancel ongoing custom export operation
@@ -629,7 +559,7 @@ extension MovieWriter {
     /// Design Notes:
     /// - writeCancelled is set BEFORE dispatching channel cancellations for two
     ///   reasons:
-    ///     1. It suppresses duplicate dispatches: the `if writeCancelled == false`
+    ///     1. It suppresses duplicate dispatches: the `if !writeCancelled`
     ///        check inside cancelCustomMovie() short-circuits repeated Cancel
     ///        button presses, so the SampleBufferChannel queue only sees one
     ///        cancel pass.
@@ -643,7 +573,7 @@ extension MovieWriter {
     public func cancelCustomMovie() {
         // Only proceed if a custom export is actually in progress
         guard let customQueue = customQueue else { return }
-        if writeCancelled == false {
+        if !writeCancelled {
             writeCancelled = true
             let params = cancelParams(channels: customSampleBufferChannels)
             customQueue.async { @Sendable in // @escaping
@@ -663,7 +593,11 @@ extension MovieWriter {
         let channels: [SampleBufferChannel]
     }
     
-    // SampleBufferChannelDelegate
+    /// Receives a sample buffer from a custom-export channel and schedules progress updates.
+    ///
+    /// - Parameters:
+    ///   - channel: The channel that supplied the sample buffer.
+    ///   - buffer: The sample buffer that was read.
     nonisolated public func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer) {
         let params = didReadParams(channel: channel, buffer: buffer)
         Task { @Sendable in

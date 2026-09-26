@@ -90,65 +90,140 @@ extension Document {
 }
 
 /* ============================================ */
-// MARK: -
+// MARK: - KVO context token (L-33)
 /* ============================================ */
 
+/// Identity-only reference type used as the per-document KVO context.
+///
+/// The instance is never dereferenced and has no stored state; only its
+/// identity (address) is compared. A stateless `final` class conforms to
+/// `Sendable` directly, so no `@unchecked` opt-out is needed. Internal (not
+/// `private`) so both `Document` (token storage) and `Document+Observers.swift`
+/// (registration / callback) can refer to it within the module, and the unit
+/// tests (`DocumentKVOContextTests`) can verify the pointer contract directly.
+final class PlayerKVOContextToken: Sendable {
+
+    /// Raw `context` pointer derived from this token's identity. Single
+    /// derivation site shared by registration, callback comparison, and the
+    /// unit tests (internal test helper).
+    ///
+    /// `Unmanaged.passUnretained` performs no memory management and allocates
+    /// nothing. Usage contract: do not store the pointer in stored or global
+    /// state, pass it as a `Sendable` argument, capture it in a `Task`, or
+    /// keep it beyond this token's lifetime — derive and compare it in place.
+    var contextPointer: UnsafeMutableRawPointer {
+        Unmanaged.passUnretained(self).toOpaque()
+    }
+}
+
+struct SaveMode: Sendable {
+    var selfContained: Bool = false
+    var overwrite: Bool = false
+    var useAccessory: Bool = false
+    var copyData: Bool = false
+}
+
 @MainActor
-class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
+class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, ViewControllerDelegate {
     
     /* ============================================ */
     // MARK: - Public properties
     /* ============================================ */
     
-    /// Strong reference to MovieMutator
+    /// Strong reference to the document's movie mutator.
     public var movieMutator: MovieMutator? = nil
     
-    // Computed properties
+    /// The window of the document's first window controller.
+    ///
+    /// Access this property after a window controller has been created.
     public var window: Window? {
         return self.windowControllers[0].window as? Window
     }
+
+    /// The document's view controller, or `nil` when the window content is unavailable.
     public var viewController: ViewController? {
         return window?.contentViewController as? ViewController
     }
+
+    /// The document's player view, or `nil` when the view controller is unavailable.
     public var playerView: AVPlayerView? {
         return viewController?.playerView
     }
+
+    /// The player associated with the document's player view.
     public var player: AVPlayer? {
         return playerView?.player
     }
+
+    /// The current player item, or `nil` when no player is attached.
     public var playerItem: AVPlayerItem? {
         return player?.currentItem
     }
-    
-    // Polling timer
+
+    /// The timer used for periodic playback-position polling.
     public var timer: Timer? = nil
+
+    /// The interval between playback-position polls, in seconds.
     public var pollingInterval: TimeInterval = 1.0/15
-    
-    // KVO Context
+
+    /// Per-document KVO context token (L-33).
+    ///
+    /// `nonisolated` + `Sendable` so the nonisolated `observeValue` override can
+    /// derive the context pointer without a MainActor hop. The address is stable
+    /// for the lifetime of the Document instance — the same per-instance
+    /// stability contract the legacy `kvoContext` storage provided. Never
+    /// weakified, regenerated, or shared outside this instance.
+    nonisolated private let playerKVOContextToken = PlayerKVOContextToken()
+
+    /// Raw `context` pointer identifying this document's KVO registrations (L-33).
+    ///
+    /// Forwards to the token's `contextPointer` derivation at each use site and
+    /// allocates nothing. (The pointer is not precomputed into stored state: raw
+    /// pointer types are non-`Sendable`, so they cannot be kept in nonisolated
+    /// stored state at all.)
+    ///
+    /// - Usage contract: the returned pointer must not be stored in stored or
+    ///   global state, passed as a `Sendable` argument, captured in a `Task`, or
+    ///   kept beyond the token lifetime. It is consumed in place by the
+    ///   `addObserver`/`removeObserver` calls and the callback comparison.
+    nonisolated var playerKVOContext: UnsafeMutableRawPointer {
+        playerKVOContextToken.contextPointer
+    }
+
+    /// Storage used as the KVO context for document observations.
+    ///
+    /// Retained for source compatibility: this member is `public` and may be
+    /// referenced by code outside this repository. It is no longer used as the
+    /// context for document observations (see L-33). Complete removal is a
+    /// public API change tracked as a separate issue.
+    @available(*, deprecated, message: "KVO context is managed internally.")
     public var kvoContext = 0
-    
-    // SavePanel with Accessory View support
+
+    /// The save panel currently associated with the document.
     public weak var savePanel: NSSavePanel? = nil
-    
-    /// Alert for progress dialog
+
+    /// The alert used to display progress or error information.
     public var alert: NSAlert? = nil
-    
-    /// Progress indicator for visual feedback
+
+    /// The progress indicator used for visual feedback.
     public var progressIndicator: NSProgressIndicator? = nil
-    
-    /// Timestamp of last progress update (nanoseconds)
+
+    /// The timestamp of the last progress update, in nanoseconds.
     public var lastUpdateAt: UInt64 = 0
-    
-    /// Last reported progress value for smooth animation
-    /// Used for exponential smoothing to avoid jarring progress jumps
+
+    /// The last progress value reported after exponential smoothing.
     public var lastReportedProgress: Float = 0.0
-    
-    // NSProgress support for save/export operations
+
+    /// The current save or export progress object.
     public var saveProgress: Progress? = nil
-    
-    //
+
+    /// The most recently queried movie time.
     public var cachedTime = CMTime.invalid
+
+    /// Whether `cachedTime` lies within the cached last-sample range.
     public var cachedWithinLastSampleRange: Bool = false
+
+    /// The last sample range used by playback-position queries.
     public var cachedLastSampleRange: CMTimeRange? = nil
     
     //
@@ -171,26 +246,14 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate {
     internal var dimensionsType: dimensionsType = .clean
     
     // SavePanel support
-    internal var selfcontainedFlag: Bool = false
-    internal var overwriteFlag: Bool = false
-    internal var useAccessory: Bool = false
-    internal var copyData: Bool = false
+    internal var saveMode = SaveMode()
     internal var accessoryVCselfContained: Bool = false
     
     //
     internal var mutationObserver: NSObjectProtocol? = nil
     
-    /// The latest scheduled player reload task. Replaced/cancelled when a new
-    /// reload request arrives so stale AVPlayerItems are never applied after a
-    /// newer edit has already requested another refresh.
-    internal var playerReloadTask: Task<Void, Never>? = nil
-    
-    /// Monotonic generation counter for player reload requests. Used so only
-    /// the newest in-flight reload task may clear `playerReloadTask`.
-    internal var playerReloadGeneration: UInt64 = 0
-    
-    /// Suppress queryPosition while a reload/seek is in progress.
-    internal var suppressQueryPosition: Bool = false
+    /// Reload/seek suppression state machine (S-17).
+    internal let playerSeekSequencer = PlayerSeekSequencer()
     
     /* ============================================ */
     // MARK: - NSDocument methods/properties

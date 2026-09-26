@@ -1,15 +1,8 @@
 # Contributing to cutter2
 
-**Last Updated**: February 5, 2026
+**Last Updated**: September 21, 2026
 
 Thank you for your interest in contributing to cutter2! This document provides guidelines and instructions for contributing to the project.
-
-**Recent Updates**:
-- ✅ Phase 2.1 complete: Full internationalization support
-- ✅ Phase 2.2 complete: Performance optimization infrastructure
-- ✅ LocalizationTests added
-- ✅ PerformanceTests added
-- ✅ String Catalog integration
 
 ---
 
@@ -55,34 +48,37 @@ We are committed to providing a welcoming and inspiring community for all. Pleas
 Before contributing, ensure you have:
 
 1. **macOS** 14.0 or later
-2. **Xcode** 15.0 or later (currently 26.1.1)
-3. **Swift** 6.0 or later (currently 6.2.1)
+2. **Xcode** 16.0 or later
+3. **Swift language mode** 6.0 (`SWIFT_VERSION = 6.0`)
 4. **Git** installed and configured
 5. **GitHub account** for submitting contributions
+
+The documentation was verified on September 21, 2026 with macOS 27.0, Xcode 27.0 (build 27A266a), and Swift compiler 6.4. These are verification values, not minimum requirements.
 
 ### Fork and Clone
 
 1. **Fork the repository** on GitHub
-   - Click "Fork" button on the repository page
+   - Open [MyCometG3/cutter2](https://github.com/MyCometG3/cutter2) and click **Fork**.
 
 2. **Clone your fork**
+   - Replace `<YOUR-USERNAME>` with your GitHub account name.
    ```bash
-   git clone https://github.com/YOUR-USERNAME/cutter2.git
+   git clone https://github.com/<YOUR-USERNAME>/cutter2.git
    cd cutter2
    ```
 
-3. **Add upstream remote**
+3. **Add the upstream remote**
    ```bash
-   git remote add upstream https://github.com/ORIGINAL-OWNER/cutter2.git
+   git remote add upstream https://github.com/MyCometG3/cutter2.git
    ```
 
 4. **Verify remotes**
    ```bash
    git remote -v
-   # origin    https://github.com/YOUR-USERNAME/cutter2.git (fetch)
-   # origin    https://github.com/YOUR-USERNAME/cutter2.git (push)
-   # upstream  https://github.com/ORIGINAL-OWNER/cutter2.git (fetch)
-   # upstream  https://github.com/ORIGINAL-OWNER/cutter2.git (push)
+   # origin    https://github.com/<YOUR-USERNAME>/cutter2.git (fetch)
+   # origin    https://github.com/<YOUR-USERNAME>/cutter2.git (push)
+   # upstream  https://github.com/MyCometG3/cutter2.git (fetch)
+   # upstream  https://github.com/MyCometG3/cutter2.git (push)
    ```
 
 ### Set Up Development Environment
@@ -100,7 +96,7 @@ Before contributing, ensure you have:
 
 4. **Read documentation**
    - [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) - Development setup and workflows
-   - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture
+   - [CODEBASE_REVIEW.md](CODEBASE_REVIEW.md) - Codebase analysis and architecture overview
    - [TESTING_GUIDE.md](TESTING_GUIDE.md) - Testing practices
 
 ---
@@ -146,12 +142,13 @@ We welcome various types of contributions:
 
 ### 1. Sync with Upstream
 
-Before starting work, sync your fork:
+Before starting work, sync your fork. `work` is the integration branch used by the current project workflow; confirm it exists on the upstream remote before merging:
 
 ```bash
-git checkout work
 git fetch upstream
-git merge upstream/work
+git ls-remote --exit-code --heads upstream work
+git checkout work
+git merge --ff-only upstream/work
 git push origin work
 ```
 
@@ -290,19 +287,19 @@ class MyClass {
     // MARK: Properties
     // Public properties first
     var publicProperty: String
-    
+
     // Then private properties
     private var privateProperty: Int
-    
+
     // MARK: Initialization
     init() { }
-    
+
     // MARK: Public Methods
     func publicMethod() { }
-    
+
     // MARK: Private Methods
     private func privateMethod() { }
-    
+
     // MARK: Protocol Conformance
 }
 
@@ -342,7 +339,9 @@ class ViewController: NSViewController {
 
 // Use async/await for I/O
 func loadData() async throws -> Data {
-    return try await Task.detached {
+    // Task.detached runs the @Sendable closure on a background thread.
+    // Specify priority explicitly for user-facing vs maintenance work.
+    return try await Task.detached(priority: .userInitiated) {
         // Background work
     }.value
 }
@@ -400,7 +399,7 @@ LoggingSystem.video.debug("Detailed state: \(complexObject)")
 **Log levels**:
 - `debug()` - Development debugging (wrap in `#if DEBUG`)
 - `info()` - Informational messages
-- `notice()` - Significant events
+- `notice()` - Significant events and warning-like issues (use for potential, non-fatal problems; there is no `warning()` on `os.Logger`)
 - `error()` - Error conditions
 - `fault()` - Critical failures
 
@@ -451,24 +450,24 @@ class MyFeatureTests: XCTestCase {
         super.setUp()
         // Test setup
     }
-    
+
     override func tearDown() {
         // Test cleanup
         super.tearDown()
     }
-    
+
     // MARK: - Tests
     func testFeatureWorks() {
         // Arrange
         let input = setupInput()
-        
+
         // Act
         let result = performOperation(input)
-        
+
         // Assert
         XCTAssertEqual(result, expected)
     }
-    
+
     func testFeatureHandlesError() {
         // Test error case
     }
@@ -580,10 +579,10 @@ What should happen
 What actually happens
 
 ## Environment
-- macOS version: 26.1
-- Xcode version: 26.1.1
-- Swift version: 6.2.1
-- App version: 1.0.0
+- macOS version: 14.0+
+- Xcode version: 16.0+
+- Swift version: 6.0
+- App version: 0.8.20a1
 
 ## Additional Context
 - Screenshots if applicable
@@ -651,6 +650,6 @@ Your contributions help make video editing on macOS better for everyone.
 
 ---
 
-**Document Status**: ✅ Active  
-**Last Updated**: February 5, 2026  
+**Document Status**: ✅ Active
+**Last Updated**: September 21, 2026
 **Maintained By**: cutter2 project maintainers

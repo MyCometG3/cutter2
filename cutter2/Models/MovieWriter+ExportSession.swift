@@ -168,27 +168,26 @@ extension MovieWriter {
         // Note: For custom exports, cancelCustomMovie must be called separately
     }
     
-    /// Status string representation.
+    /// Display names for `AVAssetExportSession.Status` cases.
     ///
-    /// - Parameter status: `AVAssetExportSession.Status`
-    /// - Returns: String representation of status
+    /// String interpolation of an imported C enum does not yield the case
+    /// name on current Swift runtimes (`"\(status)"` renders as
+    /// `"AVAssetExportSessionStatus(rawValue: N)"`), so the names are held
+    /// here explicitly. Unknown cases (including future SDK additions) fall
+    /// back to "unknown", matching the former `@unknown default` behavior.
+    private static let statusNames: [AVAssetExportSession.Status: String] = [
+        .unknown: "unknown",
+        .waiting: "waiting",
+        .exporting: "exporting",
+        .completed: "completed",
+        .failed: "failed",
+        .cancelled: "cancelled"
+    ]
+
+    /// Status string representation in "name(rawValue)" form without spaces,
+    /// e.g. "completed(3)". The numeric suffix is derived from `rawValue`.
     private func statusString(of status: AVAssetExportSession.Status) -> String {
-        switch status {
-        case .unknown:
-            return "unknown(0)"
-        case .waiting:
-            return "waiting(1)"
-        case .exporting:
-            return "exporting(2)"
-        case .completed:
-            return "completed(3)"
-        case .failed:
-            return "failed(4)"
-        case .cancelled:
-            return "cancelled(5)"
-        @unknown default:
-            return "unknown(\(status.rawValue))"
-        }
+        return "\(Self.statusNames[status] ?? "unknown")(\(status.rawValue))"
     }
     
     /// Export as specified file type using AVAssetExportSessionPreset.
@@ -201,26 +200,12 @@ extension MovieWriter {
     ///   export errors surfaced by the active platform path.
     public func exportMovie(to url: URL, fileType type: AVFileType, presetName preset: String?) async throws {
         
-        guard writeInProgress == false else {
-            let reason = "Please wait until the current export session finishes."
-            try throwError(.anotherExportSessionRunning, reason: reason)
-        }
+        let dateStart: Date = try beginWrite()
         defer {
             writeInProgress = false
         }
         
         /* ============================================ */
-        
-        // Update Properties
-        self.writeInProgress = true
-        self.writeSuccess = false
-        self.writeError = nil
-        self.writeCancelled = false
-        
-        let dateStart: Date = Date()
-        self.writeStart = dateStart
-        self.writeEnd = nil
-        self.writeProgress = 0.0
         
         self.exportSession = nil
         self.exportSessionStatus = .unknown
@@ -229,11 +214,7 @@ extension MovieWriter {
         self.unblockUserInteraction?()
         
         // Issue start notification
-        let userInfoStart: [AnyHashable:Any] = [urlInfoKey:url,
-                                              startInfoKey:dateStart]
-        let notificationStart = Notification(name: .movieWillExportSession,
-                                             object: self, userInfo: userInfoStart)
-        NotificationCenter.default.post(notificationStart)
+        issueStartNotification(.movieWillExportSession, url: url, dateStart: dateStart)
         
         /* ============================================ */
         
@@ -310,7 +291,7 @@ extension MovieWriter {
         }
         
         //
-        if writeSuccess == false {
+        if !writeSuccess {
             if writeCancelled {
                 try throwError(.operationCancelled, reason: "Export was cancelled by the user.")
             } else if let error = writeError {
@@ -323,16 +304,7 @@ extension MovieWriter {
         /* ============================================ */
         
         // Issue end notification
-        var userInfoEnd: [AnyHashable:Any] = [urlInfoKey:url,
-                                            startInfoKey:dateStart,
-                                        completedInfoKey:self.writeSuccess]
-        if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
-            userInfoEnd[endInfoKey] = dateEnd
-            userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)
-        }
-        let notificationEnd = Notification(name: .movieDidExportSession,
-                                           object: self, userInfo: userInfoEnd)
-        NotificationCenter.default.post(notificationEnd)
+        issueEndNotification(.movieDidExportSession, url: url, dateStart: dateStart)
     }
     
     /// Check compatibility of preset + asset + output file type.
@@ -377,9 +349,12 @@ extension MovieWriter {
         return true
     }
     
-    /// Get progress info of current exportSession
+    /// Returns progress and status information for the current or most recent export session.
     ///
-    /// - Returns: Dictionary of progress info
+    /// The dictionary includes progress and status values and may include elapsed,
+    /// estimated-total, and estimated-remaining durations in seconds.
+    ///
+    /// - Returns: Export-session progress information keyed by the writer's progress constants.
     public func exportSessionProgressInfo() -> [String: Any] {
         var result: [String:Any] = [:]
         

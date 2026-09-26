@@ -15,6 +15,11 @@ import os.log
 /* ============================================ */
 
 extension Document {
+    /// Builds the dictionary of display strings used by the movie inspector.
+    ///
+    /// Returns an empty dictionary when no movie mutator is available.
+    ///
+    /// - Returns: Inspector values keyed by the application's inspector constants.
     public func inspectorDictionary() -> [String:Any] {
         
         var dict: [String:Any] = [:]
@@ -48,15 +53,14 @@ extension Document {
     
     /// Cleanup for close document
     public func cleanup() {
-        guard didCleanup == false else { return }
+        guard !didCleanup else { return }
         didCleanup = true
         
         //
         self.removeMutationObserver()
         self.removeAllUndoRecords()
         self.useUpdateTimer(false)
-        self.playerReloadTask?.cancel()
-        self.playerReloadTask = nil
+        self.playerSeekSequencer.cancelReloadTask()
         self.removePlayerObserver()
         
         //

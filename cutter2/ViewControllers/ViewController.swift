@@ -65,18 +65,20 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
     // MARK: - public properties
     /* ============================================ */
     
-    // Step offset resolution in sec
+    /// The short keyboard-step offset in seconds.
     public var offsetS: Float64 = 1.0
+    /// The medium keyboard-step offset in seconds.
     public var offsetM: Float64 = 5.0
+    /// The long keyboard-step offset in seconds.
     public var offsetL: Float64 = 15.0
     
-    // To mimic legacy QT7PlayerPro JKL combination
+    /// Whether to mimic the legacy QuickTime Player Pro JKL key combination behavior.
     @objc public var mimicJKLcombination: Bool = true
     
-    // To mimic legacy QT7PlayerPro left/right combination
+    /// Whether Shift+Option movement should ignore the Option modifier's boundary behavior.
     public var ignoreOptionWhenShift: Bool = false
     
-    // To mimic legacy QT7PlayerPro selectionMarker move sync w/ current
+    /// Whether moving a selection marker also moves the current marker.
     public var followSelectionMove: Bool = true
     
     /// delegate to Document (NSDocument subclass)
@@ -111,6 +113,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         }
     }
     
+    /// Connects the timeline and installs the view controller's notification observers.
     public func setup() {
         self.timelineView.delegate = self
         
@@ -122,6 +125,7 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         addUserDefaultObserver()
     }
     
+    /// Removes notification observers installed by `setup()`.
     public func cleanup() {
         //
         removeUpdateReqObserver()
@@ -131,6 +135,14 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         removeUserDefaultsObserver()
     }
     
+    /// Updates timeline markers and the time label, requesting layout only when state changes.
+    ///
+    /// - Parameters:
+    ///   - curPosition: The current marker position from 0.0 to 1.0.
+    ///   - startPosition: The selection start position from 0.0 to 1.0.
+    ///   - endPosition: The selection end position from 0.0 to 1.0.
+    ///   - string: The time label text.
+    ///   - valid: Whether the supplied timeline state is valid.
     public func updateTimeline(current curPosition: Float64,
                                from startPosition: Float64,
                                to endPosition: Float64,
@@ -147,6 +159,9 @@ class ViewController: NSViewController, TimelineUpdateDelegate {
         }
     }
     
+    /// Shows or hides the controller box.
+    ///
+    /// - Parameter flag: `true` to show the controller box; `false` to hide it.
     public func showController(_ flag: Bool) {
         controllerBox.isHidden = !flag
     }

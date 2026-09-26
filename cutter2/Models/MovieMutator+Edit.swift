@@ -203,7 +203,9 @@ extension MovieMutator {
     // MARK: - public method - edit action
     /* ============================================ */
     
-    /// Copy selection of internalMovie
+    /// Copies the selected time range of the internal movie to the pasteboard.
+    ///
+    /// The operation does nothing when the selection is not a positive-duration range.
     public func copySelection() {
         
         // perform copy selection
@@ -217,9 +219,12 @@ extension MovieMutator {
         }
     }
     
-    /// Cut selection of internalMovie
+    /// Cuts the selected time range from the internal movie and places it on the pasteboard.
     ///
-    /// - Parameter undoManager: UndoManager for this operation
+    /// The operation updates the movie and registers an undo action only after the cut
+    /// succeeds. Invalid selections or unavailable movie data leave the movie unchanged.
+    ///
+    /// - Parameter undoManager: The undo manager used to register the cut operation.
     public func cutSelection(using undoManager: UndoManagerWrapper) {
         
         let time = self.insertionTime
@@ -252,9 +257,13 @@ extension MovieMutator {
         undoManager.setActionName("Cut selection")
     }
     
-    /// Paste clip into internalMovie
+    /// Pastes the clip from the pasteboard at the current insertion time.
     ///
-    /// - Parameter undoManager: UndoManager for this operation
+    /// The operation updates the movie and registers an undo action only after the
+    /// insertion succeeds. An invalid insertion state or unavailable clip leaves the
+    /// movie unchanged.
+    ///
+    /// - Parameter undoManager: The undo manager used to register the paste operation.
     public func pasteAtInsertionTime(using undoManager: UndoManagerWrapper) {
         
         let time = self.insertionTime
@@ -286,9 +295,13 @@ extension MovieMutator {
         undoManager.setActionName("Paste at marker")
     }
     
-    /// Delete selection of internalMovie
+    /// Deletes the selected time range from the internal movie.
     ///
-    /// - Parameter undoManager: UndoManager for this operation
+    /// The operation updates the movie and registers an undo action only after the
+    /// deletion succeeds. Invalid selections or unavailable movie data leave the
+    /// movie unchanged.
+    ///
+    /// - Parameter undoManager: The undo manager used to register the delete operation.
     public func deleteSelection(using undoManager: UndoManagerWrapper) {
         
         let time = self.insertionTime

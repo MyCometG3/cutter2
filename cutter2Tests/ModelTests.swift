@@ -385,4 +385,45 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(converter.dataSize(descCount: Int.max), 0,
                        "overflow must return 0 without trapping")
     }
+    
+    // MARK: - MovieWriter status string pinning (L-22)
+    
+    func testExportSessionProgressInfoStatusStringFormat() async throws {
+        let params = MovieWriterParams(movie: AVMutableMovie(),
+                                       unblockUserInteraction: nil,
+                                       progressContinuation: nil)
+        let writer = MovieWriter(params: params)
+
+        let expected: [AVAssetExportSession.Status: String] = [
+            .unknown: "unknown(0)",
+            .waiting: "waiting(1)",
+            .exporting: "exporting(2)",
+            .completed: "completed(3)",
+            .failed: "failed(4)",
+            .cancelled: "cancelled(5)"
+        ]
+
+        for (status, expectedString) in expected {
+            await writer.setProgressInfoState(status: status)
+            let actual = await writer.progressInfoStatusValue()
+            XCTAssertEqual(actual, expectedString,
+                           "statusString format changed for \(expectedString)")
+        }
+    }
+}
+
+extension MovieWriter {
+    /// Test-target-only helper: seeds the state consumed by the non-running
+    /// branch of exportSessionProgressInfo(). Runs on the writer's actor.
+    fileprivate func setProgressInfoState(status: AVAssetExportSession.Status) {
+        writeStart = Date()
+        exportSessionStatus = status
+    }
+
+    /// Test-target-only helper: extracts the "status" value from the
+    /// non-running branch of exportSessionProgressInfo() while staying on
+    /// the writer's actor (the [String: Any] payload itself is not Sendable).
+    fileprivate func progressInfoStatusValue() -> String {
+        return exportSessionProgressInfo()[statusInfoKey] as? String ?? "missing"
+    }
 }

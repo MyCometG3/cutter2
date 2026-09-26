@@ -24,11 +24,11 @@ extension Document {
         player.addObserver(self,
                            forKeyPath: #keyPath(AVPlayer.status),
                            options: [.old, .new],
-                           context: &(self.kvoContext))
+                           context: playerKVOContext)
         player.addObserver(self,
                            forKeyPath: #keyPath(AVPlayer.rate),
                            options: [.old, .new],
-                           context: &(self.kvoContext))
+                           context: playerKVOContext)
     }
     
     /// Remove AVPlayer properties observer
@@ -38,27 +38,29 @@ extension Document {
         
         player.removeObserver(self,
                               forKeyPath: #keyPath(AVPlayer.status),
-                              context: &(self.kvoContext))
+                              context: playerKVOContext)
         player.removeObserver(self,
                               forKeyPath: #keyPath(AVPlayer.rate),
-                              context: &(self.kvoContext))
-    }
-    
-    /// compare KVO context address as UInt
-    @MainActor func checkKVOContext(_ contextAddress: UInt) -> Bool {
-        return withUnsafePointer(to: &self.kvoContext) { kvoPointer in
-            let kvoAddress = UInt(bitPattern: kvoPointer)
-            return (contextAddress == kvoAddress)
-        }
+                              context: playerKVOContext)
     }
     
     // NSKeyValueObserving protocol - observeValue(forKeyPath:of:change:context:)
     override nonisolated func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey:Any]?,
                                            context: UnsafeMutableRawPointer?) {
         
-        guard
-            let context = context, let object = object as? AVPlayer, let keyPath = keyPath, let change = change
-        else {
+        // L-33: match this document's KVO context token by direct pointer
+        // comparison. The token is a per-instance property (its address is
+        // stable for the Document lifetime) and no isolated state is touched
+        // here, so foreign notifications are forwarded to super without a
+        // MainActor hop.
+        guard let context = context, context == playerKVOContext else {
+            super.observeValue(forKeyPath: keyPath,
+                               of: object,
+                               change: change,
+                               context: context)
+            return
+        }
+        guard let object = object as? AVPlayer, let keyPath = keyPath, let change = change else {
             super.observeValue(forKeyPath: keyPath,
                                of: object,
                                change: change,
@@ -66,13 +68,11 @@ extension Document {
             return
         }
         
-        let contextAddress = UInt(bitPattern: context) // Cast UnsafeMutableRawPointer to UInt for actor isolation
         let (objectIsPlayer, keyPathIsAVPlayerStatus, keyPathIsAVPlayerRate) = ActorUtilities.performSyncOnMainActor {
-            let contextMatch: Bool = checkKVOContext(contextAddress)
             let objectIsPlayer: Bool = (object === self.player)
             let keyPathIsAVPlayerStatus: Bool = (keyPath == #keyPath(AVPlayer.status))
             let keyPathIsAVPlayerRate: Bool = (keyPath == #keyPath(AVPlayer.rate))
-            return (contextMatch && objectIsPlayer, keyPathIsAVPlayerStatus, keyPathIsAVPlayerRate)
+            return (objectIsPlayer, keyPathIsAVPlayerStatus, keyPathIsAVPlayerRate)
         }
         
         if objectIsPlayer && keyPathIsAVPlayerStatus {
@@ -80,9 +80,20 @@ extension Document {
             // Force redraw when AVPlayer.status is updated
             guard let newStatus = change[.newKey] as? NSNumber else { return }
             if newStatus.intValue == AVPlayer.Status.readyToPlay.rawValue {
-                // Seek and refresh View
+                // While a reload's seek is in flight, suppressQueryPosition is
+                // held on. Starting the re-seek here would interrupt that seek
+                // (its completion fires with finished == false) and lift
+                // suppression before the player settles, so queryPosition() can
+                // write a transient currentTime() back into insertionTime. Skip
+                // the competing seek and just re-assert the marker. MainActor
+                // state reads must happen inside performSyncOnMainActor.
                 ActorUtilities.performSyncOnMainActor {
                     guard let mutator = self.movieMutator else { return }
+                    if self.playerSeekSequencer.suppressQueryPosition {
+                        updateTimeline(mutator.insertionTime, range: mutator.selectedTimeRange)
+                        return
+                    }
+                    // Seek and refresh View
                     let time = mutator.insertionTime
                     let range = mutator.selectedTimeRange
                     updateGUI(time, range, false)

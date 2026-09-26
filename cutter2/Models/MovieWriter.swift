@@ -15,7 +15,7 @@ import os.log
 // MARK: - MovieWriterError
 /* ============================================ */
 
-enum MovieWriterError: Error, NSErrorConvertible {
+enum MovieWriterError: Error, NSErrorConvertible, Hashable, CaseIterable {
     case compatibilityError
     case assetReaderWriterUnavailable
     case anotherExportSessionRunning
@@ -26,47 +26,49 @@ enum MovieWriterError: Error, NSErrorConvertible {
     
     static let errorDomain = "MovieWriterError"
     
+    /// Per-case NSError metadata: (code, localization key, localization comment).
+    ///
+    /// The domain ("MovieWriterError") and these codes are an external contract:
+    /// `.operationCancelled` (NSUserCancelledError) is matched by
+    /// Document+FileIO.write() to suppress the error sheet on user cancellation,
+    /// and MovieWriter+ExportSession compares `code == NSUserCancelledError`.
+    ///
+    /// Declared internal (not private) so the test target can verify
+    /// `Set(MovieWriterError.allCases) == Set(errorInfo.keys)` directly.
+    static let errorInfo: [MovieWriterError: (code: Int, key: String, comment: String)] = [
+        .compatibilityError: (code: 1,
+                              key: "error.writer.compatibility",
+                              comment: "Error when file type or preset is not compatible"),
+        .assetReaderWriterUnavailable: (code: 2,
+                                        key: "error.writer.reader_writer_unavailable",
+                                        comment: "Error when AVAssetReader or AVAssetWriter cannot be created"),
+        .anotherExportSessionRunning: (code: 3,
+                                       key: "error.writer.export_in_progress",
+                                       comment: "Error when trying to start export while another is running"),
+        .movieWriterFailed: (code: 4,
+                             key: "error.writer.write_failed",
+                             comment: "Error when movie writer encounters an error"),
+        .assetReaderWriterFailed: (code: 5,
+                                   key: "error.writer.reader_writer_failed",
+                                   comment: "Error when asset reader or writer encounters an error"),
+        // --- Special cases (non-sequential codes; keep exactly as-is) ---
+        // Note: This uses the custom domain internally. Document.write() converts it
+        // to NSCocoaErrorDomain before rethrowing to conform to system conventions.
+        .operationCancelled: (code: NSUserCancelledError,
+                              key: "error.writer.operation_cancelled",
+                              comment: "Error when user cancels an operation"),
+        .unknown: (code: -1,
+                   key: "error.writer.unknown",
+                   comment: "Unknown error message")
+    ]
+    
     var nsError: NSError {
-        let domain = MovieWriterError.errorDomain
-        switch self {
-        case .compatibilityError:
-            let message = NSLocalizedString("error.writer.compatibility",
-                                            comment: "Error when file type or preset is not compatible")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: 1, userInfo: info)
-        case .assetReaderWriterUnavailable:
-            let message = NSLocalizedString("error.writer.reader_writer_unavailable",
-                                            comment: "Error when AVAssetReader or AVAssetWriter cannot be created")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: 2, userInfo: info)
-        case .anotherExportSessionRunning:
-            let message = NSLocalizedString("error.writer.export_in_progress",
-                                            comment: "Error when trying to start export while another is running")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: 3, userInfo: info)
-        case .movieWriterFailed:
-            let message = NSLocalizedString("error.writer.write_failed",
-                                            comment: "Error when movie writer encounters an error")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: 4, userInfo: info)
-        case .assetReaderWriterFailed:
-            let message = NSLocalizedString("error.writer.reader_writer_failed",
-                                            comment: "Error when asset reader or writer encounters an error")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: 5, userInfo: info)
-        case .operationCancelled:
-            // Note: This uses the custom domain internally. Document.write() converts it
-            // to NSCocoaErrorDomain before rethrowing to conform to system conventions.
-            let message = NSLocalizedString("error.writer.operation_cancelled",
-                                            comment: "Error when user cancels an operation")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: NSUserCancelledError, userInfo: info)
-        case .unknown:
-            let message = NSLocalizedString("error.writer.unknown",
-                                            comment: "Unknown error message")
-            let info = [NSLocalizedDescriptionKey: message]
-            return NSError(domain: domain, code: -1, userInfo: info)
+        guard let info = Self.errorInfo[self] else {
+            preconditionFailure("MovieWriterError.errorInfo has no entry for \(self)")
         }
+        let message = NSLocalizedString(info.key, comment: info.comment)
+        return NSError(domain: Self.errorDomain, code: info.code,
+                       userInfo: [NSLocalizedDescriptionKey: message])
     }
 }
 
@@ -84,6 +86,77 @@ extension MovieWriter {
             self.writeSuccess = false
             throw nsError
         }
+    }
+}
+
+/* ============================================ */
+// MARK: - common write phases
+/* ============================================ */
+
+extension MovieWriter {
+    /// Begin a write/export phase with mutual exclusion and shared state reset.
+    ///
+    /// - Throws `anotherExportSessionRunning` when a write/export is already running.
+    /// - Resets the shared write state (`writeInProgress`, `writeSuccess`, `writeError`,
+    ///   `writeCancelled`, `writeStart`, `writeEnd`, `writeProgress`).
+    ///
+    /// The caller must keep `defer { writeInProgress = false }` at its own scope.
+    /// Moving the defer into this method would release the flag as soon as this
+    /// method returns (see S-15 plan §2.5).
+    ///
+    /// - Returns: The operation start date (also stored into `writeStart`).
+    /// - Throws: `MovieWriterError.anotherExportSessionRunning` when busy.
+    func beginWrite() throws -> Date {
+        guard !writeInProgress else {
+            let reason = "Please wait until the current export session finishes."
+            try throwError(.anotherExportSessionRunning, reason: reason)
+        }
+        
+        // Update Properties
+        self.writeInProgress = true
+        self.writeSuccess = false
+        self.writeError = nil
+        self.writeCancelled = false
+        
+        let dateStart: Date = Date()
+        self.writeStart = dateStart
+        self.writeEnd = nil
+        self.writeProgress = 0.0
+        
+        return dateStart
+    }
+
+    /// Post the start-phase notification with the standard userInfo keys.
+    ///
+    /// - Parameters:
+    ///   - name: Entry-specific notification name (`movieWill*`).
+    ///   - url: The destination file URL (`urlInfoKey`).
+    ///   - dateStart: The operation start date (`startInfoKey`).
+    func issueStartNotification(_ name: Notification.Name, url: URL, dateStart: Date) {
+        let userInfoStart: [AnyHashable:Any] = [urlInfoKey:url,
+                                              startInfoKey:dateStart]
+        let notificationStart = Notification(name: name, object: self, userInfo: userInfoStart)
+        NotificationCenter.default.post(notificationStart)
+    }
+
+    /// Post the end-phase notification with the standard userInfo keys.
+    ///
+    /// `endInfoKey` / `intervalInfoKey` are appended only when `writeEnd` is set.
+    ///
+    /// - Parameters:
+    ///   - name: Entry-specific notification name (`movieDid*`).
+    ///   - url: The destination file URL (`urlInfoKey`).
+    ///   - dateStart: The operation start date (`startInfoKey`).
+    func issueEndNotification(_ name: Notification.Name, url: URL, dateStart: Date) {
+        var userInfoEnd: [AnyHashable:Any] = [urlInfoKey:url,
+                                            startInfoKey:dateStart,
+                                        completedInfoKey:self.writeSuccess]
+        if let dateEnd = self.writeEnd, let dateStart = self.writeStart {
+            userInfoEnd[endInfoKey] = dateEnd
+            userInfoEnd[intervalInfoKey] = dateEnd.timeIntervalSince(dateStart)
+        }
+        let notificationEnd = Notification(name: name, object: self, userInfo: userInfoEnd)
+        NotificationCenter.default.post(notificationEnd)
     }
 }
 
@@ -126,6 +199,9 @@ struct MovieWriterParams: @unchecked Sendable {
 
 actor MovieWriter: SampleBufferChannelDelegate {
     
+    /// Creates a writer actor for the supplied movie and progress callbacks.
+    ///
+    /// - Parameter params: The movie and callbacks used by the writer.
     public init(params: MovieWriterParams) {
         self.internalMovie = params.movie
         self.unblockUserInteraction = params.unblockUserInteraction
@@ -144,25 +220,25 @@ actor MovieWriter: SampleBufferChannelDelegate {
     /// Progress stream continuation
     private(set) var progressContinuation: AsyncStream<Float>.Continuation?
     
-    /// Flag if writer is running
+    /// Whether a save or export operation is currently running.
     public internal(set) var writeInProgress: Bool = false
     
-    /// Flag if writer finished successfully
+    /// Whether the most recent save or export operation completed successfully.
     public internal(set) var writeSuccess: Bool = false
     
-    /// Flag if cancelled while writing
+    /// Whether the current save or export operation was cancelled.
     public internal(set) var writeCancelled: Bool = false
     
-    /// Error result while writing
+    /// The error produced by the current or most recent save/export operation.
     public internal(set) var writeError: Error? = nil
     
-    /// Date when save/export operation start
+    /// The start date of the current or most recent save/export operation.
     public internal(set) var writeStart: Date? = nil
     
-    /// Date when save/export operation finish
+    /// The completion date of the current or most recent save/export operation.
     public internal(set) var writeEnd: Date? = nil
     
-    /// Progress ratio of save/export operation
+    /// The current save/export progress as a value from 0.0 to 1.0.
     public internal(set) var writeProgress: Float = 0.0
     /* ============================================ */
     // MARK: - exportSession properties

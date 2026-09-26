@@ -1,17 +1,7 @@
 # Development Guide for cutter2
 
-**Last Updated**: February 5, 2026  
+**Last Updated**: September 21, 2026
 **Status**: ✅ Active and Maintained
-
-**Recent Updates**:
-- ✅ Phase 2.1: Internationalization Support (Complete)
-- ✅ Phase 2.2: Performance Optimization (Complete)
-- ✅ Phase 2.3: Logging System (Complete)
-- ✅ LocalizationTests added
-- ✅ PerformanceTests added
-- ✅ LoggingSystemTests added
-- ✅ String Catalog integration
-- ✅ Console.app integration for logging
 
 ---
 
@@ -35,16 +25,18 @@
 
 ### Prerequisites
 
-- **macOS**: 14.0 or later (currently using 26.1)
-- **Xcode**: 15.0 or later (currently using 26.1.1)
-- **Swift**: 6.0 or later (currently using 6.2.1)
+- **macOS**: 14.0 or later
+- **Xcode**: 16.0 or later
+- **Swift language mode**: 6.0 (`SWIFT_VERSION = 6.0`)
 - **Git**: For version control
 - **Command Line Tools**: Install via `xcode-select --install`
+
+The documentation was verified on September 21, 2026 with macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), and Swift compiler 6.4. These are verification values, not minimum requirements.
 
 ### Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/MyCometG3/cutter2.git
 cd cutter2
 ```
 
@@ -124,7 +116,9 @@ Or double-click `cutter2.xcodeproj` in Finder.
 xcodebuild build \
   -project cutter2.xcodeproj \
   -scheme cutter2 \
-  -destination 'platform=macOS'
+  -destination 'platform=macOS' \
+  CODE_SIGN_IDENTITY='' \
+  CODE_SIGNING_REQUIRED=NO
 ```
 
 **Build for Testing**:
@@ -132,7 +126,9 @@ xcodebuild build \
 xcodebuild build-for-testing \
   -project cutter2.xcodeproj \
   -scheme cutter2 \
-  -destination 'platform=macOS'
+  -destination 'platform=macOS' \
+  CODE_SIGN_IDENTITY='' \
+  CODE_SIGNING_REQUIRED=NO
 ```
 
 **Clean Build**:
@@ -140,7 +136,9 @@ xcodebuild build-for-testing \
 xcodebuild clean build \
   -project cutter2.xcodeproj \
   -scheme cutter2 \
-  -destination 'platform=macOS'
+  -destination 'platform=macOS' \
+  CODE_SIGN_IDENTITY='' \
+  CODE_SIGNING_REQUIRED=NO
 ```
 
 ### Build Configuration
@@ -188,7 +186,9 @@ xcodebuild build \
 xcodebuild test \
   -project cutter2.xcodeproj \
   -scheme cutter2 \
-  -destination 'platform=macOS'
+  -destination 'platform=macOS' \
+  CODE_SIGN_IDENTITY='' \
+  CODE_SIGNING_REQUIRED=NO
 ```
 
 **Run Tests with Coverage**:
@@ -197,7 +197,9 @@ xcodebuild test \
   -project cutter2.xcodeproj \
   -scheme cutter2 \
   -destination 'platform=macOS' \
-  -enableCodeCoverage YES
+  -enableCodeCoverage YES \
+  CODE_SIGN_IDENTITY='' \
+  CODE_SIGNING_REQUIRED=NO
 ```
 
 **Using Test Script** (includes coverage report):
@@ -207,19 +209,32 @@ xcodebuild test \
 
 ### Test Organization
 
-**Test Files**:
+**Test directory contents** (20 files: 19 test source files + 1 helper; 253 statically declared test methods):
 ```
 cutter2Tests/
-├── cutter2Tests.swift              # Base test class
-├── DocumentTests.swift             # Document tests
-├── LocalizationTests.swift         # Localization tests
-├── LoggingSystemTests.swift        # Logging system tests
-├── ModelTests.swift                # Model layer tests
-├── MovieMutatorTests.swift         # Model layer tests
-├── PerformanceTests.swift          # Performance tests
-├── UtilitiesTests.swift            # Utility tests
-└── ViewControllerTests.swift       # ViewController tests
+├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
+├── cutter2Tests.swift                    # Integration tests (20 tests)
+├── DocumentKVOContextTests.swift         # KVO context tests (3 tests)
+├── DocumentTests.swift                   # Document tests (6 tests)
+├── LayoutConverterMappingTests.swift     # Layout mapping tests (7 tests)
+├── LocalizationTests.swift               # Localization tests (11 tests)
+├── LoggingSystemTests.swift              # Logging tests (17 tests)
+├── ModelTests.swift                      # Model layer tests (26 tests)
+├── MovieHeaderValidatorTests.swift       # Header validation tests (3 tests)
+├── MovieMutatorEditTests.swift           # Edit operation and presentation traversal tests (11 tests)
+├── MovieMutatorTests.swift               # Model layer tests (22 tests)
+├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
+├── MovieWriterVideoChannelMetadataTests.swift # Video channel metadata tests (25 tests)
+├── PerformanceTests.swift                # Performance tests (12 tests)
+├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (12 tests)
+├── TestMovieFixtureWriter.swift          # Test helper (0 tests)
+├── TimelineViewRenderingTests.swift      # Timeline rendering tests (15 tests)
+├── UtilitiesTests.swift                  # Utility tests (22 tests)
+├── ViewControllerKeyEventTests.swift     # Key event tests (14 tests)
+└── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
+
+The static count is derived from `func test...` declarations. Runtime results depend on the current build and test run.
 
 See [TESTING_GUIDE.md](TESTING_GUIDE.md) for detailed testing information.
 
@@ -305,7 +320,7 @@ let maximumZoomLevel: Float = 2.0
 enum DocumentError: Error {
     case invalidFormat(String)
     case exportFailed(String, underlying: Error?)
-    
+
     var localizedDescription: String {
         switch self {
         case .invalidFormat(let msg):
@@ -346,17 +361,24 @@ class ViewController: NSViewController {
 
 **Use async/await for I/O operations**:
 ```swift
-func loadMovie(from url: URL) async throws -> AVMutableMovie {
-    return try await Task.detached {
-        try AVMutableMovie(url: url)
+func loadMovieData(from url: URL) async throws -> Data {
+    try await Task.detached(priority: .userInitiated) {
+        try Data(contentsOf: url)
     }.value
 }
+
+@MainActor
+func makeMovie(from data: Data) -> AVMutableMovie {
+    AVMutableMovie(data: data, options: nil)
+}
 ```
+
+`AVMutableMovie` is not a `Sendable` value in this project. Keep the detached task boundary on `Data` or another `Sendable` value, then create or mutate the movie on the appropriate actor.
 
 **Synchronize callbacks properly**:
 ```swift
 mutator.updateProgress = { progress in
-    performSyncOnMainActor {
+    ActorUtilities.performSyncOnMainActor {
         self.progressIndicator.doubleValue = progress
     }
 }
@@ -416,10 +438,10 @@ git checkout -b feature/your-feature-name
    ```bash
    # Build
    ⌘B in Xcode or xcodebuild build
-   
+
    # Run tests
    ⌘U in Xcode or ./scripts/test.sh
-   
+
    # Manual testing
    ⌘R in Xcode and test functionality
    ```
@@ -503,15 +525,8 @@ LoggingSystem.video.info("Processing frame: \(frameNumber)")
 
 // For complex objects in debug builds
 #if DEBUG
-LoggingSystem.debug.debug("Object state: \(String(describing: object))")
+LoggingSystem.document.debug("Object state: \(String(describing: object))")
 #endif
-```
-
-**Quick Debug Prints** (Development only):
-```swift
-// For quick debugging only - use LoggingSystem in committed code
-debugPrint(someObject)
-dump(complexObject)
 ```
 
 **LLDB Commands**:
@@ -540,19 +555,20 @@ br delete 1
 
 **Actor Isolation Issues**:
 ```swift
-// Check if on main thread
-print("On main thread: \(Thread.isMainThread)")
-
-// Verify actor isolation
-MainActor.assertIsolated()
+#if DEBUG
+// Check if on main actor
+MainActor.assertIsolated()  // Crashes if not on main actor
+#endif
 ```
 
 **Memory Issues**:
 ```swift
+#if DEBUG
 // Check retain cycles
 deinit {
-    print("\(type(of: self)) deallocated")
+    LoggingSystem.document.debug("\(type(of: self)) deallocated")
 }
+#endif
 ```
 
 ---
@@ -649,7 +665,7 @@ LoggingSystem.performance.info("Processing \(count, privacy: .public) items")
 LoggingSystem.fileIO.debug("Opening file: \(url.path)")
 
 // Sensitive: Always redacted
-LoggingSystem.security.debug("Bookmark data: \(data, privacy: .sensitive)")
+LoggingSystem.security.debug("Bookmark data: \(data, privacy: .private)")
 ```
 
 ### Best Practices
@@ -706,7 +722,7 @@ log show --predicate 'subsystem == "com.mycometg3.cutter2"' --last 1h > cutter2.
 ```swift
 func saveDocument(to url: URL) async throws {
     LoggingSystem.document.info("Saving document to: \(url.lastPathComponent)")
-    
+
     do {
         try await performSave(to: url)
         LoggingSystem.document.info("Document saved successfully")
@@ -732,11 +748,9 @@ LoggingSystem.video.debug("Frame timing: \(time.seconds)s, valid: \(CMTIME_IS_VA
 #endif
 ```
 
-For more details, see [PHASE_2.3_LOGGING_PLAN.md](archive/phase-2.3/PHASE_2.3_LOGGING_PLAN.md).
-
 ---
 
-## Common Tasks
+## Bug Fix Workflow
 
 1. **Create bug fix branch**
    ```bash
@@ -761,7 +775,7 @@ For more details, see [PHASE_2.3_LOGGING_PLAN.md](archive/phase-2.3/PHASE_2.3_LO
    git commit -m "fix: Brief description of bug
 
    Detailed explanation of what was wrong and how it's fixed.
-   
+
    Fixes #123"
    ```
 
@@ -795,7 +809,7 @@ For more details, see [PHASE_2.3_LOGGING_PLAN.md](archive/phase-2.3/PHASE_2.3_LO
    - Add validation
 
 2. **Update UI**
-   - Add option to ExportAccessoryViewController
+   - Add option to AccessoryViewController
    - Update storyboard if needed
 
 3. **Add tests**
@@ -878,11 +892,11 @@ cutter2 supports internationalization using String Catalogs (.xcstrings format).
    ```swift
    // Simple localization
    let message = NSLocalizedString("your.key.name", comment: "Description")
-   
+
    // Using LocalizationHelper
-   let message = LocalizationHelper.localized("your.key.name", 
+   let message = LocalizationHelper.localized("your.key.name",
                                              comment: "Description")
-   
+
    // Common UI strings
    let cancelButton = LocalizationHelper.Button.cancel
    ```
@@ -926,20 +940,9 @@ cutter2 supports internationalization using String Catalogs (.xcstrings format).
    - Build and test in new language
    - Verify layout with different string lengths
 
-For detailed localization information, see [LOCALIZATION_PLAN.md](archive/phase-2.1/LOCALIZATION_PLAN.md) and [LOCALIZATION_COMPLETE.md](archive/phase-2.1/LOCALIZATION_COMPLETE.md).
-
 ---
 
 ## Additional Resources
-
-### Documentation
-
-- [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture
-- [TESTING_GUIDE.md](TESTING_GUIDE.md) - Testing guide
-- [REFACTORING_PLAN.md](archive/phase-1.2/REFACTORING_PLAN.md) - Code organization
-- [CODEBASE_REVIEW.md](archive/reviews/CODEBASE_REVIEW.md) - Codebase analysis
-- [LOCALIZATION_PLAN.md](archive/phase-2.1/LOCALIZATION_PLAN.md) - Localization implementation
-- [LOCALIZATION_COMPLETE.md](archive/phase-2.1/LOCALIZATION_COMPLETE.md) - Localization summary
 
 ### Apple Documentation
 
@@ -969,6 +972,6 @@ If you encounter issues:
 
 ---
 
-**Document Status**: ✅ Active  
-**Last Updated**: February 5, 2026  
+**Document Status**: ✅ Active
+**Last Updated**: September 21, 2026
 **Maintained By**: cutter2 development team

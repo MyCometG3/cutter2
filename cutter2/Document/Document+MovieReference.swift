@@ -16,6 +16,13 @@ import os.log
 
 extension Document {
     
+    /// Determines whether the document's movie is self-contained at the specified URL.
+    ///
+    /// A movie is considered self-contained when exactly one referenced URL exists and
+    /// it matches `url`.
+    ///
+    /// - Parameter url: The document URL to compare with the movie's referenced URL.
+    /// - Returns: `true` when the movie has exactly one matching reference URL.
     public func validateIfSelfContained(for url: URL) -> Bool {
         
         /*

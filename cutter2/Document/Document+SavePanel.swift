@@ -101,7 +101,15 @@ extension Document {
     // MARK: - NSOpenSavePanelDelegate protocol
     /* ============================================ */
     
-    // NSOpenSavePanelDelegate protocol
+    /// Validates the selected save URL against the accessory view's file type.
+    ///
+    /// The selected self-contained state is cached for the subsequent save operation.
+    ///
+    /// - Parameters:
+    ///   - sender: The save-panel delegate sender.
+    ///   - url: The URL being validated.
+    /// - Throws: An error when the accessory view is unavailable, the extension is unsupported,
+    ///   or the URL extension does not match the selected file type.
     public func panel(_ sender: Any, validate url: URL) throws {
         
         guard let accessoryVC = self.accessoryVC else {
@@ -123,7 +131,13 @@ extension Document {
         self.accessoryVCselfContained = accessoryVC.selfContained
     }
     
-    // NSOpenSavePanelDelegate protocol
+    /// Returns the filename entered in the save panel.
+    ///
+    /// - Parameters:
+    ///   - sender: The save-panel delegate sender.
+    ///   - filename: The filename entered by the user.
+    ///   - okFlag: Whether the user confirmed the save operation.
+    /// - Returns: The entered filename unchanged.
     public func panel(_ sender: Any, userEnteredFilename filename: String, confirmed okFlag: Bool) -> String? {
         
         return filename
@@ -149,7 +163,11 @@ extension Document {
     // MARK: - AccessoryViewDelegate protocol
     /* ============================================ */
     
-    // AccessoryViewDelegate protocol
+    /// Updates the save panel's allowed content type after the accessory selection changes.
+    ///
+    /// - Parameters:
+    ///   - fileType: The newly selected output file type.
+    ///   - selfContained: Whether the output should include sample data.
     public func didUpdateFileType(_ fileType: AVFileType, selfContained: Bool) {
         
         guard let savePanel = self.savePanel else { return }

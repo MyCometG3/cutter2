@@ -12,12 +12,18 @@ public final class TestFixtureURLStore: @unchecked Sendable {
     private let lock = NSLock()
     private var urls: [URL] = []
 
+    /// Adds a fixture URL to the thread-safe store.
+    ///
+    /// - Parameter url: The fixture URL to retain for later cleanup.
     public func append(_ url: URL) {
         lock.lock()
         defer { lock.unlock() }
         urls.append(url)
     }
 
+    /// Returns all stored fixture URLs and empties the store.
+    ///
+    /// - Returns: A snapshot of the stored fixture URLs.
     public func takeAll() -> [URL] {
         lock.lock()
         defer { lock.unlock() }
@@ -27,8 +33,17 @@ public final class TestFixtureURLStore: @unchecked Sendable {
     }
 }
 
-/// nonisolated synchronous helper: write a sample H.264 .mov.
-/// Callers must invoke on a background thread to avoid blocking the main actor.
+/// Synchronously writes a sample H.264 movie fixture.
+///
+/// Callers must invoke this helper on a background thread to avoid blocking the main actor.
+/// Invalid or non-positive duration, timescale, and frame-rate values return `false`.
+///
+/// - Parameters:
+///   - url: The destination URL for the temporary movie.
+///   - duration: The fixture duration in seconds.
+///   - timescale: The movie time scale.
+///   - frameRate: The video frame rate.
+/// - Returns: `true` when the fixture is written successfully; otherwise, `false`.
 func writeSampleMovie(
     to url: URL,
     duration: TimeInterval = 1.0,

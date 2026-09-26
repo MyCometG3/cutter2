@@ -14,7 +14,25 @@ import AVFoundation
 /* ============================================ */
 
 extension MovieMutator {
-    
+
+    private func makeCleanApertureDictionary(size: NSSize, offset: NSPoint) -> NSMutableDictionary? {
+        guard validSize(size), validPoint(offset) else { return nil }
+        return [
+            kCMFormatDescriptionKey_CleanApertureWidth: size.width,
+            kCMFormatDescriptionKey_CleanApertureHeight: size.height,
+            kCMFormatDescriptionKey_CleanApertureHorizontalOffset: offset.x,
+            kCMFormatDescriptionKey_CleanApertureVerticalOffset: offset.y
+        ]
+    }
+
+    private func makePixelAspectRatioDictionary(_ ratio: NSSize) -> NSMutableDictionary? {
+        guard validSize(ratio) else { return nil }
+        return [
+            kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing: ratio.width,
+            kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing: ratio.height
+        ]
+    }
+
     /* ============================================ */
     // MARK: - private method - clap/pasp
     /* ============================================ */
@@ -82,12 +100,15 @@ extension MovieMutator {
     // MARK: - public method - clap/pasp
     /* ============================================ */
     
-    //
+    /// Returns the current video dimensions, clean-aperture, and pixel-aspect-ratio settings.
+    ///
+    /// - Returns: A dictionary containing the four CAPAR settings, or `nil` when the movie
+    ///   has no usable video format description.
     public func clappaspDictionary() -> [AnyHashable: Any]? {
         var dict: [AnyHashable:Any] = [:]
         
         let vTracks: [AVMutableMovieTrack] = internalMovie.tracks(withMediaType: .video)
-        guard vTracks.count > 0 else { NSSound.beep(); return nil }
+        guard !vTracks.isEmpty else { NSSound.beep(); return nil }
         
         let formats: [Any] = (vTracks[0]).formatDescriptions
         guard !formats.isEmpty else { NSSound.beep(); return nil }
@@ -129,7 +150,15 @@ extension MovieMutator {
         return dict
     }
     
-    //
+    /// Applies clean-aperture and pixel-aspect-ratio settings to compatible video tracks.
+    ///
+    /// The operation registers an undo record and skips tracks whose encoded dimensions
+    /// do not match the supplied dimensions.
+    ///
+    /// - Parameters:
+    ///   - dict: A CAPAR settings dictionary produced by `clappaspDictionary()`.
+    ///   - undoManager: The undo manager used to register the transformation.
+    /// - Returns: `true` when the settings are applied to at least one compatible track.
     public func applyClapPasp(_ dict: [AnyHashable:Any], using undoManager: UndoManagerWrapper) -> Bool {
         guard let clapSize = dict[clapSizeKey] as? NSSize else { return false }
         guard let clapOffset = dict[clapOffsetKey] as? NSPoint else { return false }
@@ -190,26 +219,12 @@ extension MovieMutator {
                 dict[kCMFormatDescriptionExtension_VerbatimISOSampleEntry] = nil
                 
                 // Replace CleanAperture if available
-                if !validSize(clapSize) || !validPoint(clapOffset) {
-                    dict[kCMFormatDescriptionExtension_CleanAperture] = nil
-                } else {
-                    let clap: NSMutableDictionary = [:]
-                    clap[kCMFormatDescriptionKey_CleanApertureWidth] = clapSize.width
-                    clap[kCMFormatDescriptionKey_CleanApertureHeight] = clapSize.height
-                    clap[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] = clapOffset.x
-                    clap[kCMFormatDescriptionKey_CleanApertureVerticalOffset] = clapOffset.y
-                    dict[kCMFormatDescriptionExtension_CleanAperture] = clap
-                }
+                dict[kCMFormatDescriptionExtension_CleanAperture] =
+                    makeCleanApertureDictionary(size: clapSize, offset: clapOffset)
                 
                 // Replace PixelAspectRatio if available
-                if !validSize(paspRatio) {
-                    dict[kCMFormatDescriptionExtension_PixelAspectRatio] = nil
-                } else {
-                    let pasp: NSMutableDictionary = [:]
-                    pasp[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] = paspRatio.width
-                    pasp[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] = paspRatio.height
-                    dict[kCMFormatDescriptionExtension_PixelAspectRatio] = pasp
-                }
+                dict[kCMFormatDescriptionExtension_PixelAspectRatio] =
+                    makePixelAspectRatioDictionary(paspRatio)
                 
                 // Create New formatDescription as replacement
                 var newFormat: CMVideoFormatDescription? = nil
@@ -221,12 +236,9 @@ extension MovieMutator {
                                                             height: dimensions.height,
                                                             extensions: dict,
                                                             formatDescriptionOut: &newFormat)
-                if result == noErr, let newFormat = newFormat {
-                    track.replaceFormatDescription(format, with: newFormat)
-                    count += 1
-                } else {
-                    //
-                }
+                guard result == noErr, let newFormat = newFormat else { continue }
+                track.replaceFormatDescription(format, with: newFormat)
+                count += 1
             }
         }
         

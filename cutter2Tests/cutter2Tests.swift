@@ -37,7 +37,7 @@ final class cutter2Tests: XCTestCase {
         
         if let info = bundle.infoDictionary {
             // Check for common Info.plist keys
-            XCTAssertTrue(info.keys.count > 0)
+            XCTAssertFalse(info.keys.isEmpty)
         }
     }
     
@@ -84,7 +84,7 @@ final class cutter2Tests: XCTestCase {
         // Verify Document class can handle different file types
         let readableTypes = Document.readableTypes
         
-        XCTAssertTrue(readableTypes.count > 0)
+        XCTAssertFalse(readableTypes.isEmpty)
         XCTAssertTrue(readableTypes.contains("com.apple.quicktime-movie"))
     }
     
@@ -165,7 +165,7 @@ final class cutter2Tests: XCTestCase {
         let header = movie.movHeader
         
         XCTAssertNotNil(header)
-        XCTAssertTrue(header!.count > 0)
+        XCTAssertFalse(header!.isEmpty)
     }
     
     // MARK: - Error Handling Integration Tests

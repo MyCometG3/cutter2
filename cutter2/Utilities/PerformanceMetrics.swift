@@ -80,13 +80,18 @@ class PerformanceMetrics {
     
     private nonisolated let state = UnfairLockBox(MetricsState())
     
-    /// Flag to enable/disable performance logging
+    /// Controls whether performance log output is enabled.
+    ///
+    /// Measurements are recorded regardless of this flag. Per-measurement completion
+    /// messages additionally require `verboseLogging` to be enabled.
     public nonisolated var loggingEnabled: Bool {
         get { state.withLock { $0.loggingEnabled } }
         set { state.withLock { $0.loggingEnabled = newValue } }
     }
     
-    /// Flag to enable/disable detailed console output
+    /// Enables per-measurement completion messages in the console.
+    ///
+    /// These messages are emitted only when both `loggingEnabled` and this flag are enabled.
     public nonisolated var verboseLogging: Bool {
         get { state.withLock { $0.verboseLogging } }
         set { state.withLock { $0.verboseLogging = newValue } }

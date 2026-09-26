@@ -147,11 +147,6 @@ extension TimelineView {
     /* ============================================ */
     
     // NSResponder
-    override func mouseMoved(with event: NSEvent) {
-        //let point = self.convert(event.locationInWindow, from: nil)
-    }
-    
-    // NSResponder
     override func mouseDown(with event: NSEvent) {
         let point = self.convert(event.locationInWindow, from: nil)
         

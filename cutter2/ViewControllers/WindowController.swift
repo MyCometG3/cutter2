@@ -34,35 +34,53 @@ class WindowController: NSWindowController, NSWindowDelegate {
     // MARK: - NSWindowDelegate protocol
     /* ============================================ */
     
+    /// Synchronizes the window title with the document's display scale after resizing.
+    ///
+    /// - Parameter notification: The window resize notification.
     public func windowDidResize(_ notification: Notification) {
         // Update window title with scale ratio
         synchronizeWindowTitleWithDocumentName()
     }
     
+    /// Hides the controller box before entering full-screen mode.
+    ///
+    /// - Parameter notification: The full-screen transition notification.
     public func windowWillEnterFullScreen(_ notification: Notification) {
         // Hide controllerBox
         guard let vc = self.contentViewController as? ViewController else { return }
         vc.showController(false)
     }
     
+    /// Shows the controller box before leaving full-screen mode.
+    ///
+    /// - Parameter notification: The full-screen transition notification.
     public func windowWillExitFullScreen(_ notification: Notification) {
         // Reveal controllerBox
         guard let vc = self.contentViewController as? ViewController else { return }
         vc.showController(true)
     }
     
+    /// Restores the key-view traversal after entering full-screen mode.
+    ///
+    /// - Parameter notification: The full-screen transition notification.
     public func windowDidEnterFullScreen(_ notification: Notification) {
         // Reset keyView/makeFirstResponder on Fullscreen mode
         guard let window = self.window else { return }
         window.selectNextKeyView(self)
     }
     
+    /// Restores the key-view traversal after leaving full-screen mode.
+    ///
+    /// - Parameter notification: The full-screen transition notification.
     public func windowDidExitFullScreen(_ notification: Notification) {
         // Reset keyView/makeFirstResponder on Non-Fullscreen mode
         guard let window = self.window else { return }
         window.selectNextKeyView(self)
     }
     
+    /// Logs the current responder chain in DEBUG builds.
+    ///
+    /// - Parameter sender: The action sender.
     @IBAction public func dumpResponderChain(_ sender: Any) {
         #if DEBUG
         guard let window = self.window else { return }

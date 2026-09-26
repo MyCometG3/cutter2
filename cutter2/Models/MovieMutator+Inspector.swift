@@ -14,10 +14,33 @@ import AVFoundation
 /* ============================================ */
 
 extension MovieMutatorBase {
-    
-    /// Inspector - mediaDataURLs
+
+    private func channelLayoutName(for desc: CMAudioFormatDescription) -> String? {
+        var layoutSize: Int = 0
+        guard let layout = CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &layoutSize),
+              layoutSize > 0 else {
+            return nil
+        }
+
+        var nameSize = UInt32(MemoryLayout<CFString?>.size)
+        var name: Unmanaged<CFString>? = nil
+        let error = withUnsafeMutablePointer(to: &name) { namePtr in
+            AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
+                                   UInt32(layoutSize),
+                                   layout,
+                                   &nameSize,
+                                   namePtr)
+        }
+        guard error == noErr, let name else { return nil }
+        return name.takeUnretainedValue() as String
+    }
+
+    /// Returns the paths of files referenced by the movie's tracks.
     ///
-    /// - Returns: all referenced file URLs by every track samples
+    /// The result is cached after the first query. When no referenced files are found,
+    /// the returned array contains the placeholder string `"-"`.
+    ///
+    /// - Returns: Referenced file paths formatted for inspector display.
     public func mediaDataPaths() -> [String]? {
         if let cache = cachedMediaDataPaths {
             return cache
@@ -28,14 +51,17 @@ extension MovieMutatorBase {
         if let urls = urls {
             urlStrings = urls.map { $0.path }
         }
-        cachedMediaDataPaths = (urlStrings.count > 0 ? urlStrings : ["-"])
+        cachedMediaDataPaths = (urlStrings.isEmpty ? ["-"] : urlStrings)
         return cachedMediaDataPaths
     }
     
     
-    /// Inspector - VideoFPS Description
+    /// Returns formatted nominal frame-rate information for each video track.
     ///
-    /// - Returns: human readable description
+    /// The result is cached after the first query; `"-"` is returned when no video
+    /// tracks are present.
+    ///
+    /// - Returns: One string per video track containing its track ID and FPS.
     public func videoFPSs() -> [String]? {
         if let cache = cachedVideoFPSs {
             return cache
@@ -48,13 +74,16 @@ extension MovieMutatorBase {
             let trackString: String = String(format:"%d: %.2f fps", trackID, fps)
             trackStrings.append(trackString)
         }
-        cachedVideoFPSs = (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedVideoFPSs = trackStrings.isEmpty ? ["-"] : trackStrings
         return cachedVideoFPSs
     }
     
-    /// Inspector - VideoDataSize/Rate Description
+    /// Returns formatted sample-data size and estimated data-rate information for video tracks.
     ///
-    /// - Returns: human readable description
+    /// The result is cached after the first query; `"-"` is returned when no video
+    /// tracks are present.
+    ///
+    /// - Returns: One string per video track containing its track ID, size in MB, and rate in Mbps.
     public func videoDataSizes() -> [String]? {
         if let cache = cachedVideoDataSizes {
             return cache
@@ -70,13 +99,16 @@ extension MovieMutatorBase {
                                              rate/1000000.0)
             trackStrings.append(trackString)
         }
-        cachedVideoDataSizes = (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedVideoDataSizes = trackStrings.isEmpty ? ["-"] : trackStrings
         return cachedVideoDataSizes
     }
     
-    /// Inspector - AudioDataSize/Rate Description
+    /// Returns formatted sample-data size and estimated data-rate information for audio tracks.
     ///
-    /// - Returns: human readable description
+    /// The result is cached after the first query; `"-"` is returned when no audio
+    /// tracks are present.
+    ///
+    /// - Returns: One string per audio track containing its track ID, size in MB, and rate in Mbps.
     public func audioDataSizes() -> [String]? {
         if let cache = cachedAudioDataSizes {
             return cache
@@ -92,13 +124,16 @@ extension MovieMutatorBase {
                                              rate/1000000.0)
             trackStrings.append(trackString)
         }
-        cachedAudioDataSizes = (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedAudioDataSizes = trackStrings.isEmpty ? ["-"] : trackStrings
         return cachedAudioDataSizes
     }
     
-    /// Inspector - VideoFormats Description
+    /// Returns formatted codec and presentation-dimension information for video tracks.
     ///
-    /// - Returns: human readable description
+    /// The result is cached after the first query; reference tracks are marked as
+    /// `Reference`, and `"-"` is returned when no video formats are available.
+    ///
+    /// - Returns: One formatted string for each video format description.
     public func videoFormats() -> [String]? {
         if let cache = cachedVideoFormats {
             return cache
@@ -154,13 +189,16 @@ extension MovieMutatorBase {
             }
             trackStrings.append(contentsOf: trackString)
         }
-        cachedVideoFormats = (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedVideoFormats = trackStrings.isEmpty ? ["-"] : trackStrings
         return cachedVideoFormats
     }
     
-    /// Inspector - AudioFormats Description
+    /// Returns formatted codec, sample-rate, and channel-layout information for audio tracks.
     ///
-    /// - Returns: human readable description
+    /// The result is cached after the first query; reference tracks are marked as
+    /// `Reference`, and `"-"` is returned when no audio formats are available.
+    ///
+    /// - Returns: One formatted string for each audio format description.
     public func audioFormats() -> [String]? {
         if let cache = cachedAudioFormats {
             return cache
@@ -236,21 +274,8 @@ extension MovieMutatorBase {
                         }
                     }
                 }
-                do {
-                    var err: OSStatus = noErr;
-                    var aclSize: Int = 0
-                    let aclPtr: UnsafePointer<AudioChannelLayout>? = CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &aclSize)
-                    if aclSize > 0, let aclPtr = aclPtr {
-                        var nameSize: UInt32 = UInt32(MemoryLayout<CFString?>.size)
-                        var name: Unmanaged<CFString>? = nil
-                        err = withUnsafeMutablePointer(to: &name) { namePtr in
-                            AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
-                                                   UInt32(aclSize), aclPtr, &nameSize, namePtr)
-                        }
-                        if err == noErr, let name = name {
-                            layoutString = name.takeUnretainedValue() as String
-                        }
-                    }
+                if let explicitLayoutName = channelLayoutName(for: desc) {
+                    layoutString = explicitLayoutName
                 }
                 if reference {
                     trackString.append("\(trackID): \(formatString), \(layoutString), \(rateString), Reference")
@@ -260,7 +285,7 @@ extension MovieMutatorBase {
             }
             trackStrings.append(contentsOf: trackString)
         }
-        cachedAudioFormats = (trackStrings.count > 0) ? trackStrings : ["-"]
+        cachedAudioFormats = trackStrings.isEmpty ? ["-"] : trackStrings
         return cachedAudioFormats
     }
     

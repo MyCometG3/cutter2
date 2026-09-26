@@ -70,6 +70,16 @@ final class PlayerSeekSequencerTests: XCTestCase {
         XCTAssertTrue(sequencer.isCurrent(second))
     }
 
+    func testSeekFromPreviousReloadIsStaleWhenNewReloadStartsBeforeReplacement() {
+        let sequencer = PlayerSeekSequencer()
+        let firstReloadGeneration = sequencer.beginReload()
+        let token = sequencer.beginItemReplacement(reloadGeneration: firstReloadGeneration)
+
+        _ = sequencer.beginReload()
+
+        XCTAssertFalse(sequencer.isCurrent(token))
+    }
+
     func testCanReleaseSuppressionIsGatedByReloadGeneration() {
         let sequencer = PlayerSeekSequencer()
         let token = sequencer.beginUserSeek()

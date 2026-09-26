@@ -70,6 +70,7 @@ final class PlayerSeekSequencer {
 
     func isCurrent(_ token: SeekToken) -> Bool {
         return self.seekGeneration == token.seekGeneration
+            && self.reloadGeneration == token.reloadGeneration
     }
 
     func canReleaseSuppression(_ token: SeekToken) -> Bool {

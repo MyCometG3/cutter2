@@ -201,7 +201,7 @@ extension MovieMutatorBase {
         return nil
     }
     
-    private enum AdjacentDirection {
+    private enum AdjacentDirection: Equatable {
         case previous
         case next
     }

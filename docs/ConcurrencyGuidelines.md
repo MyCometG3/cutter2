@@ -1,7 +1,7 @@
 # Concurrency Guidelines for cutter2
 
-**Version**: 1.2
-**Last Updated**: September 21, 2026
+**Version**: 1.3
+**Last Updated**: September 23, 2026
 **Swift Version**: 6.0
 
 ---

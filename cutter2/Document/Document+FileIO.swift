@@ -51,6 +51,7 @@ extension Document {
         try super.revert(toContentsOf: url, ofType: typeName)
         
         // reset GUI when revert
+        self.resetPositionCache()
         self.updateGUI(CMTime.zero, CMTimeRange.zero, true)
         self.doVolumeOffset(100)
     }
@@ -114,6 +115,7 @@ extension Document {
         removeMutationObserver()
         removeAllUndoRecords()
         movieMutator = MovieMutator(with: movie)
+        resetPositionCache()
         addMutationObserver()
     }
     
@@ -418,5 +420,6 @@ extension Document {
             LoggingSystem.fileIO.error("Failed to refresh mutator after SaveAs")
             return
         }
+        resetPositionCache()
     }
 }

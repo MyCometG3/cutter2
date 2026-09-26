@@ -74,6 +74,22 @@ final class DocumentTests: XCTestCase {
 
         XCTAssertNil(document.window)
     }
+
+    func testResetPositionCacheClearsAllCachedPositionState() {
+        let document = Document()
+        document.cachedTime = CMTime(seconds: 3, preferredTimescale: 600)
+        document.cachedWithinLastSampleRange = true
+        document.cachedLastSampleRange = CMTimeRange(
+            start: .zero,
+            duration: CMTime(seconds: 4, preferredTimescale: 600)
+        )
+
+        document.resetPositionCache()
+
+        XCTAssertEqual(document.cachedTime, .invalid)
+        XCTAssertFalse(document.cachedWithinLastSampleRange)
+        XCTAssertNil(document.cachedLastSampleRange)
+    }
     
     // MARK: - Document read error handling (T-14)
     

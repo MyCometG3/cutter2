@@ -73,7 +73,9 @@ final class PlayerSeekSequencerTests: XCTestCase {
     func testSeekFromPreviousReloadIsStaleWhenNewReloadStartsBeforeReplacement() {
         let sequencer = PlayerSeekSequencer()
         let firstReloadGeneration = sequencer.beginReload()
-        let token = sequencer.beginItemReplacement(reloadGeneration: firstReloadGeneration)
+        let token = try! XCTUnwrap(
+            sequencer.beginItemReplacement(expectedReloadGeneration: firstReloadGeneration)
+        )
 
         _ = sequencer.beginReload()
 
@@ -93,7 +95,8 @@ final class PlayerSeekSequencerTests: XCTestCase {
     func testReleaseSuppressionClearsFlag() {
         let sequencer = PlayerSeekSequencer()
         sequencer.suppressForReload()
-        sequencer.releaseSuppression()
+        let token = sequencer.beginUserSeek()
+        sequencer.releaseSuppression(for: token)
 
         XCTAssertFalse(sequencer.suppressQueryPosition)
     }
@@ -101,7 +104,9 @@ final class PlayerSeekSequencerTests: XCTestCase {
     func testBeginItemReplacementBumpsSeekGenerationOnly() {
         let sequencer = PlayerSeekSequencer()
         let reloadGeneration = sequencer.beginReload()
-        let token = sequencer.beginItemReplacement(reloadGeneration: reloadGeneration)
+        let token = try! XCTUnwrap(
+            sequencer.beginItemReplacement(expectedReloadGeneration: reloadGeneration)
+        )
 
         XCTAssertEqual(sequencer.seekGeneration, 1)
         XCTAssertEqual(sequencer.reloadGeneration, reloadGeneration)
@@ -148,8 +153,18 @@ final class PlayerSeekSequencerTests: XCTestCase {
 
         XCTAssertTrue(sequencer.isCurrent(token))
         XCTAssertTrue(sequencer.canReleaseSuppression(token))
-        sequencer.releaseSuppression()
+        sequencer.releaseSuppression(for: token)
 
         XCTAssertFalse(sequencer.suppressQueryPosition)
+    }
+
+    func testStaleReloadCannotBeginItemReplacement() {
+        let sequencer = PlayerSeekSequencer()
+        let staleGeneration = sequencer.beginReload()
+        _ = sequencer.beginReload()
+
+        XCTAssertNil(
+            sequencer.beginItemReplacement(expectedReloadGeneration: staleGeneration)
+        )
     }
 }

@@ -225,6 +225,12 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
 
     /// The last sample range used by playback-position queries.
     public var cachedLastSampleRange: CMTimeRange? = nil
+
+    func resetPositionCache() {
+        cachedTime = .invalid
+        cachedWithinLastSampleRange = false
+        cachedLastSampleRange = nil
+    }
     
     //
     lazy var undoManagerWrapper: UndoManagerWrapper = UndoManagerWrapper(self.undoManager!)

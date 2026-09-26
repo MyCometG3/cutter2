@@ -238,7 +238,7 @@ extension Document {
             ActorUtilities.performSyncOnMainActor {
                 guard self.playerSeekSequencer.isCurrent(token) else { return }
                 guard self.playerSeekSequencer.canReleaseSuppression(token) else { return }
-                self.playerSeekSequencer.releaseSuppression()
+                self.playerSeekSequencer.releaseSuppression(for: token)
                 updateRate(player, rate)
                 updateTimeline(time, range: mutator.selectedTimeRange)
             }
@@ -316,7 +316,11 @@ extension Document {
                 // a no-op, so it must always observe the already-advanced
                 // counter.
                 self.playerSeekSequencer.suppressForReload()
-                let token = self.playerSeekSequencer.beginItemReplacement(reloadGeneration: generation)
+                guard let token = self.playerSeekSequencer.beginItemReplacement(
+                    expectedReloadGeneration: generation
+                ) else {
+                    return
+                }
 
                 // Apply modified source movie
                 player.replaceCurrentItem(with: playerItem)

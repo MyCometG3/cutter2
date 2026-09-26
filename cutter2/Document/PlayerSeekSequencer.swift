@@ -62,10 +62,11 @@ final class PlayerSeekSequencer {
                          reloadGeneration: self.reloadGeneration)
     }
 
-    func beginItemReplacement(reloadGeneration: UInt64) -> SeekToken {
+    func beginItemReplacement(expectedReloadGeneration: UInt64) -> SeekToken? {
+        guard self.reloadGeneration == expectedReloadGeneration else { return nil }
         self.seekGeneration += 1
         return SeekToken(seekGeneration: self.seekGeneration,
-                         reloadGeneration: reloadGeneration)
+                         reloadGeneration: self.reloadGeneration)
     }
 
     func isCurrent(_ token: SeekToken) -> Bool {
@@ -77,7 +78,8 @@ final class PlayerSeekSequencer {
         return self.reloadGeneration == token.reloadGeneration
     }
 
-    func releaseSuppression() {
+    func releaseSuppression(for token: SeekToken) {
+        guard self.isCurrent(token) else { return }
         self.suppressQueryPosition = false
     }
 

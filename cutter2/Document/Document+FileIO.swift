@@ -90,10 +90,7 @@ extension Document {
                 LoggingSystem.fileIO.error("Failed to validate movie header: \(url.lastPathComponent)")
                 try throwError(.unableToOpenFile, reason: reason)
             }
-            self.removeMutationObserver()
-            self.removeAllUndoRecords()
-            self.movieMutator = MovieMutator(with: movie)
-            self.addMutationObserver()
+            self.applyOpenedMovie(movie)
             
             LoggingSystem.fileIO.notice("Document opened successfully: \(url.lastPathComponent)")
         } else {
@@ -101,6 +98,13 @@ extension Document {
             LoggingSystem.fileIO.error("Failed to open file: \(url.lastPathComponent)")
             try throwError(.unableToOpenFile, reason: reason)
         }
+    }
+
+    private func applyOpenedMovie(_ movie: AVMutableMovie) {
+        removeMutationObserver()
+        removeAllUndoRecords()
+        movieMutator = MovieMutator(with: movie)
+        addMutationObserver()
     }
     
     override nonisolated func read(from url: URL, ofType typeName: String) throws {
@@ -147,10 +151,7 @@ extension Document {
                         LoggingSystem.fileIO.error("Failed to validate movie header: \(url.lastPathComponent)")
                         try self.throwError(.unableToOpenFile, reason: reason)
                     }
-                    self.removeMutationObserver()
-                    self.removeAllUndoRecords()
-                    self.movieMutator = MovieMutator(with: movie)
-                    self.addMutationObserver()
+                    self.applyOpenedMovie(movie)
                     self.fileType = preparation.typeName
                     self.fileModificationDate = preparation.modificationDate
                     LoggingSystem.fileIO.notice("Document opened successfully: \(url.lastPathComponent)")

@@ -168,7 +168,11 @@ extension Document {
             if start != CMTime.zero {
                 newRange = CMTimeRangeFromTimeToTime(start: CMTime.zero, end: end)
             } else {
-                fallthrough
+                if current < end {
+                    newRange = CMTimeRangeFromTimeToTime(start: current, end: end)
+                } else {
+                    newRange = CMTimeRangeFromTimeToTime(start: current, end: current)
+                }
             }
         case .current :
             if current < end {
@@ -207,7 +211,11 @@ extension Document {
             if end != duration {
                 newRange = CMTimeRangeFromTimeToTime(start: start, end: duration)
             } else {
-                fallthrough
+                if start < current {
+                    newRange = CMTimeRangeFromTimeToTime(start: start, end: current)
+                } else {
+                    newRange = CMTimeRangeFromTimeToTime(start: current, end: current)
+                }
             }
         case .current :
             if start < current {

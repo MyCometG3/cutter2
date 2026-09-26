@@ -200,7 +200,11 @@ final class MovieMutatorTransformExportTests: XCTestCase {
         guard let mutator = makeMutator(duration: 1.0) else { return }
         let outURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("cutter2_write_\(UUID().uuidString).mov")
-        defer { try? FileManager.default.removeItem(at: outURL) }
+        defer {
+            if FileManager.default.fileExists(atPath: outURL.path) {
+                try? FileManager.default.removeItem(at: outURL)
+            }
+        }
         
         try await mutator.writeMovie(to: outURL, fileType: .mov, copySampleData: true)
         
@@ -224,7 +228,11 @@ final class MovieMutatorTransformExportTests: XCTestCase {
         guard let mutator = makeMutator(duration: 1.0) else { return }
         let outURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("cutter2_write_cancel_\(UUID().uuidString).mov")
-        defer { try? FileManager.default.removeItem(at: outURL) }
+        defer {
+            if FileManager.default.fileExists(atPath: outURL.path) {
+                try? FileManager.default.removeItem(at: outURL)
+            }
+        }
         
         try await mutator.writeMovie(to: outURL, fileType: .mov, copySampleData: true)
         await mutator.cancel() // writer already cleared

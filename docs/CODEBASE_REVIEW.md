@@ -35,8 +35,8 @@ All three steps succeeded; the full test run passed 200 test cases with 0 failur
 
 **Current verification facts:**
 
-- **Current static test suite size:** 21 files total (20 test source files + 1 helper), with 267 test methods.
-- **Runtime test result:** The September 26, 2026 run on `local/state` commit `4735805` passed 267 test cases with 0 failures.
+- **Current static test suite size:** 21 files total (20 test source files + 1 helper), with 269 test methods.
+- **Runtime test result:** The September 26, 2026 run after H-11 passed 269 test cases with 0 failures.
 - **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps plus coverage report generation/upload. The workflow uses `macos-latest` and does not pin a specific Xcode image.
 - **Strict concurrency:** `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` are enabled across all four app/test configurations.
 - **Swift language mode:** `SWIFT_VERSION = 6.0` is pinned in the app and test targets.
@@ -154,7 +154,7 @@ cutter2Tests/
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
 ├── PerformanceTests.swift                # Performance tests (12 tests)
 ├── MovieWriterVideoChannelMetadataTests.swift # Video channel metadata tests (25 tests)
-├── MovieWriterWriteTests.swift           # Movie writer failure-state tests (1 test)
+├── MovieWriterWriteTests.swift           # Movie writer failure-state tests (3 tests)
 ├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (19 tests)
 ├── TestMovieFixtureWriter.swift          # Test helper (0 tests, fixture writer)
 ├── TimelineViewRenderingTests.swift      # Timeline rendering tests (15 tests)
@@ -163,11 +163,11 @@ cutter2Tests/
 └── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Current total:** 21 files (20 test source files + 1 helper), **267 test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`). M-27 adds watchdog, stale-token, failure-fallback, and cleanup regression coverage; M-26 covers cancellation classification; CR-4 covers the empty-window lifecycle.
+**Current total:** 21 files (20 test source files + 1 helper), **269 test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`). M-27 adds watchdog, stale-token, failure-fallback, and cleanup regression coverage; M-26 covers cancellation classification; CR-4 covers the empty-window lifecycle; H-11 covers temporary finalization.
 
 ### 2.3 Test Execution Results
 
-The current source contains 267 test methods and no `XCTSkip` usage was found. The September 26, 2026 full-suite run on `local/state` commit `4735805` (macOS 27.0, Xcode 27.0) executed all 267 test cases successfully with 0 failures.
+The current source contains 269 test methods and no `XCTSkip` usage was found. The latest full-suite run after H-11 executed all 269 test cases successfully with 0 failures.
 
 ---
 
@@ -262,14 +262,14 @@ Security-scoped resource access is properly wrapped with `NSFileCoordinator` and
 | **LoggingSystem** | `LoggingSystemTests.swift` | 17 | ✅ Covered |
 | **cutter2 (integration)** | `cutter2Tests.swift` | 20 | ✅ Covered |
 | **MovieHeaderValidator** | `MovieHeaderValidatorTests.swift` | 3 | ✅ Covered |
-| **Overall** | 21 files (20 test source + 1 helper) | **267 test methods** | ✅ Full suite passed 267/267 on `4735805`; live player integration remains untested |
+| **Overall** | 21 files (20 test source + 1 helper) | **269 test methods** | ✅ Full suite passed 269/269 after H-11; live player integration remains untested |
 
 ### 5.2 Test Execution
 
 - `scripts/test.sh` orchestrates build → test → analyze via `xcodebuild`
 - CI workflow (`.github/workflows/test.yml`) runs on push/PR to `main`, `work`, and `develop` branches (Build → Test → Analyze, using `build-for-testing` + `test-without-building` to avoid double compilation)
-- The current source contains 267 test methods and no `XCTSkip` usage; the September 26, 2026 full-suite run on `4735805` passed all 267 test cases
-- `scripts/test.sh` reports the current inventory of 20 test source files + 1 helper and 267 tests; the serial run on `4735805` passed 267/267
+- The current source contains 269 test methods and no `XCTSkip` usage; the September 26, 2026 full-suite run after H-11 passed all 269 test cases
+- `scripts/test.sh` reports the current inventory of 20 test source files + 1 helper and 269 tests; the serial run after H-11 passed 269/269
 
 ### 5.3 Test Coverage Gaps
 
@@ -285,7 +285,7 @@ Security-scoped resource access is properly wrapped with `NSFileCoordinator` and
 | **MovieMutator+Clipboard** | Copy/paste operations | ❌ Not tested — clipboard serialization and deserialization |
 | **Document+PositionControl** | Playback position scrubbing | ❌ Not tested — position updates during playback |
 
-> **Recommendation:** Unit-level seek, cancellation classification, position-cache reset, and empty-window lifecycle are covered. The highest-value remaining gap is integration ordering between `Document`, a live AVPlayer, KVO, and the polling timer; it needs a player/reload seam or UI/integration test. Save atomicity/self-contained selection remains deferred with H-11; window resize, save panel, clipboard, and scrubbing coverage remain open.
+> **Recommendation:** Unit-level seek, cancellation classification, position-cache reset, empty-window lifecycle, and H-11 temporary finalization/self-contained selection are covered. The highest-value remaining gap is integration ordering between `Document`, a live AVPlayer, KVO, and the polling timer; it needs a player/reload seam or UI/integration test. Window resize, save panel, clipboard, and scrubbing coverage remain open.
 
 ### 5.4 Skipped Test — RESOLVED
 
@@ -341,7 +341,7 @@ The Markdown set contains 7 files when `README.md` and `.github/copilot-instruct
 - Each step is guarded with `if ! ...; then exit 1; fi` so failures are reported with a custom message (works with `set -e`)
 - Uses color-coded echo statements for output formatting
 - Generates coverage reports via `xcrun llvm-cov`
-- Reports a summary; its inventory distinguishes 20 test source files from 1 helper and reports 267 tests
+- Reports a summary; its inventory distinguishes 20 test source files from 1 helper and reports 269 tests
 
 ---
 
@@ -407,7 +407,7 @@ The window is narrow (it requires a completed user seek overlapping the `makePla
 
 ### 9.2 Medium Priority
 
-4. ~~**Synchronize test counts in `scripts/test.sh`**~~ — Resolved by T-17: the script reports 20 test source files + 1 helper and 267 tests.
+4. ~~**Synchronize test counts in `scripts/test.sh`**~~ — Resolved by T-17/H-11: the script reports 20 test source files + 1 helper and 269 tests.
 5. **Unify date formatter usage** between `LoggingSystem` and `DateFormatter+Factory.swift`.
 6. **Expand performance tests** to cover TimelineView rendering and MovieMutator operations.
 
@@ -419,9 +419,9 @@ The window is narrow (it requires a completed user seek overlapping the `makePla
 
 ## 10. Conclusion
 
-The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 267 test methods across 20 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. The 2026-09-26 revision verified `4735805` with a clean build, clean analyze, and a full test run passing 267 test cases with 0 failures.
+The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 269 test methods across 20 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. The 2026-09-26 revision verified H-11 with a clean build, clean analyze, and a full test run passing 269 test cases with 0 failures.
 
-The current release-blocker fixes include M-26 cancellation classification, M-27 seek liveness, M-28 generation/cache protection, and CR-4 empty-window lifecycle coverage. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer; H-11 atomic save/self-contained selection, window resize, save panel, clipboard, and scrubbing coverage also remain open. Test counts in `scripts/test.sh` and the test guides now match the current inventory.
+The current release-blocker fixes include M-26 cancellation classification, M-27 seek liveness, M-28 generation/cache protection, CR-4 empty-window lifecycle coverage, and H-11 temporary finalization/self-contained selection protection. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer; window resize, save panel, clipboard, and scrubbing coverage remain open. Test counts in `scripts/test.sh` and the test guides now match the current inventory.
 
 ---
 
@@ -436,11 +436,11 @@ The current release-blocker fixes include M-26 cancellation classification, M-27
 - Utilities: `AsyncBridge.swift`, `ActorUtilities.swift`, `LayoutConverter.swift` + 3 extensions (`+Convert`, `+LayoutData`, `+Mapping`), `MovieHeaderValidator.swift`, `PerformanceMetrics.swift`, `ErrorUtilities.swift`, `Constants.swift`, `LocalizationHelper.swift`, `LoggingSystem.swift`, `DateFormatter+Factory.swift`
 - Resources: `Info.plist`, `cutter2.entitlements`, `Localizable.xcstrings`
 
-### Test Files (21 files: 20 test source files + 1 helper; 267 test methods)
+### Test Files (21 files: 20 test source files + 1 helper; 269 test methods)
 - `AsyncBridgeTests.swift` (4 tests), `cutter2Tests.swift` (20 tests), `DocumentKVOContextTests.swift` (3 tests), `DocumentTests.swift` (6 tests)
 - `LayoutConverterMappingTests.swift` (7 tests), `LocalizationTests.swift` (11 tests), `LoggingSystemTests.swift` (17 tests), `ModelTests.swift` (26 tests)
 - `MovieHeaderValidatorTests.swift` (3 tests), `MovieMutatorEditTests.swift` (11 tests), `MovieMutatorTests.swift` (22 tests), `MovieMutatorTransformExportTests.swift` (8 tests)
-- `MovieWriterVideoChannelMetadataTests.swift` (25 tests), `MovieWriterWriteTests.swift` (1 test), `PerformanceTests.swift` (12 tests), `PlayerSeekSequencerTests.swift` (19 tests), `TimelineViewRenderingTests.swift` (15 tests)
+- `MovieWriterVideoChannelMetadataTests.swift` (25 tests), `MovieWriterWriteTests.swift` (3 tests), `PerformanceTests.swift` (12 tests), `PlayerSeekSequencerTests.swift` (19 tests), `TimelineViewRenderingTests.swift` (15 tests)
 - `UtilitiesTests.swift` (22 tests), `ViewControllerKeyEventTests.swift` (14 tests), `ViewControllerTests.swift` (15 tests)
 - `TestMovieFixtureWriter.swift` (0 tests, fixture writer helper)
 
@@ -456,4 +456,4 @@ The current release-blocker fixes include M-26 cancellation classification, M-27
 ### Configuration
 - `cutter2.xcodeproj/project.pbxproj` (version 0.8.19 / build 20260802 — app target, committed in the reviewed state; the test target carries placeholder `1.0` / `1`)
 - `.github/workflows/test.yml` (build/test/analyze, branches `main`/`work`/`develop`; coverage artifact generation is optional)
-- `scripts/test.sh` (build/test/analyze; summary reports 20 test source files + 1 helper and 267 tests)
+- `scripts/test.sh` (build/test/analyze; summary reports 20 test source files + 1 helper and 269 tests)

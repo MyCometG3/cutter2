@@ -215,8 +215,10 @@ extension Document {
     private func preparation(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
         
         do {
-            // Check if current AVMovie reference URL = write target URL
-            let selfContained = validateIfSelfContained(for: url)
+            // Self-contained status describes the source movie, not the Save As target.
+            let selfContained = self.fileURL.map {
+                validateIfSelfContained(for: $0)
+            } ?? false
             
             // Check if current document URL = write target URL
             let overwrite = self.fileURL == url

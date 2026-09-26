@@ -9,14 +9,19 @@ import XCTest
 import AVFoundation
 @testable import cutter2
 
+@MainActor
 final class MovieWriterWriteTests: XCTestCase {
 
-    func testFlattenFailurePreservesErrorAndPostsEndNotification() async throws {
-        let writer = MovieWriter(params: MovieWriterParams(
+    private func makeWriter() -> MovieWriter {
+        return MovieWriter(params: MovieWriterParams(
             movie: AVMutableMovie(),
             unblockUserInteraction: nil,
             progressContinuation: nil
         ))
+    }
+
+    func testFlattenFailurePreservesErrorAndPostsEndNotification() async throws {
+        let writer = makeWriter()
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let destination = parent.appendingPathComponent("failure.mov")
@@ -43,5 +48,42 @@ final class MovieWriterWriteTests: XCTestCase {
         XCTAssertFalse(writeSuccess)
         XCTAssertNotNil(writeEnd)
         XCTAssertFalse(writeInProgress)
+    }
+
+    func testFinalizeTemporaryMovieReplacesExistingDestination() async throws {
+        let writer = makeWriter()
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory,
+                                                withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let temporaryURL = directory.appendingPathComponent("temporary.mov")
+        let destinationURL = directory.appendingPathComponent("destination.mov")
+        try Data("new".utf8).write(to: temporaryURL)
+        try Data("old".utf8).write(to: destinationURL)
+
+        try await writer.finalizeTemporaryMovie(at: temporaryURL, to: destinationURL)
+
+        XCTAssertEqual(try Data(contentsOf: destinationURL), Data("new".utf8))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: temporaryURL.path))
+    }
+
+    func testFinalizeTemporaryMovieMovesToMissingDestination() async throws {
+        let writer = makeWriter()
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory,
+                                                withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let temporaryURL = directory.appendingPathComponent("temporary.mov")
+        let destinationURL = directory.appendingPathComponent("destination.mov")
+        try Data("new".utf8).write(to: temporaryURL)
+
+        try await writer.finalizeTemporaryMovie(at: temporaryURL, to: destinationURL)
+
+        XCTAssertEqual(try Data(contentsOf: destinationURL), Data("new".utf8))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: temporaryURL.path))
     }
 }

@@ -6,8 +6,8 @@
 # 
 # Test Suite (as of 2026-09-26):
 #   - 21 test source files + 1 helper
-#   - 267 statically declared test methods
-#   - Expected result: 267 tests passing
+#   - 269 statically declared test methods
+#   - Expected result: 269 tests passing
 #
 # Usage: ./scripts/test.sh [derivedDataPath]
 #
@@ -20,7 +20,7 @@
 set -e
 
 echo "🧪 Running cutter2 tests..."
-echo "   Test Suite: 21 files (20 test + 1 helper), 267 tests"
+echo "   Test Suite: 21 files (20 test + 1 helper), 269 tests"
 echo ""
 
 # Colors for output
@@ -154,7 +154,7 @@ echo -e "${GREEN}  Test Run Summary${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}  Status: ✅ All Passed${NC}"
 echo -e "  Test Files: 21"
-echo -e "  Total Tests: 267"
-echo -e "    - Passing: 267"
+echo -e "  Total Tests: 269"
+echo -e "    - Passing: 269"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""

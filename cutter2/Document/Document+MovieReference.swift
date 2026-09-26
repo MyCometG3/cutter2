@@ -34,7 +34,8 @@ extension Document {
          In case of multiple url found it should be a reference movie.
          */
         let refURLs: [URL] = self.movieMutator?.queryMediaDataURLs() ?? []
-        if refURLs.count == 1 && refURLs[0] == url {
+        if refURLs.count == 1
+            && refURLs[0].standardizedFileURL == url.standardizedFileURL {
             return true
         }
         //

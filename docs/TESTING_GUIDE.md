@@ -9,7 +9,7 @@ This guide provides instructions for running and writing tests for the cutter2 a
 The test target is configured with XCTest and currently contains:
 - 20 test source files
 - 1 test helper file
-- 267 statically declared test methods
+- 269 test methods
 - Code coverage support in the command-line and CI workflows
 
 Run the complete suite with:
@@ -24,7 +24,7 @@ xcodebuild test \
   CODE_SIGNING_REQUIRED=NO
 ```
 
-The September 26, 2026 full-suite run on `local/state` after M-27 (commit `4735805`, single scheme `cutter2`, Debug) executed 267 test cases with 267 passed and 0 failed. The current inventory is 267 tests across 20 test source files and one helper; runtime results remain tied to each specific test run.
+The September 26, 2026 full-suite run on `local/state` after H-11 (single scheme `cutter2`, Debug) executed 269 test cases with 269 passed and 0 failed. The current inventory is 269 tests across 20 test source files and one helper; runtime results remain tied to each specific test run.
 
 ## Table of Contents
 
@@ -82,7 +82,7 @@ cutter2Tests/
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
 ├── MovieWriterVideoChannelMetadataTests.swift # Video channel metadata tests (25 tests)
 ├── PerformanceTests.swift                # Performance tests (12 tests)
-├── MovieWriterWriteTests.swift           # Movie writer failure-state tests (1 test)
+├── MovieWriterWriteTests.swift           # Movie writer failure-state tests (3 tests)
 ├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (19 tests)
 ├── TestMovieFixtureWriter.swift          # Test helper (0 tests)
 ├── TimelineViewRenderingTests.swift      # Timeline rendering tests (15 tests)
@@ -91,7 +91,7 @@ cutter2Tests/
 └── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Static suite size**: 21 files total (20 test source files + 1 helper), **267 test methods**.
+**Static suite size**: 21 files total (20 test source files + 1 helper), **269 test methods**.
 
 Runtime results must be taken from the specific `xcodebuild test` or Xcode run being reported.
 
@@ -442,4 +442,4 @@ Based on Phase 2-3 of the improvement plan:
 
 **Last Updated**: September 26, 2026
 **Version**: 1.8
-**Status**: Static suite size: 267 test methods across 20 test source files + 1 helper; the latest runtime run passed 267/267
+**Status**: Static suite size: 269 test methods across 20 test source files + 1 helper; the latest runtime run passed 269/269

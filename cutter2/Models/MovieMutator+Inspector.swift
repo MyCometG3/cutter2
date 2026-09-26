@@ -14,7 +14,27 @@ import AVFoundation
 /* ============================================ */
 
 extension MovieMutatorBase {
-    
+
+    private func channelLayoutName(for desc: CMAudioFormatDescription) -> String? {
+        var layoutSize: Int = 0
+        guard let layout = CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &layoutSize),
+              layoutSize > 0 else {
+            return nil
+        }
+
+        var nameSize = UInt32(MemoryLayout<CFString?>.size)
+        var name: Unmanaged<CFString>? = nil
+        let error = withUnsafeMutablePointer(to: &name) { namePtr in
+            AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
+                                   UInt32(layoutSize),
+                                   layout,
+                                   &nameSize,
+                                   namePtr)
+        }
+        guard error == noErr, let name else { return nil }
+        return name.takeUnretainedValue() as String
+    }
+
     /// Returns the paths of files referenced by the movie's tracks.
     ///
     /// The result is cached after the first query. When no referenced files are found,
@@ -254,21 +274,8 @@ extension MovieMutatorBase {
                         }
                     }
                 }
-                do {
-                    var err: OSStatus = noErr;
-                    var aclSize: Int = 0
-                    let aclPtr: UnsafePointer<AudioChannelLayout>? = CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &aclSize)
-                    if aclSize > 0, let aclPtr = aclPtr {
-                        var nameSize: UInt32 = UInt32(MemoryLayout<CFString?>.size)
-                        var name: Unmanaged<CFString>? = nil
-                        err = withUnsafeMutablePointer(to: &name) { namePtr in
-                            AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
-                                                   UInt32(aclSize), aclPtr, &nameSize, namePtr)
-                        }
-                        if err == noErr, let name = name {
-                            layoutString = name.takeUnretainedValue() as String
-                        }
-                    }
+                if let explicitLayoutName = channelLayoutName(for: desc) {
+                    layoutString = explicitLayoutName
                 }
                 if reference {
                     trackString.append("\(trackID): \(formatString), \(layoutString), \(rateString), Reference")

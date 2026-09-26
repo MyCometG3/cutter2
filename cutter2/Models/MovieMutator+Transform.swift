@@ -14,7 +14,25 @@ import AVFoundation
 /* ============================================ */
 
 extension MovieMutator {
-    
+
+    private func makeCleanApertureDictionary(size: NSSize, offset: NSPoint) -> NSMutableDictionary? {
+        guard validSize(size), validPoint(offset) else { return nil }
+        return [
+            kCMFormatDescriptionKey_CleanApertureWidth: size.width,
+            kCMFormatDescriptionKey_CleanApertureHeight: size.height,
+            kCMFormatDescriptionKey_CleanApertureHorizontalOffset: offset.x,
+            kCMFormatDescriptionKey_CleanApertureVerticalOffset: offset.y
+        ]
+    }
+
+    private func makePixelAspectRatioDictionary(_ ratio: NSSize) -> NSMutableDictionary? {
+        guard validSize(ratio) else { return nil }
+        return [
+            kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing: ratio.width,
+            kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing: ratio.height
+        ]
+    }
+
     /* ============================================ */
     // MARK: - private method - clap/pasp
     /* ============================================ */
@@ -201,26 +219,12 @@ extension MovieMutator {
                 dict[kCMFormatDescriptionExtension_VerbatimISOSampleEntry] = nil
                 
                 // Replace CleanAperture if available
-                if !validSize(clapSize) || !validPoint(clapOffset) {
-                    dict[kCMFormatDescriptionExtension_CleanAperture] = nil
-                } else {
-                    let clap: NSMutableDictionary = [:]
-                    clap[kCMFormatDescriptionKey_CleanApertureWidth] = clapSize.width
-                    clap[kCMFormatDescriptionKey_CleanApertureHeight] = clapSize.height
-                    clap[kCMFormatDescriptionKey_CleanApertureHorizontalOffset] = clapOffset.x
-                    clap[kCMFormatDescriptionKey_CleanApertureVerticalOffset] = clapOffset.y
-                    dict[kCMFormatDescriptionExtension_CleanAperture] = clap
-                }
+                dict[kCMFormatDescriptionExtension_CleanAperture] =
+                    makeCleanApertureDictionary(size: clapSize, offset: clapOffset)
                 
                 // Replace PixelAspectRatio if available
-                if !validSize(paspRatio) {
-                    dict[kCMFormatDescriptionExtension_PixelAspectRatio] = nil
-                } else {
-                    let pasp: NSMutableDictionary = [:]
-                    pasp[kCMFormatDescriptionKey_PixelAspectRatioHorizontalSpacing] = paspRatio.width
-                    pasp[kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing] = paspRatio.height
-                    dict[kCMFormatDescriptionExtension_PixelAspectRatio] = pasp
-                }
+                dict[kCMFormatDescriptionExtension_PixelAspectRatio] =
+                    makePixelAspectRatioDictionary(paspRatio)
                 
                 // Create New formatDescription as replacement
                 var newFormat: CMVideoFormatDescription? = nil

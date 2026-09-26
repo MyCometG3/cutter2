@@ -218,12 +218,8 @@ class MovieMutatorBase: NSObject {
         }
         
         // Clamp insertionTime and selection into the new range.
-        var clampedTime: CMTime = clampTime(insertionTime)
-        var clampedRange: CMTimeRange = clampRange(selectedTimeRange)
-        
-        // Reset invalid time/range
-        clampedTime = (validateTime(clampedTime) ? clampedTime : clampTime(clampedTime))
-        clampedRange = (validateRange(clampedRange, false) ? clampedRange : clampRange(clampedRange))
+        let clampedTime: CMTime = clampTime(insertionTime)
+        let clampedRange: CMTimeRange = clampRange(selectedTimeRange)
         
         // Notify observers after internalMovie is replaced.
         resetMarker(clampedTime, clampedRange, true)

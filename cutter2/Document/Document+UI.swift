@@ -231,6 +231,7 @@ extension Document {
         // release, and the seek generation prevents stale callbacks from
         // overwriting newer rate or timeline state.
         let token = self.playerSeekSequencer.beginUserSeek()
+        self.playerSeekSequencer.armSuppressionWatchdog(for: token)
         let handler: @Sendable (Bool) -> Void = {[weak self, weak player, weak mutator] (_: Bool) in // @escaping
             guard let self else { return }
             guard let player = player else { return }
@@ -319,8 +320,10 @@ extension Document {
                 guard let token = self.playerSeekSequencer.beginItemReplacement(
                     expectedReloadGeneration: generation
                 ) else {
+                    self.playerSeekSequencer.liftSuppression(for: generation)
                     return
                 }
+                self.playerSeekSequencer.armSuppressionWatchdog(for: token)
 
                 // Apply modified source movie
                 player.replaceCurrentItem(with: playerItem)

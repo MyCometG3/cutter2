@@ -101,6 +101,9 @@ extension Document {
             } else if newStatus.intValue == AVPlayer.Status.failed.rawValue {
                 //
                 LoggingSystem.ui.error("AVPlayerStatus.failed detected")
+                ActorUtilities.performSyncOnMainActor {
+                    self.playerSeekSequencer.releaseCurrentSuppressionAfterFailure()
+                }
             }
             return
         } else if objectIsPlayer && keyPathIsAVPlayerRate {

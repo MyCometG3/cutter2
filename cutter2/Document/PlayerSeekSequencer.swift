@@ -31,6 +31,13 @@ final class PlayerSeekSequencer {
     private(set) var suppressQueryPosition: Bool = false
 
     private var reloadTask: Task<Void, Never>? = nil
+    private var suppressionWatchdogTask: Task<Void, Never>? = nil
+    private let suppressionWatchdogNanoseconds: UInt64
+    private var isInvalidated = false
+
+    init(suppressionWatchdogNanoseconds: UInt64 = 5_000_000_000) {
+        self.suppressionWatchdogNanoseconds = suppressionWatchdogNanoseconds
+    }
 
     func suppressForReload() {
         self.suppressQueryPosition = true
@@ -39,6 +46,7 @@ final class PlayerSeekSequencer {
     func beginReload() -> UInt64 {
         self.reloadGeneration += 1
         self.reloadTask?.cancel()
+        self.cancelSuppressionWatchdog()
         return self.reloadGeneration
     }
 
@@ -58,6 +66,7 @@ final class PlayerSeekSequencer {
 
     func beginUserSeek() -> SeekToken {
         self.seekGeneration += 1
+        self.cancelSuppressionWatchdog()
         return SeekToken(seekGeneration: self.seekGeneration,
                          reloadGeneration: self.reloadGeneration)
     }
@@ -65,6 +74,7 @@ final class PlayerSeekSequencer {
     func beginItemReplacement(expectedReloadGeneration: UInt64) -> SeekToken? {
         guard self.reloadGeneration == expectedReloadGeneration else { return nil }
         self.seekGeneration += 1
+        self.cancelSuppressionWatchdog()
         return SeekToken(seekGeneration: self.seekGeneration,
                          reloadGeneration: self.reloadGeneration)
     }
@@ -80,11 +90,49 @@ final class PlayerSeekSequencer {
 
     func releaseSuppression(for token: SeekToken) {
         guard self.isCurrent(token) else { return }
+        self.cancelSuppressionWatchdog()
         self.suppressQueryPosition = false
     }
 
     func liftSuppression(for generation: UInt64) {
         guard self.reloadGeneration == generation else { return }
+        self.cancelSuppressionWatchdog()
         self.suppressQueryPosition = false
+    }
+
+    func armSuppressionWatchdog(for token: SeekToken) {
+        self.cancelSuppressionWatchdog()
+        let timeout = self.suppressionWatchdogNanoseconds
+        self.suppressionWatchdogTask = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(nanoseconds: timeout)
+            } catch {
+                return
+            }
+            guard let self, !self.isInvalidated else { return }
+            guard self.isCurrent(token) else { return }
+            self.suppressionWatchdogTask = nil
+            self.suppressQueryPosition = false
+            LoggingSystem.ui.warning("Seek suppression watchdog expired")
+        }
+    }
+
+    func releaseCurrentSuppressionAfterFailure() {
+        guard self.suppressQueryPosition, !self.isInvalidated else { return }
+        self.cancelSuppressionWatchdog()
+        self.suppressQueryPosition = false
+    }
+
+    func invalidate() {
+        self.isInvalidated = true
+        self.cancelSuppressionWatchdog()
+        self.reloadTask?.cancel()
+        self.reloadTask = nil
+        self.suppressQueryPosition = false
+    }
+
+    private func cancelSuppressionWatchdog() {
+        self.suppressionWatchdogTask?.cancel()
+        self.suppressionWatchdogTask = nil
     }
 }

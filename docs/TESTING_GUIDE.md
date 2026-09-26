@@ -77,7 +77,7 @@ cutter2Tests/
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
 ├── ModelTests.swift                      # Additional model tests (26 tests)
 ├── MovieHeaderValidatorTests.swift       # Header validation tests (3 tests)
-├── MovieMutatorEditTests.swift           # Edit operation tests (8 tests)
+├── MovieMutatorEditTests.swift           # Edit operation and presentation traversal tests (11 tests)
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
 ├── MovieWriterVideoChannelMetadataTests.swift # Video channel metadata tests (25 tests)

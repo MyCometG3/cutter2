@@ -216,7 +216,7 @@ cutter2Tests/
 ├── cutter2Tests.swift                    # Integration tests (20 tests)
 ├── DocumentKVOContextTests.swift         # KVO context tests (3 tests)
 ├── DocumentTests.swift                   # Document tests (6 tests)
-├── LayoutConverterMappingTests.swift     # Layout mapping tests (5 tests)
+├── LayoutConverterMappingTests.swift     # Layout mapping tests (7 tests)
 ├── LocalizationTests.swift               # Localization tests (11 tests)
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
 ├── ModelTests.swift                      # Model layer tests (26 tests)

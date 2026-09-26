@@ -582,7 +582,7 @@ What actually happens
 - macOS version: 14.0+
 - Xcode version: 16.0+
 - Swift version: 6.0
-- App version: 0.8.19
+- App version: 0.8.20a1
 
 ## Additional Context
 - Screenshots if applicable

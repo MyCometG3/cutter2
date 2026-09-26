@@ -116,6 +116,13 @@ final class PlayerKVOContextToken: Sendable {
     }
 }
 
+struct SaveMode: Sendable {
+    var selfContained: Bool = false
+    var overwrite: Bool = false
+    var useAccessory: Bool = false
+    var copyData: Bool = false
+}
+
 @MainActor
 class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, ViewControllerDelegate {
     
@@ -239,10 +246,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     internal var dimensionsType: dimensionsType = .clean
     
     // SavePanel support
-    internal var selfcontainedFlag: Bool = false
-    internal var overwriteFlag: Bool = false
-    internal var useAccessory: Bool = false
-    internal var copyData: Bool = false
+    internal var saveMode = SaveMode()
     internal var accessoryVCselfContained: Bool = false
     
     //

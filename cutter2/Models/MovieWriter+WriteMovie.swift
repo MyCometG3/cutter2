@@ -58,8 +58,13 @@ extension MovieWriter {
     private func flattenMovie(to url: URL, with mode: FlattenMode) async throws {
         
         let dateStart: Date = try beginWrite()
+        var after: Notification.Name = .movieDidWriteHeaderOnly
         defer {
+            if self.writeEnd == nil {
+                self.writeEnd = Date()
+            }
             writeInProgress = false
+            issueEndNotification(after, url: url, dateStart: dateStart)
         }
         
         /* ============================================ */
@@ -71,7 +76,6 @@ extension MovieWriter {
         var selfContained: Bool = false
         var option: AVMovieWritingOptions = .truncateDestinationToMovieHeaderOnly
         var before: Notification.Name = .movieWillWriteHeaderOnly
-        var after: Notification.Name = .movieDidWriteHeaderOnly
         
         switch mode {
         case .writeSelfContained:
@@ -152,14 +156,11 @@ extension MovieWriter {
                     LoggingSystem.export.notice("Result: \(status), progress: \(progressStr), elapsed: \(intervalStr)")
                 }
             } catch {
-                let reason = "Failed to write movie: \(option)."
-                try throwError(.movieWriterFailed, reason: reason)
+                self.writeEnd = Date()
+                self.writeError = error
+                self.writeSuccess = false
+                throw error
             }
         }
-        
-        /* ============================================ */
-        
-        // Issue end notification
-        issueEndNotification(after, url: url, dateStart: dateStart)
     }
 }

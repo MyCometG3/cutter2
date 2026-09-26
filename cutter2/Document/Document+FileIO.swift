@@ -34,6 +34,16 @@ extension Document {
     /* ============================================ */
     // MARK: - Revert
     /* ============================================ */
+
+    /// Returns whether an error represents user cancellation from MovieWriter or AppKit.
+    ///
+    /// MovieWriter cancellation is converted to the Cocoa domain by `write(to:)`; both
+    /// representations must bypass `showErrorSheet` in the outer save path.
+    nonisolated static func isUserCancellationError(_ error: NSError) -> Bool {
+        let isKnownDomain = error.domain == MovieWriterError.errorDomain ||
+            error.domain == NSCocoaErrorDomain
+        return isKnownDomain && error.code == NSUserCancelledError
+    }
     
     override func revert(toContentsOf url: URL, ofType typeName: String) throws {
         LoggingSystem.document.debug("\(#function) called for \(url.lastPathComponent)")
@@ -282,8 +292,10 @@ extension Document {
             // Trigger actual write operation (saveTo, save/saveAs)
             try super.writeSafely(to: url, ofType: typeName, for: saveOperation)
         } catch {
-            ActorUtilities.performSyncOnMainActor {
-                showErrorSheet(error)
+            if !Self.isUserCancellationError(error as NSError) {
+                ActorUtilities.performSyncOnMainActor {
+                    showErrorSheet(error)
+                }
             }
             throw error // rethrow to abort write operation
         }
@@ -343,10 +355,12 @@ extension Document {
             }
         } catch let error as NSError {
             // Handle cancellation specially - don't show error sheet
-            if error.domain == MovieWriterError.errorDomain && error.code == NSUserCancelledError {
+            if Self.isUserCancellationError(error) {
                 // Rethrow as standard user cancellation error
                 // This prevents error sheet and maintains document dirty flag
-                throw NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: error.userInfo)
+                if error.domain == MovieWriterError.errorDomain {
+                    throw NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: error.userInfo)
+                }
             }
             throw error
         }

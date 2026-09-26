@@ -33,6 +33,42 @@ final class DocumentTests: XCTestCase {
         XCTAssertTrue(types.contains("com.apple.quicktime-movie"))
     }
 
+    func testUserCancellationErrorAcceptsMovieWriterDomain() {
+        let error = NSError(
+            domain: MovieWriterError.errorDomain,
+            code: NSUserCancelledError
+        )
+
+        XCTAssertTrue(Document.isUserCancellationError(error))
+    }
+
+    func testUserCancellationErrorAcceptsCocoaDomain() {
+        let error = NSError(
+            domain: NSCocoaErrorDomain,
+            code: NSUserCancelledError
+        )
+
+        XCTAssertTrue(Document.isUserCancellationError(error))
+    }
+
+    func testUserCancellationErrorRejectsWrongCode() {
+        let error = NSError(
+            domain: MovieWriterError.errorDomain,
+            code: MovieWriterError.errorInfo[.movieWriterFailed]?.code ?? 4
+        )
+
+        XCTAssertFalse(Document.isUserCancellationError(error))
+    }
+
+    func testUserCancellationErrorRejectsWrongDomain() {
+        let error = NSError(
+            domain: "UnknownDomain",
+            code: NSUserCancelledError
+        )
+
+        XCTAssertFalse(Document.isUserCancellationError(error))
+    }
+
     func testWindowIsNilBeforeWindowControllerCreation() {
         let document = Document()
 

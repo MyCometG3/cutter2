@@ -5,9 +5,9 @@
 # This script runs all tests for the cutter2 application with code coverage enabled.
 # 
 # Test Suite (as of 2026-09-26):
-#   - 19 test source files + 1 helper
-#   - 255 statically declared test methods
-#   - Expected result: 255 tests passing
+#   - 21 test source files + 1 helper
+#   - 259 statically declared test methods
+#   - Expected result: 259 tests passing
 #
 # Usage: ./scripts/test.sh [derivedDataPath]
 #
@@ -20,7 +20,7 @@
 set -e
 
 echo "🧪 Running cutter2 tests..."
-echo "   Test Suite: 20 files (19 test + 1 helper), 255 tests"
+echo "   Test Suite: 22 files (21 test + 1 helper), 259 tests"
 echo ""
 
 # Colors for output
@@ -153,8 +153,8 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 echo -e "${GREEN}  Test Run Summary${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}  Status: ✅ All Passed${NC}"
-echo -e "  Test Files: 19"
-echo -e "  Total Tests: 255"
-echo -e "    - Passing: 255"
+echo -e "  Test Files: 21"
+echo -e "  Total Tests: 259"
+echo -e "    - Passing: 259"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""

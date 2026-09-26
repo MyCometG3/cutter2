@@ -28,7 +28,7 @@ import AVFoundation
 
 private enum LayoutMappingTables {
     // Keep table order aligned with the original switch cases.
-    static let tagToLabels: [(AudioChannelLayoutTag, [AudioChannelLabel])] = [
+    static let labelsByTag: [(AudioChannelLayoutTag, [AudioChannelLabel])] = [
         (kAudioChannelLayoutTag_Mono, [42]),
         (kAudioChannelLayoutTag_Stereo, [1, 2]),
         (kAudioChannelLayoutTag_StereoHeadphones, [301, 302]),
@@ -127,7 +127,7 @@ private enum LayoutMappingTables {
         (kAudioChannelLayoutTag_Atmos_5_1_2, [1, 2, 3, 4, 5, 6, 52, 54]),
     ]
 
-    static let aacDirect: [([AudioChannelLabel], AudioChannelLayoutTag)] = [
+    static let aacTagByLabelsStrict: [([AudioChannelLabel], AudioChannelLayoutTag)] = [
         ([42], kAudioChannelLayoutTag_Mono),
         ([3], kAudioChannelLayoutTag_Mono),
         ([1, 2], kAudioChannelLayoutTag_Stereo),
@@ -145,7 +145,7 @@ private enum LayoutMappingTables {
         ([3, 1, 2, 5, 6, 33, 34, 9], kAudioChannelLayoutTag_AAC_Octagonal),
     ]
 
-    static let aacFallback: [([AudioChannelLabel], AudioChannelLayoutTag)] = [
+    static let aacTagByLabelsFallback: [([AudioChannelLabel], AudioChannelLayoutTag)] = [
         ([301, 302], kAudioChannelLayoutTag_Stereo),
         ([38, 39], kAudioChannelLayoutTag_Stereo),
         ([204, 205], kAudioChannelLayoutTag_Stereo),
@@ -164,7 +164,7 @@ private enum LayoutMappingTables {
         ([1, 2, 5, 6, 3, 7, 8], kAudioChannelLayoutTag_AAC_Octagonal),
     ]
 
-    static let lpcmReverse: [([AudioChannelLabel], AudioChannelLayoutTag)] = [
+    static let lpcmTagByLabels: [([AudioChannelLabel], AudioChannelLayoutTag)] = [
         ([42], kAudioChannelLayoutTag_Mono),
         ([3], kAudioChannelLayoutTag_Mono),
         ([1, 2], kAudioChannelLayoutTag_Stereo),
@@ -258,7 +258,7 @@ private enum LayoutMappingTables {
         ([1, 2, 3, 4, 5, 6, 52, 54], kAudioChannelLayoutTag_Atmos_5_1_2),
     ]
 
-    static let bitmapMappings: [(UInt32, AudioChannelLabel)] = [
+    static let labelByBitmapBit: [(UInt32, AudioChannelLabel)] = [
         (AudioChannelBitmap.bit_Left.rawValue, kAudioChannelLabel_Left),
         (AudioChannelBitmap.bit_Right.rawValue, kAudioChannelLabel_Right),
         (AudioChannelBitmap.bit_Center.rawValue, kAudioChannelLabel_Center),
@@ -296,7 +296,7 @@ extension LayoutConverter {
     /* ============================================ */
     
     func channelLabelSet(forBitmap bitmap: AudioChannelBitmap) -> Set<AudioChannelLabel> {
-        Set(LayoutMappingTables.bitmapMappings.compactMap { bit, label in
+        Set(LayoutMappingTables.labelByBitmapBit.compactMap { bit, label in
             bitmap.contains(AudioChannelBitmap(rawValue: bit)) ? label : nil
         })
     }
@@ -330,7 +330,7 @@ extension LayoutConverter {
     }
     
     func channelLabelSet(forTag tag: AudioChannelLayoutTag) -> Set<AudioChannelLabel> {
-        if let (_, labels) = LayoutMappingTables.tagToLabels.first(where: { $0.0 == tag }) {
+        if let (_, labels) = LayoutMappingTables.labelsByTag.first(where: { $0.0 == tag }) {
             return Set(labels)
         }
         // Unknown / DiscreteInOrder-style tags use the low 16-bit channel count payload.
@@ -340,21 +340,21 @@ extension LayoutConverter {
     }
     
     func channelLayoutTagAACForChannelLabelSet(_ pos: Set<AudioChannelLabel>, _ strict: Bool) -> AudioChannelLayoutTag {
-        if let (_, tag) = LayoutMappingTables.aacDirect.first(where: { Set($0.0) == pos }) {
+        if let (_, tag) = LayoutMappingTables.aacTagByLabelsStrict.first(where: { Set($0.0) == pos }) {
             return tag
         }
         if strict {
             // Incompatible with AAC.
             return kAudioChannelLayoutTag_Unknown | AudioChannelLayoutTag(pos.count)
         }
-        if let (_, tag) = LayoutMappingTables.aacFallback.first(where: { Set($0.0) == pos }) {
+        if let (_, tag) = LayoutMappingTables.aacTagByLabelsFallback.first(where: { Set($0.0) == pos }) {
             return tag
         }
         return kAudioChannelLayoutTag_Unknown | AudioChannelLayoutTag(pos.count)
     }
     
     func channelLayoutTagLPCMForChannelLabelSet(_ pos: Set<AudioChannelLabel>) -> AudioChannelLayoutTag {
-        if let (_, tag) = LayoutMappingTables.lpcmReverse.first(where: { Set($0.0) == pos }) {
+        if let (_, tag) = LayoutMappingTables.lpcmTagByLabels.first(where: { Set($0.0) == pos }) {
             return tag
         }
         // Fallback into numbered discrete channels.
@@ -365,7 +365,7 @@ extension LayoutConverter {
     
     func channelBitmapForChannelLabelSet(_ pos: Set<AudioChannelLabel>) -> AudioChannelBitmap {
         var bitmap: AudioChannelBitmap = []
-        for (bit, label) in LayoutMappingTables.bitmapMappings where pos.contains(label) {
+        for (bit, label) in LayoutMappingTables.labelByBitmapBit where pos.contains(label) {
             bitmap.insert(AudioChannelBitmap(rawValue: bit))
         }
         return bitmap

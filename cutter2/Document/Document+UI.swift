@@ -281,16 +281,16 @@ extension Document {
     /// mutating the current player item.
     ///
     /// `suppressQueryPosition` stays held for the whole in-flight seek and is
-    /// released only once the newest seek reports `finished == true`. Reload
-    /// completions must additionally belong to the newest reload generation
-    /// (see `PlayerSeekSequencer.liftSuppression(for:)`). The `readyToPlay` re-seek is suppressed
-    /// while this seek is in flight; a user-initiated seek (marker drag, JKL)
-    /// may interrupt it instead, in which case this completion reports
-    /// `finished == false` and the user seek's own completion releases the
-    /// suppression once it settles. Every seek completion carries a token
-    /// captured when its seek starts, so a delayed or superseded callback —
-    /// even one within the same reload generation — is a full no-op
-    /// that neither lifts the suppression nor overwrites the newer state.
+    /// released when the current completion settles, regardless of its
+    /// `finished` result. Reload completions must additionally belong to the
+    /// newest reload generation (see `PlayerSeekSequencer.liftSuppression(for:)`).
+    /// The `readyToPlay` re-seek is suppressed while this seek is in flight; a
+    /// user-initiated seek (marker drag, JKL) may interrupt it instead, in
+    /// which case the current completion releases suppression when it settles.
+    /// Every seek completion carries a token captured when its seek starts, so
+    /// a delayed or superseded callback — even one within the same reload
+    /// generation — is a full no-op that neither lifts the suppression nor
+    /// overwrites the newer state.
     /// Together this stops `queryPosition()` from adopting a pre-seek
     /// `currentTime()` and clobbering the corrected `insertionTime` (the
     /// delete-key position regression) without ever leaving the polling timer

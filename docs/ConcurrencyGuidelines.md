@@ -1,7 +1,7 @@
 # Concurrency Guidelines for cutter2
 
-**Version**: 1.3
-**Last Updated**: September 23, 2026
+**Version**: 1.4
+**Last Updated**: September 27, 2026
 **Swift Version**: 6.0
 
 ---
@@ -144,7 +144,7 @@ nonisolated func performAsync<T: Sendable>(
 
 **Allowed ONLY for:**
 - `SampleBufferChannel` internal queue (created at `SampleBufferChannel.swift:30`, used by `requestMediaDataWhenReady`)
-- `MovieWriter+CustomExport.swift:550` (`exportCustomMovie` dedicated queue, passed to `SampleBufferChannel`)
+- `MovieWriter+CustomExport.swift:482` (`exportCustomMovie` dedicated queue, passed to `SampleBufferChannel`)
 - AVFoundation `requestMediaDataWhenReady(on:using:)` API (AVFoundation interop)
 - `OperationQueue.main` for `NotificationCenter` (AppKit requirement)
 - `Timer.scheduledTimer` (Foundation API)
@@ -157,7 +157,7 @@ The `requestMediaDataWhenReady(on:using:)` API in AVFoundation asynchronously no
 
 - **Usage locations:**
   - `SampleBufferChannel.swift:30` — each `SampleBufferChannel` creates its own queue (`SBC-<mediaType>`) in its `init`, used by `requestMediaDataWhenReady` at line 76
-  - `MovieWriter+CustomExport.swift:550` — `MovieWriter` creates a separate `exportCustomMovie` queue stored as `customQueue`, passed to `SampleBufferChannel` for custom export
+  - `MovieWriter+CustomExport.swift:482` — `MovieWriter` creates a separate `exportCustomMovie` queue stored as `customQueue`, passed to `SampleBufferChannel` for custom export
 - **Reason:** AVFoundation API contract requires `DispatchQueue` — cannot be replaced with `Task` / `async`.
 - **Safety:** `requestMediaDataWhenReady` processes sequentially on the queue, so no data races occur. Queue cleanup happens at `stopRequestingMediaData` call.
 - **Note:** This API is called from the `SampleBufferChannel` (not from within an actor), with data passed back via `@Sendable` closure.
@@ -248,6 +248,7 @@ When touching a file, verify:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.4 | 2026-09-27 | — | Corrected the `exportCustomMovie` queue line reference (`MovieWriter+CustomExport.swift:550` → `:482`) after the export-path refactor. |
 | 1.3 | 2026-09-23 | — | Updated the generation-gated example and reference implementation to use `PlayerSeekSequencer` after S-17 extraction. |
 | 1.2 | 2026-09-21 | — | Added the generation-gated completion pattern (reload/seek pipeline), documented the `Sendable`-refining conformance placement rule, made the main-actor-hop capture list explicit in the example, and refreshed the `DispatchQueue` usage line references. |
 | 1.1 | 2026-08-06 | — | Clarified `MovieMutatorBase` `@MainActor` isolation and synchronized the documented concurrency examples with the current implementation. |

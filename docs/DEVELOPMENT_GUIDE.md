@@ -1,6 +1,6 @@
 # Development Guide for cutter2
 
-**Last Updated**: September 21, 2026
+**Last Updated**: September 27, 2026
 **Status**: ✅ Active and Maintained
 
 ---
@@ -31,7 +31,7 @@
 - **Git**: For version control
 - **Command Line Tools**: Install via `xcode-select --install`
 
-The documentation was verified on September 21, 2026 with macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), and Swift compiler 6.4. These are verification values, not minimum requirements.
+The documentation was verified on September 27, 2026 with macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), and Swift compiler 6.4. These are verification values, not minimum requirements.
 
 ### Clone the Repository
 
@@ -215,7 +215,7 @@ cutter2Tests/
 ├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
 ├── cutter2Tests.swift                    # Integration tests (20 tests)
 ├── DocumentKVOContextTests.swift         # KVO context tests (3 tests)
-├── DocumentTests.swift                   # Document tests (6 tests)
+├── DocumentTests.swift                   # Document tests (12 tests)
 ├── LayoutConverterMappingTests.swift     # Layout mapping tests (7 tests)
 ├── LocalizationTests.swift               # Localization tests (11 tests)
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
@@ -974,5 +974,5 @@ If you encounter issues:
 ---
 
 **Document Status**: ✅ Active
-**Last Updated**: September 21, 2026
+**Last Updated**: September 27, 2026
 **Maintained By**: cutter2 development team

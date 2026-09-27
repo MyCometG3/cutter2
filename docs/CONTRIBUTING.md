@@ -1,6 +1,6 @@
 # Contributing to cutter2
 
-**Last Updated**: September 21, 2026
+**Last Updated**: September 27, 2026
 
 Thank you for your interest in contributing to cutter2! This document provides guidelines and instructions for contributing to the project.
 
@@ -53,7 +53,7 @@ Before contributing, ensure you have:
 4. **Git** installed and configured
 5. **GitHub account** for submitting contributions
 
-The documentation was verified on September 21, 2026 with macOS 27.0, Xcode 27.0 (build 27A266a), and Swift compiler 6.4. These are verification values, not minimum requirements.
+The documentation was verified on September 27, 2026 with macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), and Swift compiler 6.4. These are verification values, not minimum requirements.
 
 ### Fork and Clone
 
@@ -582,7 +582,7 @@ What actually happens
 - macOS version: 14.0+
 - Xcode version: 16.0+
 - Swift version: 6.0
-- App version: 0.8.20a1
+- App version: 0.8.20
 
 ## Additional Context
 - Screenshots if applicable
@@ -651,5 +651,5 @@ Your contributions help make video editing on macOS better for everyone.
 ---
 
 **Document Status**: ✅ Active
-**Last Updated**: September 21, 2026
+**Last Updated**: September 27, 2026
 **Maintained By**: cutter2 project maintainers

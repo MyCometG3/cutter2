@@ -1,6 +1,6 @@
 # Testing Guide for cutter2
 
-**Status**: Active — test instructions and infrastructure reference *(Updated: September 25, 2026)*
+**Status**: Active — test instructions and infrastructure reference *(Updated: September 27, 2026)*
 
 This guide provides instructions for running and writing tests for the cutter2 application.
 
@@ -24,7 +24,7 @@ xcodebuild test \
   CODE_SIGNING_REQUIRED=NO
 ```
 
-The September 26, 2026 full-suite run on `local/state` after H-11 (single scheme `cutter2`, Debug) executed 269 test cases with 269 passed and 0 failed. The current inventory is 269 tests across 20 test source files and one helper; runtime results remain tied to each specific test run.
+The September 27, 2026 full-suite run on `work` (0.8.20b, single scheme `cutter2`, Debug) executed 269 test cases with 269 passed, 0 failed, and 0 skipped. The current inventory is 269 tests across 20 test source files and one helper; runtime results remain tied to each specific test run.
 
 ## Table of Contents
 
@@ -45,7 +45,7 @@ The September 26, 2026 full-suite run on `local/state` after H-11 (single scheme
 - macOS 14.0 or later
 - Swift language mode 6.0 (`SWIFT_VERSION = 6.0`)
 
-The documentation was verified on September 21, 2026 with macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), and Swift compiler 6.4.
+The documentation was verified on September 27, 2026 with macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), and Swift compiler 6.4.
 
 ### Initial Setup
 
@@ -71,7 +71,7 @@ cutter2Tests/
 ├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
 ├── cutter2Tests.swift                    # Base test class and integration tests (20 tests)
 ├── DocumentKVOContextTests.swift         # KVO context tests (3 tests)
-├── DocumentTests.swift                   # Document tests (6 tests)
+├── DocumentTests.swift                   # Document tests (12 tests)
 ├── LayoutConverterMappingTests.swift     # Layout mapping tests (7 tests)
 ├── LocalizationTests.swift               # Localization tests (11 tests)
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
@@ -440,6 +440,6 @@ Based on Phase 2-3 of the improvement plan:
 
 ---
 
-**Last Updated**: September 26, 2026
-**Version**: 1.8
-**Status**: Static suite size: 269 test methods across 20 test source files + 1 helper; the latest runtime run passed 269/269
+**Last Updated**: September 27, 2026
+**Version**: 1.9
+**Status**: Static suite size: 269 test methods across 20 test source files + 1 helper; the September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips

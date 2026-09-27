@@ -5,12 +5,12 @@
 cutter2 is a sophisticated macOS video editing application written in Swift, leveraging Apple's AVFoundation framework. It serves as a QuickTime movie editor with powerful keyboard shortcuts, designed for precise video editing workflows.
 
 **Current Status**:
-- **Version**: 0.8.20a1
+- **Version**: 0.8.20
 - **Swift language mode**: 6.0 (`SWIFT_VERSION = 6.0`)
 - **Minimum environment**: macOS 14.0; Xcode 16.0 or later
-- **Verified environment (September 21, 2026)**: macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
+- **Verified environment (September 27, 2026)**: macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
 - **Phase history**: Phase 2.1 (Internationalization) and Phase 2.2 (Performance Optimization) were recorded as complete on October 15 and October 17, 2025; these entries are historical milestones, not current verification results
-- **Current test note**: 253 statically declared test methods are present; the September 25, 2026 verification run (commit `9c1700d`) passed all 249 test cases, and the current branch adds one sequencer regression test plus three presentation traversal tests
+- **Current test note**: 269 statically declared test methods are present across 21 test files (20 test source files + 1 helper); the September 27, 2026 verification run (`xcodebuild test`, single scheme `cutter2`, Debug) passed all 269 test cases with 0 failures and 0 skips
 
 ## Architecture & Design Patterns
 
@@ -176,13 +176,14 @@ mutator.applySomething(parameters, using: self.undoManagerWrapper)
 
 ### File Access
 - Security-scoped bookmarks for file persistence
-- Automatic bookmark validation and renewal
-- User permission prompts for file system access
+- Automatic bookmark validation and renewal (`AppDelegate.validateBookmarks` / `refreshBookmarkIfRequired`)
+- Security-scoped access is bracketed by `AppDelegate.bracketSecurityScopedAccess(for:_:)`
 
 ### Entitlements
-- Video/audio capture capabilities
-- File system access permissions
-- Network access for media streaming
+`cutter2/Resources/cutter2.entitlements` declares exactly one capability:
+- `com.apple.security.files.bookmarks.app-scope` — app-scoped security bookmarks
+
+The app declares no capture (camera/microphone) and no network entitlements.
 
 ## Testing & Validation
 

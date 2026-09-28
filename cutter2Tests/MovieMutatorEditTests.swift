@@ -105,6 +105,32 @@ private final class FixtureURLStore: @unchecked Sendable {
     }
 }
 
+/// Writes the sample movie fixture without blocking the calling (main) actor.
+///
+/// Use this instead of wrapping the file-private ``writeSampleMovie(to:duration:timescale:frameDuration:frameCount:)``
+/// in `DispatchQueue.global().sync`: a synchronous dispatch still blocks the main actor for the whole
+/// encode and is reported by the runtime as a main-thread unresponsiveness violation.
+///
+/// - Parameters:
+///   - url: The destination URL for the temporary movie.
+///   - duration: The fixture duration in seconds.
+///   - timescale: The movie time scale.
+///   - frameDuration: The per-frame duration written to the fixture.
+///   - frameCount: The number of frames written to the fixture.
+/// - Returns: `true` when the fixture is written successfully; otherwise, `false`.
+private func writeSampleMovieOffMainActor(
+    to url: URL,
+    duration: TimeInterval,
+    timescale: CMTimeScale,
+    frameDuration: CMTime,
+    frameCount: Int
+) async -> Bool {
+    await Task.detached(priority: .utility) {
+        writeSampleMovie(to: url, duration: duration, timescale: timescale,
+                         frameDuration: frameDuration, frameCount: frameCount)
+    }.value
+}
+
 @MainActor
 final class MovieMutatorEditTests: XCTestCase {
     
@@ -128,7 +154,7 @@ final class MovieMutatorEditTests: XCTestCase {
         duration: TimeInterval = 10.0,
         insertionTime: TimeInterval = 0.0,
         selectionDuration: TimeInterval = 1.0
-    ) -> MovieMutator? {
+    ) async -> MovieMutator? {
         let timescale: CMTimeScale = 600
         let frameRate: Int = 30
         let frameDuration = CMTime(value: CMTimeValue(timescale) / CMTimeValue(frameRate), timescale: timescale)
@@ -137,11 +163,10 @@ final class MovieMutatorEditTests: XCTestCase {
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("cutter2_edit_test_\(UUID().uuidString).mov")
         
-        // Write fixture off main thread to avoid AVAssetWriter thread warnings
-        let writeOK = DispatchQueue.global().sync {
-            writeSampleMovie(to: tempURL, duration: duration, timescale: timescale,
-                             frameDuration: frameDuration, frameCount: frameCount)
-        }
+        // Write fixture off the main actor to avoid blocking it during the encode
+        let writeOK = await writeSampleMovieOffMainActor(to: tempURL, duration: duration,
+                                                         timescale: timescale,
+                                                         frameDuration: frameDuration, frameCount: frameCount)
         guard writeOK else {
             XCTFail("failed to write sample movie")
             return nil
@@ -166,8 +191,8 @@ final class MovieMutatorEditTests: XCTestCase {
 
     // MARK: - Presentation traversal
 
-    func testAdjacentPresentationInfoReturnsPreviousAndNextSamples() {
-        guard let mutator = makeMutator(duration: 3.0, insertionTime: 1.0) else { return }
+    func testAdjacentPresentationInfoReturnsPreviousAndNextSamples() async {
+        guard let mutator = await makeMutator(duration: 3.0, insertionTime: 1.0) else { return }
         let currentTime = CMTime(seconds: 1.0, preferredTimescale: 600)
         guard let current = mutator.presentationInfoAtTime(currentTime) else {
             XCTFail("expected a presentation sample at the middle of the fixture")
@@ -183,8 +208,8 @@ final class MovieMutatorEditTests: XCTestCase {
         XCTAssertEqual(next?.timeRange.start, current.timeRange.end)
     }
 
-    func testAdjacentPresentationInfoReturnsNilAtMovieBoundaries() {
-        guard let mutator = makeMutator(duration: 3.0) else { return }
+    func testAdjacentPresentationInfoReturnsNilAtMovieBoundaries() async {
+        guard let mutator = await makeMutator(duration: 3.0) else { return }
         guard let first = mutator.presentationInfoAtTime(.zero) else {
             XCTFail("expected the first presentation sample")
             return
@@ -199,8 +224,8 @@ final class MovieMutatorEditTests: XCTestCase {
         XCTAssertNil(mutator.nextInfo(of: last.timeRange))
     }
 
-    func testAdjacentPresentationInfoTraversesAcrossCutSegments() {
-        guard let mutator = makeMutator(duration: 3.0, insertionTime: 1.0) else { return }
+    func testAdjacentPresentationInfoTraversesAcrossCutSegments() async {
+        guard let mutator = await makeMutator(duration: 3.0, insertionTime: 1.0) else { return }
         let undoManager = UndoManager()
         undoManager.groupsByEvent = false
         undoManager.beginUndoGrouping()
@@ -231,8 +256,8 @@ final class MovieMutatorEditTests: XCTestCase {
     
     // MARK: - Cut / Paste / Delete round-trip (T-09)
     
-    func testCutSelectionRegistersUndoAndCachesClip() {
-        guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
+    func testCutSelectionRegistersUndoAndCachesClip() async {
+        guard let mutator = await makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
         
@@ -258,8 +283,8 @@ final class MovieMutatorEditTests: XCTestCase {
                         "clip must be cached on PBoard")
     }
     
-    func testCutUndoRestoresDurationAndMarker() {
-        guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
+    func testCutUndoRestoresDurationAndMarker() async {
+        guard let mutator = await makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
         
@@ -286,8 +311,8 @@ final class MovieMutatorEditTests: XCTestCase {
         XCTAssertTrue(realUM.canRedo, "redo available after undo")
     }
     
-    func testCutRedoReappliesCut() {
-        guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
+    func testCutRedoReappliesCut() async {
+        guard let mutator = await makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
         
@@ -308,8 +333,8 @@ final class MovieMutatorEditTests: XCTestCase {
         XCTAssertTrue(realUM.canUndo, "undo available after redo")
     }
     
-    func testPasteAtInsertionTimeRoundTrip() {
-        guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
+    func testPasteAtInsertionTimeRoundTrip() async {
+        guard let mutator = await makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
         
@@ -344,8 +369,8 @@ final class MovieMutatorEditTests: XCTestCase {
                        "redo paste re-inserts clip")
     }
     
-    func testDeleteSelectionRoundTrip() {
-        guard let mutator = makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
+    func testDeleteSelectionRoundTrip() async {
+        guard let mutator = await makeMutator(duration: 10.0, insertionTime: 0.0, selectionDuration: 1.0) else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
         
@@ -377,9 +402,9 @@ final class MovieMutatorEditTests: XCTestCase {
     /// corrected marker in seconds. Locks in the position-correction branches of `doRemove` that
     /// the async `queryPosition` path must not clobber. Returns `nil` only if the fixture movie
     /// could not be written (which already records an `XCTFail`).
-    private func deleteSelection_3To4(insertionTime seconds: Double) -> Double? {
+    private func deleteSelection_3To4(insertionTime seconds: Double) async -> Double? {
         let timescale: CMTimeScale = 600
-        guard let mutator = makeMutator(duration: 6.0, insertionTime: 3.0, selectionDuration: 1.0) else { return nil }
+        guard let mutator = await makeMutator(duration: 6.0, insertionTime: 3.0, selectionDuration: 1.0) else { return nil }
         mutator.selectedTimeRange = CMTimeRange(
             start: CMTime(seconds: 3.0, preferredTimescale: timescale),
             duration: CMTime(seconds: 1.0, preferredTimescale: timescale))
@@ -393,22 +418,22 @@ final class MovieMutatorEditTests: XCTestCase {
     }
 
     /// The user's delete-key scenario: marker at the range end must snap to the range start.
-    func testDeleteMarkerAtRangeEndSnapsToRangeStart() {
-        guard let result = deleteSelection_3To4(insertionTime: 4.0) else { return }
+    func testDeleteMarkerAtRangeEndSnapsToRangeStart() async {
+        guard let result = await deleteSelection_3To4(insertionTime: 4.0) else { return }
         XCTAssertEqual(result, 3.0, accuracy: 0.01,
                        "marker at range end must snap to range start (3.0)")
     }
 
     /// Marker before the removed range is unaffected.
-    func testDeleteMarkerBeforeRangeStays() {
-        guard let result = deleteSelection_3To4(insertionTime: 2.0) else { return }
+    func testDeleteMarkerBeforeRangeStays() async {
+        guard let result = await deleteSelection_3To4(insertionTime: 2.0) else { return }
         XCTAssertEqual(result, 2.0, accuracy: 0.01,
                        "marker before range must stay (2.0)")
     }
 
     /// Marker after the removed range shifts backward by selection.
-    func testDeleteMarkerAfterRangeShiftsBackwardBySelection() {
-        guard let result = deleteSelection_3To4(insertionTime: 5.0) else { return }
+    func testDeleteMarkerAfterRangeShiftsBackwardBySelection() async {
+        guard let result = await deleteSelection_3To4(insertionTime: 5.0) else { return }
         XCTAssertEqual(result, 4.0, accuracy: 0.01,
                        "marker after range must shift back by selection duration (5.0 -> 4.0)")
     }

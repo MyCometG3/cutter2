@@ -54,16 +54,15 @@ final class MovieMutatorTransformExportTests: XCTestCase {
     
     // MARK: - Helpers
     
-    private func makeMutator(duration: TimeInterval = 1.0) -> MovieMutator? {
+    private func makeMutator(duration: TimeInterval = 1.0) async -> MovieMutator? {
         let timescale: CMTimeScale = 600
         let frameRate: Int = 30
         
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("cutter2_transform_test_\(UUID().uuidString).mov")
         
-        let writeOK = DispatchQueue.global().sync {
-            writeSampleMovie(to: tempURL, duration: duration, timescale: timescale, frameRate: frameRate)
-        }
+        let writeOK = await writeSampleMovieOffMainActor(to: tempURL, duration: duration,
+                                                         timescale: timescale, frameRate: frameRate)
         guard writeOK else {
             XCTFail("failed to write sample movie")
             return nil
@@ -85,8 +84,8 @@ final class MovieMutatorTransformExportTests: XCTestCase {
     
     // MARK: - clappaspDictionary
     
-    func testClappaspDictionaryReturnsDefaultsForH264Fixture() {
-        guard let mutator = makeMutator() else { return }
+    func testClappaspDictionaryReturnsDefaultsForH264Fixture() async {
+        guard let mutator = await makeMutator() else { return }
         guard let dict = mutator.clappaspDictionary() else {
             return XCTFail("expected non-nil clap/pasp dict for video fixture")
         }
@@ -110,8 +109,8 @@ final class MovieMutatorTransformExportTests: XCTestCase {
     
     // MARK: - applyClapPasp + undo/redo
     
-    func testApplyClapPaspRegistersUndoAndRoundTrips() {
-        guard let mutator = makeMutator() else { return }
+    func testApplyClapPaspRegistersUndoAndRoundTrips() async {
+        guard let mutator = await makeMutator() else { return }
         guard var dict = mutator.clappaspDictionary() else {
             return XCTFail("dict required")
         }
@@ -162,8 +161,8 @@ final class MovieMutatorTransformExportTests: XCTestCase {
         XCTAssertEqual(Double(paspRedone?.height ?? 0), 3.0, accuracy: 0.001)
     }
     
-    func testApplyClapPaspMissingKeyReturnsFalse() {
-        guard let mutator = makeMutator() else { return }
+    func testApplyClapPaspMissingKeyReturnsFalse() async {
+        guard let mutator = await makeMutator() else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
         let wrapper = UndoManagerWrapper(realUM)
@@ -178,8 +177,8 @@ final class MovieMutatorTransformExportTests: XCTestCase {
         XCTAssertFalse(realUM.canUndo, "failed apply must not register undo")
     }
     
-    func testApplyClapPaspMismatchedDimensionsReturnsFalse() {
-        guard let mutator = makeMutator() else { return }
+    func testApplyClapPaspMismatchedDimensionsReturnsFalse() async {
+        guard let mutator = await makeMutator() else { return }
         let realUM = UndoManager()
         realUM.groupsByEvent = false
         let wrapper = UndoManagerWrapper(realUM)
@@ -197,7 +196,7 @@ final class MovieMutatorTransformExportTests: XCTestCase {
     // MARK: - writeMovie / cancel
     
     func testWriteMovieSelfContainedProducesFile() async throws {
-        guard let mutator = makeMutator(duration: 1.0) else { return }
+        guard let mutator = await makeMutator(duration: 1.0) else { return }
         let outURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("cutter2_write_\(UUID().uuidString).mov")
         defer {
@@ -220,12 +219,12 @@ final class MovieMutatorTransformExportTests: XCTestCase {
     }
     
     func testCancelWithNoWriterIsNoOp() async {
-        guard let mutator = makeMutator() else { return }
+        guard let mutator = await makeMutator() else { return }
         await mutator.cancel() // must not throw / crash
     }
     
     func testWriteMovieThenCancelIsSafe() async throws {
-        guard let mutator = makeMutator(duration: 1.0) else { return }
+        guard let mutator = await makeMutator(duration: 1.0) else { return }
         let outURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("cutter2_write_cancel_\(UUID().uuidString).mov")
         defer {

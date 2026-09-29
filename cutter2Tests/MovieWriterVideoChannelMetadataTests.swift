@@ -516,9 +516,8 @@ final class MovieWriterVideoChannelMetadataTests: XCTestCase {
             try? FileManager.default.removeItem(at: outURL)
         }
 
-        let writeOK = DispatchQueue.global().sync {
-            writeSampleMovie(to: fixtureURL, duration: 1.0, timescale: 600, frameRate: 30)
-        }
+        let writeOK = await writeSampleMovieOffMainActor(to: fixtureURL, duration: 1.0,
+                                                         timescale: 600, frameRate: 30)
         guard writeOK else {
             XCTFail("failed to write sample movie fixture")
             return

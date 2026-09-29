@@ -119,3 +119,26 @@ func writeSampleMovie(
     guard result == .success else { return false }
     return writer.status == .completed
 }
+
+/// Writes a sample H.264 movie fixture without blocking the calling (main) actor.
+///
+/// Use this instead of wrapping ``writeSampleMovie(to:duration:timescale:frameRate:)`` in
+/// `DispatchQueue.global().sync`: a synchronous dispatch still blocks the main actor for the
+/// whole encode and is reported by the runtime as a main-thread unresponsiveness violation.
+///
+/// - Parameters:
+///   - url: The destination URL for the temporary movie.
+///   - duration: The fixture duration in seconds.
+///   - timescale: The movie time scale.
+///   - frameRate: The video frame rate.
+/// - Returns: `true` when the fixture is written successfully; otherwise, `false`.
+func writeSampleMovieOffMainActor(
+    to url: URL,
+    duration: TimeInterval = 1.0,
+    timescale: CMTimeScale = 600,
+    frameRate: Int = 30
+) async -> Bool {
+    await Task.detached(priority: .utility) {
+        writeSampleMovie(to: url, duration: duration, timescale: timescale, frameRate: frameRate)
+    }.value
+}

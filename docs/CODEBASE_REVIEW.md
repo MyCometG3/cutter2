@@ -318,6 +318,8 @@ The following documents were removed on 2026-08-05 because they were outdated an
 
 Revision 4 also re-aligned this document with the current 0.8.20b head, correcting: the test inventory (`DocumentTests` 6 → 12, and the source-file total 66/65 → 67 with the previously omitted `VideoChannelMetadataBuilder.swift`), the app version/build, the security-scoped access location (§4.3, §8.3), the `Document` constructibility note (§5.4), and the reload/seek suppression description (§3.2, §8.6). The corresponding test-count annotation was synchronized in `DEVELOPMENT_GUIDE.md` and `TESTING_GUIDE.md` so the per-file breakdown sums to the documented 269.
 
+Revision 5 additionally closed two stale recommendations: the DateFormatter duplication item is already resolved by the shared factory (L-02 / PR #38), and the Utilities public-API documentation item is not applicable because the 10 public declarations found by the scan already have documentation comments; the remaining Utilities declarations are internal.
+
 ---
 
 ## 7. Build & CI Configuration
@@ -375,7 +377,7 @@ Revision 4 also re-aligned this document with the current 0.8.20b head, correcti
 
 **Finding:** `LoggingSystem.swift` provides a structured logging interface. `DateFormatter+Factory.swift` provides factory methods for date formatters, including a `logFormatter` used by the logging system.
 
-**Observation:** The `LoggingSystem` uses its own internal timestamp formatting via `DateFormatter.logFormatter`, which is separate from the general-purpose formatters in `DateFormatter+Factory.swift`. This is a minor duplication that could be unified.
+**Assessment:** The logging system already uses the shared `DateFormatter.logFormatter` factory (PR #38 / L-02). The remaining `Thread.threadDictionary` cache is intentional: it avoids sharing a mutable `DateFormatter` across threads without introducing a new shared synchronization mechanism. No further unification work is required.
 
 ### 8.5 Performance
 
@@ -405,17 +407,17 @@ Under the historical implementation, `queryPosition()` could poll the new item a
 ### 9.1 High Priority
 
 1. ~~**Update documentation** (`ARCHITECTURE.md`, `API_REFERENCE.md`)~~ — Resolved (2026-08-05): Both documents removed. Information is now maintained in this review document.
-2. **Add integration tests** for ordering between `Document`, a live AVPlayer, KVO, and the polling timer. `PlayerSeekSequencer` state transitions and the reload suppression fix are unit-tested in isolation; exercising the integration requires a player/reload seam or UI/integration harness. Window resize, save panel, clipboard, and scrubbing tests also remain open.
+2. **Add integration tests** for ordering between `Document`, a live AVPlayer, KVO, and the polling timer. `PlayerSeekSequencer` state transitions and the reload suppression fix are unit-tested in isolation; exercising the integration requires a narrow player/item factory seam rather than broad `MovieMutator` protocolization or a full XCUITest harness. Window resize, save panel, clipboard, and scrubbing tests also remain open.
 
 ### 9.2 Medium Priority
 
 3. ~~**Triage the runtime performance warnings.**~~ — **RESOLVED (2026-09-29, PR #65 / `011aff7`).** The reports originated in `libRPAC.dylib`, not `libMainThreadChecker.dylib`. With `PERFC_ENABLE_DUPLICATE_DETECTION=0`, 55 reports were reproduced in an approximately 220 ms burst; PID correlation identified the three fixture-generating test processes and the shared cause: `DispatchQueue.global().sync` blocked the main actor during synchronous `AVAssetWriter` fixture encoding. Moving fixture generation to detached utility tasks reduced the A/B measurement from 55 reports to 0.
-4. **Unify date formatter usage** between `LoggingSystem` and `DateFormatter+Factory.swift`.
-5. **Expand performance tests** to cover TimelineView rendering and MovieMutator operations.
+4. ~~**Unify date formatter usage** between `LoggingSystem` and `DateFormatter+Factory.swift.**~~ — **RESOLVED (PR #38 / L-02).** `LoggingSystem` already calls the shared `DateFormatter.logFormatter`; the thread-local cache is intentional.
+5. **Expand performance tests** to cover TimelineView rendering and MovieMutator operations, using non-gating measurements that do not introduce CI timing thresholds.
 
 ### 9.3 Low Priority
 
-6. **Add documentation comments** to public APIs in `Utilities/` that lack them.
+6. ~~**Add documentation comments** to public APIs in `Utilities/` that lack them.~~ — **NOT APPLICABLE (2026-09-29).** All 10 public declarations found in `Utilities/` already have documentation comments; the remaining declarations are internal to the application module.
 
 ---
 

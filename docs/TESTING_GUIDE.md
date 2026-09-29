@@ -1,6 +1,6 @@
 # Testing Guide for cutter2
 
-**Status**: Active — test instructions and infrastructure reference *(Updated: September 27, 2026)*
+**Status**: Active — test instructions and infrastructure reference *(Updated: September 29, 2026; release 0.8.20)*
 
 This guide provides instructions for running and writing tests for the cutter2 application.
 
@@ -24,7 +24,7 @@ xcodebuild test \
   CODE_SIGNING_REQUIRED=NO
 ```
 
-The September 27, 2026 full-suite run on `work` (0.8.20b, single scheme `cutter2`, Debug) executed 269 test cases with 269 passed, 0 failed, and 0 skipped. The current inventory is 269 tests across 20 test source files and one helper; runtime results remain tied to each specific test run.
+The September 27, 2026 full-suite run on the pre-release `work` baseline (0.8.20b, single scheme `cutter2`, Debug) executed 269 test cases with 269 passed, 0 failed, and 0 skipped. Release 0.8.20 (`fb44143`) changes only the version/build metadata after the tested PR #65 code baseline (`011aff7`). The current inventory is 269 tests across 20 test source files and one helper; runtime results remain tied to each specific test run.
 
 ## Table of Contents
 

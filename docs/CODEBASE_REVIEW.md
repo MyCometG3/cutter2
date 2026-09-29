@@ -3,9 +3,9 @@
 **Date:** 2026-09-29 (revision 5; original review 2026-08-06)
 **Reviewer:** Source-level documentation and code review
 **Scope:** Source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
-**Reviewed baseline:** `011aff78eff75deaa5c967a355e341bf516c6a47` (`work`, PR #65)
+**Reviewed baseline:** `fb4414346f86933344958ca31e5813dac4ef175a` (`work`, release 0.8.20)
 **Verification environment:** macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
-**Status:** Rebaselined on the current `work` head after PR #65. Clean build / clean analyze / full test passed (269/269); the runtime warning triage is resolved, with live integration coverage still open.
+**Status:** Rebaselined on the current `work` head for release 0.8.20. The tested code baseline is PR #65 (`011aff7`); `fb44143` is the version/build metadata commit. Clean build / clean analyze / full test passed (269/269), with 0 release blockers; live integration coverage remains a non-blocking gap.
 
 ---
 
@@ -13,12 +13,13 @@
 
 This document records a source-level review of the **cutter2** project — a macOS video editor application built with Swift and AVFoundation. The review covers project structure, architecture, concurrency model, code quality, test coverage, documentation accuracy, and build/CI configuration.
 
-Revision 5 (2026-09-29) rebaselines the review on `work` after PR #65, commit `011aff7`. The previously reviewed baseline `4747c9a` remains the 0.8.20b version bump; PR #65 adds the fixture-writing test fix and closes the runtime warning triage. The commits that constitute the current state relative to `master` (`88c0e13`) are:
+Revision 5 (2026-09-29) rebaselines the review on `work` for the 0.8.20 release. PR #65 (`011aff7`) adds the fixture-writing test fix and closes the runtime warning triage; `fb44143` applies the 0.8.20 version/build metadata. The commits that constitute the current state relative to `master` (`88c0e13`) are:
 
 - `b724483` Refactor cutter2: concurrency, export, and media cleanup overhaul (#63) — squash-merged the previously reviewed line together with the reload/seek generation work; re-asserts suppression immediately before `replaceCurrentItem`.
 - `38221e9` Fix cutter2 release blockers (#64) — CR-4, M-24, M-25, M-26, M-27, M-28, T-17, H-11; expands `DocumentTests` (6 → 12), `MovieWriterWriteTests`, `PlayerSeekSequencerTests`, and `MovieMutatorTransformExportTests`.
 - `4747c9a` 0.8.20b — version/build bump.
 - `011aff7` Fix main-thread blocking in fixture-writing tests (#65) — moves synchronous fixture encoding off the main actor and resolves the runtime warning reports.
+- `fb44143` 0.8.20 — release version/build metadata update.
 
 Verification for this baseline was run with the current toolchain:
 
@@ -423,9 +424,9 @@ Under the historical implementation, `queryPosition()` could poll the new item a
 
 ## 10. Conclusion
 
-The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 269 test methods across 20 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Revision 5 verified the current `work` head (`011aff7`, PR #65) with a clean build, clean analyze, and a full test run passing 269 test cases with 0 failures and 0 skips.
+The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 269 test methods across 20 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Revision 5 verified the release code baseline (`011aff7`, PR #65) and the resulting 0.8.20 head (`fb44143`) with a clean build, clean analyze, and a full test run passing 269 test cases with 0 failures and 0 skips.
 
-The current release-blocker fixes include CR-4 (empty-window lifecycle, which also made `Document` constructible in tests), M-26 cancellation classification, M-27 seek liveness (watchdog), M-28 generation/cache protection, and H-11 temporary finalization/self-contained selection protection. PR #65 also resolved the runtime performance warning triage by moving test fixture encoding off the main actor; the RPAC diagnostic A/B measurement changed from 55 reports to 0. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer; window resize, save panel, clipboard, and scrubbing coverage remain open. Test counts in `scripts/test.sh`, this review, and the test guides now match the current inventory (269 across 21 files).
+The current release-blocker fixes include CR-4 (empty-window lifecycle, which also made `Document` constructible in tests), M-26 cancellation classification, M-27 seek liveness (watchdog), M-28 generation/cache protection, and H-11 temporary finalization/self-contained selection protection. PR #65 also resolved the runtime performance warning triage by moving test fixture encoding off the main actor; the RPAC diagnostic A/B measurement changed from 55 reports to 0. Release blocker count is **0**. T-19 (live player integration), T-20 (performance baselines), and T-21 (`invalidDuration` branch coverage) remain non-blocking backlog items. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer; window resize, save panel, clipboard, and scrubbing coverage remain open. Test counts in `scripts/test.sh`, this review, and the test guides now match the current inventory (269 across 21 files).
 
 ---
 

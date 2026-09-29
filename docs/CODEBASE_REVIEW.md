@@ -1,11 +1,11 @@
 # Codebase Review — cutter2
 
-**Date:** 2026-09-27 (revision 4; original review 2026-08-06)
+**Date:** 2026-09-29 (revision 5; original review 2026-08-06)
 **Reviewer:** Source-level documentation and code review
 **Scope:** Source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
-**Reviewed baseline:** `4747c9a209567e552f95f53e3ebe952b25ed0d1e` (`work`, version 0.8.20b)
+**Reviewed baseline:** `011aff78eff75deaa5c967a355e341bf516c6a47` (`work`, PR #65)
 **Verification environment:** macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
-**Status:** Rebaselined on the current `work` head (0.8.20b). Clean build / clean analyze / full test passed (269/269). §4.3 and §5.4 corrected to match the current implementation; the §8.6 reload-suppression finding remains resolved, with live integration coverage still open.
+**Status:** Rebaselined on the current `work` head after PR #65. Clean build / clean analyze / full test passed (269/269); the runtime warning triage is resolved, with live integration coverage still open.
 
 ---
 
@@ -13,11 +13,12 @@
 
 This document records a source-level review of the **cutter2** project — a macOS video editor application built with Swift and AVFoundation. The review covers project structure, architecture, concurrency model, code quality, test coverage, documentation accuracy, and build/CI configuration.
 
-Revision 4 (2026-09-27) rebaselines the review on the current `work` head, `4747c9a` (0.8.20b). The previously reviewed baseline `4d37278` was the head of the branch that PR #63 subsequently squash-merged into `work`; it is no longer reachable from any branch, so the old baseline is cited here only for history. The commits that constitute the current state relative to `master` (`88c0e13`) are:
+Revision 5 (2026-09-29) rebaselines the review on `work` after PR #65, commit `011aff7`. The previously reviewed baseline `4747c9a` remains the 0.8.20b version bump; PR #65 adds the fixture-writing test fix and closes the runtime warning triage. The commits that constitute the current state relative to `master` (`88c0e13`) are:
 
 - `b724483` Refactor cutter2: concurrency, export, and media cleanup overhaul (#63) — squash-merged the previously reviewed line together with the reload/seek generation work; re-asserts suppression immediately before `replaceCurrentItem`.
 - `38221e9` Fix cutter2 release blockers (#64) — CR-4, M-24, M-25, M-26, M-27, M-28, T-17, H-11; expands `DocumentTests` (6 → 12), `MovieWriterWriteTests`, `PlayerSeekSequencerTests`, and `MovieMutatorTransformExportTests`.
 - `4747c9a` 0.8.20b — version/build bump.
+- `011aff7` Fix main-thread blocking in fixture-writing tests (#65) — moves synchronous fixture encoding off the main actor and resolves the runtime warning reports.
 
 Verification for this baseline was run with the current toolchain:
 
@@ -27,12 +28,13 @@ xcodebuild clean analyze -project cutter2.xcodeproj -scheme cutter2 -destination
 xcodebuild test          -project cutter2.xcodeproj -scheme cutter2 -destination 'platform=macOS' -enableCodeCoverage YES CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO
 ```
 
-All three steps succeeded. The full test run executed **269 test cases with 269 passed and 0 failed** (0 skipped). The run emitted 3 Main Thread Checker runtime warnings ("This method should not be called on the main thread as it may lead to UI unresponsiveness."); origin not yet triaged (§9.3).
+All three steps succeeded. The full test run executed **269 test cases with 269 passed and 0 failed** (0 skipped). The 2026-09-27 run initially emitted 3 runtime performance warnings. Follow-up triage identified `libRPAC.dylib` (Xcode runtime performance analysis), not `libMainThreadChecker.dylib`, as the reporting component.
 
 **Current verification facts:**
 
 - **Current static test suite size:** 21 files total (20 test source files + 1 helper), with 269 test methods.
-- **Runtime test result:** The 2026-09-27 run on the 0.8.20b head passed 269 test cases with 0 failures and 0 skips; 3 Main Thread Checker runtime warnings were observed.
+- **Runtime test result:** The 2026-09-27 run on the 0.8.20b head passed 269 test cases with 0 failures and 0 skips; after PR #65, the follow-up A/B measurement recorded **0 runtime performance reports** (55 before the fix).
+- **Runtime warning triage:** `PERFC_ENABLE_DUPLICATE_DETECTION=0` reproduced 55 reports in an approximately 220 ms burst. PID correlation mapped the reporting processes to the three fixture-generating test files, where `DispatchQueue.global().sync` synchronously blocked the main actor during `AVAssetWriter` encoding. After PR #65 moved fixture generation to detached utility tasks, the same diagnostic measurement produced 0 reports.
 - **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps plus coverage report generation/upload. The workflow uses `macos-latest` and does not pin a specific Xcode image.
 - **Strict concurrency:** `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` are enabled across all four app/test configurations.
 - **Swift language mode:** `SWIFT_VERSION = 6.0` is pinned in the app and test targets.
@@ -167,7 +169,7 @@ cutter2Tests/
 
 ### 2.3 Test Execution Results
 
-The current source contains 269 test methods and no `XCTSkip` usage. The 2026-09-27 full-suite run on the 0.8.20b head executed all 269 test cases successfully (269 passed, 0 failed, 0 skipped). The run produced 3 Main Thread Checker runtime warnings; these are recorded in §9.3 as an open item.
+The current source contains 269 test methods and no `XCTSkip` usage. The 2026-09-27 full-suite run on the 0.8.20b head executed all 269 test cases successfully (269 passed, 0 failed, 0 skipped). The subsequent RPAC diagnosis and PR #65 A/B measurement reduced the runtime performance reports from 55 to 0.
 
 ---
 
@@ -407,7 +409,7 @@ Under the historical implementation, `queryPosition()` could poll the new item a
 
 ### 9.2 Medium Priority
 
-3. **Triage the Main Thread Checker runtime warnings.** The 2026-09-27 full-suite run emitted 3 "This method should not be called on the main thread as it may lead to UI unresponsiveness" warnings. Identify the originating call site(s) and either move the work off the main thread or suppress the warning with justification.
+3. ~~**Triage the runtime performance warnings.**~~ — **RESOLVED (2026-09-29, PR #65 / `011aff7`).** The reports originated in `libRPAC.dylib`, not `libMainThreadChecker.dylib`. With `PERFC_ENABLE_DUPLICATE_DETECTION=0`, 55 reports were reproduced in an approximately 220 ms burst; PID correlation identified the three fixture-generating test processes and the shared cause: `DispatchQueue.global().sync` blocked the main actor during synchronous `AVAssetWriter` fixture encoding. Moving fixture generation to detached utility tasks reduced the A/B measurement from 55 reports to 0.
 4. **Unify date formatter usage** between `LoggingSystem` and `DateFormatter+Factory.swift`.
 5. **Expand performance tests** to cover TimelineView rendering and MovieMutator operations.
 
@@ -419,9 +421,9 @@ Under the historical implementation, `queryPosition()` could poll the new item a
 
 ## 10. Conclusion
 
-The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 269 test methods across 20 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. The 2026-09-27 revision verified the current `work` head (0.8.20b, `4747c9a`) with a clean build, clean analyze, and a full test run passing 269 test cases with 0 failures and 0 skips.
+The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 269 test methods across 20 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Revision 5 verified the current `work` head (`011aff7`, PR #65) with a clean build, clean analyze, and a full test run passing 269 test cases with 0 failures and 0 skips.
 
-The current release-blocker fixes include CR-4 (empty-window lifecycle, which also made `Document` constructible in tests), M-26 cancellation classification, M-27 seek liveness (watchdog), M-28 generation/cache protection, and H-11 temporary finalization/self-contained selection protection. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer; window resize, save panel, clipboard, and scrubbing coverage remain open. The test run also surfaced 3 Main Thread Checker runtime warnings that are not yet triaged. Test counts in `scripts/test.sh`, this review, and the test guides now match the current inventory (269 across 21 files).
+The current release-blocker fixes include CR-4 (empty-window lifecycle, which also made `Document` constructible in tests), M-26 cancellation classification, M-27 seek liveness (watchdog), M-28 generation/cache protection, and H-11 temporary finalization/self-contained selection protection. PR #65 also resolved the runtime performance warning triage by moving test fixture encoding off the main actor; the RPAC diagnostic A/B measurement changed from 55 reports to 0. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer; window resize, save panel, clipboard, and scrubbing coverage remain open. Test counts in `scripts/test.sh`, this review, and the test guides now match the current inventory (269 across 21 files).
 
 ---
 

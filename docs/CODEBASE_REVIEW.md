@@ -33,7 +33,7 @@ All three steps succeeded. The full test run executed **269 test cases with 269 
 
 **Current verification facts:**
 
-- **Current static test suite size:** 21 files total (20 test source files + 1 helper), with 269 test methods.
+- **Current static test suite size:** 21 files total (20 test source files + 1 helper), with 275 test methods.
 - **Runtime test result:** The 2026-09-27 run on the 0.8.20b head passed 269 test cases with 0 failures and 0 skips; after PR #65, the follow-up A/B measurement recorded **0 runtime performance reports** (55 before the fix).
 - **Runtime warning triage:** `PERFC_ENABLE_DUPLICATE_DETECTION=0` reproduced 55 reports in an approximately 220 ms burst. PID correlation mapped the reporting processes to the three fixture-generating test files, where `DispatchQueue.global().sync` synchronously blocked the main actor during `AVAssetWriter` encoding. After PR #65 moved fixture generation to detached utility tasks, the same diagnostic measurement produced 0 reports.
 - **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps plus coverage report generation/upload. The workflow uses `macos-latest` and does not pin a specific Xcode image.
@@ -151,7 +151,7 @@ cutter2Tests/
 ├── LocalizationTests.swift               # Localization tests (11 tests)
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
 ├── ModelTests.swift                      # Model layer tests (26 tests)
-├── MovieHeaderValidatorTests.swift       # Header validation tests (3 tests)
+├── MovieHeaderValidatorTests.swift       # Header validation tests (9 tests)
 ├── MovieMutatorEditTests.swift           # Edit operation and presentation traversal tests (11 tests)
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
@@ -166,11 +166,11 @@ cutter2Tests/
 └── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Current total:** 21 files (20 test source files + 1 helper), **269 test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`). #64 adds watchdog, stale-token, failure-fallback, and cleanup regression coverage (`PlayerSeekSequencerTests`), empty-window lifecycle coverage (`DocumentTests`, CR-4), cancellation classification (M-26), and temporary finalization (H-11).
+**Current total:** 21 files (20 test source files + 1 helper), **275 test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`). #64 adds watchdog, stale-token, failure-fallback, and cleanup regression coverage (`PlayerSeekSequencerTests`), empty-window lifecycle coverage (`DocumentTests`, CR-4), cancellation classification (M-26), and temporary finalization (H-11).
 
 ### 2.3 Test Execution Results
 
-The current source contains 269 test methods and no `XCTSkip` usage. The 2026-09-27 full-suite run on the 0.8.20b head executed all 269 test cases successfully (269 passed, 0 failed, 0 skipped). The subsequent RPAC diagnosis and PR #65 A/B measurement reduced the runtime performance reports from 55 to 0.
+The current source contains 275 test methods and no `XCTSkip` usage. The 2026-09-27 full-suite run on the 0.8.20b head executed all 269 test cases successfully (269 passed, 0 failed, 0 skipped). The subsequent RPAC diagnosis and PR #65 A/B measurement reduced the runtime performance reports from 55 to 0.
 
 ---
 
@@ -264,17 +264,17 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 | **Localization** | `LocalizationTests.swift` | 11 | ✅ Covered |
 | **LoggingSystem** | `LoggingSystemTests.swift` | 17 | ✅ Covered |
 | **cutter2 (integration)** | `cutter2Tests.swift` | 20 | ✅ Covered |
-| **MovieHeaderValidator** | `MovieHeaderValidatorTests.swift` | 3 | ✅ Covered |
+| **MovieHeaderValidator** | `MovieHeaderValidatorTests.swift` | 9 | ✅ Covered |
 | **MovieWriter video channel metadata** | `MovieWriterVideoChannelMetadataTests.swift` | 25 | ✅ Covered |
 | **MovieWriter failure states** | `MovieWriterWriteTests.swift` | 3 | ✅ Covered (expanded in #64, H-11) |
-| **Overall** | 21 files (20 test source + 1 helper) | **269 test methods** | ✅ Full suite passed 269/269 (2026-09-27); live player integration remains untested |
+| **Overall** | 21 files (20 test source + 1 helper) | **275 test methods** | ✅ Full suite passed 269/269 (2026-09-27); live player integration remains untested |
 
 ### 5.2 Test Execution
 
 - `scripts/test.sh` orchestrates build → test → analyze via `xcodebuild`
 - CI workflow (`.github/workflows/test.yml`) runs on push/PR to `main`, `work`, and `develop` branches (Build → Test → Analyze, using `build-for-testing` + `test-without-building` to avoid double compilation)
-- The current source contains 269 test methods and no `XCTSkip` usage; the 2026-09-27 full-suite run on the 0.8.20b head passed all 269 test cases (0 failed, 0 skipped)
-- `scripts/test.sh` reports the current inventory of 20 test source files + 1 helper and 269 tests
+- The current source contains 275 test methods and no `XCTSkip` usage; the 2026-09-27 full-suite run on the 0.8.20b head passed all 269 test cases (0 failed, 0 skipped)
+- `scripts/test.sh` reports the current inventory of 20 test source files + 1 helper and 275 tests
 
 ### 5.3 Test Coverage Gaps
 
@@ -294,7 +294,7 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 
 ### 5.4 Skipped Test — RESOLVED
 
-The always-skipped `MovieHeaderValidatorTests.testInvalidDurationPath()` was removed by S-12. The test threw `XCTSkip` because the `invalidDuration` fixture is not constructible via the public `AVMutableMovie` API. After removal, the suite contains no `XCTSkip` usage; the `invalidDuration` validation error path in `MovieHeaderValidator` remains uncovered, but the `errorDescription` behavior is exercised by the remaining `MovieHeaderValidatorTests` cases.
+The always-skipped `MovieHeaderValidatorTests.testInvalidDurationPath()` was removed by S-12. The test threw `XCTSkip` because the `invalidDuration` fixture is not constructible via the public `AVMutableMovie` API. After removal, the suite contains no `XCTSkip` usage, and the `errorDescription` behavior is exercised by the `MovieHeaderValidatorTests` cases. (T-21, October 1, 2026) The `invalidDuration` validation error path is now covered directly: the branch decision was extracted into the internal `MovieHeaderValidator.validate(trackCount:duration:)` helper, and six direct helper tests exercise it with `.invalid` / `.indefinite` / ±`.infinity` (all rejected) and `.zero` (accepted), so the path no longer depends on a public-API fixture.
 
 **Document constructibility (updated for #64 / CR-4):** An earlier revision of this review recorded that `Document` instances could not be constructed in the unit-test environment because the `window` computed property force-indexed `windowControllers[0]`, raising `NSRangeException` on the empty array during `NSDocument.init()`. CR-4 (shipped in #64) changed `Document.window` to `self.windowControllers.first?.window as? Window`, which safely returns `nil` until a window controller exists. As a result, `Document()` can now be constructed in tests, and `DocumentTests` exercises it directly (`testWindowIsNilBeforeWindowControllerCreation`, `testResetPositionCacheClearsAllCachedPositionState`). The full revert sheet-display flow still has no test seam, but it is no longer blocked by the construction crash.
 
@@ -348,7 +348,7 @@ Revision 5 additionally closed two stale recommendations: the DateFormatter dupl
 - Each step is guarded with `if ! ...; then exit 1; fi` so failures are reported with a custom message (works with `set -e`)
 - Uses color-coded echo statements for output formatting
 - Generates coverage reports via `xcrun llvm-cov`
-- Reports a summary; its inventory distinguishes 20 test source files from 1 helper and reports 269 tests
+- Reports a summary; its inventory distinguishes 20 test source files from 1 helper and reports 275 tests
 
 ---
 
@@ -424,9 +424,9 @@ Under the historical implementation, `queryPosition()` could poll the new item a
 
 ## 10. Conclusion
 
-The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 269 test methods across 20 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Revision 5 verified the release code baseline (`011aff7`, PR #65) and the resulting 0.8.20 head (`fb44143`) with a clean build, clean analyze, and a full test run passing 269 test cases with 0 failures and 0 skips.
+The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 275 test methods across 20 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Revision 5 verified the release code baseline (`011aff7`, PR #65) and the resulting 0.8.20 head (`fb44143`) with a clean build, clean analyze, and a full test run passing 269 test cases with 0 failures and 0 skips.
 
-The current release-blocker fixes include CR-4 (empty-window lifecycle, which also made `Document` constructible in tests), M-26 cancellation classification, M-27 seek liveness (watchdog), M-28 generation/cache protection, and H-11 temporary finalization/self-contained selection protection. PR #65 also resolved the runtime performance warning triage by moving test fixture encoding off the main actor; the RPAC diagnostic A/B measurement changed from 55 reports to 0. Release blocker count is **0**. T-19 (live player integration), T-20 (performance baselines), and T-21 (`invalidDuration` branch coverage) remain non-blocking backlog items. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer; window resize, save panel, clipboard, and scrubbing coverage remain open. Test counts in `scripts/test.sh`, this review, and the test guides now match the current inventory (269 across 21 files).
+The current release-blocker fixes include CR-4 (empty-window lifecycle, which also made `Document` constructible in tests), M-26 cancellation classification, M-27 seek liveness (watchdog), M-28 generation/cache protection, and H-11 temporary finalization/self-contained selection protection. PR #65 also resolved the runtime performance warning triage by moving test fixture encoding off the main actor; the RPAC diagnostic A/B measurement changed from 55 reports to 0. Release blocker count is **0**. T-19 (live player integration) and T-20 (performance baselines) remain non-blocking backlog items; T-21 (`invalidDuration` branch coverage) is implemented with direct helper tests (§5.4), and its backlog closure follows the merge. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer; window resize, save panel, clipboard, and scrubbing coverage remain open. Test counts in `scripts/test.sh`, this review, and the test guides now match the current inventory (275 across 21 files).
 
 ---
 
@@ -441,10 +441,10 @@ The current release-blocker fixes include CR-4 (empty-window lifecycle, which al
 - Utilities: `AsyncBridge.swift`, `ActorUtilities.swift`, `LayoutConverter.swift` + 3 extensions (`+Convert`, `+LayoutData`, `+Mapping`), `MovieHeaderValidator.swift`, `PerformanceMetrics.swift`, `ErrorUtilities.swift`, `Constants.swift`, `LocalizationHelper.swift`, `LoggingSystem.swift`, `DateFormatter+Factory.swift`
 - Resources: `Info.plist`, `cutter2.entitlements`, `Localizable.xcstrings` (hand-curated app strings), `Base.lproj/Main.storyboard` (main UI), `mul.lproj/Main.xcstrings` (storyboard-extracted strings), `Assets.xcassets` (app icon)
 
-### Test Files (21 files: 20 test source files + 1 helper; 269 test methods)
+### Test Files (21 files: 20 test source files + 1 helper; 275 test methods)
 - `AsyncBridgeTests.swift` (4 tests), `cutter2Tests.swift` (20 tests), `DocumentKVOContextTests.swift` (3 tests), `DocumentTests.swift` (12 tests)
 - `LayoutConverterMappingTests.swift` (7 tests), `LocalizationTests.swift` (11 tests), `LoggingSystemTests.swift` (17 tests), `ModelTests.swift` (26 tests)
-- `MovieHeaderValidatorTests.swift` (3 tests), `MovieMutatorEditTests.swift` (11 tests), `MovieMutatorTests.swift` (22 tests), `MovieMutatorTransformExportTests.swift` (8 tests)
+- `MovieHeaderValidatorTests.swift` (9 tests), `MovieMutatorEditTests.swift` (11 tests), `MovieMutatorTests.swift` (22 tests), `MovieMutatorTransformExportTests.swift` (8 tests)
 - `MovieWriterVideoChannelMetadataTests.swift` (25 tests), `MovieWriterWriteTests.swift` (3 tests), `PerformanceTests.swift` (12 tests), `PlayerSeekSequencerTests.swift` (19 tests), `TimelineViewRenderingTests.swift` (15 tests)
 - `UtilitiesTests.swift` (22 tests), `ViewControllerKeyEventTests.swift` (14 tests), `ViewControllerTests.swift` (15 tests)
 - `TestMovieFixtureWriter.swift` (0 tests, fixture writer helper)
@@ -461,4 +461,4 @@ The current release-blocker fixes include CR-4 (empty-window lifecycle, which al
 ### Configuration
 - `cutter2.xcodeproj/project.pbxproj` (version 0.8.20 / build 20260926 — app target, committed in the project; the test target carries placeholder `1.0` / `1`)
 - `.github/workflows/test.yml` (build/test/analyze, branches `main`/`work`/`develop`; coverage artifact generation is optional)
-- `scripts/test.sh` (build/test/analyze; summary reports 20 test source files + 1 helper and 269 tests)
+- `scripts/test.sh` (build/test/analyze; summary reports 20 test source files + 1 helper and 275 tests)

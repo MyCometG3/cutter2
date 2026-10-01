@@ -52,4 +52,61 @@ final class MovieHeaderValidatorTests: XCTestCase {
             MovieHeaderValidator.ValidationError.invalidDuration.errorDescription?.isEmpty ?? true
         )
     }
+    
+    // Pins the VALID == false route: an invalid CMTime rejects the duration.
+    func testValidateHelperRejectsInvalidTime() {
+        let error = MovieHeaderValidator.validate(trackCount: 1, duration: .invalid)
+        guard case .invalidDuration? = error else {
+            return XCTFail("expected .invalidDuration, got \(String(describing: error))")
+        }
+    }
+    
+    // Pins the NUMERIC == false route with VALID == true: an indefinite CMTime
+    // is an implied value and is rejected as an invalid duration.
+    func testValidateHelperRejectsIndefiniteDuration() {
+        let error = MovieHeaderValidator.validate(trackCount: 1, duration: .indefinite)
+        guard case .invalidDuration? = error else {
+            return XCTFail("expected .invalidDuration, got \(String(describing: error))")
+        }
+    }
+    
+    // Pins the NUMERIC == false route for implied values: both ±infinity
+    // durations are rejected as invalid durations.
+    func testValidateHelperRejectsInfiniteDurations() {
+        let positive = MovieHeaderValidator.validate(trackCount: 1, duration: .positiveInfinity)
+        guard case .invalidDuration? = positive else {
+            return XCTFail("expected .invalidDuration for positiveInfinity, got \(String(describing: positive))")
+        }
+        let negative = MovieHeaderValidator.validate(trackCount: 1, duration: .negativeInfinity)
+        guard case .invalidDuration? = negative else {
+            return XCTFail("expected .invalidDuration for negativeInfinity, got \(String(describing: negative))")
+        }
+    }
+    
+    // Pins the current semantics: a zero duration with at least one track
+    // is valid and numeric, so validation passes.
+    func testValidateHelperAcceptsZeroDurationWithTrack() {
+        let error = MovieHeaderValidator.validate(trackCount: 1, duration: .zero)
+        guard error == nil else {
+            return XCTFail("expected nil, got \(String(describing: error))")
+        }
+    }
+    
+    // Pins the branch ordering: a track count of zero yields .noTracks even
+    // when the duration is also invalid.
+    func testValidateHelperPrioritizesNoTracksOverInvalidDuration() {
+        let error = MovieHeaderValidator.validate(trackCount: 0, duration: .invalid)
+        guard case .noTracks? = error else {
+            return XCTFail("expected .noTracks, got \(String(describing: error))")
+        }
+    }
+    
+    // Pins the branch ordering: a track count of zero yields .noTracks even
+    // for a valid, numeric duration.
+    func testValidateHelperPrioritizesNoTracksOverValidDuration() {
+        let error = MovieHeaderValidator.validate(trackCount: 0, duration: .zero)
+        guard case .noTracks? = error else {
+            return XCTFail("expected .noTracks, got \(String(describing: error))")
+        }
+    }
 }

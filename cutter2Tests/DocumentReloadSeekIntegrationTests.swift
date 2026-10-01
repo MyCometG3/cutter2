@@ -422,21 +422,6 @@ final class DocumentReloadSeekIntegrationTests: XCTestCase {
         XCTAssertIdentical(player.currentItem, generation2Item)
         XCTAssertEqual(completedGenerations, [1, 2])
 
-        // The item-replacement branch arms a suppression watchdog whose completion
-        // is a real AVFoundation seek callback (non-deterministic). Retire the
-        // watchdog deterministically: wait until it has armed and then expired, so
-        // tearDown's `cleanup()` → `invalidate()` has no live task to cancel and
-        // drop (a cancelled suspended task's deallocation trips a Swift concurrency
-        // runtime fatal error).
-        if document.playerSeekSequencer.hasArmedSuppressionWatchdog {
-            let deadline = Date().addingTimeInterval(10)
-            while document.playerSeekSequencer.hasArmedSuppressionWatchdog && Date() < deadline {
-                try await Task.sleep(for: .milliseconds(100))
-            }
-            XCTAssertFalse(document.playerSeekSequencer.hasArmedSuppressionWatchdog,
-                           "suppression watchdog never retired")
-        }
-
         // Symmetric teardown of the manually attached player: remove the
         // Document's KVO registrations BEFORE the player is detached, mirroring
         // the production add/remove pairing. Detaching first would deallocate an
@@ -445,7 +430,11 @@ final class DocumentReloadSeekIntegrationTests: XCTestCase {
         // already released. The detach itself stays in the test body — releasing
         // the player from an `AVPlayerView` inside XCTest's teardown sequence
         // aborts the whole suite (SIGABRT), so the teardown must find nothing
-        // left to release.
+        // left to release. The armed suppression watchdog needs no special
+        // handling: `cleanup()` → `invalidate()` cancels it mid-sleep and drops
+        // the handle (the same path production takes on every re-arm, and the
+        // one `testInvalidateCancelsWatchdogAndClearsSuppression` already
+        // exercises), and cancelling a sleeping unstructured task is safe.
         document.removePlayerObserver()
         playerView.player = nil
     }

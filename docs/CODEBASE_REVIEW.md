@@ -5,7 +5,7 @@
 **Scope:** Source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
 **Reviewed baseline:** `fb4414346f86933344958ca31e5813dac4ef175a` (`work`, release 0.8.20)
 **Verification environment:** macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
-**Status:** Rebaselined on the current `work` head for release 0.8.20. The tested code baseline is PR #65 (`011aff7`); `fb44143` is the version/build metadata commit. Clean build / clean analyze / full test passed (269/269), with 0 release blockers; live integration coverage remains a non-blocking gap. The T-19 feature branch (this working tree) additionally adds the `Document` test-only seam and 5 integration tests, raising the suite to 274 methods across 22 files (see §5.3, §8.6, and §Conclusion).
+**Status:** Rebaselined on the current `work` head for release 0.8.20. The tested code baseline is PR #65 (`011aff7`); `fb44143` is the version/build metadata commit. Clean build / clean analyze / full test passed (269/269), with 0 release blockers; live integration coverage remains a non-blocking gap. The T-19 feature branch (this working tree) adds the `Document` test-only seam and 5 integration tests and now carries PR #67 (T-21: direct `invalidDuration` helper tests, §5.4) via rebase, raising the suite to 280 methods across 22 files (see §2.3, §5.3, §5.4, §8.6, and §Conclusion).
 
 ---
 

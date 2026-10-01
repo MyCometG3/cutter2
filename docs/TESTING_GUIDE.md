@@ -1,6 +1,6 @@
 # Testing Guide for cutter2
 
-**Status**: Active — test instructions and infrastructure reference *(Updated: September 29, 2026; release 0.8.20)*
+**Status**: Active — test instructions and infrastructure reference *(Updated: October 1, 2026; release 0.8.20)*
 
 This guide provides instructions for running and writing tests for the cutter2 application.
 
@@ -9,7 +9,7 @@ This guide provides instructions for running and writing tests for the cutter2 a
 The test target is configured with XCTest and currently contains:
 - 20 test source files
 - 1 test helper file
-- 269 test methods
+- 275 test methods
 - Code coverage support in the command-line and CI workflows
 
 Run the complete suite with:
@@ -24,7 +24,7 @@ xcodebuild test \
   CODE_SIGNING_REQUIRED=NO
 ```
 
-The September 27, 2026 full-suite run on the pre-release `work` baseline (0.8.20b, single scheme `cutter2`, Debug) executed 269 test cases with 269 passed, 0 failed, and 0 skipped. Release 0.8.20 (`fb44143`) changes only the version/build metadata after the tested PR #65 code baseline (`011aff7`). The current inventory is 269 tests across 20 test source files and one helper; runtime results remain tied to each specific test run.
+The September 27, 2026 full-suite run on the pre-release `work` baseline (0.8.20b, single scheme `cutter2`, Debug) executed 269 test cases with 269 passed, 0 failed, and 0 skipped. Release 0.8.20 (`fb44143`) changes only the version/build metadata after the tested PR #65 code baseline (`011aff7`). The current inventory is 275 tests across 20 test source files and one helper (the 2026-10-01 T-21 run adds 6 `MovieHeaderValidator` helper tests after that baseline); runtime results remain tied to each specific test run.
 
 ## Table of Contents
 
@@ -76,7 +76,7 @@ cutter2Tests/
 ├── LocalizationTests.swift               # Localization tests (11 tests)
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
 ├── ModelTests.swift                      # Additional model tests (26 tests)
-├── MovieHeaderValidatorTests.swift       # Header validation tests (3 tests)
+├── MovieHeaderValidatorTests.swift       # Header validation tests (9 tests)
 ├── MovieMutatorEditTests.swift           # Edit operation and presentation traversal tests (11 tests)
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
@@ -91,7 +91,7 @@ cutter2Tests/
 └── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Static suite size**: 21 files total (20 test source files + 1 helper), **269 test methods**.
+**Static suite size**: 21 files total (20 test source files + 1 helper), **275 test methods**.
 
 Runtime results must be taken from the specific `xcodebuild test` or Xcode run being reported.
 
@@ -440,6 +440,6 @@ Based on Phase 2-3 of the improvement plan:
 
 ---
 
-**Last Updated**: September 27, 2026
-**Version**: 1.9
-**Status**: Static suite size: 269 test methods across 20 test source files + 1 helper; the September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips
+**Last Updated**: October 1, 2026
+**Version**: 1.10
+**Status**: Static suite size: 275 test methods across 20 test source files + 1 helper; the October 1, 2026 run (T-21) passed 275/275 with 0 skips; the prior September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips

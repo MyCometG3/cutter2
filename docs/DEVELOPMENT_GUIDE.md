@@ -1,6 +1,6 @@
 # Development Guide for cutter2
 
-**Last Updated**: September 27, 2026
+**Last Updated**: October 1, 2026
 **Status**: ✅ Active and Maintained
 
 ---
@@ -209,7 +209,7 @@ xcodebuild test \
 
 ### Test Organization
 
-**Test directory contents** (21 files: 20 test source files + 1 helper; 269 test methods):
+**Test directory contents** (21 files: 20 test source files + 1 helper; 275 test methods):
 ```
 cutter2Tests/
 ├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
@@ -220,7 +220,7 @@ cutter2Tests/
 ├── LocalizationTests.swift               # Localization tests (11 tests)
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
 ├── ModelTests.swift                      # Model layer tests (26 tests)
-├── MovieHeaderValidatorTests.swift       # Header validation tests (3 tests)
+├── MovieHeaderValidatorTests.swift       # Header validation tests (9 tests)
 ├── MovieMutatorEditTests.swift           # Edit operation and presentation traversal tests (11 tests)
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
@@ -974,5 +974,5 @@ If you encounter issues:
 ---
 
 **Document Status**: ✅ Active
-**Last Updated**: September 27, 2026
+**Last Updated**: October 1, 2026
 **Maintained By**: cutter2 development team

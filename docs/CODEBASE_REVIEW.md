@@ -170,7 +170,7 @@ cutter2Tests/
 
 ### 2.3 Test Execution Results
 
-The current source contains 280 test methods and no `XCTSkip` usage. The 2026-09-27 full-suite run on the 0.8.20b head executed all 269 test cases successfully (269 passed, 0 failed, 0 skipped). The subsequent RPAC diagnosis and PR #65 A/B measurement reduced the runtime performance reports from 55 to 0. The October 1, 2026 feature-branch runs added the T-21 `MovieHeaderValidator` helper tests (PR #67, 275/275) and the T-19 `DocumentReloadSeekIntegrationTests` (PR #66, 274/274 on its branch baseline).
+The current source contains 280 test methods and no `XCTSkip` usage. The 2026-09-27 full-suite run on the 0.8.20b head executed all 269 test cases successfully (269 passed, 0 failed, 0 skipped). The subsequent RPAC diagnosis and PR #65 A/B measurement reduced the runtime performance reports from 55 to 0. The October 1, 2026 feature-branch runs added the T-21 `MovieHeaderValidator` helper tests (PR #67, 275/275) and the T-19 `DocumentReloadSeekIntegrationTests` (274/274 on the standalone branch baseline), and the combined T-19 branch carried on top of PR #67 passed all 280 tests (280/280, 0 failed, 0 skipped).
 
 ---
 

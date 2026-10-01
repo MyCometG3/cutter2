@@ -363,6 +363,15 @@ final class DocumentReloadSeekIntegrationTests: XCTestCase {
         playerView.player = AVPlayer(playerItem: placeholderItem)
         document.testablePlayerView = playerView
 
+        // Mirror the production attach state: the item-replacement branch never
+        // installs Document's KVO observers (only the initial-setup branch does),
+        // so register them here the way `updatePlayer` would have. This keeps
+        // `removePlayerObserver()` (via tearDown's `cleanup()`) matched even when
+        // a mid-test assertion aborts the test before its own removal runs —
+        // removing an observer that was never added raises an Objective-C
+        // exception and kills the whole suite.
+        document.addPlayerObserver()
+
         // Distinct items so `currentItem` identity is a meaningful assertion.
         let asset = AVAsset(url: url)
         let generation1Item = AVPlayerItem(asset: asset)
@@ -428,10 +437,16 @@ final class DocumentReloadSeekIntegrationTests: XCTestCase {
                            "suppression watchdog never retired")
         }
 
-        // Detach the player while this test still owns the view. Leaving it attached
-        // until tearDown aborts the whole test process (SIGABRT): releasing an
-        // `AVPlayer` from an `AVPlayerView` inside XCTest's teardown sequence
-        // crashes, so the teardown must find nothing left to release.
+        // Symmetric teardown of the manually attached player: remove the
+        // Document's KVO registrations BEFORE the player is detached, mirroring
+        // the production add/remove pairing. Detaching first would deallocate an
+        // observed `AVPlayer` with observers still attached; leaving both for
+        // tearDown would make `cleanup()`'s removal run on a player this test
+        // already released. The detach itself stays in the test body — releasing
+        // the player from an `AVPlayerView` inside XCTest's teardown sequence
+        // aborts the whole suite (SIGABRT), so the teardown must find nothing
+        // left to release.
+        document.removePlayerObserver()
         playerView.player = nil
     }
 

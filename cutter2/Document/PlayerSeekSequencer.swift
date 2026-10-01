@@ -30,6 +30,14 @@ final class PlayerSeekSequencer {
     private(set) var seekGeneration: UInt64 = 0
     private(set) var suppressQueryPosition: Bool = false
 
+    /// Whether a suppression watchdog task is currently held.
+    ///
+    /// Exposed so tests can wait until the watchdog has retired itself instead of
+    /// guessing with a fixed sleep: a watchdog that is cancelled and dropped while
+    /// still suspended trips a Swift concurrency runtime fatal error on task
+    /// deallocation. Test-only: production never reads this.
+    var hasArmedSuppressionWatchdog: Bool { suppressionWatchdogTask != nil }
+
     private var reloadTask: Task<Void, Never>? = nil
     private var suppressionWatchdogTask: Task<Void, Never>? = nil
     private let suppressionWatchdogNanoseconds: UInt64

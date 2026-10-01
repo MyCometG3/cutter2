@@ -147,7 +147,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
 
     /// The document's player view, or `nil` when the view controller is unavailable.
     public var playerView: AVPlayerView? {
-        return viewController?.playerView
+        return testablePlayerView ?? viewController?.playerView
     }
 
     /// The player associated with the document's player view.
@@ -260,6 +260,36 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     
     /// Reload/seek suppression state machine (S-17).
     internal let playerSeekSequencer = PlayerSeekSequencer()
+    
+    /* ============================================ */
+    // MARK: - Test seams (T-19)
+    /* ============================================ */
+    
+    /// Overrides the player view resolved by `playerView`. `nil` in production.
+    ///
+    /// When set, `playerView`, `player`, `playerItem`, `addPlayerObserver`,
+    /// `removePlayerObserver`, and `cleanup` all observe this single view, so
+    /// `updatePlayer`'s effects are visible to tests through the same accessors
+    /// the production code uses.
+    internal var testablePlayerView: AVPlayerView? = nil
+    
+    /// Invoked with the reload generation on the reload Task's exit path.
+    /// `nil` in production.
+    ///
+    /// Covers every reachable exit of `updatePlayer` (success, cancellation,
+    /// throw) because the call sits in the reload Task's existing `defer`.
+    @MainActor
+    internal var testableReloadCompletion: (@MainActor (UInt64) -> Void)? = nil
+    
+    /// Produces the `AVPlayerItem` for a reload. Production uses
+    /// `MovieMutator.makePlayerItem()`. `nil` in production.
+    ///
+    /// The reload generation is passed so a test can gate a specific
+    /// generation deterministically. The closure is MainActor-isolated to
+    /// match `Document`, so it may touch MainActor state without a hop and
+    /// needs no `Sendable` conformance under strict concurrency.
+    @MainActor
+    internal var testablePlayerItemFactory: (@MainActor (UInt64, MovieMutator) async throws -> AVPlayerItem)? = nil
     
     /* ============================================ */
     // MARK: - NSDocument methods/properties

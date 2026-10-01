@@ -204,6 +204,8 @@ extension Document {
                 guard let self else { return }
                 defer {
                     self.playerSeekSequencer.reloadTaskDidFinish(generation: generation)
+                    // T-19 seam: nil in production.
+                    self.testableReloadCompletion?(generation)
                 }
                 await self.updatePlayer(generation: generation)
             }
@@ -304,7 +306,13 @@ extension Document {
         }
         
         do {
-            let playerItem = try await mutator.makePlayerItem()
+            // T-19 seam: nil in production → makePlayerItem() below.
+            let playerItem: AVPlayerItem
+            if let factory = self.testablePlayerItemFactory {
+                playerItem = try await factory(generation, mutator)
+            } else {
+                playerItem = try await mutator.makePlayerItem()
+            }
             guard !Task.isCancelled else {
                 self.playerSeekSequencer.liftSuppression(for: generation)
                 return

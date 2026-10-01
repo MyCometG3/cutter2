@@ -24,7 +24,7 @@ xcodebuild test \
   CODE_SIGNING_REQUIRED=NO
 ```
 
-The September 27, 2026 full-suite run on the pre-release `work` baseline (0.8.20b, single scheme `cutter2`, Debug) executed 269 test cases with 269 passed, 0 failed, and 0 skipped. Release 0.8.20 (`fb44143`) changes only the version/build metadata after the tested PR #65 code baseline (`011aff7`). The October 1, 2026 feature-branch runs added 6 direct `MovieHeaderValidator` helper tests (PR #67, 275/275 on its branch baseline) and `DocumentReloadSeekIntegrationTests` (5 tests, PR #66, 274/274 on its branch baseline); the combined T-19 branch inventory carried on top of PR #67 is 280 tests across 21 test source files and one helper; runtime results remain tied to each specific test run.
+The September 27, 2026 full-suite run on the pre-release `work` baseline (0.8.20b, single scheme `cutter2`, Debug) executed 269 test cases with 269 passed, 0 failed, and 0 skipped. Release 0.8.20 (`fb44143`) changes only the version/build metadata after the tested PR #65 code baseline (`011aff7`). The October 1, 2026 feature-branch runs added 6 direct `MovieHeaderValidator` helper tests (PR #67, 275/275 on its branch baseline) and `DocumentReloadSeekIntegrationTests` (5 tests, 274/274 on the standalone T-19 branch baseline); the combined T-19 branch carried on top of PR #67 is 280 tests across 21 test source files and one helper, and its full-suite run passed 280/280 with 0 failed and 0 skipped; runtime results remain tied to each specific test run.
 
 ## Table of Contents
 

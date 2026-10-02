@@ -1,6 +1,6 @@
 # Development Guide for cutter2
 
-**Last Updated**: October 1, 2026
+**Last Updated**: October 2, 2026
 **Status**: ✅ Active and Maintained
 
 ---
@@ -209,7 +209,7 @@ xcodebuild test \
 
 ### Test Organization
 
-**Test directory contents** (22 files: 21 test source files + 1 helper; 280 test methods):
+**Test directory contents** (22 files: 21 test source files + 1 helper; 284 test methods):
 ```
 cutter2Tests/
 ├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
@@ -226,7 +226,7 @@ cutter2Tests/
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
 ├── MovieWriterVideoChannelMetadataTests.swift # Video channel metadata tests (25 tests)
-├── PerformanceTests.swift                # Performance tests (12 tests)
+├── PerformanceTests.swift                # Performance tests (16 tests)
 ├── MovieWriterWriteTests.swift           # Movie writer failure-state tests (3 tests)
 ├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (19 tests)
 ├── TestMovieFixtureWriter.swift          # Test helper (0 tests)
@@ -975,5 +975,5 @@ If you encounter issues:
 ---
 
 **Document Status**: ✅ Active
-**Last Updated**: October 1, 2026
+**Last Updated**: October 2, 2026
 **Maintained By**: cutter2 development team

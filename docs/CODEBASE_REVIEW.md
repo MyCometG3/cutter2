@@ -5,7 +5,7 @@
 **Scope:** Source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
 **Reviewed baseline:** `fb4414346f86933344958ca31e5813dac4ef175a` (`work`, release 0.8.20)
 **Verification environment:** macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
-**Status:** Rebaselined on the current `work` head for release 0.8.20. The tested code baseline is PR #65 (`011aff7`); `fb44143` is the version/build metadata commit. Clean build / clean analyze / full test passed (269/269), with 0 release blockers; live integration coverage remains a non-blocking gap. The T-19 feature branch (this working tree) adds the `Document` test-only seam and 5 integration tests and now carries PR #67 (T-21: direct `invalidDuration` helper tests, §5.4) via rebase, raising the suite to 280 methods across 22 files (see §2.3, §5.3, §5.4, §8.6, and §Conclusion).
+**Status:** Rebaselined on the current `work` head for release 0.8.20. The tested code baseline is PR #65 (`011aff7`); `fb44143` is the version/build metadata commit. Clean build / clean analyze / full test passed (269/269), with 0 release blockers; live integration coverage remains a non-blocking gap. The T-19 feature branch (this working tree) adds the `Document` test-only seam and 5 integration tests and now carries PR #67 (T-21: direct `invalidDuration` helper tests, §5.4) via rebase, raising the suite to 280 methods across 22 files; the T-20 branch (this working tree) adds four non-gating `TimelineView` / `MovieMutator` performance baselines, raising the current inventory to 284 methods across 22 files (see §2.3, §5.3, §5.4, §8.5, §8.6, and §Conclusion).
 
 ---
 
@@ -33,7 +33,7 @@ All three steps succeeded. The full test run executed **269 test cases with 269 
 
 **Current verification facts:**
 
-- **Current static test suite size:** 22 files total (21 test source files + 1 helper), with 280 test methods.
+- **Current static test suite size:** 22 files total (21 test source files + 1 helper), with 284 test methods.
 - **Runtime test result:** The 2026-09-27 run on the 0.8.20b head passed 269 test cases with 0 failures and 0 skips; after PR #65, the follow-up A/B measurement recorded **0 runtime performance reports** (55 before the fix).
 - **Runtime warning triage:** `PERFC_ENABLE_DUPLICATE_DETECTION=0` reproduced 55 reports in an approximately 220 ms burst. PID correlation mapped the reporting processes to the three fixture-generating test files, where `DispatchQueue.global().sync` synchronously blocked the main actor during `AVAssetWriter` encoding. After PR #65 moved fixture generation to detached utility tasks, the same diagnostic measurement produced 0 reports.
 - **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps plus coverage report generation/upload. The workflow uses `macos-latest` and does not pin a specific Xcode image.
@@ -155,7 +155,7 @@ cutter2Tests/
 ├── MovieMutatorEditTests.swift           # Edit operation and presentation traversal tests (11 tests)
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
-├── PerformanceTests.swift                # Performance tests (12 tests)
+├── PerformanceTests.swift                # Performance tests (16 tests)
 ├── MovieWriterVideoChannelMetadataTests.swift # Video channel metadata tests (25 tests)
 ├── MovieWriterWriteTests.swift           # Movie writer failure-state tests (3 tests)
 ├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (19 tests)
@@ -166,11 +166,11 @@ cutter2Tests/
 └── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Current total:** 22 files (21 test source files + 1 helper), **280 test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`). #64 adds watchdog, stale-token, failure-fallback, and cleanup regression coverage (`PlayerSeekSequencerTests`), empty-window lifecycle coverage (`DocumentTests`, CR-4), cancellation classification (M-26), and temporary finalization (H-11).
+**Current total:** 22 files (21 test source files + 1 helper), **284 test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`). #64 adds watchdog, stale-token, failure-fallback, and cleanup regression coverage (`PlayerSeekSequencerTests`), empty-window lifecycle coverage (`DocumentTests`, CR-4), cancellation classification (M-26), and temporary finalization (H-11).
 
 ### 2.3 Test Execution Results
 
-The current source contains 280 test methods and no `XCTSkip` usage. The 2026-09-27 full-suite run on the 0.8.20b head executed all 269 test cases successfully (269 passed, 0 failed, 0 skipped). The subsequent RPAC diagnosis and PR #65 A/B measurement reduced the runtime performance reports from 55 to 0. The October 1, 2026 feature-branch runs added the T-21 `MovieHeaderValidator` helper tests (PR #67, 275/275) and the T-19 `DocumentReloadSeekIntegrationTests` (274/274 on the standalone branch baseline), and the combined T-19 branch carried on top of PR #67 passed all 280 tests (280/280, 0 failed, 0 skipped).
+The current source contains 284 test methods and no `XCTSkip` usage. The 2026-09-27 full-suite run on the 0.8.20b head executed all 269 test cases successfully (269 passed, 0 failed, 0 skipped). The subsequent RPAC diagnosis and PR #65 A/B measurement reduced the runtime performance reports from 55 to 0. The October 1, 2026 feature-branch runs added the T-21 `MovieHeaderValidator` helper tests (PR #67, 275/275) and the T-19 `DocumentReloadSeekIntegrationTests` (274/274 on the standalone branch baseline), and the combined T-19 branch carried on top of PR #67 passed all 280 tests (280/280, 0 failed, 0 skipped).
 
 ---
 
@@ -260,21 +260,21 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 | **Player seek sequencing** | `PlayerSeekSequencerTests.swift` + `DocumentReloadSeekIntegrationTests.swift` | 19 + 5 | ✅ Generation, item-replacement, watchdog, failure fallback, and cleanup transitions covered (expanded in #64); T-19 adds the live-player reload wiring (§5.3). KVO `readyToPlay` re-seek and real-media playback remain untested |
 | **Model** | `ModelTests.swift` | 26 | ✅ Covered |
 | **Utilities** | `UtilitiesTests.swift` | 22 | ✅ Covered |
-| **Performance** | `PerformanceTests.swift` | 12 | ✅ Covered |
+| **Performance** | `PerformanceTests.swift` | 16 | ✅ Covered (T-20 adds four non-gating real `TimelineView` / `MovieMutator` baselines) |
 | **Localization** | `LocalizationTests.swift` | 11 | ✅ Covered |
 | **LoggingSystem** | `LoggingSystemTests.swift` | 17 | ✅ Covered |
 | **cutter2 (integration)** | `cutter2Tests.swift` | 20 | ✅ Covered |
 | **MovieHeaderValidator** | `MovieHeaderValidatorTests.swift` | 9 | ✅ Covered |
 | **MovieWriter video channel metadata** | `MovieWriterVideoChannelMetadataTests.swift` | 25 | ✅ Covered |
 | **MovieWriter failure states** | `MovieWriterWriteTests.swift` | 3 | ✅ Covered (expanded in #64, H-11) |
-| **Overall** | 22 files (21 test source + 1 helper) | **280 test methods** | ✅ Full suite passed 274/274 (2026-10-01, T-19 branch) and 275/275 (PR #67); the combined T-19 branch carried on top of PR #67 runs 280/280; KVO `readyToPlay` re-seek and real-media playback remain untested |
+| **Overall** | 22 files (21 test source + 1 helper) | **284 test methods** | ✅ Full suite passed 274/274 (2026-10-01, T-19 branch) and 275/275 (PR #67); the combined T-19 branch carried on top of PR #67 runs 280/280; KVO `readyToPlay` re-seek and real-media playback remain untested |
 
 ### 5.2 Test Execution
 
 - `scripts/test.sh` orchestrates build → test → analyze via `xcodebuild`
 - CI workflow (`.github/workflows/test.yml`) runs on push/PR to `main`, `work`, and `develop` branches (Build → Test → Analyze, using `build-for-testing` + `test-without-building` to avoid double compilation)
-- The current source contains 280 test methods and no `XCTSkip` usage; the 2026-09-27 full-suite run on the 0.8.20b head passed all 269 test cases (0 failed, 0 skipped), the 2026-10-01 T-19 run passed all 274 (0 failed, 0 skipped), and the combined T-19-onto-PR-#67 run passed all 280 (0 failed, 0 skipped)
-- `scripts/test.sh` reports the current inventory of 21 test source files + 1 helper and 280 tests
+- The current source contains 284 test methods and no `XCTSkip` usage; the 2026-09-27 full-suite run on the 0.8.20b head passed all 269 test cases (0 failed, 0 skipped), the 2026-10-01 T-19 run passed all 274 (0 failed, 0 skipped), and the combined T-19-onto-PR-#67 run passed all 280 (0 failed, 0 skipped)
+- `scripts/test.sh` reports the current inventory of 21 test source files + 1 helper and 284 tests
 
 ### 5.3 Test Coverage Gaps
 
@@ -348,7 +348,7 @@ Revision 5 additionally closed two stale recommendations: the DateFormatter dupl
 - Each step is guarded with `if ! ...; then exit 1; fi` so failures are reported with a custom message (works with `set -e`)
 - Uses color-coded echo statements for output formatting
 - Generates coverage reports via `xcrun llvm-cov`
-- Reports a summary; its inventory distinguishes 21 test source files from 1 helper and reports 280 tests
+- Reports a summary; its inventory distinguishes 21 test source files from 1 helper and reports 284 tests
 
 ---
 
@@ -384,7 +384,7 @@ Revision 5 additionally closed two stale recommendations: the DateFormatter dupl
 
 **Finding:** `PerformanceMetrics.swift` provides instrumentation for tracking operation durations (`measure`/`measureAsync`/`recordMeasurement`). Instrumentation call sites are in `MovieMutator+Export.swift`; performance-related tests live in `PerformanceTests.swift`.
 
-**Assessment:** Performance tooling is present and `PerformanceTests.swift` covers 12 scenarios (metrics measurement/report/reset, export progress, timeline marker/position, memory allocation). However, most are functional assertions; genuine timing-baseline coverage is limited. The overhead test, previously flaky, was stabilized by M-22 (§5.5).
+**Assessment:** Performance tooling is present and `PerformanceTests.swift` covers 16 scenarios (metrics measurement/report/reset, export progress, timeline marker/position, memory allocation, and, added by T-20, four non-gating real-processing baselines: the real `TimelineView` `updateTimeline` + `layout` + layer commit path and the `MovieMutator` `movieClip` / `deleteSelection` / `applyClapPasp` operations, measured with `XCTClockMetric` + `XCTMemoryMetric` and recorded without thresholds). The simulation-based scenarios remain functional assertions. The overhead test, previously flaky, was stabilized by M-22 (§5.5); T-20 retires its remaining relative (30%) threshold in favor of a recorded observation, so the suite no longer gates on relative overhead.
 
 ### 8.6 Reload Suppression Ordering — Resolved in PR #63, reinforced in PR #64
 
@@ -414,7 +414,7 @@ Under the historical implementation, `queryPosition()` could poll the new item a
 
 3. ~~**Triage the runtime performance warnings.**~~ — **RESOLVED (2026-09-29, PR #65 / `011aff7`).** The reports originated in `libRPAC.dylib`, not `libMainThreadChecker.dylib`. With `PERFC_ENABLE_DUPLICATE_DETECTION=0`, 55 reports were reproduced in an approximately 220 ms burst; PID correlation identified the three fixture-generating test processes and the shared cause: `DispatchQueue.global().sync` blocked the main actor during synchronous `AVAssetWriter` fixture encoding. Moving fixture generation to detached utility tasks reduced the A/B measurement from 55 reports to 0.
 4. ~~**Unify date formatter usage** between `LoggingSystem` and `DateFormatter+Factory.swift.**~~ — **RESOLVED (PR #38 / L-02).** `LoggingSystem` already calls the shared `DateFormatter.logFormatter`; the thread-local cache is intentional.
-5. **Expand performance tests** to cover TimelineView rendering and MovieMutator operations, using non-gating measurements that do not introduce CI timing thresholds.
+5. ~~**Expand performance tests** to cover TimelineView rendering and MovieMutator operations, using non-gating measurements that do not introduce CI timing thresholds.~~ — **DONE (T-20, October 2, 2026, `feature/t20-performance-baseline-plan`).** `PerformanceTests.swift` gained four non-gating baselines (`testTimelineViewMarkerRenderBaseline`, `testMovieMutatorMovieClipBaseline`, `testMovieMutatorDeleteSelectionBaseline`, `testMovieMutatorApplyClapPaspBaseline`) that measure the real `TimelineView` `updateTimeline` + `layout` + layer commit path and the real `MovieMutator` clip/delete/transform operations with `XCTClockMetric` + `XCTMemoryMetric`; the values are recorded in the test output / result bundle with no CI timing thresholds (M-22 lesson), and the suite grew from 280 to 284 test methods. Paste/cut baselines remain out of scope (shared `NSPasteboard` state; see §8.5 and the T-20 plan `_plans/t-20_performance_baseline_plan.md`).
 
 ### 9.3 Low Priority
 
@@ -424,9 +424,9 @@ Under the historical implementation, `queryPosition()` could poll the new item a
 
 ## 10. Conclusion
 
-The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 280 test methods across 21 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Revision 5 verified the release code baseline (`011aff7`, PR #65) and the resulting 0.8.20 head (`fb44143`) with a clean build, clean analyze, and a full test run passing 269 test cases with 0 failures and 0 skips.
+The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 284 test methods across 21 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Revision 5 verified the release code baseline (`011aff7`, PR #65) and the resulting 0.8.20 head (`fb44143`) with a clean build, clean analyze, and a full test run passing 269 test cases with 0 failures and 0 skips.
 
-The current release-blocker fixes include CR-4 (empty-window lifecycle, which also made `Document` constructible in tests), M-26 cancellation classification, M-27 seek liveness (watchdog), M-28 generation/cache protection, and H-11 temporary finalization/self-contained selection protection. PR #65 also resolved the runtime performance warning triage by moving test fixture encoding off the main actor; the RPAC diagnostic A/B measurement changed from 55 reports to 0. Release blocker count is **0**. T-19 (live player integration) has been implemented on the `feature/t19-document-player-integration-seam` branch — a test-only seam in `Document` plus `DocumentReloadSeekIntegrationTests` (5 cases) covering reload generation propagation, superseded-reload item application, and the initial-setup wiring; KVO `readyToPlay` re-seek and real-media playback remain unverified (§5.3, §8.6) — and this branch now carries PR #67 (T-21: the `invalidDuration` branch is covered by direct helper tests, §5.4), giving a combined inventory of 280 tests across 22 files. T-20 (performance baselines) remains a non-blocking backlog item. Window resize, save panel, clipboard, and scrubbing coverage remain open. Test counts in `scripts/test.sh`, this review, and the test guides now match the current inventory (280 across 22 files).
+The current release-blocker fixes include CR-4 (empty-window lifecycle, which also made `Document` constructible in tests), M-26 cancellation classification, M-27 seek liveness (watchdog), M-28 generation/cache protection, and H-11 temporary finalization/self-contained selection protection. PR #65 also resolved the runtime performance warning triage by moving test fixture encoding off the main actor; the RPAC diagnostic A/B measurement changed from 55 reports to 0. Release blocker count is **0**. T-19 (live player integration) has been implemented on the `feature/t19-document-player-integration-seam` branch — a test-only seam in `Document` plus `DocumentReloadSeekIntegrationTests` (5 cases) covering reload generation propagation, superseded-reload item application, and the initial-setup wiring; KVO `readyToPlay` re-seek and real-media playback remain unverified (§5.3, §8.6) — and this branch now carries PR #67 (T-21: the `invalidDuration` branch is covered by direct helper tests, §5.4), giving a combined inventory of 280 tests across 22 files. T-20 (performance baselines) is implemented on this branch: four non-gating real-processing baselines for the real `TimelineView` `updateTimeline` + `layout` path and the `MovieMutator` clip/delete/transform operations, recorded with `XCTClockMetric` + `XCTMemoryMetric` without CI thresholds, giving a current inventory of 284 tests across 22 files. Window resize, save panel, clipboard, and scrubbing coverage remain open. Test counts in `scripts/test.sh`, this review, and the test guides now match the current inventory (284 across 22 files).
 
 ---
 
@@ -441,11 +441,11 @@ The current release-blocker fixes include CR-4 (empty-window lifecycle, which al
 - Utilities: `AsyncBridge.swift`, `ActorUtilities.swift`, `LayoutConverter.swift` + 3 extensions (`+Convert`, `+LayoutData`, `+Mapping`), `MovieHeaderValidator.swift`, `PerformanceMetrics.swift`, `ErrorUtilities.swift`, `Constants.swift`, `LocalizationHelper.swift`, `LoggingSystem.swift`, `DateFormatter+Factory.swift`
 - Resources: `Info.plist`, `cutter2.entitlements`, `Localizable.xcstrings` (hand-curated app strings), `Base.lproj/Main.storyboard` (main UI), `mul.lproj/Main.xcstrings` (storyboard-extracted strings), `Assets.xcassets` (app icon)
 
-### Test Files (22 files: 21 test source files + 1 helper; 280 test methods)
+### Test Files (22 files: 21 test source files + 1 helper; 284 test methods)
 - `AsyncBridgeTests.swift` (4 tests), `cutter2Tests.swift` (20 tests), `DocumentKVOContextTests.swift` (3 tests), `DocumentReloadSeekIntegrationTests.swift` (5 tests), `DocumentTests.swift` (12 tests)
 - `LayoutConverterMappingTests.swift` (7 tests), `LocalizationTests.swift` (11 tests), `LoggingSystemTests.swift` (17 tests), `ModelTests.swift` (26 tests)
 - `MovieHeaderValidatorTests.swift` (9 tests), `MovieMutatorEditTests.swift` (11 tests), `MovieMutatorTests.swift` (22 tests), `MovieMutatorTransformExportTests.swift` (8 tests)
-- `MovieWriterVideoChannelMetadataTests.swift` (25 tests), `MovieWriterWriteTests.swift` (3 tests), `PerformanceTests.swift` (12 tests), `PlayerSeekSequencerTests.swift` (19 tests), `TimelineViewRenderingTests.swift` (15 tests)
+- `MovieWriterVideoChannelMetadataTests.swift` (25 tests), `MovieWriterWriteTests.swift` (3 tests), `PerformanceTests.swift` (16 tests), `PlayerSeekSequencerTests.swift` (19 tests), `TimelineViewRenderingTests.swift` (15 tests)
 - `UtilitiesTests.swift` (22 tests), `ViewControllerKeyEventTests.swift` (14 tests), `ViewControllerTests.swift` (15 tests)
 - `TestMovieFixtureWriter.swift` (0 tests, fixture writer helper)
 
@@ -461,4 +461,4 @@ The current release-blocker fixes include CR-4 (empty-window lifecycle, which al
 ### Configuration
 - `cutter2.xcodeproj/project.pbxproj` (version 0.8.20 / build 20260926 — app target, committed in the project; the test target carries placeholder `1.0` / `1`)
 - `.github/workflows/test.yml` (build/test/analyze, branches `main`/`work`/`develop`; coverage artifact generation is optional)
-- `scripts/test.sh` (build/test/analyze; summary reports 21 test source files + 1 helper and 280 tests)
+- `scripts/test.sh` (build/test/analyze; summary reports 21 test source files + 1 helper and 284 tests)

@@ -1,6 +1,6 @@
 # Testing Guide for cutter2
 
-**Status**: Active — test instructions and infrastructure reference *(Updated: October 1, 2026; release 0.8.20)*
+**Status**: Active — test instructions and infrastructure reference *(Updated: October 2, 2026; release 0.8.20)*
 
 This guide provides instructions for running and writing tests for the cutter2 application.
 
@@ -9,7 +9,7 @@ This guide provides instructions for running and writing tests for the cutter2 a
 The test target is configured with XCTest and currently contains:
 - 21 test source files
 - 1 test helper file
-- 280 test methods
+- 284 test methods
 - Code coverage support in the command-line and CI workflows
 
 Run the complete suite with:
@@ -82,7 +82,7 @@ cutter2Tests/
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
 ├── MovieWriterVideoChannelMetadataTests.swift # Video channel metadata tests (25 tests)
-├── PerformanceTests.swift                # Performance tests (12 tests)
+├── PerformanceTests.swift                # Performance tests (16 tests)
 ├── MovieWriterWriteTests.swift           # Movie writer failure-state tests (3 tests)
 ├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (19 tests)
 ├── TestMovieFixtureWriter.swift          # Test helper (0 tests)
@@ -92,7 +92,7 @@ cutter2Tests/
 └── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Static suite size**: 22 files total (21 test source files + 1 helper), **280 test methods**.
+**Static suite size**: 22 files total (21 test source files + 1 helper), **284 test methods**.
 
 Runtime results must be taken from the specific `xcodebuild test` or Xcode run being reported.
 
@@ -441,6 +441,6 @@ Based on Phase 2-3 of the improvement plan:
 
 ---
 
-**Last Updated**: October 1, 2026
-**Version**: 1.10
-**Status**: Static suite size: 280 test methods across 21 test source files + 1 helper; the October 1, 2026 combined-branch run (T-19 rebased onto PR #67) passed 280/280 with 0 skips; the prior September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips
+**Last Updated**: October 2, 2026
+**Version**: 1.11
+**Status**: Static suite size: 284 test methods across 21 test source files + 1 helper; the October 1, 2026 combined-branch run (T-19 rebased onto PR #67) passed 280/280 with 0 skips; the prior September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips

@@ -7,9 +7,9 @@ This guide provides instructions for running and writing tests for the cutter2 a
 ## Quick Start
 
 The test target is configured with XCTest and currently contains:
-- 20 test source files
+- 21 test source files
 - 1 test helper file
-- 275 test methods
+- 280 test methods
 - Code coverage support in the command-line and CI workflows
 
 Run the complete suite with:
@@ -24,7 +24,7 @@ xcodebuild test \
   CODE_SIGNING_REQUIRED=NO
 ```
 
-The September 27, 2026 full-suite run on the pre-release `work` baseline (0.8.20b, single scheme `cutter2`, Debug) executed 269 test cases with 269 passed, 0 failed, and 0 skipped. Release 0.8.20 (`fb44143`) changes only the version/build metadata after the tested PR #65 code baseline (`011aff7`). The current inventory is 275 tests across 20 test source files and one helper (the 2026-10-01 T-21 run adds 6 `MovieHeaderValidator` helper tests after that baseline); runtime results remain tied to each specific test run.
+The September 27, 2026 full-suite run on the pre-release `work` baseline (0.8.20b, single scheme `cutter2`, Debug) executed 269 test cases with 269 passed, 0 failed, and 0 skipped. Release 0.8.20 (`fb44143`) changes only the version/build metadata after the tested PR #65 code baseline (`011aff7`). The October 1, 2026 feature-branch runs added 6 direct `MovieHeaderValidator` helper tests (PR #67, 275/275 on its branch baseline) and `DocumentReloadSeekIntegrationTests` (5 tests, 274/274 on the standalone T-19 branch baseline); the combined T-19 branch carried on top of PR #67 is 280 tests across 21 test source files and one helper, and its full-suite run passed 280/280 with 0 failed and 0 skipped; runtime results remain tied to each specific test run.
 
 ## Table of Contents
 
@@ -71,6 +71,7 @@ cutter2Tests/
 ├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
 ├── cutter2Tests.swift                    # Base test class and integration tests (20 tests)
 ├── DocumentKVOContextTests.swift         # KVO context tests (3 tests)
+├── DocumentReloadSeekIntegrationTests.swift # Document reload/seek integration seam tests (5 tests)
 ├── DocumentTests.swift                   # Document tests (12 tests)
 ├── LayoutConverterMappingTests.swift     # Layout mapping tests (7 tests)
 ├── LocalizationTests.swift               # Localization tests (11 tests)
@@ -91,7 +92,7 @@ cutter2Tests/
 └── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Static suite size**: 21 files total (20 test source files + 1 helper), **275 test methods**.
+**Static suite size**: 22 files total (21 test source files + 1 helper), **280 test methods**.
 
 Runtime results must be taken from the specific `xcodebuild test` or Xcode run being reported.
 
@@ -442,4 +443,4 @@ Based on Phase 2-3 of the improvement plan:
 
 **Last Updated**: October 1, 2026
 **Version**: 1.10
-**Status**: Static suite size: 275 test methods across 20 test source files + 1 helper; the October 1, 2026 run (T-21) passed 275/275 with 0 skips; the prior September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips
+**Status**: Static suite size: 280 test methods across 21 test source files + 1 helper; the October 1, 2026 combined-branch run (T-19 rebased onto PR #67) passed 280/280 with 0 skips; the prior September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips

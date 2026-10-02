@@ -5,7 +5,7 @@
 **Scope:** Source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
 **Reviewed baseline:** `fb4414346f86933344958ca31e5813dac4ef175a` (`work`, release 0.8.20)
 **Verification environment:** macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
-**Status:** Rebaselined on the current `work` head for release 0.8.20. The tested code baseline is PR #65 (`011aff7`); `fb44143` is the version/build metadata commit. Clean build / clean analyze / full test passed (269/269), with 0 release blockers; live integration coverage remains a non-blocking gap.
+**Status:** Rebaselined on the current `work` head for release 0.8.20. The tested code baseline is PR #65 (`011aff7`); `fb44143` is the version/build metadata commit. Clean build / clean analyze / full test passed (269/269), with 0 release blockers; live integration coverage remains a non-blocking gap. The T-19 feature branch (this working tree) adds the `Document` test-only seam and 5 integration tests and now carries PR #67 (T-21: direct `invalidDuration` helper tests, §5.4) via rebase, raising the suite to 280 methods across 22 files (see §2.3, §5.3, §5.4, §8.6, and §Conclusion).
 
 ---
 
@@ -33,7 +33,7 @@ All three steps succeeded. The full test run executed **269 test cases with 269 
 
 **Current verification facts:**
 
-- **Current static test suite size:** 21 files total (20 test source files + 1 helper), with 275 test methods.
+- **Current static test suite size:** 22 files total (21 test source files + 1 helper), with 280 test methods.
 - **Runtime test result:** The 2026-09-27 run on the 0.8.20b head passed 269 test cases with 0 failures and 0 skips; after PR #65, the follow-up A/B measurement recorded **0 runtime performance reports** (55 before the fix).
 - **Runtime warning triage:** `PERFC_ENABLE_DUPLICATE_DETECTION=0` reproduced 55 reports in an approximately 220 ms burst. PID correlation mapped the reporting processes to the three fixture-generating test files, where `DispatchQueue.global().sync` synchronously blocked the main actor during `AVAssetWriter` encoding. After PR #65 moved fixture generation to detached utility tasks, the same diagnostic measurement produced 0 reports.
 - **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps plus coverage report generation/upload. The workflow uses `macos-latest` and does not pin a specific Xcode image.
@@ -166,11 +166,11 @@ cutter2Tests/
 └── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Current total:** 21 files (20 test source files + 1 helper), **275 test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`). #64 adds watchdog, stale-token, failure-fallback, and cleanup regression coverage (`PlayerSeekSequencerTests`), empty-window lifecycle coverage (`DocumentTests`, CR-4), cancellation classification (M-26), and temporary finalization (H-11).
+**Current total:** 22 files (21 test source files + 1 helper), **280 test methods**. Runtime results are recorded separately in §2.3. Note: 2 method names are duplicated across different test classes (`testMovieHeaderGeneration` in `cutter2Tests.swift` and `MovieMutatorTests.swift`; `testTimeCalculationPerformance` in `MovieMutatorTests.swift` and `ViewControllerTests.swift`). #64 adds watchdog, stale-token, failure-fallback, and cleanup regression coverage (`PlayerSeekSequencerTests`), empty-window lifecycle coverage (`DocumentTests`, CR-4), cancellation classification (M-26), and temporary finalization (H-11).
 
 ### 2.3 Test Execution Results
 
-The current source contains 275 test methods and no `XCTSkip` usage. The 2026-09-27 full-suite run on the 0.8.20b head executed all 269 test cases successfully (269 passed, 0 failed, 0 skipped). The subsequent RPAC diagnosis and PR #65 A/B measurement reduced the runtime performance reports from 55 to 0.
+The current source contains 280 test methods and no `XCTSkip` usage. The 2026-09-27 full-suite run on the 0.8.20b head executed all 269 test cases successfully (269 passed, 0 failed, 0 skipped). The subsequent RPAC diagnosis and PR #65 A/B measurement reduced the runtime performance reports from 55 to 0. The October 1, 2026 feature-branch runs added the T-21 `MovieHeaderValidator` helper tests (PR #67, 275/275) and the T-19 `DocumentReloadSeekIntegrationTests` (274/274 on the standalone branch baseline), and the combined T-19 branch carried on top of PR #67 passed all 280 tests (280/280, 0 failed, 0 skipped).
 
 ---
 
@@ -257,7 +257,7 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 | **Document** | `DocumentTests.swift` | 12 | ✅ Covered (expanded in #64: cancellation-error classification, empty-window lifecycle (CR-4), position-cache reset) |
 | **Document KVO context** | `DocumentKVOContextTests.swift` | 3 | ✅ Covered |
 | **LayoutConverter mappings** | `LayoutConverterMappingTests.swift` | 7 | ✅ Covered (T-16) |
-| **Player seek sequencing** | `PlayerSeekSequencerTests.swift` | 19 | ✅ Generation, item-replacement, watchdog, failure fallback, and cleanup transitions covered (expanded in #64); live player integration remains untested |
+| **Player seek sequencing** | `PlayerSeekSequencerTests.swift` + `DocumentReloadSeekIntegrationTests.swift` | 19 + 5 | ✅ Generation, item-replacement, watchdog, failure fallback, and cleanup transitions covered (expanded in #64); T-19 adds the live-player reload wiring (§5.3). KVO `readyToPlay` re-seek and real-media playback remain untested |
 | **Model** | `ModelTests.swift` | 26 | ✅ Covered |
 | **Utilities** | `UtilitiesTests.swift` | 22 | ✅ Covered |
 | **Performance** | `PerformanceTests.swift` | 12 | ✅ Covered |
@@ -267,14 +267,14 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 | **MovieHeaderValidator** | `MovieHeaderValidatorTests.swift` | 9 | ✅ Covered |
 | **MovieWriter video channel metadata** | `MovieWriterVideoChannelMetadataTests.swift` | 25 | ✅ Covered |
 | **MovieWriter failure states** | `MovieWriterWriteTests.swift` | 3 | ✅ Covered (expanded in #64, H-11) |
-| **Overall** | 21 files (20 test source + 1 helper) | **275 test methods** | ✅ Full suite passed 269/269 (2026-09-27); live player integration remains untested |
+| **Overall** | 22 files (21 test source + 1 helper) | **280 test methods** | ✅ Full suite passed 274/274 (2026-10-01, T-19 branch) and 275/275 (PR #67); the combined T-19 branch carried on top of PR #67 runs 280/280; KVO `readyToPlay` re-seek and real-media playback remain untested |
 
 ### 5.2 Test Execution
 
 - `scripts/test.sh` orchestrates build → test → analyze via `xcodebuild`
 - CI workflow (`.github/workflows/test.yml`) runs on push/PR to `main`, `work`, and `develop` branches (Build → Test → Analyze, using `build-for-testing` + `test-without-building` to avoid double compilation)
-- The current source contains 275 test methods and no `XCTSkip` usage; the 2026-09-27 full-suite run on the 0.8.20b head passed all 269 test cases (0 failed, 0 skipped)
-- `scripts/test.sh` reports the current inventory of 20 test source files + 1 helper and 275 tests
+- The current source contains 280 test methods and no `XCTSkip` usage; the 2026-09-27 full-suite run on the 0.8.20b head passed all 269 test cases (0 failed, 0 skipped), the 2026-10-01 T-19 run passed all 274 (0 failed, 0 skipped), and the combined T-19-onto-PR-#67 run passed all 280 (0 failed, 0 skipped)
+- `scripts/test.sh` reports the current inventory of 21 test source files + 1 helper and 280 tests
 
 ### 5.3 Test Coverage Gaps
 
@@ -283,14 +283,14 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 | **Document+FileIO** | Revert/read error paths (`readAsync` UTI + header validation) | ✅ Covered by T-14 (`validateMovieType` / `MovieHeaderValidator` tests) and the CR-4 empty-window lifecycle test. Full revert sheet-display flow still untested (a `Document` instance is now constructible — see §5.4 — but the sheet presentation path has no seam) |
 | **TimelineView+Input** | Mouse event handling (`mouseDown`, `mouseDragged`) | ✅ Covered by T-14 (marker selection → `doSetCurrent`, drag updates `startPosition`/`currentPosition`, no-op when unselected) |
 | **MovieMutator edit marker correction** | `doRemove` position-correction branches | ✅ Covered (3 regression tests in `MovieMutatorEditTests.swift`) |
-| **PlayerSeekSequencer state transitions** | Reload/seek generations, item replacement, task cancellation gates, suppression transitions, stale tokens, watchdog, failure fallback, cleanup preservation | ✅ Unit-tested by 19 cases in `PlayerSeekSequencerTests.swift`; live AVPlayer ordering remains untested |
-| **Document × live AVPlayer integration** | Async ordering of `updatePlayer`, KVO delivery, and polling timer | ❌ Not tested — requires a live `Document`/AVPlayer integration seam, which the unit-test environment does not provide. The resolved §8.6 ordering remains unprotected by an integration test |
+| **PlayerSeekSequencer state transitions** | Reload/seek generations, item replacement, task cancellation gates, suppression transitions, stale tokens, watchdog, failure fallback, cleanup preservation | ✅ Unit-tested by 19 cases in `PlayerSeekSequencerTests.swift`; the live-player reload wiring is covered by T-19 (`DocumentReloadSeekIntegrationTests`) |
+| **Document × live AVPlayer integration** | Async ordering of `updatePlayer`, KVO delivery, and polling timer | ◑ Partially covered by T-19 (`DocumentReloadSeekIntegrationTests`, 5 cases): the reload generation propagation across the awaited player-item regeneration, superseded-reload item application, and the initial-setup wiring (player attachment, polling timer, immediate suppression release) are now fixed through a test-only seam. KVO `readyToPlay` re-seek delivery and playback with real media remain untested (out of scope, §0) |
 | **Document+UI** | Window resize handling (`windowDidResize`) | ❌ Not tested — layout update propagation on window resize |
 | **Document+SavePanel** | Export save panel flow | ❌ Not tested — save panel presentation and cancellation paths |
 | **MovieMutator+Clipboard** | Copy/paste operations | ❌ Not tested — clipboard serialization and deserialization |
 | **Document+PositionControl** | Playback position scrubbing | ❌ Not tested — position updates during playback |
 
-> **Recommendation:** Unit-level seek, cancellation classification, position-cache reset, empty-window lifecycle, and H-11 temporary finalization/self-contained selection are covered. The highest-value remaining gap is integration ordering between `Document`, a live AVPlayer, KVO, and the polling timer; it needs a player/reload seam or UI/integration test. Window resize, save panel, clipboard, and scrubbing coverage remain open.
+> **Recommendation:** Unit-level seek, cancellation classification, position-cache reset, empty-window lifecycle, H-11 temporary finalization/self-contained selection, and — via the T-19 test-only seam — the reload ordering between `Document` and a live AVPlayer are covered. The remaining gaps in this area are KVO `readyToPlay` re-seek delivery (the AVPlayer observer count is not observable through public APIs) and playback with real media, both of which would need a UI/integration harness. Window resize, save panel, clipboard, and scrubbing coverage remain open.
 
 ### 5.4 Skipped Test — RESOLVED
 
@@ -348,7 +348,7 @@ Revision 5 additionally closed two stale recommendations: the DateFormatter dupl
 - Each step is guarded with `if ! ...; then exit 1; fi` so failures are reported with a custom message (works with `set -e`)
 - Uses color-coded echo statements for output formatting
 - Generates coverage reports via `xcrun llvm-cov`
-- Reports a summary; its inventory distinguishes 20 test source files from 1 helper and reports 275 tests
+- Reports a summary; its inventory distinguishes 21 test source files from 1 helper and reports 280 tests
 
 ---
 
@@ -399,7 +399,7 @@ Revision 5 additionally closed two stale recommendations: the DateFormatter dupl
 
 Under the historical implementation, `queryPosition()` could poll the new item and adopt a pre-seek `currentTime()`, reintroducing the stale-marker class of bug this mechanism exists to prevent. PR #63 shipped the suppression re-assertion; PR #64 (M-27/M-28) reinforced it with per-item-replacement generation bumping, a suppression watchdog, and a failure fallback (`releaseCurrentSuppressionAfterFailure`).
 
-**Remaining gap:** The ordering is not covered by a live `Document`/AVPlayer integration test (§5.3); the unit tests cover the sequencer state transitions only.
+**Remaining gap:** Partially closed by T-19 (`DocumentReloadSeekIntegrationTests`, 5 cases): the reload generation propagation across the awaited player-item regeneration, the superseded-reload item-application guard, and the initial-setup wiring (player attachment, polling timer start, immediate suppression release) are now exercised against a live `AVPlayer` through a test-only seam. The sequencer state transitions remain unit-tested in `PlayerSeekSequencerTests` (19 cases). Unverified items that stay open: KVO `readyToPlay` re-seek delivery (the observer count is not observable through public APIs), playback and re-seek with real media, and the `nil` return path of `beginItemReplacement(expectedReloadGeneration:)` (unreachable in the current structure because `beginReload()` always cancels the previous reload task first — its unit behavior is covered by `PlayerSeekSequencerTests.testStaleReloadCannotBeginItemReplacement`).
 
 ---
 
@@ -408,7 +408,7 @@ Under the historical implementation, `queryPosition()` could poll the new item a
 ### 9.1 High Priority
 
 1. ~~**Update documentation** (`ARCHITECTURE.md`, `API_REFERENCE.md`)~~ — Resolved (2026-08-05): Both documents removed. Information is now maintained in this review document.
-2. **Add integration tests** for ordering between `Document`, a live AVPlayer, KVO, and the polling timer. `PlayerSeekSequencer` state transitions and the reload suppression fix are unit-tested in isolation; exercising the integration requires a narrow player/item factory seam rather than broad `MovieMutator` protocolization or a full XCUITest harness. Window resize, save panel, clipboard, and scrubbing tests also remain open.
+2. **Extend the integration coverage** that T-19 started. `PlayerSeekSequencer` state transitions are unit-tested, and T-19 covers the reload ordering between `Document` and a live AVPlayer through a narrow player/item factory seam (rather than broad `MovieMutator` protocolization or a full XCUITest harness). What is still missing is KVO `readyToPlay` re-seek delivery and playback against real media, which would need a UI/integration harness. Window resize, save panel, clipboard, and scrubbing tests also remain open.
 
 ### 9.2 Medium Priority
 
@@ -424,9 +424,9 @@ Under the historical implementation, `queryPosition()` could poll the new item a
 
 ## 10. Conclusion
 
-The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 275 test methods across 20 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Revision 5 verified the release code baseline (`011aff7`, PR #65) and the resulting 0.8.20 head (`fb44143`) with a clean build, clean analyze, and a full test run passing 269 test cases with 0 failures and 0 skips.
+The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 280 test methods across 21 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Revision 5 verified the release code baseline (`011aff7`, PR #65) and the resulting 0.8.20 head (`fb44143`) with a clean build, clean analyze, and a full test run passing 269 test cases with 0 failures and 0 skips.
 
-The current release-blocker fixes include CR-4 (empty-window lifecycle, which also made `Document` constructible in tests), M-26 cancellation classification, M-27 seek liveness (watchdog), M-28 generation/cache protection, and H-11 temporary finalization/self-contained selection protection. PR #65 also resolved the runtime performance warning triage by moving test fixture encoding off the main actor; the RPAC diagnostic A/B measurement changed from 55 reports to 0. Release blocker count is **0**. T-19 (live player integration) and T-20 (performance baselines) remain non-blocking backlog items; T-21 (`invalidDuration` branch coverage) is implemented with direct helper tests (§5.4), and its backlog closure follows the merge. These tests do not exercise integration ordering against a live AVPlayer, KVO, or polling timer; window resize, save panel, clipboard, and scrubbing coverage remain open. Test counts in `scripts/test.sh`, this review, and the test guides now match the current inventory (275 across 21 files).
+The current release-blocker fixes include CR-4 (empty-window lifecycle, which also made `Document` constructible in tests), M-26 cancellation classification, M-27 seek liveness (watchdog), M-28 generation/cache protection, and H-11 temporary finalization/self-contained selection protection. PR #65 also resolved the runtime performance warning triage by moving test fixture encoding off the main actor; the RPAC diagnostic A/B measurement changed from 55 reports to 0. Release blocker count is **0**. T-19 (live player integration) has been implemented on the `feature/t19-document-player-integration-seam` branch — a test-only seam in `Document` plus `DocumentReloadSeekIntegrationTests` (5 cases) covering reload generation propagation, superseded-reload item application, and the initial-setup wiring; KVO `readyToPlay` re-seek and real-media playback remain unverified (§5.3, §8.6) — and this branch now carries PR #67 (T-21: the `invalidDuration` branch is covered by direct helper tests, §5.4), giving a combined inventory of 280 tests across 22 files. T-20 (performance baselines) remains a non-blocking backlog item. Window resize, save panel, clipboard, and scrubbing coverage remain open. Test counts in `scripts/test.sh`, this review, and the test guides now match the current inventory (280 across 22 files).
 
 ---
 
@@ -441,8 +441,8 @@ The current release-blocker fixes include CR-4 (empty-window lifecycle, which al
 - Utilities: `AsyncBridge.swift`, `ActorUtilities.swift`, `LayoutConverter.swift` + 3 extensions (`+Convert`, `+LayoutData`, `+Mapping`), `MovieHeaderValidator.swift`, `PerformanceMetrics.swift`, `ErrorUtilities.swift`, `Constants.swift`, `LocalizationHelper.swift`, `LoggingSystem.swift`, `DateFormatter+Factory.swift`
 - Resources: `Info.plist`, `cutter2.entitlements`, `Localizable.xcstrings` (hand-curated app strings), `Base.lproj/Main.storyboard` (main UI), `mul.lproj/Main.xcstrings` (storyboard-extracted strings), `Assets.xcassets` (app icon)
 
-### Test Files (21 files: 20 test source files + 1 helper; 275 test methods)
-- `AsyncBridgeTests.swift` (4 tests), `cutter2Tests.swift` (20 tests), `DocumentKVOContextTests.swift` (3 tests), `DocumentTests.swift` (12 tests)
+### Test Files (22 files: 21 test source files + 1 helper; 280 test methods)
+- `AsyncBridgeTests.swift` (4 tests), `cutter2Tests.swift` (20 tests), `DocumentKVOContextTests.swift` (3 tests), `DocumentReloadSeekIntegrationTests.swift` (5 tests), `DocumentTests.swift` (12 tests)
 - `LayoutConverterMappingTests.swift` (7 tests), `LocalizationTests.swift` (11 tests), `LoggingSystemTests.swift` (17 tests), `ModelTests.swift` (26 tests)
 - `MovieHeaderValidatorTests.swift` (9 tests), `MovieMutatorEditTests.swift` (11 tests), `MovieMutatorTests.swift` (22 tests), `MovieMutatorTransformExportTests.swift` (8 tests)
 - `MovieWriterVideoChannelMetadataTests.swift` (25 tests), `MovieWriterWriteTests.swift` (3 tests), `PerformanceTests.swift` (12 tests), `PlayerSeekSequencerTests.swift` (19 tests), `TimelineViewRenderingTests.swift` (15 tests)
@@ -461,4 +461,4 @@ The current release-blocker fixes include CR-4 (empty-window lifecycle, which al
 ### Configuration
 - `cutter2.xcodeproj/project.pbxproj` (version 0.8.20 / build 20260926 — app target, committed in the project; the test target carries placeholder `1.0` / `1`)
 - `.github/workflows/test.yml` (build/test/analyze, branches `main`/`work`/`develop`; coverage artifact generation is optional)
-- `scripts/test.sh` (build/test/analyze; summary reports 20 test source files + 1 helper and 275 tests)
+- `scripts/test.sh` (build/test/analyze; summary reports 21 test source files + 1 helper and 280 tests)

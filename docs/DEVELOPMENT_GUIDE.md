@@ -209,12 +209,13 @@ xcodebuild test \
 
 ### Test Organization
 
-**Test directory contents** (21 files: 20 test source files + 1 helper; 275 test methods):
+**Test directory contents** (22 files: 21 test source files + 1 helper; 280 test methods):
 ```
 cutter2Tests/
 ├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
 ├── cutter2Tests.swift                    # Integration tests (20 tests)
 ├── DocumentKVOContextTests.swift         # KVO context tests (3 tests)
+├── DocumentReloadSeekIntegrationTests.swift # Document reload/seek integration seam tests (5 tests)
 ├── DocumentTests.swift                   # Document tests (12 tests)
 ├── LayoutConverterMappingTests.swift     # Layout mapping tests (7 tests)
 ├── LocalizationTests.swift               # Localization tests (11 tests)

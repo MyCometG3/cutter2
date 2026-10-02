@@ -417,7 +417,7 @@ extension PerformanceTests {
     func testMovieMutatorDeleteSelectionBaseline() async {
         guard let fixture = await makePerformanceFixture() else { return }
         defer { try? FileManager.default.removeItem(at: fixture.url) }
-        let source = AVMutableMovie(data: fixture.data, options: nil)
+        let source = AVMutableMovie(url: fixture.url, options: nil)
         var lastDuration: Double = 0
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()],
                 options: baselineMeasureOptions()) {
@@ -470,10 +470,19 @@ extension PerformanceTests {
             let mutator = MovieMutator(with: source)
             let undoManager = UndoManager()
             undoManager.groupsByEvent = false
+            // An undo group must be open around applyClapPasp: registering undo
+            // on a groupsByEvent = false manager at grouping level zero aborts
+            // the runner, exactly as it does for the delete baseline. The
+            // manager is retained for the process lifetime like the delete
+            // baseline so the undo closures' captured AVFoundation objects stay
+            // alive.
+            Self.keptUndoManagers.append(undoManager)
+            undoManager.beginUndoGrouping()
             startMeasuring()
             lastResult = mutator.applyClapPasp(settings,
                                                using: UndoManagerWrapper(undoManager))
             stopMeasuring()
+            undoManager.endUndoGrouping()
         }
         // Functional assertion, outside the metric block (not a performance
         // threshold): the transform must apply to the H.264 fixture track.

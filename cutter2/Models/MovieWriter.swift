@@ -273,4 +273,20 @@ actor MovieWriter: SampleBufferChannelDelegate {
     
     /// Parameter dictionary for custom exporting
     var customParam: [String: any Sendable] = [:]
+    
+    /// Test seam (H-12 regression): set to `true` when `cancelCustomMovie()`
+    /// issues the SampleBufferChannel cancel dispatch. Lets the test target
+    /// observe, deterministically, that the custom-channel cancel path ran
+    /// before `cancelExport()` flipped `writeCancelled`. Not reset by
+    /// `beginWrite()`; the regression test uses a fresh writer (initial `false`).
+    var isCustomChannelCancelDispatched: Bool = false
+    
+    /// Test seam (H-12 regression): install a non-nil `customQueue` so
+    /// `cancelCustomMovie()` passes its `guard let customQueue` without running
+    /// a real export. `customQueue` is actor-isolated and cannot be assigned
+    /// from the test target, so the seam is an actor method. Not used in
+    /// production code paths.
+    internal func testableSetCustomQueue(_ queue: DispatchQueue?) {
+        customQueue = queue
+    }
 }

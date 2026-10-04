@@ -102,7 +102,10 @@ extension MovieMutator {
     /// The method is safe to call at any time:
     /// - If no operation is in progress, it has no effect
     /// - If an operation is in progress, it attempts to cancel it gracefully
-    /// - For custom exports, both cancelExport() and cancelCustomMovie() are called
+    /// - For custom exports, cancelCustomMovie() is called before cancelExport()
+    ///   so that the custom-channel cancel dispatch runs while writeCancelled
+    ///   is still false (if the order were reversed, cancelExport() would set
+    ///   writeCancelled=true first and the dispatch would be skipped)
     ///
     /// **Design Notes:**
     /// - This method is async due to the actor hop to MovieWriter
@@ -117,7 +120,7 @@ extension MovieMutator {
         // Clear the reference before the actor hop so that any subsequent
         // cancel() calls become no-ops while this cancellation is in flight.
         self.currentMovieWriter = nil
-        await writer.cancelExport()
         await writer.cancelCustomMovie()
+        await writer.cancelExport()
     }
 }

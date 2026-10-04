@@ -581,6 +581,7 @@ extension MovieWriter {
                     sbc.cancel()
                 }
             }
+            isCustomChannelCancelDispatched = true
         }
     }
     

@@ -193,6 +193,22 @@ final class MovieMutatorTransformExportTests: XCTestCase {
         XCTAssertFalse(realUM.canUndo)
     }
     
+    func testApplyClapPaspZeroHeightPaspReturnsFalse() async {
+        guard let mutator = await makeMutator() else { return }
+        let realUM = UndoManager()
+        realUM.groupsByEvent = false
+        let wrapper = UndoManagerWrapper(realUM)
+        
+        let bad: [AnyHashable: Any] = [
+            dimensionsKey: NSSize(width: 320, height: 180),
+            clapSizeKey: NSSize(width: 320, height: 180),
+            clapOffsetKey: NSZeroPoint,
+            paspRatioKey: NSSize(width: 1.0, height: 0.0)  // → ratio = inf
+        ]
+        XCTAssertFalse(mutator.applyClapPasp(bad, using: wrapper))
+        XCTAssertFalse(realUM.canUndo, "non-finite ratio must not register undo")
+    }
+    
     // MARK: - writeMovie / cancel
     
     func testWriteMovieSelfContainedProducesFile() async throws {

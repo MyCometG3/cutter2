@@ -193,6 +193,22 @@ final class MovieMutatorTransformExportTests: XCTestCase {
         XCTAssertFalse(realUM.canUndo)
     }
     
+    func testApplyClapPaspZeroHeightPaspReturnsFalse() async {
+        guard let mutator = await makeMutator() else { return }
+        let realUM = UndoManager()
+        realUM.groupsByEvent = false
+        let wrapper = UndoManagerWrapper(realUM)
+        
+        let bad: [AnyHashable: Any] = [
+            dimensionsKey: NSSize(width: 320, height: 180),
+            clapSizeKey: NSSize(width: 320, height: 180),
+            clapOffsetKey: NSZeroPoint,
+            paspRatioKey: NSSize(width: 1.0, height: 0.0)  // → ratio = inf
+        ]
+        XCTAssertFalse(mutator.applyClapPasp(bad, using: wrapper))
+        XCTAssertFalse(realUM.canUndo, "non-finite ratio must not register undo")
+    }
+    
     // MARK: - writeMovie / cancel
     
     func testWriteMovieSelfContainedProducesFile() async throws {
@@ -236,5 +252,32 @@ final class MovieMutatorTransformExportTests: XCTestCase {
         try await mutator.writeMovie(to: outURL, fileType: .mov, copySampleData: true)
         await mutator.cancel() // writer already cleared
         XCTAssertTrue(FileManager.default.fileExists(atPath: outURL.path))
+    }
+
+    func testCancelDispatchesCustomChannelCancelBeforeExportCancel() async {
+        guard let mutator = await makeMutator() else { return }
+
+        // Real export is NOT run. Build a fresh writer and hand it to the mutator
+        // via the public `currentMovieWriter` so `cancel()` (the method under test)
+        // has a writer to dispatch against.
+        let writer = MovieWriter(params: MovieWriterParams(movie: AVMutableMovie(),
+                                                           unblockUserInteraction: nil,
+                                                           progressContinuation: nil))
+        // Give cancelCustomMovie() a non-nil customQueue so it passes its
+        // `guard let customQueue`. Channels stay empty (no-op dispatch); the flag
+        // is the observation point. customQueue is actor-isolated, so it is set
+        // via the internal test seam (no real export is run).
+        await writer.testableSetCustomQueue(DispatchQueue(label: "cutter2.test.customQueue"))
+        mutator.currentMovieWriter = writer
+
+        await mutator.cancel()   // the method whose call order is under test
+
+        let dispatched = await writer.isCustomChannelCancelDispatched
+        XCTAssertTrue(dispatched,
+                      "cancel() must call cancelCustomMovie() BEFORE cancelExport(): " +
+                      "only then does the custom-channel cancel dispatch run while " +
+                      "writeCancelled is still false. If the order is swapped, " +
+                      "cancelExport() sets writeCancelled=true first and the dispatch " +
+                      "is skipped (flag stays false).")
     }
 }

@@ -204,6 +204,10 @@ extension MovieMutator {
             
             do {
                 let ratio = paspRatio.width / paspRatio.height
+                guard ratio.isFinite else {
+                    LoggingSystem.video.error("applyClapPasp: invalid paspRatio (\(paspRatio.width)/\(paspRatio.height)) → non-finite ratio; skipping track \(track.trackID)")
+                    continue
+                }
                 let newCAD = NSSize(width: clapSize.width * ratio, height: clapSize.height)
                 let newPAD = NSSize(width: dimensions.width * ratio, height: dimensions.height)
                 track.encodedPixelsDimensions = dimensions

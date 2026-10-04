@@ -40,8 +40,11 @@ extension Document {
         guard let contVC = transcodeWC.contentViewController else { NSSound.beep(); return }
         guard let transcodeVC = contVC as? TranscodeViewController else { NSSound.beep(); return }
         
+        // S-10: guard let for window (early-bail before sheet presentation)
+        guard let window = self.window else { NSSound.beep(); return }
+        
         // Show Transcode Sheet
-        transcodeVC.beginSheetModal(for: self.window!) { @Sendable @MainActor [weak self] (response) in // @escaping
+        transcodeVC.beginSheetModal(for: window) { @Sendable @MainActor [weak self] (response) in // @escaping
             self?.afterSheetContinue(response) { document in
                 document.transcoding = true
                 document.saveTo(document)

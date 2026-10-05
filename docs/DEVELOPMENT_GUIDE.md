@@ -209,7 +209,7 @@ xcodebuild test \
 
 ### Test Organization
 
-**Test directory contents** (22 files: 21 test source files + 1 helper; 284 test methods):
+**Test directory contents** (22 files: 21 test source files + 1 helper; 288 test methods):
 ```
 cutter2Tests/
 ├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
@@ -230,7 +230,7 @@ cutter2Tests/
 ├── MovieWriterWriteTests.swift           # Movie writer failure-state tests (3 tests)
 ├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (19 tests)
 ├── TestMovieFixtureWriter.swift          # Test helper (0 tests)
-├── TimelineViewRenderingTests.swift      # Timeline rendering tests (15 tests)
+├── TimelineViewRenderingTests.swift      # Timeline rendering tests (17 tests)
 ├── UtilitiesTests.swift                  # Utility tests (22 tests)
 ├── ViewControllerKeyEventTests.swift     # Key event tests (14 tests)
 └── ViewControllerTests.swift             # ViewController tests (15 tests)

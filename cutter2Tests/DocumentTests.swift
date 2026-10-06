@@ -128,6 +128,35 @@ final class DocumentTests: XCTestCase {
         }
     }
     
+    // MARK: - Progress reporting (terminal state)
+    
+    func testFinalizeProgressSetsExactTerminalState() throws {
+        let document = Document()
+        let indicator = NSProgressIndicator()
+        document.progressIndicator = indicator
+        // A value that exponential smoothing could never reach: updateProgress converges
+        // towards 1.0 without ever arriving there.
+        document.lastReportedProgress = 0.42
+
+        document.finalizeProgress(1.0)
+
+        XCTAssertEqual(document.lastReportedProgress, 1.0)
+        XCTAssertEqual(indicator.doubleValue, 100.0)
+    }
+    
+    func testUpdateProgressNeverLowersReportedProgress() throws {
+        let document = Document()
+        let indicator = NSProgressIndicator()
+        document.progressIndicator = indicator
+        document.finalizeProgress(1.0)
+
+        // A buffered update arriving after the terminal state must not undo it.
+        document.updateProgress(0.5)
+
+        XCTAssertEqual(document.lastReportedProgress, 1.0)
+        XCTAssertEqual(indicator.doubleValue, 100.0)
+    }
+    
     // MARK: - DocumentError Tests
     
     func testDocumentErrorTypes() throws {

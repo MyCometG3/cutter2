@@ -124,11 +124,26 @@ extension Document {
                 progress.completedUnitCount = Int64(progressValue * 100)
             }
         }
-        defer {
-            progressTask.cancel()
-        }
         
-        return try await operation(mutator)
+        // Ordering matters here. The terminal state must be written *after* the consumer
+        // has been cancelled, otherwise a buffered update still sitting in the stream can
+        // be applied afterwards and lower the progress again.
+        //
+        // The consumer's completion is deliberately not awaited: `AsyncStream` termination
+        // on task cancellation is not a guaranteed synchronisation point, so
+        // `await progressTask.value` could stall the save operation indefinitely. The
+        // monotonic clamp in `updateProgress(_:)` covers the residual race instead.
+        do {
+            let result = try await operation(mutator)
+            
+            progressTask.cancel()
+            finalizeProgress(1.0)
+            progress.completedUnitCount = progress.totalUnitCount
+            return result
+        } catch {
+            progressTask.cancel()
+            throw error
+        }
     }
     
     internal func export(to url: URL, ofType typeName: String, preset: String) async throws {

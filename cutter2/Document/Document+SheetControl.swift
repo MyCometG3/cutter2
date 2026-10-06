@@ -53,8 +53,13 @@ extension Document {
         // Apply exponential smoothing for smoother animation
         // Formula: smoothed = α * new + (1 - α) * old
         // α = 0.3 provides good balance between responsiveness and smoothness
+        //
+        // Clamped to `lastReportedProgress` so the bar never moves backwards. A buffered
+        // update arriving after `finalizeProgress(1.0)` must not undo the terminal state,
+        // and no progress source is expected to report a regression.
         let smoothingFactor: Float = 0.3
-        let smoothedProgress = lastReportedProgress + smoothingFactor * (progress - lastReportedProgress)
+        let smoothedProgress = max(lastReportedProgress,
+                                   lastReportedProgress + smoothingFactor * (progress - lastReportedProgress))
         lastReportedProgress = smoothedProgress
         
         // Update UI synchronously: the caller is already MainActor-isolated,
@@ -70,6 +75,25 @@ extension Document {
         // Update text (percentage)
         let format = NSLocalizedString("progress.format.percent", comment: "Progress percentage format")
         alert.informativeText = String(format: format, Int(smoothedProgress * 100))
+    }
+    
+    /// Show the exact terminal progress state, bypassing smoothing and throttling.
+    ///
+    /// `updateProgress(_:)` applies exponential smoothing (alpha = 0.3) and a 100 ms
+    /// throttle, so it converges towards 1.0 without ever reaching it and can drop the
+    /// final update. A finished operation therefore writes the terminal state here.
+    /// `updateProgress(_:)` is monotonic, so a buffered update arriving afterwards cannot
+    /// undo what this method reports.
+    ///
+    /// - Parameter progress: The terminal progress value.
+    public func finalizeProgress(_ progress: Float) {
+        lastUpdateAt = clock_gettime_nsec_np(CLOCK_REALTIME)
+        lastReportedProgress = progress
+        
+        progressIndicator?.doubleValue = Double(progress * 100.0)
+        
+        let format = NSLocalizedString("progress.format.percent", comment: "Progress percentage format")
+        alert?.informativeText = String(format: format, Int(progress * 100.0))
     }
     
     /// Show busy modalSheet

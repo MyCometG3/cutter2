@@ -304,6 +304,7 @@ final class TimelineViewRenderingTests: XCTestCase {
     ///
     /// This pins the zero-width case only. A view narrower than the margins
     /// gives a negative divisor, which is finite but reversed rather than NaN.
+    /// The negative-width case has its own test below.
     func testPositionIsNotNaNWhenViewTooNarrowToDivide() throws {
         let narrowWidth = timelineView.leftMargin + timelineView.rightMargin // 87
         let frame = NSRect(x: 0, y: 0, width: narrowWidth, height: 50)
@@ -366,5 +367,50 @@ final class TimelineViewRenderingTests: XCTestCase {
         
         XCTAssertFalse(timelineView.currentPosition.isNaN)
         XCTAssertEqual(timelineView.currentPosition, 0.5, accuracy: 0.05)
+    }
+    
+    /// Regression (M-32): the guard covers negative drawable widths too, so pin
+    /// that branch. `bounds.width = 77` leaves `width = 77 - 87 = -10`, a
+    /// negative divisor, so the division is finite rather than NaN and the
+    /// reversal has to be caught by an assertion rather than by an isNaN check.
+    ///
+    /// The pointer sits at x=50, left of `leftMargin` and inside the view.
+    /// Without the guard that computes `(50 - 75) / -10 == 2.5`, which the
+    /// comparison clamp pins to 1.0; with the guard it is 0.0. A `width != 0`
+    /// guard would pass the zero-width and normal-width tests above while still
+    /// producing this reversed 1.0, which is why this case exists.
+    func testPositionIsZeroWhenDrawableWidthIsNegative() throws {
+        let frame = NSRect(x: 0, y: 0, width: timelineView.leftMargin + timelineView.rightMargin - 10, height: 50)
+        XCTAssertLessThan(frame.width, timelineView.leftMargin + timelineView.rightMargin,
+                          "frame must be narrower than the margins so the drawable width is negative")
+        timelineView.frame = frame
+        
+        let window = NSWindow(contentRect: frame, styleMask: [.borderless], backing: .buffered, defer: false)
+        window.contentView = timelineView
+        
+        timelineView.layout()
+        timelineView.isValid = true
+        let delegate = MockTimelineDelegate()
+        timelineView.delegate = delegate
+        
+        guard let currentMarker = timelineView.currentMarker else {
+            return XCTFail("current marker should exist")
+        }
+        timelineView.selectedMarker = currentMarker
+        
+        let event = NSEvent.mouseEvent(
+            with: .leftMouseDragged,
+            location: CGPoint(x: 50, y: timelineView.bounds.midY),
+            modifierFlags: [], timestamp: 0, windowNumber: window.windowNumber,
+            context: nil, eventNumber: 1, clickCount: 1, pressure: 1
+        )!
+        timelineView.mouseDragged(with: event)
+        
+        XCTAssertFalse(timelineView.currentPosition.isNaN,
+                       "position must not be NaN when the drawable width is negative (M-32)")
+        XCTAssertEqual(timelineView.currentPosition, 0.0, accuracy: 0.001,
+                       "a negative-width timeline reports position 0.0, not the clamped reversed mapping")
+        XCTAssertTrue(delegate.cursorUpdates.allSatisfy { !$0.isNaN },
+                      "delegate cursor updates must never be NaN")
     }
 }

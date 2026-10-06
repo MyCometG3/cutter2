@@ -123,6 +123,12 @@ extension TimelineView {
     func position(from event: NSEvent, snap toGrid: Bool) -> Float64 {
         let point = self.convert(event.locationInWindow, from: nil)
         let width: CGFloat = self.bounds.width - (leftMargin + rightMargin)
+        // A drawable width of 0 divides by zero and yields inf/NaN; a negative
+        // one (view narrower than the margins) yields a finite but reversed
+        // mapping. Neither describes a meaningful timeline, and the
+        // comparison-based clamp below cannot reject NaN, so bail out before
+        // dividing.
+        guard width > 0 else { return 0.0 }
         var pos: Float64 = Float64((point.x - leftMargin) / width)
         pos = min(max(pos, 0.0), 1.0) // clamp(x, a, b)
         return (toGrid ? quantize(pos) : pos)

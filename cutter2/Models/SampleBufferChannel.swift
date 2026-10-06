@@ -10,7 +10,13 @@ import Cocoa
 import AVFoundation
 
 protocol SampleBufferChannelDelegate: AnyObject {
-    func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer)
+    /// Receives a sample buffer read from a channel.
+    ///
+    /// Called on the channel's serial queue, once per sample buffer. The previous
+    /// `channel` parameter was never read by the only conformer and has been removed.
+    ///
+    /// - Parameter buffer: The sample buffer that was read.
+    func didRead(buffer: CMSampleBuffer)
 }
 
 /// `@unchecked Sendable` rationale:
@@ -93,7 +99,7 @@ class SampleBufferChannel: @unchecked Sendable {
             while awInput.isReadyForMoreMediaData && !needsCompletion {
                 let sb: CMSampleBuffer? = arOutput.copyNextSampleBuffer()
                 if let sb = sb {
-                    delegate.didRead(from: self, buffer: sb)
+                    delegate.didRead(buffer: sb)
                     
                     let success: Bool = awInput.append(sb)
                     needsCompletion = !success

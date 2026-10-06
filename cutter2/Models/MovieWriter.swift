@@ -184,13 +184,19 @@ extension Notification.Name {
 /// `@unchecked Sendable` rationale:
 /// `MovieWriterParams` is created by `prepareMovieWriterParams()` and
 /// immediately moved into the `MovieWriter` actor (effectively move-only).
-/// `progressContinuation` and `unblockUserInteraction` are accessed only
-/// within the `MovieWriter` actor. `movie` (`AVMutableMovie`) is mutated
-/// only under actor isolation.
+/// `progressSink` and `unblockUserInteraction` are accessed only from the
+/// `MovieWriter` actor and from the `nonisolated didRead` callback, and both are
+/// `Sendable`. `movie` (`AVMutableMovie`) is mutated only under actor
+/// isolation.
 struct MovieWriterParams: @unchecked Sendable {
     let movie: AVMutableMovie
     let unblockUserInteraction: (@Sendable () -> Void)?
-    let progressContinuation: AsyncStream<Float>.Continuation?
+    
+    /// Shared progress destination.
+    ///
+    /// A reference rather than a snapshot, because `MovieMutatorBase.progressStream()`
+    /// installs the destination lazily from its `AsyncStream` builder closure.
+    let progressSink: ProgressSink
 }
 
 /* ============================================ */
@@ -199,13 +205,32 @@ struct MovieWriterParams: @unchecked Sendable {
 
 actor MovieWriter: SampleBufferChannelDelegate {
     
+    /// Shared progress destination for the custom-export sample path and the
+    /// `AVAssetExportSession` path.
+    ///
+    /// `nonisolated let` and a reference rather than a snapshot: the destination is
+    /// installed lazily by `MovieMutatorBase.progressStream()`, so a writer created before
+    /// the `AsyncStream` builder closure runs must still reach it.
+    nonisolated let progressSink: ProgressSink
+    
+    /// Length of the internal movie in seconds, sampled once at writer creation.
+    ///
+    /// `nonisolated` because `internalMovie` is actor-isolated (`private(set) var`) and
+    /// unreadable from the `nonisolated` `didRead` callback. `AVMutableMovie.range` walks
+    /// every track on each access, so sampling once also removes a per-sample cost.
+    /// `internalMovie` is never mutated for the lifetime of a writer because
+    /// `MovieMutator.withMovieWriter` creates a fresh writer per operation, so the
+    /// snapshot cannot go stale mid-export.
+    nonisolated let movieDurationSeconds: Float64
+    
     /// Creates a writer actor for the supplied movie and progress callbacks.
     ///
     /// - Parameter params: The movie and callbacks used by the writer.
     public init(params: MovieWriterParams) {
         self.internalMovie = params.movie
         self.unblockUserInteraction = params.unblockUserInteraction
-        self.progressContinuation = params.progressContinuation
+        self.progressSink = params.progressSink
+        self.movieDurationSeconds = CMTimeGetSeconds(params.movie.range.duration)
     }
     
     /* ============================================ */
@@ -216,9 +241,6 @@ actor MovieWriter: SampleBufferChannelDelegate {
     
     /// callback for NSDocument.unblockUserInteraction()
     private(set) var unblockUserInteraction: (@Sendable () -> Void)? = nil
-    
-    /// Progress stream continuation
-    private(set) var progressContinuation: AsyncStream<Float>.Continuation?
     
     /// Whether a save or export operation is currently running.
     public internal(set) var writeInProgress: Bool = false

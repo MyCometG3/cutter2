@@ -594,59 +594,47 @@ extension MovieWriter {
         let channels: [SampleBufferChannel]
     }
     
-    /// Receives a sample buffer from a custom-export channel and schedules progress updates.
+    /// Receives a sample buffer from a custom-export channel and publishes progress.
+    ///
+    /// Runs synchronously on the channel's serial queue, so no task is created per
+    /// sample. `ProgressSink.publish` both admits and emits inside one critical section,
+    /// so concurrent channels cannot emit out of order, and samples that do not advance
+    /// the high-water mark by at least `ProgressSink.minimumDelta` are dropped.
+    ///
+    /// - Parameter buffer: The sample buffer that was read.
+    nonisolated public func didRead(buffer: CMSampleBuffer) {
+        let value: Float64 = Self.progress(presentationEnd: Self.presentationEnd(of: buffer),
+                                           movieDurationSeconds: movieDurationSeconds)
+        progressSink.publish(value)
+    }
+    
+    /// Presentation end of `buffer`: the presentation timestamp plus its duration when
+    /// the duration is numeric.
+    ///
+    /// - Parameter buffer: The sample buffer that was read.
+    /// - Returns: The sample's end time; `CMTime.invalid` propagates from the buffer.
+    nonisolated static func presentationEnd(of buffer: CMSampleBuffer) -> CMTime {
+        let pts: CMTime = CMSampleBufferGetPresentationTimeStamp(buffer)
+        let dur: CMTime = CMSampleBufferGetDuration(buffer)
+        return CMTIME_IS_NUMERIC(dur) ? (pts + dur) : pts
+    }
+    
+    /// Relative position of a sample's end time inside the movie, in `0.0...1.0`.
+    ///
+    /// Nonisolated static so it is exercisable with plain `CMTime` values. A non-finite
+    /// result is returned as-is; `ProgressSink.publish` drops it because the comparison
+    /// against the high-water mark is always false for `NaN`.
     ///
     /// - Parameters:
-    ///   - channel: The channel that supplied the sample buffer.
-    ///   - buffer: The sample buffer that was read.
-    nonisolated public func didRead(from channel: SampleBufferChannel, buffer: CMSampleBuffer) {
-        let params = didReadParams(channel: channel, buffer: buffer)
-        Task { @Sendable in
-            await self.didReadCore(params)
-        }
+    ///   - presentationEnd: The sample's end time.
+    ///   - movieDurationSeconds: Movie length in seconds; `0.0` yields `0.0`.
+    /// - Returns: The relative position.
+    nonisolated static func progress(presentationEnd: CMTime, movieDurationSeconds: Float64) -> Float64 {
+        guard movieDurationSeconds != 0.0 else { return 0.0 }
+        return CMTimeGetSeconds(presentationEnd) / movieDurationSeconds
     }
     
-    private func didReadCore(_ params: didReadParams) {
-        let buffer = params.buffer
-        let progress: Float = Float(calcProgress(of: buffer))
-        
-        // Send progress to AsyncStream
-        progressContinuation?.yield(progress)
-        
-        //if let imageBuffer: CVImageBuffer = CMSampleBufferGetImageBuffer(buffer) {
-        //    if let pixelBuffer: CVPixelBuffer = imageBuffer as? CVPixelBuffer {
-        //        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags.readOnly)
-        //        // Pixel processing?
-        //        CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags.readOnly)
-        //    }
-        //}
-        //
-        //Task { @Sendable [weak self] in // @escaping
-        //    // Any GUI related processing - update GUI etc. here
-        //}
-    }
-    
-    /// `@unchecked Sendable` rationale:
-    /// `didReadParams` is created in the `nonisolated` `didRead` delegate callback
-    /// and then captured by a `@Sendable` closure in a `Task`. The struct is
-    /// consumed only from within that `Task` (via `didReadCore`), so no data races
-    /// occur across the nonisolated-to-async handoff.
-    private struct didReadParams: @unchecked Sendable {
-        let channel: SampleBufferChannel
-        let buffer: CMSampleBuffer
-    }
-    
-    private func calcProgress(of sampleBuffer: CMSampleBuffer) -> Float64 {
-        var pts: CMTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
-        let dur: CMTime = CMSampleBufferGetDuration(sampleBuffer)
-        if CMTIME_IS_NUMERIC(dur) {
-            pts = pts + dur
-        }
-        let ptsSec: Float64 = CMTimeGetSeconds(pts)
-        let lenSec: Float64 = CMTimeGetSeconds(internalMovie.range.duration)
-        return (lenSec != 0.0) ? (ptsSec/lenSec) : 0.0
-    }
-    
+
     // subs for UTGetOSTypeFromString()
     private func stringToOSType(_ type:String) -> OSType {
         guard type.count == 4 else { return 0 }

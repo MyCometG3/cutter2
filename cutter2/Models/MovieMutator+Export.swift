@@ -17,7 +17,7 @@ extension MovieMutator {
     internal func prepareMovieWriterParams() -> MovieWriterParams {
         return MovieWriterParams(movie: self.internalMovie,
                                  unblockUserInteraction: self.unblockUserInteraction,
-                                 progressContinuation: self.progressContinuation)
+                                 progressSink: self.progressSink)
     }
     
     /// Run a MovieWriter operation with consistent lifetime management.

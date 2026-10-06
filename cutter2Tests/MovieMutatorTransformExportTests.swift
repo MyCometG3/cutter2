@@ -262,7 +262,7 @@ final class MovieMutatorTransformExportTests: XCTestCase {
         // has a writer to dispatch against.
         let writer = MovieWriter(params: MovieWriterParams(movie: AVMutableMovie(),
                                                            unblockUserInteraction: nil,
-                                                           progressContinuation: nil))
+                                                           progressSink: ProgressSink()))
         // Give cancelCustomMovie() a non-nil customQueue so it passes its
         // `guard let customQueue`. Channels stay empty (no-op dispatch); the flag
         // is the observation point. customQueue is actor-isolated, so it is set

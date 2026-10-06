@@ -52,15 +52,26 @@ extension MovieMutatorBase {
     /// ```
     public func progressStream() -> AsyncStream<Float> {
         AsyncStream { [weak self] continuation in
-            // Assign continuation on MainActor using ActorUtilities to ensure
+            // Install into the shared sink on MainActor using ActorUtilities to ensure
             // proper isolation tracking and avoid strict concurrency warnings.
+            //
+            // Two facts drive this shape:
+            //  * The closure runs lazily on first consumption, so the sink (rather than a
+            //    writer snapshot) must hold the destination: a MovieWriter may already
+            //    exist by the time it runs.
+            //  * `onTermination` runs inside a detached `Task { @MainActor in ... }`, whose
+            //    execution order relative to the next operation is not guaranteed. The
+            //    token makes a superseded termination a no-op instead of letting it clear
+            //    the destination the next operation just installed.
             ActorUtilities.performSyncOnMainActor {
-                self?.progressContinuation = continuation
-            }
-            
-            continuation.onTermination = { @Sendable [weak self] _ in
-                Task { @MainActor in
-                    self?.progressContinuation = nil
+                guard let self else { return }
+                let token: ProgressSink.Token = self.progressSink.install(
+                    AsyncStreamProgressDestination(continuation))
+                
+                continuation.onTermination = { @Sendable [weak self] _ in
+                    Task { @MainActor in
+                        self?.progressSink.detach(token)
+                    }
                 }
             }
         }

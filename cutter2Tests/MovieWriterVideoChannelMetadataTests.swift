@@ -532,7 +532,7 @@ final class MovieWriterVideoChannelMetadataTests: XCTestCase {
 
         let writer = MovieWriter(params: MovieWriterParams(movie: movie,
                                                            unblockUserInteraction: nil,
-                                                           progressContinuation: nil))
+                                                           progressSink: ProgressSink()))
         let param: [String: any Sendable] = [
             kVideoEncodeKey: true,
             kVideoCodecKey: "avc1",

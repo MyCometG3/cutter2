@@ -10,7 +10,7 @@ import Cocoa
 import os.log
 
 @main @MainActor
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, SecurityScopedBookmarkRegistering {
     
     /* ============================================ */
     // MARK: - Private properties/constants
@@ -80,7 +80,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// Register url as bookmark
     ///
     /// - Parameter newURL: url to register as bookmark
-    public func addBookmark(for newURL: URL) {
+    /// - Returns: `true` when a new entry was appended by this call, `false` when an
+    ///   equivalent entry already existed or bookmark creation failed. Callers that may
+    ///   need to roll the registration back (Save As) must roll back only when this
+    ///   returns `true`: removing an entry created by an earlier session would revoke a
+    ///   permission the current operation never granted.
+    @discardableResult
+    public func addBookmark(for newURL: URL) -> Bool {
         // Check duplicate
         var found: Bool = false
         validateBookmarks(false, using: {(url) in
@@ -89,7 +95,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         })
         if found {
-            return
+            return false
         }
         
         // Register new bookmark
@@ -103,9 +109,46 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             bookmarks.append(data)
             defaults.set(bookmarks, forKey: bookmarksKey)
+            return true
         } else {
             LoggingSystem.security.error("Failed to create bookmark for: \(newURL.lastPathComponent)")
+            return false
         }
+    }
+    
+    /// Unregister the bookmark registered for `url`, if any.
+    ///
+    /// Used to revoke a registration made for a Save As that did not complete.
+    /// Unresolvable entries are left in place: discarding them stays the single
+    /// responsibility of `validateBookmarks`.
+    ///
+    /// - Parameter url: The url whose bookmark should be removed.
+    public func removeBookmark(for url: URL) {
+        let defaults = UserDefaults.standard
+        guard let stored: [Data] = defaults.array(forKey: bookmarksKey) as? [Data] else { return }
+        
+        let outcome = BookmarkStore.removing(url: url,
+                                             from: stored,
+                                             resolving: Self.resolveBookmarkURL)
+        guard outcome.removed else { return }
+        
+        defaults.set(outcome.retained, forKey: bookmarksKey)
+        LoggingSystem.security.info("Removed bookmark: \(url.lastPathComponent)")
+    }
+    
+    /// Resolves stored security-scoped bookmark data back to its url.
+    ///
+    /// - Parameter data: Stored bookmark data.
+    /// - Returns: The resolved url, or `nil` when the data is unusable.
+    private static func resolveBookmarkURL(_ data: Data) -> URL? {
+        // `bookmarkDataIsStale` is an `UnsafeMutablePointer<Bool>`, so it cannot be
+        // passed `nil`; the flag is irrelevant here and is only threaded through to
+        // satisfy the signature, matching `refreshBookmarkIfRequired`.
+        var stale: Bool = false
+        return try? URL(resolvingBookmarkData: data,
+                        options: .withSecurityScope,
+                        relativeTo: nil,
+                        bookmarkDataIsStale: &stale)
     }
     
     /// Start access bookmarks in sandbox

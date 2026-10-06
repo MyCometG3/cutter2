@@ -255,6 +255,25 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     internal var saveMode = SaveMode()
     internal var accessoryVCselfContained: Bool = false
     
+    /// Bookmark target decided by `preparation` and consumed by `writeSafely`.
+    ///
+    /// Set synchronously while the Save Panel state is still the one the user chose,
+    /// cleared as soon as `writeSafely` reads it and again on every failure path, so the
+    /// invariant "nil once the save operation finished" holds on all of them.
+    internal var pendingSourceBookmark: URL? = nil
+    
+    /// Test seam (M-31): overrides the bookmark registry lookup.
+    ///
+    /// Production resolves the `AppDelegate` singleton; tests install a recorder so the
+    /// commit/rollback policy is observable without a live `NSApplication`. Never
+    /// assigned in production code.
+    internal var bookmarkRegistryOverride: (any SecurityScopedBookmarkRegistering)? = nil
+    
+    /// The registry used to (un)register the source movie's security-scoped bookmark.
+    internal var bookmarkRegistry: (any SecurityScopedBookmarkRegistering)? {
+        self.bookmarkRegistryOverride ?? (NSApp.delegate as? AppDelegate)
+    }
+    
     //
     internal var mutationObserver: NSObjectProtocol? = nil
     

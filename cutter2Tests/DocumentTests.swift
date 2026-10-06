@@ -150,7 +150,12 @@ final class DocumentTests: XCTestCase {
         document.progressIndicator = indicator
         document.finalizeProgress(1.0)
 
-        // A buffered update arriving after the terminal state must not undo it.
+        // `finalizeProgress` stamps `lastUpdateAt` with the current time, so a call that
+        // follows immediately is dropped by the 100 ms throttle before it ever reaches
+        // the smoothing step. Backdate the stamp so the update is admitted and the clamp
+        // is actually exercised.
+        document.lastUpdateAt = 1
+
         document.updateProgress(0.5)
 
         XCTAssertEqual(document.lastReportedProgress, 1.0)

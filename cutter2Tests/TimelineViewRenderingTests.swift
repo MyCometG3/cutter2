@@ -296,11 +296,14 @@ final class TimelineViewRenderingTests: XCTestCase {
     
     // MARK: - M-32: zero-width timeline position guard
     
-    /// Regression (M-32): when the view is no wider than leftMargin+rightMargin,
-    /// the position calculation divides by zero and yields NaN. The comparison
-    /// based clamp does not reject NaN, so it used to reach currentPosition and
-    /// downstream `positionOfTime`. Unfixed code returns NaN here (0/0 when the
-    /// pointer sits exactly at leftMargin).
+    /// Regression (M-32): with the view set to exactly leftMargin+rightMargin the
+    /// drawable width is 0, so the position calculation divides by zero and
+    /// yields NaN. The comparison based clamp does not reject NaN, so it used to
+    /// reach currentPosition and downstream `positionOfTime`. Unfixed code
+    /// returns NaN here (0/0 when the pointer sits exactly at leftMargin).
+    ///
+    /// This pins the zero-width case only. A view narrower than the margins
+    /// gives a negative divisor, which is finite but reversed rather than NaN.
     func testPositionIsNotNaNWhenViewTooNarrowToDivide() throws {
         let narrowWidth = timelineView.leftMargin + timelineView.rightMargin // 87
         let frame = NSRect(x: 0, y: 0, width: narrowWidth, height: 50)

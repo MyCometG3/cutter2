@@ -5,7 +5,7 @@
 **Scope:** Source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
 **Reviewed baseline:** `fb4414346f86933344958ca31e5813dac4ef175a` (`work`, release 0.8.20)
 **Verification environment:** macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
-**Status:** Rebaselined on the current `work` head for release 0.8.20. The tested code baseline is PR #65 (`011aff7`); `fb44143` is the version/build metadata commit. Clean build / clean analyze / full test passed (269/269), with 0 release blockers; live integration coverage remains a non-blocking gap. The T-19 feature branch (this working tree) adds the `Document` test-only seam and 5 integration tests and now carries PR #67 (T-21: direct `invalidDuration` helper tests, §5.4) via rebase, raising the suite to 280 methods across 22 files; the T-20 branch (this working tree) adds four non-gating `TimelineView` / `MovieMutator` performance baselines, raising the current inventory to 284 methods across 22 files (see §2.3, §5.3, §5.4, §8.5, §8.6, and §Conclusion).
+**Status:** Rebaselined on the current `work` head for release 0.8.20. The tested code baseline is PR #65 (`011aff7`); `fb44143` is the version/build metadata commit. Clean build / clean analyze / full test passed (269/269), with 0 release blockers; live integration coverage remains a non-blocking gap. The T-19 feature branch (this working tree) adds the `Document` test-only seam and 5 integration tests and now carries PR #67 (T-21: direct `invalidDuration` helper tests, §5.4) via rebase, raising the suite to 280 methods across 22 files; the T-20 branch (this working tree) adds four non-gating `TimelineView` / `MovieMutator` performance baselines, raising the suite to 284 methods across 22 files; the `fix/cutter2-m32` branch adds 2 M-32 zero-width position regression tests, taking the current inventory to 288 methods across 22 files (see §2.3, §5.3, §5.4, §8.5, §8.6, and §Conclusion).
 
 ---
 
@@ -146,6 +146,7 @@ cutter2Tests/
 ├── AsyncBridgeTests.swift                # AsyncBridge tests (4 tests)
 ├── cutter2Tests.swift                    # Integration tests (20 tests)
 ├── DocumentKVOContextTests.swift         # KVO context tests (3 tests)
+├── DocumentReloadSeekIntegrationTests.swift # Document reload/seek integration seam tests (5 tests)
 ├── DocumentTests.swift                   # Document tests (12 tests)
 ├── LayoutConverterMappingTests.swift     # Layout mapping tests (7 tests)
 ├── LocalizationTests.swift               # Localization tests (11 tests)
@@ -154,7 +155,7 @@ cutter2Tests/
 ├── MovieHeaderValidatorTests.swift       # Header validation tests (9 tests)
 ├── MovieMutatorEditTests.swift           # Edit operation and presentation traversal tests (11 tests)
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
-├── MovieMutatorTransformExportTests.swift # Transform/export tests (8 tests)
+├── MovieMutatorTransformExportTests.swift # Transform/export tests (10 tests)
 ├── PerformanceTests.swift                # Performance tests (16 tests)
 ├── MovieWriterVideoChannelMetadataTests.swift # Video channel metadata tests (25 tests)
 ├── MovieWriterWriteTests.swift           # Movie writer failure-state tests (3 tests)
@@ -250,7 +251,7 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 | **AsyncBridge** | `AsyncBridgeTests.swift` | 4 | ✅ Covered |
 | **MovieMutator (core)** | `MovieMutatorTests.swift` | 22 | ✅ Covered |
 | **MovieMutator (edit)** | `MovieMutatorEditTests.swift` | 11 | ✅ Covered |
-| **MovieMutator (transform/export)** | `MovieMutatorTransformExportTests.swift` | 8 | ✅ Covered |
+| **MovieMutator (transform/export)** | `MovieMutatorTransformExportTests.swift` | 10 | ✅ Covered (cancel-order regression from #69) |
 | **TimelineView rendering/mouse input** | `TimelineViewRenderingTests.swift` | 17 | ✅ Covered (M-32 zero-width position guard) |
 | **ViewController key events** | `ViewControllerKeyEventTests.swift` | 14 | ✅ Covered |
 | **ViewController (general)** | `ViewControllerTests.swift` | 15 | ✅ Covered |
@@ -444,7 +445,7 @@ The current release-blocker fixes include CR-4 (empty-window lifecycle, which al
 ### Test Files (22 files: 21 test source files + 1 helper; 288 test methods)
 - `AsyncBridgeTests.swift` (4 tests), `cutter2Tests.swift` (20 tests), `DocumentKVOContextTests.swift` (3 tests), `DocumentReloadSeekIntegrationTests.swift` (5 tests), `DocumentTests.swift` (12 tests)
 - `LayoutConverterMappingTests.swift` (7 tests), `LocalizationTests.swift` (11 tests), `LoggingSystemTests.swift` (17 tests), `ModelTests.swift` (26 tests)
-- `MovieHeaderValidatorTests.swift` (9 tests), `MovieMutatorEditTests.swift` (11 tests), `MovieMutatorTests.swift` (22 tests), `MovieMutatorTransformExportTests.swift` (8 tests)
+- `MovieHeaderValidatorTests.swift` (9 tests), `MovieMutatorEditTests.swift` (11 tests), `MovieMutatorTests.swift` (22 tests), `MovieMutatorTransformExportTests.swift` (10 tests)
 - `MovieWriterVideoChannelMetadataTests.swift` (25 tests), `MovieWriterWriteTests.swift` (3 tests), `PerformanceTests.swift` (16 tests), `PlayerSeekSequencerTests.swift` (19 tests), `TimelineViewRenderingTests.swift` (17 tests)
 - `UtilitiesTests.swift` (22 tests), `ViewControllerKeyEventTests.swift` (14 tests), `ViewControllerTests.swift` (15 tests)
 - `TestMovieFixtureWriter.swift` (0 tests, fixture writer helper)

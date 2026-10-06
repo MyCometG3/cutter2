@@ -7,9 +7,9 @@ This guide provides instructions for running and writing tests for the cutter2 a
 ## Quick Start
 
 The test target is configured with XCTest and currently contains:
-- 21 test source files
+- 23 test source files
 - 1 test helper file
-- 289 test methods
+- 318 test methods
 - Code coverage support in the command-line and CI workflows
 
 Run the complete suite with:
@@ -72,7 +72,7 @@ cutter2Tests/
 ├── cutter2Tests.swift                    # Base test class and integration tests (20 tests)
 ├── DocumentKVOContextTests.swift         # KVO context tests (3 tests)
 ├── DocumentReloadSeekIntegrationTests.swift # Document reload/seek integration seam tests (5 tests)
-├── DocumentTests.swift                   # Document tests (12 tests)
+├── DocumentTests.swift                   # Document tests (14 tests)
 ├── LayoutConverterMappingTests.swift     # Layout mapping tests (7 tests)
 ├── LocalizationTests.swift               # Localization tests (11 tests)
 ├── LoggingSystemTests.swift              # Logging tests (17 tests)
@@ -81,6 +81,7 @@ cutter2Tests/
 ├── MovieMutatorEditTests.swift           # Edit operation and presentation traversal tests (11 tests)
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (10 tests)
+├── MovieWriterCustomProgressTests.swift  # Custom-export progress sink tests (12 tests)
 ├── MovieWriterVideoChannelMetadataTests.swift # Video channel metadata tests (25 tests)
 ├── PerformanceTests.swift                # Performance tests (16 tests)
 ├── MovieWriterWriteTests.swift           # Movie writer failure-state tests (3 tests)
@@ -92,7 +93,7 @@ cutter2Tests/
 └── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Static suite size**: 22 files total (21 test source files + 1 helper), **289 test methods**.
+**Static suite size**: 24 files total (23 test source files + 1 helper), **318 test methods**.
 
 Runtime results must be taken from the specific `xcodebuild test` or Xcode run being reported.
 
@@ -443,4 +444,4 @@ Based on Phase 2-3 of the improvement plan:
 
 **Last Updated**: October 6, 2026
 **Version**: 1.12
-**Status**: Static suite size: 289 test methods across 21 test source files + 1 helper; the October 6, 2026 run on the `fix/cutter2-m32` branch passed 289/289 with 0 failures and 0 skips (M-32 added 3 TimelineView regression tests); the October 1, 2026 combined-branch run (T-19 rebased onto PR #67) passed 280/280 with 0 skips; the prior September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips
+**Status**: Static suite size: 318 test methods across 23 test source files + 1 helper; the October 6, 2026 run on the `fix/cutter2-m32` branch passed 318/318 with 0 failures and 0 skips (M-32 added 3 TimelineView regression tests); the October 1, 2026 combined-branch run (T-19 rebased onto PR #67) passed 280/280 with 0 skips; the prior September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips

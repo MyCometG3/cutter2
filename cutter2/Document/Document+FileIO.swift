@@ -337,9 +337,10 @@ extension Document {
             throw error // rethrow to abort write operation
         }
         
-        // The write succeeded. `preparation` throws for the non-writable combinations
-        // (`:249-265`), so reaching this point means the source movie really is
-        // referenced by the freshly written file and the bookmark is justified.
+        // The write succeeded. `preparation(to:ofType:for:)` throws `.overwriteSelfContainedWithReference`
+        // before reaching the bookmark decision for the combinations that cannot produce a
+        // reference movie, so getting here means the source movie really is referenced by
+        // the freshly written file and the bookmark is justified.
         //
         // Both the read-and-clear of the pending target and the registration need the
         // main actor; the returned `Bool` is Sendable, which is what the nonisolated

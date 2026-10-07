@@ -161,6 +161,36 @@ final class DocumentTests: XCTestCase {
         XCTAssertEqual(document.lastReportedProgress, 1.0)
         XCTAssertEqual(indicator.doubleValue, 100.0)
     }
+
+    func testApplyProgressValueNeverLowersCompletedUnitCount() throws {
+        // `NSProgress.completedUnitCount` is a separate copy of the progress state from
+        // the rendered bar, so the clamp in `updateProgress` does not cover it. A buffered
+        // iteration landing after a successful operation must not drag 100% back down.
+        let progress = Progress(totalUnitCount: 100)
+
+        Document.applyProgressValue(0.5, to: progress)
+        XCTAssertEqual(progress.completedUnitCount, 50)
+
+        // The terminal state a successful operation writes.
+        progress.completedUnitCount = progress.totalUnitCount
+        XCTAssertEqual(progress.completedUnitCount, 100)
+
+        Document.applyProgressValue(0.5, to: progress)
+        XCTAssertEqual(progress.completedUnitCount, 100, "a late buffered update must not regress a finished operation")
+
+        Document.applyProgressValue(0.8, to: progress)
+        XCTAssertEqual(progress.completedUnitCount, 100)
+    }
+
+    func testApplyProgressValueAdvancesMonotonically() throws {
+        let progress = Progress(totalUnitCount: 100)
+
+        for value in [Float(0.0), 0.25, 0.25, 0.5, 0.4, 1.0] as [Float] {
+            Document.applyProgressValue(value, to: progress)
+        }
+
+        XCTAssertEqual(progress.completedUnitCount, 100)
+    }
     
     // MARK: - DocumentError Tests
     

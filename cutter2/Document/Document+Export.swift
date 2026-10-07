@@ -112,6 +112,12 @@ extension Document {
         let stream = mutator.progressStream()
         let progressTask = Task { @MainActor [weak self, weak progress] in
             for await progressValue in stream {
+                // `cancel()` does not retract an iteration that is already under way, so
+                // leave here rather than apply one more value to a finished operation. The
+                // check and the assignment below are both MainActor-isolated with no
+                // suspension point between them, so no iteration can interleave with the
+                // terminal write in `withBusyProgress`.
+                if Task.isCancelled { break }
                 guard let self else {
                     LoggingSystem.document.warning("Progress monitoring stopped: Document was deallocated during \(operationName)")
                     break
@@ -121,18 +127,19 @@ extension Document {
                     break
                 }
                 updateProgress(progressValue)
-                progress.completedUnitCount = Int64(progressValue * 100)
+                Self.applyProgressValue(progressValue, to: progress)
             }
         }
-        
+
         // Ordering matters here. The terminal state must be written *after* the consumer
         // has been cancelled, otherwise a buffered update still sitting in the stream can
         // be applied afterwards and lower the progress again.
         //
         // The consumer's completion is deliberately not awaited: `AsyncStream` termination
         // on task cancellation is not a guaranteed synchronisation point, so
-        // `await progressTask.value` could stall the save operation indefinitely. The
-        // monotonic clamp in `updateProgress(_:)` covers the residual race instead.
+        // `await progressTask.value` could stall the save operation indefinitely. The two
+        // monotonic guards cover the residual race instead: the clamp in `updateProgress(_:)`
+        // for the rendered bar, and `applyProgressValue(_:to:)` for `NSProgress`.
         do {
             let result = try await operation(mutator)
             
@@ -146,6 +153,26 @@ extension Document {
         }
     }
     
+    /// Writes `progressValue` into `progress` without ever lowering `completedUnitCount`.
+///
+/// `NSProgress.completedUnitCount` is a second, independently observable copy of the
+/// progress state, and the monotonic clamp in `updateProgress(_:)` only protects the
+/// rendered bar. A buffered iteration that lands after a successful operation reported
+/// 100% would otherwise drag the value back down, which is the one thing a progress
+/// indicator must not do once it has finished.
+///
+/// Extracted so the guarantee is testable without driving `withBusyProgress`. `progress`
+/// is `totalUnitCount: 100` in `withBusyProgress`, and `ProgressSink` admits only values in
+/// `0.0...1.0`, so the scaled result never exceeds it.
+///
+/// - Parameters:
+///   - progressValue: Progress in `0.0...1.0`.
+///   - progress: The progress to update.
+    internal static func applyProgressValue(_ progressValue: Float, to progress: Progress) {
+        let scaled: Int64 = Int64(progressValue * 100)
+        progress.completedUnitCount = max(progress.completedUnitCount, scaled)
+    }
+
     internal func export(to url: URL, ofType typeName: String, preset: String) async throws {
         let title = NSLocalizedString("progress.exporting.title", comment: "Title for export progress dialog")
         let message = NSLocalizedString("progress.exporting.message", comment: "Message for export progress dialog")

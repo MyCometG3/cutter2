@@ -265,11 +265,11 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     /// Test seam (M-31): overrides the bookmark registry lookup.
     ///
     /// Production resolves the `AppDelegate` singleton; tests install a recorder so the
-    /// commit/rollback policy is observable without a live `NSApplication`. Never
-    /// assigned in production code.
+    /// registration policy is observable without a live `NSApplication`. Never assigned
+    /// in production code.
     internal var bookmarkRegistryOverride: (any SecurityScopedBookmarkRegistering)? = nil
-    
-    /// The registry used to (un)register the source movie's security-scoped bookmark.
+
+    /// The registry used to register the source movie's security-scoped bookmark.
     internal var bookmarkRegistry: (any SecurityScopedBookmarkRegistering)? {
         self.bookmarkRegistryOverride ?? (NSApp.delegate as? AppDelegate)
     }

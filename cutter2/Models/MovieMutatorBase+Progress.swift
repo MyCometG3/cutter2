@@ -56,9 +56,11 @@ extension MovieMutatorBase {
             // proper isolation tracking and avoid strict concurrency warnings.
             //
             // Two facts drive this shape:
-            //  * The closure runs lazily on first consumption, so the sink (rather than a
-            //    writer snapshot) must hold the destination: a MovieWriter may already
-            //    exist by the time it runs.
+            //  * `AsyncStream.init` runs this closure synchronously, so the destination is
+            //    live as soon as `progressStream()` returns. The ordering requirement above
+            //    is what guarantees a writer can reach it; the sink exists so a writer
+            //    resolves whichever installation is current rather than snapshotting this
+            //    continuation, which a later `progressStream()` call would supersede.
             //  * `onTermination` runs inside a detached `Task { @MainActor in ... }`, whose
             //    execution order relative to the next operation is not guaranteed. The
             //    token makes a superseded termination a no-op instead of letting it clear

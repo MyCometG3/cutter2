@@ -194,8 +194,11 @@ struct MovieWriterParams: @unchecked Sendable {
     
     /// Shared progress destination.
     ///
-    /// A reference rather than a snapshot, because `MovieMutatorBase.progressStream()`
-    /// installs the destination lazily from its `AsyncStream` builder closure.
+    /// A reference rather than a snapshot, because `progressStream()` replaces the
+    /// installed destination each time it is called. A writer that captured one
+    /// continuation would keep publishing into a stream nobody is consuming after the next
+    /// operation installs a new one; resolving through the sink reaches whichever
+    /// destination is currently installed.
     let progressSink: ProgressSink
 }
 
@@ -208,9 +211,11 @@ actor MovieWriter: SampleBufferChannelDelegate {
     /// Shared progress destination for the custom-export sample path and the
     /// `AVAssetExportSession` path.
     ///
-    /// `nonisolated let` and a reference rather than a snapshot: the destination is
-    /// installed lazily by `MovieMutatorBase.progressStream()`, so a writer created before
-    /// the `AsyncStream` builder closure runs must still reach it.
+    /// `nonisolated let`, and a reference rather than a snapshot, for two reasons: the
+    /// `nonisolated` `didRead` callback runs off the actor and must still reach the
+    /// destination, and `progressStream()` replaces the installation on each call, so a
+    /// writer has to resolve the *current* one on every publish rather than hold on to
+    /// whichever existed when it was created.
     nonisolated let progressSink: ProgressSink
     
     /// Length of the internal movie in seconds, sampled once at writer creation.

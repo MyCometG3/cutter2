@@ -71,13 +71,18 @@ struct AsyncStreamProgressDestination: ProgressDestination {
 /// Thread-safe destination for movie progress values, shared by `MovieMutator` and the
 /// `MovieWriter` it creates.
 ///
-/// ## Why the destination is late-bound
-/// `MovieMutatorBase.progressStream()` installs its destination from the `AsyncStream`
-/// builder closure, and that closure runs **lazily on first consumption**. The consumer
-/// is created inside `Document.withBusyProgress` without waiting for the capture to
-/// complete, so a writer created before the closure runs must still be able to publish
-/// once it does. Holding the destination as a reference here, and resolving it on every
-/// publish, removes that race; a writer must never snapshot it.
+/// ## Why the destination is held by reference
+/// `AsyncStream.init` runs its builder closure synchronously, so
+/// `MovieMutatorBase.progressStream()` installs the destination before returning, and
+/// `progressStream()` must be called before the operation starts (see that method's
+/// timing requirement). The reference is therefore not about an initialization race.
+///
+/// It is about which destination is *current*. A later `progressStream()` call replaces
+/// the installation, and the previous stream's `onTermination` may `detach` at any moment.
+/// A writer that captured the continuation would keep publishing into a stream nobody is
+/// consuming. Holding the installation behind this reference and resolving it on every
+/// publish means a writer always reaches whichever destination is live, and emits nothing
+/// once none is.
 ///
 /// ## Why admission and emission share one critical section
 /// Deciding under one lock and emitting under another lets two channels interleave as

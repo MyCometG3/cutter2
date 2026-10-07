@@ -257,7 +257,7 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 | **TimelineView rendering/mouse input** | `TimelineViewRenderingTests.swift` | 18 | ✅ Covered (M-32 zero-width and negative-width position guard) |
 | **ViewController key events** | `ViewControllerKeyEventTests.swift` | 14 | ✅ Covered |
 | **ViewController (general)** | `ViewControllerTests.swift` | 15 | ✅ Covered |
-| **Document** | `DocumentTests.swift` | 14 | ✅ Covered (expanded in #64: cancellation-error classification, empty-window lifecycle (CR-4), position-cache reset) |
+| **Document** | `DocumentTests.swift` | 16 | ✅ Covered (expanded in #64: cancellation-error classification, empty-window lifecycle (CR-4), position-cache reset; PR #71 adds the progress terminal-state and `NSProgress` monotonicity cases) |
 | **Document KVO context** | `DocumentKVOContextTests.swift` | 3 | ✅ Covered |
 | **LayoutConverter mappings** | `LayoutConverterMappingTests.swift` | 7 | ✅ Covered (T-16) |
 | **Player seek sequencing** | `PlayerSeekSequencerTests.swift` + `DocumentReloadSeekIntegrationTests.swift` | 19 + 5 | ✅ Generation, item-replacement, watchdog, failure fallback, and cleanup transitions covered (expanded in #64); T-19 adds the live-player reload wiring (§5.3). KVO `readyToPlay` re-seek and real-media playback remain untested |
@@ -270,6 +270,8 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 | **MovieHeaderValidator** | `MovieHeaderValidatorTests.swift` | 9 | ✅ Covered |
 | **MovieWriter video channel metadata** | `MovieWriterVideoChannelMetadataTests.swift` | 25 | ✅ Covered |
 | **MovieWriter failure states** | `MovieWriterWriteTests.swift` | 3 | ✅ Covered (expanded in #64, H-11) |
+| **MovieWriter custom-export progress** | `MovieWriterCustomProgressTests.swift` | 15 | ✅ Covered (PR #71: `ProgressSink` admission gate, concurrent publish ordering, non-finite and out-of-range rejection, `didRead` wiring) |
+| **Security-scoped bookmarks** | `SecurityScopedBookmarkTests.swift` | 12 | ✅ Covered (PR #71: Save As registration policy — `bookmarkSourceTarget` decision matrix and duplicate detection) |
 | **Overall** | 24 files (23 test source + 1 helper) | **320 test methods** | ✅ Full suite passed 274/274 (2026-10-01, T-19 branch) and 275/275 (PR #67); the combined T-19 branch carried on top of PR #67 runs 280/280; KVO `readyToPlay` re-seek and real-media playback remain untested |
 
 ### 5.2 Test Execution

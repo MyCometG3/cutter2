@@ -56,9 +56,9 @@ class MovieMutatorBase: NSObject {
     
     /// Shared progress destination for asynchronous progress reporting.
     ///
-    /// Owned here (one per mutator) and handed to every `MovieWriter` by reference, so the
-    /// lazily installed destination stays reachable no matter when the writer is created
-    /// relative to the stream's first consumption.
+    /// Owned here (one per mutator) and handed to every `MovieWriter` by reference, so every
+    /// writer resolves whichever destination is currently installed rather than holding a
+    /// snapshot of one that a later `progressStream()` call would supersede.
     internal let progressSink = ProgressSink()
     
     /// The current movie writer used to cancel an export or write operation.

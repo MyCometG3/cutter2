@@ -53,6 +53,61 @@ final class MovieWriterCustomProgressTests: XCTestCase {
         }
     }
 
+    /// `ProgressDestination` that blocks the first caller inside `receive` so a second
+    /// publisher's admission can be observed while the first is still emitting.
+    ///
+    /// The gate turns the ordering question into a bounded wait instead of a timing race:
+    /// `waitForEntry(count:timeout:)` reports how many callers got as far as `receive`, so
+    /// the test asserts *where* the second publisher stopped rather than sleeping and
+    /// hoping. Touches only its own lock and semaphores, never `ProgressSink`, so the
+    /// `ProgressDestination` re-entrancy contract holds by construction.
+    private final class GatedProgressDestination: ProgressDestination, @unchecked Sendable {
+        private let lock = NSLock()
+        private var storage: [Float] = []
+        private var enteredCount: Int = 0
+
+        /// Signalled once per caller, as each one reaches `receive`.
+        private let entered = DispatchSemaphore(value: 0)
+        /// Consumed by the first caller, which parks until the test releases it.
+        private let release = DispatchSemaphore(value: 0)
+
+        func receive(_ value: Float) {
+            lock.lock()
+            enteredCount += 1
+            let isFirst: Bool = (enteredCount == 1)
+            lock.unlock()
+
+            entered.signal()
+            if isFirst {
+                // Bounded so a failed expectation upstream cannot park the thread forever.
+                _ = release.wait(timeout: .now() + .seconds(10))
+            }
+
+            lock.lock()
+            storage.append(value)
+            lock.unlock()
+        }
+
+        /// Waits for one more caller to reach `receive`.
+        ///
+        /// - Parameter timeout: How long to wait.
+        /// - Returns: `true` when a caller entered within the timeout, `false` on timeout.
+        func waitForNextEntry(timeout: DispatchTimeInterval) -> Bool {
+            entered.wait(timeout: .now() + timeout) == .success
+        }
+
+        /// Lets the parked caller proceed.
+        func releaseFirst() {
+            release.signal()
+        }
+
+        var values: [Float] {
+            lock.lock()
+            defer { lock.unlock() }
+            return storage
+        }
+    }
+
     /// Builds a minimal `CMSampleBuffer` carrying only timing information.
     ///
     /// `ProgressSink` admission is driven by the presentation end, so the payload is
@@ -170,6 +225,48 @@ final class MovieWriterCustomProgressTests: XCTestCase {
         // backward steps; each of the remaining advances by at least 0.002 and is kept.
         let emitted = recorder.values
         XCTAssertEqual(emitted, [0.10, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45])
+        for pair in zip(emitted, emitted.dropFirst()) {
+            XCTAssertLessThan(pair.0, pair.1)
+        }
+    }
+
+    func testProgressSinkKeepsOrderWhenTwoThreadsPublishConcurrently() throws {
+        // The serial test above feeds a pre-arranged interleave, so it cannot tell a sink
+        // that admits and emits under one lock from one that does not. This one forces the
+        // two publishers to overlap and asserts where the second one stops.
+        let recorder = GatedProgressDestination()
+        let sink = ProgressSink()
+        sink.install(recorder)
+
+        // Publisher A publishes 0.2 and parks inside `receive`, still holding the sink lock
+        // in a correct implementation. Publisher B then publishes 0.3 concurrently.
+        let firstFinished = expectation(description: "publisher A returned")
+        let secondFinished = expectation(description: "publisher B returned")
+        let first = Thread {
+            sink.publish(0.2)
+            firstFinished.fulfill()
+        }
+        let second = Thread {
+            sink.publish(0.3)
+            secondFinished.fulfill()
+        }
+        first.start()
+        XCTAssertTrue(recorder.waitForNextEntry(timeout: .seconds(10)),
+                      "publisher A never reached the destination")
+        second.start()
+
+        // Admission and the high-water-mark update happen under the lock, so B cannot get
+        // past them until A returns from `receive` and this wait must expire. If it succeeds
+        // instead, B was admitted against the mark from before A emitted, which is the defect.
+        let overlapped = recorder.waitForNextEntry(timeout: .milliseconds(300))
+        recorder.releaseFirst()
+
+        wait(for: [firstFinished, secondFinished], timeout: 10.0)
+
+        let emitted = recorder.values
+        XCTAssertFalse(overlapped,
+                       "both publishers reached the destination at once, so admission and emission are not in one critical section")
+        XCTAssertEqual(emitted, [0.2, 0.3])
         for pair in zip(emitted, emitted.dropFirst()) {
             XCTAssertLessThan(pair.0, pair.1)
         }

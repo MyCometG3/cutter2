@@ -169,20 +169,20 @@ final class ProgressSink: @unchecked Sendable {
     ///
     /// ## Why `isRepresentable` is checked first
     /// The delta comparison cannot reject every invalid value, so both entry points check
-    /// `isRepresentable` before anything else. Four cases get through otherwise:
+    /// `isRepresentable` before anything else. Three kinds get through the delta gate:
     ///
-    /// - **`NaN`** is rejected by the comparison, because every comparison against it is
-    ///   false.
-    /// - **`±inf` is accepted**, since `inf - (-inf)` is `inf`, which satisfies the gate.
-    ///   `CMTime.positiveInfinity` survives `MovieWriter.presentationEnd(of:)` when the
-    ///   *presentation timestamp* is infinite (the duration branch is already excluded by
-    ///   `CMTIME_IS_NUMERIC`).
-    /// - **Negative values are accepted**, because `lastEmitted` starts at `-infinity` and
-    ///   `-0.5 - (-inf)` is `+inf`. A clip whose first sample sits before
-    ///   `internalMovie.range.start` therefore reported negative progress.
-    /// - **Values above `1.0` are accepted**, because they simply advance the mark.
+    /// - **Negative values**, because `lastEmitted` starts at `-infinity` and
+    ///   `-0.5 - (-inf)` is `+inf`, which satisfies `>= minimumDelta`. A clip whose first
+    ///   sample sits before `internalMovie.range.start` therefore reported negative progress.
+    /// - **Values above `1.0`**, because they simply advance the mark.
     ///   `MovieWriter.progress` deliberately does not clamp, and a sample that ends after
     ///   the movie's own range end is ordinary rather than malformed.
+    /// - **`±inf`**, for the same arithmetic reason. `CMTime.positiveInfinity` survives
+    ///   `MovieWriter.presentationEnd(of:)` when the *presentation timestamp* is infinite
+    ///   (the duration branch is already excluded by `CMTIME_IS_NUMERIC`).
+    ///
+    /// `NaN` never reaches this point: it is not a delta-gate escape, because every
+    /// comparison against it is false. It is rejected by `isRepresentable` like the rest.
     ///
     /// `Document+Export` turns each emitted value into `Int64(value * 100)` for
     /// `NSProgress.completedUnitCount`, so an out-of-range value either reports nonsense
@@ -209,10 +209,16 @@ final class ProgressSink: @unchecked Sendable {
 
     /// Whether `value` is usable as a progress value: finite and within `0.0...1.0`.
     ///
-    /// Both halves are needed. `isFinite` alone lets `inf` through, because the delta
-    /// comparison accepts it, and the range check alone is not total either: `NaN`
-    /// compares false against every bound, so it would pass a naive
-    /// `0.0...1.0 ~= value` test.
+    /// The bounds are what actually reject bad values. Measured: `value >= 0.0 &&
+    /// value <= 1.0` already rejects every invalid case — `NaN` (both comparisons false),
+    /// `±inf` (`-inf < 0`, `+inf > 1`), and the finite out-of-range values — so
+    /// `isFinite` is redundant for correctness.
+    ///
+    /// It is kept because it states the invariant in the code rather than leaving a reader
+    /// to infer it from IEEE-754 comparison behaviour, and because it rejects the non-finite
+    /// cases before the bounds are evaluated. Nothing depends on the difference, so
+    /// `isRepresentable` may be simplified to the two comparisons without changing which
+    /// values are admitted.
     ///
     /// - Parameter value: The candidate value.
     /// - Returns: `true` when `value` may be emitted.

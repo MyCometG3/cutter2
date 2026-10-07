@@ -128,6 +128,70 @@ final class DocumentTests: XCTestCase {
         }
     }
     
+    // MARK: - Progress reporting (terminal state)
+    
+    func testFinalizeProgressSetsExactTerminalState() throws {
+        let document = Document()
+        let indicator = NSProgressIndicator()
+        document.progressIndicator = indicator
+        // A value that exponential smoothing could never reach: updateProgress converges
+        // towards 1.0 without ever arriving there.
+        document.lastReportedProgress = 0.42
+
+        document.finalizeProgress(1.0)
+
+        XCTAssertEqual(document.lastReportedProgress, 1.0)
+        XCTAssertEqual(indicator.doubleValue, 100.0)
+    }
+    
+    func testUpdateProgressNeverLowersReportedProgress() throws {
+        let document = Document()
+        let indicator = NSProgressIndicator()
+        document.progressIndicator = indicator
+        document.finalizeProgress(1.0)
+
+        // `finalizeProgress` stamps `lastUpdateAt` with the current time, so a call that
+        // follows immediately is dropped by the 100 ms throttle before it ever reaches
+        // the smoothing step. Backdate the stamp so the update is admitted and the clamp
+        // is actually exercised.
+        document.lastUpdateAt = 1
+
+        document.updateProgress(0.5)
+
+        XCTAssertEqual(document.lastReportedProgress, 1.0)
+        XCTAssertEqual(indicator.doubleValue, 100.0)
+    }
+
+    func testApplyProgressValueNeverLowersCompletedUnitCount() throws {
+        // `NSProgress.completedUnitCount` is a separate copy of the progress state from
+        // the rendered bar, so the clamp in `updateProgress` does not cover it. A buffered
+        // iteration landing after a successful operation must not drag 100% back down.
+        let progress = Progress(totalUnitCount: 100)
+
+        Document.applyProgressValue(0.5, to: progress)
+        XCTAssertEqual(progress.completedUnitCount, 50)
+
+        // The terminal state a successful operation writes.
+        progress.completedUnitCount = progress.totalUnitCount
+        XCTAssertEqual(progress.completedUnitCount, 100)
+
+        Document.applyProgressValue(0.5, to: progress)
+        XCTAssertEqual(progress.completedUnitCount, 100, "a late buffered update must not regress a finished operation")
+
+        Document.applyProgressValue(0.8, to: progress)
+        XCTAssertEqual(progress.completedUnitCount, 100)
+    }
+
+    func testApplyProgressValueAdvancesMonotonically() throws {
+        let progress = Progress(totalUnitCount: 100)
+
+        for value in [Float(0.0), 0.25, 0.25, 0.5, 0.4, 1.0] as [Float] {
+            Document.applyProgressValue(value, to: progress)
+        }
+
+        XCTAssertEqual(progress.completedUnitCount, 100)
+    }
+    
     // MARK: - DocumentError Tests
     
     func testDocumentErrorTypes() throws {

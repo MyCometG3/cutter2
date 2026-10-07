@@ -43,7 +43,7 @@ extension MovieWriter {
             let progressValue = Float(progress.fractionCompleted)
             writeProgress = progressValue
             exportSessionStatus = .exporting
-            progressContinuation?.yield(progressValue)
+            progressSink.publishUngated(progressValue)
         @unknown default:
             exportSessionStatus = .unknown
         }
@@ -120,7 +120,7 @@ extension MovieWriter {
                 if Task.isCancelled {
                     break
                 }
-                await self.progressContinuation?.yield(progress)
+                self.progressSink.publishUngated(progress)
                 
                 // Adaptive polling: slow down if no progress change
                 let interval: TimeInterval

@@ -54,8 +54,12 @@ class MovieMutatorBase: NSObject {
     /// Callback used to restore user interaction after an asynchronous operation.
     public var unblockUserInteraction: (@Sendable () -> Void)? = nil
     
-    /// Progress stream continuation for asynchronous progress reporting.
-    internal var progressContinuation: AsyncStream<Float>.Continuation?
+    /// Shared progress destination for asynchronous progress reporting.
+    ///
+    /// Owned here (one per mutator) and handed to every `MovieWriter` by reference, so every
+    /// writer resolves whichever destination is currently installed rather than holding a
+    /// snapshot of one that a later `progressStream()` call would supersede.
+    internal let progressSink = ProgressSink()
     
     /// The current movie writer used to cancel an export or write operation.
     public var currentMovieWriter: MovieWriter? = nil

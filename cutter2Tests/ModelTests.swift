@@ -111,7 +111,7 @@ final class ModelTests: XCTestCase {
     
     func testSampleBufferChannelDelegateProtocolExists() throws {
         // Verify that SampleBufferChannelDelegate protocol is defined
-        // Protocol requires: didRead(from:buffer:)
+        // Protocol requires: didRead(buffer:)
         XCTAssertTrue(true, "SampleBufferChannelDelegate protocol is defined")
     }
     
@@ -391,7 +391,7 @@ final class ModelTests: XCTestCase {
     func testExportSessionProgressInfoStatusStringFormat() async throws {
         let params = MovieWriterParams(movie: AVMutableMovie(),
                                        unblockUserInteraction: nil,
-                                       progressContinuation: nil)
+                                       progressSink: ProgressSink())
         let writer = MovieWriter(params: params)
 
         let expected: [AVAssetExportSession.Status: String] = [

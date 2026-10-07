@@ -10,7 +10,7 @@ import Cocoa
 import os.log
 
 @main @MainActor
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, SecurityScopedBookmarkRegistering {
     
     /* ============================================ */
     // MARK: - Private properties/constants
@@ -79,16 +79,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     /// Register url as bookmark
     ///
+    /// A no-op when an equivalent entry already exists. The duplicate check uses the same
+    /// comparison as everything else that reasons about registry contents, so an entry
+    /// stored under a non-normalized spelling still counts as the same target.
+    ///
     /// - Parameter newURL: url to register as bookmark
     public func addBookmark(for newURL: URL) {
-        // Check duplicate
-        var found: Bool = false
+        // Check duplicate. `validateBookmarks` invokes the block once per retained entry,
+        // so collecting those urls and asking `BookmarkStore` reproduces the registry's
+        // view while keeping the path comparison in one place.
+        var registered: [URL] = []
         validateBookmarks(false, using: {(url) in
-            if url.path == newURL.path {
-                found = true
-            }
+            registered.append(url)
         })
-        if found {
+        if BookmarkStore.contains(url: newURL, among: registered) {
             return
         }
         

@@ -264,22 +264,47 @@ extension Document {
             try throwError(.incompatibleFileType, reason: reason)
         }
         
-        // Sandbox support - keep source document security scope bookmark
-        if saveOperation == .saveAsOperation, let srcURL = self.fileURL {
-            Task { @Sendable @MainActor [typeName, srcURL, weak self] in // @escaping
-                guard let self else { return }
-                let fileType: AVFileType = AVFileType.init(rawValue: typeName)
-                guard fileType == .mov else { return }
-                
-                guard let accessoryVC = self.accessoryVC else { return }
-                let saveAsRefMov: Bool = (accessoryVC.selfContained == false)
-                guard saveAsRefMov else { return }
-                
-                // SaveAs reference movie - Need to keep readonly access to original
-                guard let app = NSApp.delegate as? AppDelegate else { return }
-                app.addBookmark(for: srcURL)
-            }
-        }
+        // Sandbox support - a Save As that writes a reference movie keeps pointing at
+        // the source media, so the source url needs a security-scoped bookmark.
+        //
+        // Only the decision is made here: it depends on the accessory view state this
+        // method just captured, so it has to be read synchronously. The registration
+        // itself is deferred to `writeSafely` and runs only after the write succeeded,
+        // so a failed or cancelled Save As cannot leave a permission behind.
+        //
+        // Replacing the previous detached `Task` removes two defects at once: the
+        // unconditional registration on failure (M31-a) and the task racing with the
+        // failure it would have to be rolled back from (M31-b).
+        self.pendingSourceBookmark = Self.bookmarkSourceTarget(typeName: typeName,
+                                                               isSaveAs: saveOperation == .saveAsOperation,
+                                                               selfContained: self.accessoryVC?.selfContained,
+                                                               sourceURL: self.fileURL)
+    }
+
+    /// Whether a Save As must register a security-scoped bookmark for the source movie.
+    ///
+    /// Pure so the decision matrix is unit testable without accessory view or document
+    /// state.
+    ///
+    /// - Parameters:
+    ///   - typeName: UTI of the Save As target.
+    ///   - isSaveAs: Whether the operation is a Save As.
+    ///   - selfContained: The accessory view's self-contained selection, `nil` when no
+    ///     accessory view is installed.
+    ///   - sourceURL: The current document url.
+    /// - Returns: The url to register, or `nil` when no bookmark is required.
+    internal static func bookmarkSourceTarget(typeName: String,
+                                              isSaveAs: Bool,
+                                              selfContained: Bool?,
+                                              sourceURL: URL?) -> URL? {
+        guard isSaveAs else { return nil }
+        guard let sourceURL else { return nil }
+        guard AVFileType(rawValue: typeName) == .mov else { return nil }
+        // nil means no accessory view is installed. Preserve the previous behaviour and
+        // skip the registration in that case: a Save As always installs one, so a
+        // missing view means this is not a reference-movie save.
+        guard selfContained == false else { return nil }
+        return sourceURL
     }
     
     override nonisolated func writeSafely(to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType) throws {
@@ -287,6 +312,10 @@ extension Document {
         // Unblock main thread first to work w/ MainActor
         self.unblockUserInteraction()
         let originalFileURL = self.fileURL
+        
+        // Drop any target left over from a previous Save As, so a failure cannot commit
+        // a stale registration.
+        ActorUtilities.performSyncOnMainActor { self.pendingSourceBookmark = nil }
         
         do {
             // Prepare to save
@@ -297,6 +326,9 @@ extension Document {
             // Trigger actual write operation (saveTo, save/saveAs)
             try super.writeSafely(to: url, ofType: typeName, for: saveOperation)
         } catch {
+            // Clear unconditionally on the failure path so the "nil once the operation
+            // finished" invariant holds on every exit.
+            ActorUtilities.performSyncOnMainActor { self.pendingSourceBookmark = nil }
             if !Self.isUserCancellationError(error as NSError) {
                 ActorUtilities.performSyncOnMainActor {
                     showErrorSheet(error)
@@ -305,12 +337,41 @@ extension Document {
             throw error // rethrow to abort write operation
         }
         
+        // The write succeeded. `preparation(to:ofType:for:)` throws `.overwriteSelfContainedWithReference`
+        // before reaching the bookmark decision for the combinations that cannot produce a
+        // reference movie, so getting here means the source movie really is referenced by
+        // the freshly written file and the bookmark is justified.
+        //
+        // Both the read-and-clear of the pending target and the registration need the
+        // main actor; `URL?` is Sendable, which is what the nonisolated caller is
+        // allowed to carry across the hop.
+        let bookmarkTarget: URL? = ActorUtilities.performSyncOnMainActor { () -> URL? in
+            let target: URL? = self.pendingSourceBookmark
+            self.pendingSourceBookmark = nil
+            return target
+        }
+        ActorUtilities.performSyncOnMainActor {
+            self.commitSourceBookmark(bookmarkTarget)
+        }
+
         // Refresh internal movie (to sync selfcontained <> referece movie change)
         if saveOperation == .saveAsOperation {
             let refreshed = ActorUtilities.performSyncOnMainActor {
                 refreshMutator(from: url)
             }
             if !refreshed {
+                // The registration above is deliberately **not** revoked. `super.writeSafely`
+                // has already committed the reference movie at `url`, and nothing in this
+                // branch removes that file — so it survives on disk still pointing at the
+                // source media. Revoking the source permission here would leave a file that
+                // can never resolve its reference again after a relaunch, which is worse than
+                // keeping one grant: the entry is justified by a file that exists, and
+                // M-31's guarantee (no grant from a *failed* Save As) is already provided by
+                // registering only after the write succeeded.
+                //
+                // Rolling back the output instead is not an option: `url` may have
+                // overwritten a pre-existing document, and deleting it would destroy data
+                // the user still has.
                 ActorUtilities.performSyncOnMainActor {
                     self.fileURL = originalFileURL
                 }
@@ -420,6 +481,22 @@ extension Document {
         return true
     }
     
+    /// Registers `url` after a successful Save As.
+    ///
+    /// Extracted from `writeSafely` so the policy is unit testable; `writeSafely` itself
+    /// is `nonisolated` and drives AppKit document machinery that a unit test cannot
+    /// stand up.
+    ///
+    /// Called only once the write has succeeded, and never revoked afterwards: see the
+    /// `refreshMutator` failure branch for why the committed output keeps needing the
+    /// source permission.
+    ///
+    /// - Parameter url: The url decided by `preparation`, or `nil` when none is needed.
+    internal func commitSourceBookmark(_ url: URL?) {
+        guard let url, let registry = self.bookmarkRegistry else { return }
+        registry.addBookmark(for: url)
+    }
+
     private func refreshMutator(from url: URL) -> Bool {
         
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)

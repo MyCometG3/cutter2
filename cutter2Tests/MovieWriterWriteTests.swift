@@ -16,7 +16,7 @@ final class MovieWriterWriteTests: XCTestCase {
         return MovieWriter(params: MovieWriterParams(
             movie: AVMutableMovie(),
             unblockUserInteraction: nil,
-            progressContinuation: nil
+            progressSink: ProgressSink()
         ))
     }
 

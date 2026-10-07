@@ -50,9 +50,10 @@ SCRIPT = Path("scripts/test.sh")
 # e.g. "(0 tests, fixture writer)".
 TREE_LISTING = re.compile(r"[├└]──\s*([A-Za-z0-9_]+\.swift)[^\n]*?\((\d+)\s+tests?[^)]*\)")
 INLINE_LISTING = re.compile(r"`([A-Za-z0-9_]+\.swift)`\s*\((\d+)\s+tests?[^)]*\)")
-# | **Label** | `File.swift` … | 19 + 5 | note |
+# | **Label** | `File.swift` ... | 19 + 5 | note |
+#   groups: label, files cell, numbers cell, note cell
 COVERAGE_ROW = re.compile(
-    r"^\|\s*\*\*[^*]+\*\*\s*\|([^|]*)\|\s*([^|]*)\|\s*([^|]*)\|", re.M
+    r"^\|\s*\*\*([^*]+)\*\*\s*\|([^|]*)\|\s*([^|]*)\|\s*([^|]*)\|", re.M
 )
 TOTAL_CLAIM = re.compile(
     r"(\d+) files?[:\s][^.\n]{0,40}?(\d+) (?:test source files?|test \+ 1 helper)"
@@ -87,22 +88,39 @@ def occurrences(pattern: str, text: str) -> list[tuple[str, int]]:
     return [(m.group(1), int(m.group(2))) for m in re.finditer(pattern, text)]
 
 
-def coverage_rows(text: str) -> list[tuple[str, int]]:
-    """Every claim from the `| **Label** | files | numbers | note |` tables.
+def coverage_rows(text: str) -> tuple[list[tuple[str, int]], list[tuple[str, list[str], list[int]]], int]:
+    """Read the `| **Label** | files | numbers | note |` tables.
 
-    A row may name several files and give several counts, as the seek-sequencing row
-    does (`19 + 5`), so the two lists are zipped rather than assumed to be single. A row
-    whose arity does not agree is prose (`the Overall row`), not a per-file claim, and is
-    skipped — but it is also counted by `table_rows_skipped` so the gap stays visible.
+    Returns `(claims, unreadable, prose_rows)`:
+
+    - `claims` — every `(filename, count)` pair, all occurrences.
+    - `unreadable` — rows that **name** test files but whose counts cannot be zipped to
+      them. These are per-file claims that simply cannot be checked, so the caller reports
+      them rather than dropping them: a row naming two files and one count would otherwise
+      hide the second file's claim entirely.
+    - `prose_rows` — rows naming no test file at all (`Application`, `Models`, the
+      `Overall` total, the coverage-gap tables). Not claims, so not an error; counted so
+      that "this row was skipped" is never confused with "this row was checked".
+
+    A row may legitimately name several files and give several counts, as the
+    seek-sequencing row does (`19 + 5`), so the lists are zipped rather than assumed to
+    be single.
     """
     claims: list[tuple[str, int]] = []
+    unreadable: list[tuple[str, list[str], list[int]]] = []
+    prose_rows = 0
     for m in COVERAGE_ROW.finditer(text):
-        names = re.findall(r"([A-Za-z0-9_]+\.swift)", m.group(1))
-        numbers = [int(x) for x in re.findall(r"\d+", m.group(2).replace("**", ""))]
-        if not names or len(names) != len(numbers):
+        label = m.group(1).strip()
+        names = re.findall(r"([A-Za-z0-9_]+\.swift)", m.group(2))
+        numbers = [int(x) for x in re.findall(r"\d+", m.group(3).replace("**", ""))]
+        if not names:
+            prose_rows += 1
+            continue
+        if len(names) != len(numbers):
+            unreadable.append((label, names, numbers))
             continue
         claims.extend(zip(names, numbers))
-    return claims
+    return claims, unreadable, prose_rows
 
 
 def conflicts(claims: list[tuple[str, int]]) -> dict[str, list[int]]:
@@ -147,6 +165,9 @@ def main() -> int:
     print(f"  helper {HELPER}: {actual[HELPER]} methods")
     print()
 
+    prose_rows = 0
+    unreadable_total = 0
+
     # ---- 1. per-file listings, all three notations -------------------------
     for doc in DOCS:
         path = Path(doc)
@@ -154,10 +175,19 @@ def main() -> int:
             problems.append(f"{doc}: missing")
             continue
         text = path.read_text(encoding="utf-8")
+        tree_claims = occurrences(TREE_LISTING.pattern, text)
+        inline_claims = occurrences(INLINE_LISTING.pattern, text)
+        table_claims, table_unreadable, table_prose = coverage_rows(text)
+        prose_rows += table_prose
+        unreadable_total += len(table_unreadable)
+        for label, names, numbers in table_unreadable:
+            problems.append(
+                f"{doc} [table]: row '{label}' names {names} but gives {numbers} counts, "
+                f"so those per-file claims cannot be checked")
         sets = {
-            "tree": occurrences(TREE_LISTING.pattern, text),
-            "inline": occurrences(INLINE_LISTING.pattern, text),
-            "table": coverage_rows(text),
+            "tree": tree_claims,
+            "inline": inline_claims,
+            "table": table_claims,
         }
         # The tree listings enumerate the zero-method helper (it is a directory entry);
         # the inline and coverage notations list test *sources* only. So the expected
@@ -237,6 +267,10 @@ def main() -> int:
     print("not asserted (counted only, so the gap is visible):")
     print(f"  dated runtime results in the documents : {dated}")
     print("    historical records; their counts belong to the run they name, not to HEAD")
+    print(f"  coverage-table rows naming no test file: {prose_rows}")
+    print("    the layer, Models/Views and coverage-gap tables; they carry no per-file count")
+    print(f"  coverage-table rows with unreadable counts: {unreadable_total}")
+    print("    would be reported as a failure rather than skipped; 0 on this tree")
     print("  per-file totals outside cutter2Tests/  : 0 checked — no other test suite is declared")
 
     print()

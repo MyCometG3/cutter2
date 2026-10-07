@@ -343,30 +343,35 @@ extension Document {
         // the freshly written file and the bookmark is justified.
         //
         // Both the read-and-clear of the pending target and the registration need the
-        // main actor; the returned `Bool` is Sendable, which is what the nonisolated
-        // caller is allowed to carry across the hop.
+        // main actor; `URL?` is Sendable, which is what the nonisolated caller is
+        // allowed to carry across the hop.
         let bookmarkTarget: URL? = ActorUtilities.performSyncOnMainActor { () -> URL? in
             let target: URL? = self.pendingSourceBookmark
             self.pendingSourceBookmark = nil
             return target
         }
-        let bookmarkRegistered: Bool = ActorUtilities.performSyncOnMainActor {
+        ActorUtilities.performSyncOnMainActor {
             self.commitSourceBookmark(bookmarkTarget)
         }
-        
+
         // Refresh internal movie (to sync selfcontained <> referece movie change)
         if saveOperation == .saveAsOperation {
             let refreshed = ActorUtilities.performSyncOnMainActor {
                 refreshMutator(from: url)
             }
             if !refreshed {
-                // The document keeps pointing at the original url (`self.fileURL =
-                // originalFileURL` below), so the bookmark registered above is not
-                // needed. `rollbackSourceBookmark` ignores `registered == false`, so an
-                // entry that already existed before this operation survives.
-                ActorUtilities.performSyncOnMainActor {
-                    self.rollbackSourceBookmark(bookmarkTarget, registered: bookmarkRegistered)
-                }
+                // The registration above is deliberately **not** revoked. `super.writeSafely`
+                // has already committed the reference movie at `url`, and nothing in this
+                // branch removes that file — so it survives on disk still pointing at the
+                // source media. Revoking the source permission here would leave a file that
+                // can never resolve its reference again after a relaunch, which is worse than
+                // keeping one grant: the entry is justified by a file that exists, and
+                // M-31's guarantee (no grant from a *failed* Save As) is already provided by
+                // registering only after the write succeeded.
+                //
+                // Rolling back the output instead is not an option: `url` may have
+                // overwritten a pre-existing document, and deleting it would destroy data
+                // the user still has.
                 ActorUtilities.performSyncOnMainActor {
                     self.fileURL = originalFileURL
                 }
@@ -478,30 +483,18 @@ extension Document {
     
     /// Registers `url` after a successful Save As.
     ///
-    /// Extracted from `writeSafely` so the commit/rollback policy is unit testable;
-    /// `writeSafely` itself is `nonisolated` and drives AppKit document machinery that
-    /// a unit test cannot stand up.
+    /// Extracted from `writeSafely` so the policy is unit testable; `writeSafely` itself
+    /// is `nonisolated` and drives AppKit document machinery that a unit test cannot
+    /// stand up.
+    ///
+    /// Called only once the write has succeeded, and never revoked afterwards: see the
+    /// `refreshMutator` failure branch for why the committed output keeps needing the
+    /// source permission.
     ///
     /// - Parameter url: The url decided by `preparation`, or `nil` when none is needed.
-    /// - Returns: `true` when this call created a new registry entry.
-    @discardableResult
-    internal func commitSourceBookmark(_ url: URL?) -> Bool {
-        guard let url, let registry = self.bookmarkRegistry else { return false }
-        return registry.addBookmark(for: url)
-    }
-    
-    /// Revokes a registration made by `commitSourceBookmark`.
-    ///
-    /// No-op unless `registered` is `true`. `addBookmark` returns `false` when an
-    /// equivalent entry already existed, and removing that one would revoke a
-    /// permission granted in an earlier session.
-    ///
-    /// - Parameters:
-    ///   - url: The url passed to `commitSourceBookmark`.
-    ///   - registered: The value `commitSourceBookmark` returned.
-    internal func rollbackSourceBookmark(_ url: URL?, registered: Bool) {
-        guard registered, let url else { return }
-        self.bookmarkRegistry?.removeBookmark(for: url)
+    internal func commitSourceBookmark(_ url: URL?) {
+        guard let url, let registry = self.bookmarkRegistry else { return }
+        registry.addBookmark(for: url)
     }
 
     private func refreshMutator(from url: URL) -> Bool {

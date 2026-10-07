@@ -10,41 +10,28 @@ import Foundation
 /// Abstraction over the security-scoped bookmark registry.
 ///
 /// `AppDelegate` is the production implementation. `Document` reaches it through this
-/// protocol so the Save As commit/rollback policy is unit testable without a live
+/// protocol so the Save As registration policy is unit testable without a live
 /// `NSApplication`.
 @MainActor
 protocol SecurityScopedBookmarkRegistering: AnyObject {
     /// Registers `url` unless an equivalent entry already exists.
     ///
     /// - Parameter url: The url to register.
-    /// - Returns: `true` when a new entry was created by this call, `false` when an
-    ///   equivalent entry already existed or bookmark creation failed.
-    @discardableResult
-    func addBookmark(for url: URL) -> Bool
-
-    /// Removes the entry registered for `url`, if any.
-    ///
-    /// - Parameter url: The url to unregister.
-    func removeBookmark(for url: URL)
+    func addBookmark(for url: URL)
 }
 
-/// Pure helpers over the stored security-scoped bookmark array.
+/// Pure helpers over the security-scoped bookmark registry.
 ///
-/// Extracted from `AppDelegate` so the retention policy can be unit tested without
-/// sandbox entitlements and without mutating the developer's real `UserDefaults`.
+/// Extracted from `AppDelegate` so the duplicate-detection policy can be unit tested
+/// without sandbox entitlements and without mutating the developer's real `UserDefaults`.
 enum BookmarkStore {
 
     /// Whether two urls denote the same bookmark target.
     ///
-    /// Both sides are standardized so the duplicate check in `AppDelegate.addBookmark(for:)`
-    /// and the removal in `removing(url:from:resolving:)` can never disagree. That matters
-    /// because `addBookmark` reports whether *this* call created the entry, and
-    /// `removeBookmark` then has to remove exactly that entry: if the two compared paths
-    /// differently, a redundant `addBookmark` could report `true` while the matching
-    /// `removeBookmark` also dropped an entry created by an earlier session.
-    ///
-    /// Standardizing collapses redundant separators and `..` segments. It does **not**
-    /// resolve macOS firmlinks, so `/tmp/x.mov` and `/private/tmp/x.mov` stay distinct.
+    /// Both sides are standardized, so a redundant separator or a `..` segment cannot make
+    /// one spelling of a path look like a different file. Standardizing does **not** resolve
+    /// macOS firmlinks, so `/tmp/x.mov` and `/private/tmp/x.mov` stay distinct; that limit is
+    /// pinned by a test.
     ///
     /// - Parameters:
     ///   - lhs: One candidate url.
@@ -57,11 +44,9 @@ enum BookmarkStore {
     /// Whether any already-registered url denotes `url`.
     ///
     /// This is the duplicate check `AppDelegate.addBookmark(for:)` performs, kept as a pure
-    /// function over the urls `validateBookmarks` resolves so it can be tested against
-    /// `removing(url:from:resolving:)` on the same inputs. The two must agree: whatever this
-    /// reports `true` for, a subsequent `removeBookmark` will also match. Otherwise a
-    /// redundant `addBookmark` returns `true`, and the rollback deletes an entry an earlier
-    /// session created.
+    /// function over the urls `validateBookmarks` resolves. `addBookmark` itself needs a
+    /// live `NSApplication` and the real `UserDefaults`, so extracting the predicate is what
+    /// makes the policy testable at all.
     ///
     /// - Parameters:
     ///   - url: The url about to be registered.
@@ -69,31 +54,5 @@ enum BookmarkStore {
     /// - Returns: `true` when an equivalent entry already exists.
     static func contains(url: URL, among registered: [URL]) -> Bool {
         registered.contains { denotesSameTarget($0, url) }
-    }
-
-    /// Removes every stored entry that resolves to `url`.
-    ///
-    /// Entries whose bookmark data cannot be resolved are retained, leaving their
-    /// disposal to `AppDelegate.validateBookmarks` (`AppDelegate.swift:166-186`).
-    ///
-    /// - Parameters:
-    ///   - url: The url whose entries should be removed.
-    ///   - items: The stored bookmark entries.
-    ///   - resolve: Resolves one entry to its url, or `nil` when unresolvable.
-    /// - Returns: The retained entries, and whether any entry was removed.
-    static func removing(url: URL,
-                         from items: [Data],
-                         resolving resolve: (Data) -> URL?) -> (retained: [Data], removed: Bool) {
-        var retained: [Data] = []
-        retained.reserveCapacity(items.count)
-        var removed: Bool = false
-        for item in items {
-            if let resolved = resolve(item), denotesSameTarget(resolved, url) {
-                removed = true
-                continue
-            }
-            retained.append(item)
-        }
-        return (retained, removed)
     }
 }

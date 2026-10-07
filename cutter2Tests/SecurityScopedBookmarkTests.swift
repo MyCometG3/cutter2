@@ -14,21 +14,14 @@ final class SecurityScopedBookmarkTests: XCTestCase {
 
     // MARK: - Helpers
 
-    /// Records bookmark registry calls so the Save As commit/rollback policy is
-    /// observable without a live `NSApplication` (M-31).
+    /// Records bookmark registry calls so the Save As registration policy is observable
+    /// without a live `NSApplication` (M-31).
     @MainActor
     private final class BookmarkRegistryRecorder: SecurityScopedBookmarkRegistering {
-        private(set) var calls: [String] = []
-        var addResult: Bool = true
+        private(set) var registered: [URL] = []
 
-        @discardableResult
-        func addBookmark(for url: URL) -> Bool {
-            calls.append("add:\(url.lastPathComponent)")
-            return addResult
-        }
-
-        func removeBookmark(for url: URL) {
-            calls.append("remove:\(url.lastPathComponent)")
+        func addBookmark(for url: URL) {
+            registered.append(url)
         }
     }
 
@@ -36,92 +29,37 @@ final class SecurityScopedBookmarkTests: XCTestCase {
         return Document()
     }
 
-    // MARK: - BookmarkStore.removing
+    // MARK: - BookmarkStore duplicate detection
 
-    func testBookmarkStoreRemovesEntryResolvingToTarget() throws {
+    func testBookmarkStoreContainsFindsEquivalentTargetAmongNonNormalizedSpellings() throws {
+        // `standardizedFileURL` collapses redundant separators and `..` segments, so an
+        // entry registered under a non-normalized spelling must still count as the same
+        // target. Without this, a second Save As registers a duplicate of the same file.
         let target = URL(fileURLWithPath: "/tmp/target.mov")
-        let items: [Data] = [Data([0x01]), Data([0x02]), Data([0x03])]
+        let spellings: [URL] = [
+            URL(fileURLWithPath: "/tmp/sub/../target.mov"),
+            URL(fileURLWithPath: "/tmp//target.mov"),
+        ]
 
-        let outcome = BookmarkStore.removing(url: target, from: items) { data in
-            switch data.first {
-            case 0x01: return URL(fileURLWithPath: "/tmp/other.mov")
-            case 0x02: return URL(fileURLWithPath: "/tmp/target.mov")
-            default: return URL(fileURLWithPath: "/tmp/third.mov")
-            }
+        for spelling in spellings {
+            XCTAssertNotEqual(spelling.path, target.path,
+                              "precondition: the raw paths differ, so only standardization can match them")
+            XCTAssertTrue(BookmarkStore.contains(url: target, among: [spelling]))
+            XCTAssertTrue(BookmarkStore.contains(url: spelling, among: [target]),
+                          "the comparison must be symmetric")
         }
-
-        XCTAssertTrue(outcome.removed)
-        XCTAssertEqual(outcome.retained, [Data([0x01]), Data([0x03])])
     }
 
-    func testBookmarkStoreRetainsEntriesForOtherUrls() throws {
+    func testBookmarkStoreContainsIgnoresOtherTargets() throws {
         let target = URL(fileURLWithPath: "/tmp/target.mov")
-        let first = Data([0x01])
-        let second = Data([0x02])
-        let items: [Data] = [first, second]
+        let other: [URL] = [
+            URL(fileURLWithPath: "/tmp/other.mov"),
+            URL(fileURLWithPath: "/tmp/target.mp4"),
+        ]
 
-        let outcome = BookmarkStore.removing(url: target, from: items) { _ in
-            URL(fileURLWithPath: "/tmp/unrelated.mov")
-        }
-
-        XCTAssertFalse(outcome.removed)
-        XCTAssertEqual(outcome.retained, items)
-    }
-
-    func testBookmarkStoreRetainsUnresolvableEntries() throws {
-        let target = URL(fileURLWithPath: "/tmp/target.mov")
-        let resolvable = Data([0x01])
-        let unresolvable = Data([0x02])
-        let items: [Data] = [unresolvable, resolvable]
-
-        let outcome = BookmarkStore.removing(url: target, from: items) { data in
-            data == resolvable ? URL(fileURLWithPath: "/tmp/target.mov") : nil
-        }
-
-        XCTAssertTrue(outcome.removed)
-        XCTAssertEqual(outcome.retained, [unresolvable])
-    }
-
-    func testBookmarkStoreReportsNoRemovalWhenTargetAbsent() throws {
-        let target = URL(fileURLWithPath: "/tmp/target.mov")
-        let items: [Data] = [Data([0x01]), Data([0x02])]
-
-        let outcome = BookmarkStore.removing(url: target, from: items) { _ in
-            URL(fileURLWithPath: "/tmp/unrelated.mov")
-        }
-
-        XCTAssertFalse(outcome.removed)
-        XCTAssertEqual(outcome.retained, items)
-    }
-
-    func testBookmarkStoreDenotesSameTargetAgreesWithRemoval() throws {
-        // `addBookmark` reports whether *this* call created an entry, and `removeBookmark`
-        // then removes on that basis. If the duplicate check and the removal disagreed, a
-        // redundant `addBookmark` could report `true` — because the stored entry's raw path
-        // differs — and the rollback would then delete that older entry too, revoking a
-        // permission an earlier session granted. Both must therefore share one comparison,
-        // so this pins `denotesSameTarget` against `removing` on exactly that input.
-        let target = URL(fileURLWithPath: "/tmp/source.mov")
-        let storedUnderATraversal = URL(fileURLWithPath: "/tmp/sub/../source.mov")
-
-        XCTAssertNotEqual(storedUnderATraversal.path, target.path,
-                          "precondition: the raw paths differ, which is what used to cause the mismatch")
-        XCTAssertTrue(BookmarkStore.denotesSameTarget(storedUnderATraversal, target))
-        XCTAssertTrue(BookmarkStore.denotesSameTarget(target, storedUnderATraversal),
-                      "the comparison must be symmetric")
-
-        let stored = Data([0x01])
-        let outcome = BookmarkStore.removing(url: target, from: [stored]) { _ in
-            storedUnderATraversal
-        }
-        XCTAssertTrue(outcome.removed)
-        XCTAssertTrue(outcome.retained.isEmpty,
-                      "if this entry were not removed, the duplicate check and the removal would have disagreed")
-
-        // The duplicate check the caller actually runs must reach the same verdict, which is
-        // the whole point: `addBookmark` returns `true` only when this is `false`.
-        XCTAssertTrue(BookmarkStore.contains(url: target, among: [storedUnderATraversal]))
-        XCTAssertFalse(BookmarkStore.contains(url: target, among: [URL(fileURLWithPath: "/tmp/other.mov")]))
+        XCTAssertFalse(BookmarkStore.contains(url: target, among: other))
+        XCTAssertFalse(BookmarkStore.contains(url: target, among: []))
+        XCTAssertTrue(BookmarkStore.contains(url: target, among: other + [target]))
     }
 
     func testBookmarkStoreDenotesSameTargetKeepsFirmlinksDistinct() throws {
@@ -133,30 +71,6 @@ final class SecurityScopedBookmarkTests: XCTestCase {
 
         XCTAssertFalse(BookmarkStore.denotesSameTarget(viaTmp, viaPrivateTmp))
         XCTAssertTrue(BookmarkStore.denotesSameTarget(viaTmp, viaTmp))
-    }
-
-    func testBookmarkStoreNormalizesNonNormalizedPaths() throws {
-        // `standardizedFileURL` collapses redundant separators and `..` segments, so a
-        // bookmark stored under a non-normalized spelling still matches its target.
-        //
-        // It deliberately does NOT resolve `/tmp` -> `/private/tmp`: that is a macOS
-        // firmlink, and neither `standardizedFileURL` nor `resolvingSymlinksInPath()`
-        // maps one to the other. Path-spelling differences of that kind are therefore
-        // out of scope here (see the `addBookmark` dedup note in `AppDelegate`).
-        let target = URL(fileURLWithPath: "/tmp/target.mov")
-        let parentTraversal = Data([0x01])
-        let doubledSeparator = Data([0x02])
-        let items: [Data] = [parentTraversal, doubledSeparator]
-
-        let outcome = BookmarkStore.removing(url: target, from: items) { data in
-            if data == parentTraversal {
-                return URL(fileURLWithPath: "/tmp/sub/../target.mov")
-            }
-            return URL(fileURLWithPath: "/tmp//target.mov")
-        }
-
-        XCTAssertTrue(outcome.removed)
-        XCTAssertTrue(outcome.retained.isEmpty)
     }
 
     // MARK: - bookmarkSourceTarget decision matrix
@@ -225,7 +139,7 @@ final class SecurityScopedBookmarkTests: XCTestCase {
         XCTAssertNil(target)
     }
 
-    // MARK: - commit / rollback policy
+    // MARK: - registration policy
 
     func testCommitSourceBookmarkRegistersPendingTarget() throws {
         let document = makeDocument()
@@ -233,48 +147,29 @@ final class SecurityScopedBookmarkTests: XCTestCase {
         document.bookmarkRegistryOverride = recorder
         let source = URL(fileURLWithPath: "/tmp/source.mov")
 
-        let registered = document.commitSourceBookmark(source)
+        document.commitSourceBookmark(source)
 
-        XCTAssertTrue(registered)
-        XCTAssertEqual(recorder.calls, ["add:source.mov"])
+        XCTAssertEqual(recorder.registered, [source])
     }
 
-    func testCommitSourceBookmarkReturnsFalseWhenDeduplicated() throws {
-        let document = makeDocument()
-        let recorder = BookmarkRegistryRecorder()
-        recorder.addResult = false
-        document.bookmarkRegistryOverride = recorder
-        let source = URL(fileURLWithPath: "/tmp/source.mov")
-
-        let registered = document.commitSourceBookmark(source)
-
-        XCTAssertFalse(registered)
-        XCTAssertEqual(recorder.calls, ["add:source.mov"])
-    }
-
-    func testRollbackSourceBookmarkRemovesEntryRegisteredByThisOperation() throws {
+    func testCommitSourceBookmarkSkipsNilTarget() throws {
         let document = makeDocument()
         let recorder = BookmarkRegistryRecorder()
         document.bookmarkRegistryOverride = recorder
-        let source = URL(fileURLWithPath: "/tmp/source.mov")
 
-        document.rollbackSourceBookmark(source, registered: true)
+        // `preparation` yields `nil` for every Save As that is not a reference-movie
+        // write, and for operations that are not a Save As at all.
+        document.commitSourceBookmark(nil)
 
-        XCTAssertEqual(recorder.calls, ["remove:source.mov"])
+        XCTAssertTrue(recorder.registered.isEmpty)
     }
 
-    func testRollbackSourceBookmarkSkipsUnregisteredAndNilTarget() throws {
+    func testCommitSourceBookmarkSkipsWhenNoRegistryIsReachable() throws {
         let document = makeDocument()
-        let recorder = BookmarkRegistryRecorder()
-        document.bookmarkRegistryOverride = recorder
-        let source = URL(fileURLWithPath: "/tmp/source.mov")
+        document.bookmarkRegistryOverride = nil
 
-        // `registered == false` means an equivalent entry already existed, created by an
-        // earlier session. Removing it would revoke a permission this operation never
-        // granted.
-        document.rollbackSourceBookmark(source, registered: false)
-        document.rollbackSourceBookmark(nil, registered: true)
-
-        XCTAssertTrue(recorder.calls.isEmpty)
+        // No override installed, and `NSApp.delegate` is not the AppDelegate under test,
+        // so this must be a no-op rather than a crash.
+        document.commitSourceBookmark(URL(fileURLWithPath: "/tmp/source.mov"))
     }
 }

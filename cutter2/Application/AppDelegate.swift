@@ -84,17 +84,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, SecurityScopedBookmarkRegist
     ///   equivalent entry already existed or bookmark creation failed. Callers that may
     ///   need to roll the registration back (Save As) must roll back only when this
     ///   returns `true`: removing an entry created by an earlier session would revoke a
-    ///   permission the current operation never granted.
+    ///   permission the current operation never granted. The comparison is shared with
+    ///   `BookmarkStore.removing` for exactly that reason.
     @discardableResult
     public func addBookmark(for newURL: URL) -> Bool {
-        // Check duplicate
-        var found: Bool = false
+        // Check duplicate. `validateBookmarks` invokes the block once per retained entry,
+        // so collecting those urls and asking `BookmarkStore` reproduces the registry's
+        // view while keeping the comparison in one place — the same comparison
+        // `removeBookmark` uses, which is what makes the `Bool` below trustworthy.
+        var registered: [URL] = []
         validateBookmarks(false, using: {(url) in
-            if url.path == newURL.path {
-                found = true
-            }
+            registered.append(url)
         })
-        if found {
+        if BookmarkStore.contains(url: newURL, among: registered) {
             return false
         }
         

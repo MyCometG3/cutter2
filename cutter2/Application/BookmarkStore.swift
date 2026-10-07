@@ -34,15 +34,47 @@ protocol SecurityScopedBookmarkRegistering: AnyObject {
 /// sandbox entitlements and without mutating the developer's real `UserDefaults`.
 enum BookmarkStore {
 
+    /// Whether two urls denote the same bookmark target.
+    ///
+    /// Both sides are standardized so the duplicate check in `AppDelegate.addBookmark(for:)`
+    /// and the removal in `removing(url:from:resolving:)` can never disagree. That matters
+    /// because `addBookmark` reports whether *this* call created the entry, and
+    /// `removeBookmark` then has to remove exactly that entry: if the two compared paths
+    /// differently, a redundant `addBookmark` could report `true` while the matching
+    /// `removeBookmark` also dropped an entry created by an earlier session.
+    ///
+    /// Standardizing collapses redundant separators and `..` segments. It does **not**
+    /// resolve macOS firmlinks, so `/tmp/x.mov` and `/private/tmp/x.mov` stay distinct.
+    ///
+    /// - Parameters:
+    ///   - lhs: One candidate url.
+    ///   - rhs: The other candidate url.
+    /// - Returns: `true` when both urls standardize to the same path.
+    static func denotesSameTarget(_ lhs: URL, _ rhs: URL) -> Bool {
+        lhs.standardizedFileURL.path == rhs.standardizedFileURL.path
+    }
+
+    /// Whether any already-registered url denotes `url`.
+    ///
+    /// This is the duplicate check `AppDelegate.addBookmark(for:)` performs, kept as a pure
+    /// function over the urls `validateBookmarks` resolves so it can be tested against
+    /// `removing(url:from:resolving:)` on the same inputs. The two must agree: whatever this
+    /// reports `true` for, a subsequent `removeBookmark` will also match. Otherwise a
+    /// redundant `addBookmark` returns `true`, and the rollback deletes an entry an earlier
+    /// session created.
+    ///
+    /// - Parameters:
+    ///   - url: The url about to be registered.
+    ///   - registered: Urls of the entries currently retained in the registry.
+    /// - Returns: `true` when an equivalent entry already exists.
+    static func contains(url: URL, among registered: [URL]) -> Bool {
+        registered.contains { denotesSameTarget($0, url) }
+    }
+
     /// Removes every stored entry that resolves to `url`.
     ///
     /// Entries whose bookmark data cannot be resolved are retained, leaving their
     /// disposal to `AppDelegate.validateBookmarks` (`AppDelegate.swift:166-186`).
-    ///
-    /// Paths are compared with `standardizedFileURL`, which collapses redundant
-    /// separators and `..` segments. It does **not** resolve macOS firmlinks, so
-    /// `/tmp/x.mov` and `/private/tmp/x.mov` stay distinct; that matches the duplicate
-    /// check in `AppDelegate.addBookmark(for:)`, which compares raw paths too.
     ///
     /// - Parameters:
     ///   - url: The url whose entries should be removed.
@@ -52,12 +84,11 @@ enum BookmarkStore {
     static func removing(url: URL,
                          from items: [Data],
                          resolving resolve: (Data) -> URL?) -> (retained: [Data], removed: Bool) {
-        let target: String = url.standardizedFileURL.path
         var retained: [Data] = []
         retained.reserveCapacity(items.count)
         var removed: Bool = false
         for item in items {
-            if let resolved = resolve(item), resolved.standardizedFileURL.path == target {
+            if let resolved = resolve(item), denotesSameTarget(resolved, url) {
                 removed = true
                 continue
             }

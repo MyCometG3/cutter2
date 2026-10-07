@@ -94,6 +94,47 @@ final class SecurityScopedBookmarkTests: XCTestCase {
         XCTAssertEqual(outcome.retained, items)
     }
 
+    func testBookmarkStoreDenotesSameTargetAgreesWithRemoval() throws {
+        // `addBookmark` reports whether *this* call created an entry, and `removeBookmark`
+        // then removes on that basis. If the duplicate check and the removal disagreed, a
+        // redundant `addBookmark` could report `true` — because the stored entry's raw path
+        // differs — and the rollback would then delete that older entry too, revoking a
+        // permission an earlier session granted. Both must therefore share one comparison,
+        // so this pins `denotesSameTarget` against `removing` on exactly that input.
+        let target = URL(fileURLWithPath: "/tmp/source.mov")
+        let storedUnderATraversal = URL(fileURLWithPath: "/tmp/sub/../source.mov")
+
+        XCTAssertNotEqual(storedUnderATraversal.path, target.path,
+                          "precondition: the raw paths differ, which is what used to cause the mismatch")
+        XCTAssertTrue(BookmarkStore.denotesSameTarget(storedUnderATraversal, target))
+        XCTAssertTrue(BookmarkStore.denotesSameTarget(target, storedUnderATraversal),
+                      "the comparison must be symmetric")
+
+        let stored = Data([0x01])
+        let outcome = BookmarkStore.removing(url: target, from: [stored]) { _ in
+            storedUnderATraversal
+        }
+        XCTAssertTrue(outcome.removed)
+        XCTAssertTrue(outcome.retained.isEmpty,
+                      "if this entry were not removed, the duplicate check and the removal would have disagreed")
+
+        // The duplicate check the caller actually runs must reach the same verdict, which is
+        // the whole point: `addBookmark` returns `true` only when this is `false`.
+        XCTAssertTrue(BookmarkStore.contains(url: target, among: [storedUnderATraversal]))
+        XCTAssertFalse(BookmarkStore.contains(url: target, among: [URL(fileURLWithPath: "/tmp/other.mov")]))
+    }
+
+    func testBookmarkStoreDenotesSameTargetKeepsFirmlinksDistinct() throws {
+        // `/tmp` and `/private/tmp` are a macOS firmlink; neither `standardizedFileURL` nor
+        // `resolvingSymlinksInPath()` maps one onto the other, so they stay distinct.
+        // Pinned because it is the documented limit of the shared comparison.
+        let viaTmp = URL(fileURLWithPath: "/tmp/x.mov")
+        let viaPrivateTmp = URL(fileURLWithPath: "/private/tmp/x.mov")
+
+        XCTAssertFalse(BookmarkStore.denotesSameTarget(viaTmp, viaPrivateTmp))
+        XCTAssertTrue(BookmarkStore.denotesSameTarget(viaTmp, viaTmp))
+    }
+
     func testBookmarkStoreNormalizesNonNormalizedPaths() throws {
         // `standardizedFileURL` collapses redundant separators and `..` segments, so a
         // bookmark stored under a non-normalized spelling still matches its target.

@@ -353,6 +353,39 @@ final class MovieWriterCustomProgressTests: XCTestCase {
         XCTAssertEqual(recorder.values, [0.4, 0.4, 0.9])
     }
 
+    func testProgressSinkRejectsValuesOutsideTheProgressRange() throws {
+        let (sink, recorder) = makeAttachedSink()
+
+        // `isFinite` alone is not enough, and each of these three gets past the delta gate
+        // rather than being caught by it:
+        //  * a negative value, because `lastEmitted` starts at `-infinity` and
+        //    `-0.5 - (-inf)` is `+inf`;
+        //  * a value above `1.0`, which simply advances the mark;
+        //  * `±inf`, for the same reason as the negative case.
+        //
+        // `MovieWriter.progress` deliberately does not clamp, and a clip whose first sample
+        // precedes the movie's range start — or whose last sample ends after it — is
+        // ordinary rather than malformed. `Document+Export` converts each emitted value to
+        // `Int64(value * 100)`, so an out-of-range value reports nonsense progress and, past
+        // `Int64.max`, traps.
+        XCTAssertFalse(sink.publish(-0.5))
+        XCTAssertFalse(sink.publish(1.5))
+        XCTAssertFalse(sink.publish(.infinity))
+        XCTAssertFalse(sink.publishUngated(-1.0))
+        XCTAssertFalse(sink.publishUngated(2.0))
+        XCTAssertTrue(recorder.values.isEmpty)
+
+        // A rejected value must not move the high-water mark either, or the next
+        // legitimate value would be gated against it.
+        XCTAssertEqual(sink.lastEmittedValue, -.infinity)
+
+        // The bounds themselves are inclusive: 0.0 is the first value and 1.0 is the
+        // terminal one, so neither may be rejected.
+        XCTAssertTrue(sink.publish(0.0))
+        XCTAssertTrue(sink.publishUngated(1.0))
+        XCTAssertEqual(recorder.values, [0.0, 1.0])
+    }
+
     // MARK: - Progress arithmetic
 
     func testProgressIsZeroForZeroLengthMovie() throws {

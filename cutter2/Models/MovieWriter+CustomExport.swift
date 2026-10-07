@@ -633,7 +633,6 @@ extension MovieWriter {
         guard movieDurationSeconds != 0.0 else { return 0.0 }
         return CMTimeGetSeconds(presentationEnd) / movieDurationSeconds
     }
-    
 
     // subs for UTGetOSTypeFromString()
     private func stringToOSType(_ type:String) -> OSType {

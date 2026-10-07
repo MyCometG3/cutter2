@@ -502,7 +502,6 @@ extension Document {
         guard registered, let url else { return }
         self.bookmarkRegistry?.removeBookmark(for: url)
     }
-    
 
     private func refreshMutator(from url: URL) -> Bool {
         

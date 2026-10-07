@@ -15,14 +15,22 @@ outside the numbers that were being replaced, a dated historical record rewritte
 a global substitution, a bare line-number reference, and a coverage table whose
 column layout no pattern matched.
 
-So this checks *shapes of claim*, not specific strings:
+So this checks *shapes of claim*, not specific strings — and **every** claim, not one
+per filename:
 
   1. every per-file listing, in all three notations used in the documents
      (tree `├── X.swift … (N tests)`, inline `` `X.swift` (N tests) ``, and the
      coverage table `| … | `X.swift` | N | … |`)
   2. every "N files / M test source / K test methods" total claim
   3. every number `scripts/test.sh` prints
-  4. that each claim set agrees with the directory and with itself
+  4. that each claim set agrees with the directory, sums to the same total, and is
+     internally consistent when a file is claimed more than once
+
+Point 4's last clause exists because the first version of this script collapsed claims
+by filename, so a document asserting 3 tests in one place and 99 in another would have
+passed on the strength of the 3. A file appearing in several shapes is fine; appearing
+with **different** counts is reported as a conflict, and every occurrence is validated
+individually regardless.
 
 It also reports claims it deliberately does not assert on, so a reader can tell the
 difference between "checked and true" and "not checked".
@@ -66,28 +74,63 @@ def counts_by_file() -> dict[str, int]:
     }
 
 
-def first_seen(pattern: str, text: str) -> dict[str, int]:
-    """Collect a filename -> count mapping, keeping the first occurrence."""
-    out: dict[str, int] = {}
-    for m in re.finditer(pattern, text):
-        out.setdefault(m.group(1), int(m.group(2)))
-    return out
+def occurrences(pattern: str, text: str) -> list[tuple[str, int]]:
+    """Every `(filename, count)` claim in `text`, in document order.
+
+    Deliberately **not** deduplicated. An earlier version collapsed claims by filename
+    with `setdefault`, which meant only the first was ever compared against the source
+    and a second, conflicting claim was discarded without a word — so a document that
+    said `3` in one place and `99` in another could still pass. Every occurrence is
+    returned so every claim is checked, and `conflicts()` below names the duplicates
+    explicitly rather than letting the arithmetic hide them.
+    """
+    return [(m.group(1), int(m.group(2))) for m in re.finditer(pattern, text)]
 
 
-def coverage_rows(text: str) -> dict[str, int]:
-    """Filename -> count from the `| **Label** | files | numbers | note |` tables.
+def coverage_rows(text: str) -> list[tuple[str, int]]:
+    """Every claim from the `| **Label** | files | numbers | note |` tables.
 
     A row may name several files and give several counts, as the seek-sequencing row
-    does (`19 + 5`), so the two lists are zipped rather than assumed to be single.
+    does (`19 + 5`), so the two lists are zipped rather than assumed to be single. A row
+    whose arity does not agree is prose (`the Overall row`), not a per-file claim, and is
+    skipped — but it is also counted by `table_rows_skipped` so the gap stays visible.
     """
-    out: dict[str, int] = {}
+    claims: list[tuple[str, int]] = []
     for m in COVERAGE_ROW.finditer(text):
         names = re.findall(r"([A-Za-z0-9_]+\.swift)", m.group(1))
         numbers = [int(x) for x in re.findall(r"\d+", m.group(2).replace("**", ""))]
-        if len(names) != len(numbers) or not names:
-            continue        # a prose row (the `Overall` row), not a per-file claim
-        for name, count in zip(names, numbers):
-            out.setdefault(name, count)
+        if not names or len(names) != len(numbers):
+            continue
+        claims.extend(zip(names, numbers))
+    return claims
+
+
+def conflicts(claims: list[tuple[str, int]]) -> dict[str, list[int]]:
+    """Filenames claimed more than once **with differing counts**.
+
+    A file may legitimately appear in several shapes (a tree row and a table row), so
+    repetition is not a problem — disagreement is. Reporting it separately means the
+    document is called internally inconsistent on its own terms, independently of
+    whether one of the counts happens to match the source.
+    """
+    seen: dict[str, list[int]] = {}
+    for name, count in claims:
+        seen.setdefault(name, [])
+        if count not in seen[name]:
+            seen[name].append(count)
+    return {n: sorted(cs) for n, cs in seen.items() if len(cs) > 1}
+
+
+def tally(claims: list[tuple[str, int]], actual: dict[str, int]) -> dict[str, int]:
+    """Filename -> the count to use when summing. First occurrence wins.
+
+    Only for the arithmetic. Disagreement between occurrences is reported by
+    `conflicts()` and each occurrence is validated on its own, so nothing is hidden by
+    this choice.
+    """
+    out: dict[str, int] = {}
+    for name, count in claims:
+        out.setdefault(name, count)
     return out
 
 
@@ -112,8 +155,8 @@ def main() -> int:
             continue
         text = path.read_text(encoding="utf-8")
         sets = {
-            "tree": first_seen(TREE_LISTING.pattern, text),
-            "inline": first_seen(INLINE_LISTING.pattern, text),
+            "tree": occurrences(TREE_LISTING.pattern, text),
+            "inline": occurrences(INLINE_LISTING.pattern, text),
             "table": coverage_rows(text),
         }
         # The tree listings enumerate the zero-method helper (it is a directory entry);
@@ -127,15 +170,21 @@ def main() -> int:
             "inline": sources,
             "table": sources,
         }
-        for shape, listed in sets.items():
-            if not listed:
+        for shape, claims in sets.items():
+            if not claims:
                 continue
             expected = expected_sets[shape]
+            listed = tally(claims, actual)
+            # Every occurrence is checked, not just the first per filename, so a second
+            # claim that contradicts the first cannot slip past.
+            wrong = sorted({(n, c, actual[n]) for n, c in claims
+                            if n in actual and c != actual[n]})
+            clashes = conflicts(claims)
             missing = sorted(expected - set(listed))
             extra = sorted(set(listed) - set(actual))
-            wrong = [(n, listed[n], actual[n]) for n in sorted(listed)
-                     if n in actual and listed[n] != actual[n]]
             zero = sorted(n for n in listed if n in actual and actual[n] == 0)
+            for n, cs in sorted(clashes.items()):
+                problems.append(f"{doc} [{shape}]: {n} claimed with differing counts {cs}")
             if missing:
                 problems.append(f"{doc} [{shape}]: not listed {missing}")
             if extra:
@@ -145,9 +194,11 @@ def main() -> int:
             summed = sum(listed.values())
             if summed != total:
                 problems.append(f"{doc} [{shape}]: entries sum to {summed}, expected {total}")
+            bad = missing or extra or wrong or clashes or summed != total
             note = f"  (includes {zero[0]}, 0 methods)" if zero else ""
+            dup = f"  [{len(claims)} claims / {len(listed)} files]" if len(claims) != len(listed) else ""
             print(f"  {doc:28s} {shape:6s} {len(listed):2d} entries / {summed:3d}  "
-                  f"{'OK' if not (missing or extra or wrong) and summed == total else 'NG'}{note}")
+                  f"{'OK' if not bad else 'NG'}{note}{dup}")
 
     # ---- 2. total-count claims ---------------------------------------------
     for doc in DOCS:

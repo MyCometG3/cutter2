@@ -9,7 +9,7 @@ This guide provides instructions for running and writing tests for the cutter2 a
 The test target is configured with XCTest and currently contains:
 - 23 test source files
 - 1 test helper file
-- 320 test methods
+- 323 test methods
 - Code coverage support in the command-line and CI workflows
 
 Run the complete suite with:
@@ -81,12 +81,12 @@ cutter2Tests/
 ├── MovieMutatorEditTests.swift           # Edit operation and presentation traversal tests (11 tests)
 ├── MovieMutatorTests.swift               # Model layer tests (22 tests)
 ├── MovieMutatorTransformExportTests.swift # Transform/export tests (10 tests)
-├── MovieWriterCustomProgressTests.swift  # Custom-export progress sink tests (14 tests)
+├── MovieWriterCustomProgressTests.swift  # Custom-export progress sink tests (15 tests)
 ├── MovieWriterVideoChannelMetadataTests.swift # Video channel metadata tests (25 tests)
 ├── PerformanceTests.swift                # Performance tests (16 tests)
 ├── MovieWriterWriteTests.swift           # Movie writer failure-state tests (3 tests)
 ├── PlayerSeekSequencerTests.swift        # Reload/seek sequencer tests (19 tests)
-├── SecurityScopedBookmarkTests.swift     # Security-scoped bookmark tests (15 tests)
+├── SecurityScopedBookmarkTests.swift     # Security-scoped bookmark tests (17 tests)
 ├── TestMovieFixtureWriter.swift          # Test helper (0 tests)
 ├── TimelineViewRenderingTests.swift      # Timeline rendering tests (18 tests)
 ├── UtilitiesTests.swift                  # Utility class tests (22 tests)
@@ -94,7 +94,7 @@ cutter2Tests/
 └── ViewControllerTests.swift             # ViewController tests (15 tests)
 ```
 
-**Static suite size**: 24 files total (23 test source files + 1 helper), **320 test methods**.
+**Static suite size**: 24 files total (23 test source files + 1 helper), **323 test methods**.
 
 Runtime results must be taken from the specific `xcodebuild test` or Xcode run being reported.
 
@@ -445,4 +445,4 @@ Based on Phase 2-3 of the improvement plan:
 
 **Last Updated**: October 6, 2026
 **Version**: 1.12
-**Status**: Static suite size: 320 test methods across 23 test source files + 1 helper; the October 7, 2026 run on the `fix/cutter2-m31-l37` branch passed 320/320 with 0 failures and 0 skips (M-31 and L-37 added 31 tests: 15 security-scoped bookmark, 14 custom-export progress, 2 `Document` progress); the October 6, 2026 run on the `fix/cutter2-m32` branch passed 289/289 with 0 failures and 0 skips (M-32 added 3 TimelineView regression tests); the October 1, 2026 combined-branch run (T-19 rebased onto PR #67) passed 280/280 with 0 skips; the prior September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips
+**Status**: Static suite size: 323 test methods across 23 test source files + 1 helper; the October 7, 2026 run on the `fix/cutter2-m31-l37` branch passed 323/323 with 0 failures and 0 skips (M-31 and L-37 added 34 tests: 17 security-scoped bookmark, 15 custom-export progress, 2 `Document` progress); the October 6, 2026 run on the `fix/cutter2-m32` branch passed 289/289 with 0 failures and 0 skips (M-32 added 3 TimelineView regression tests); the October 1, 2026 combined-branch run (T-19 rebased onto PR #67) passed 280/280 with 0 skips; the prior September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips

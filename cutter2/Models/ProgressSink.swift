@@ -153,19 +153,34 @@ final class ProgressSink: @unchecked Sendable {
         state.withLock { $0.destination != nil }
     }
 
-    /// Emits `value` when it advances the high-water mark by at least `minimumDelta`.
+    /// Emits `value` when it is finite and advances the high-water mark by at least
+    /// `minimumDelta`.
     ///
-    /// A single admission rule, because `minimumDelta > 0` makes
+    /// A single admission rule for the high-water mark, because `minimumDelta > 0` makes
     /// `value - lastEmitted >= minimumDelta` imply `value > lastEmitted`. Out-of-order
-    /// values and `NaN` (whose comparison is always false) are therefore rejected by the
-    /// same condition, which is what makes emissions monotonic across concurrent
-    /// channels. Admission and emission happen in one critical section.
+    /// values are therefore rejected by that same condition, which is what makes emissions
+    /// monotonic across concurrent channels. Admission and emission happen in one critical
+    /// section.
+    ///
+    /// ## Non-finite values
+    /// That one comparison is not sufficient on its own. `NaN` is rejected because every
+    /// comparison against it is false, but **`±inf` is accepted**: `inf - (-inf)` is `inf`,
+    /// which satisfies the gate. `CMTime.positiveInfinity` survives
+    /// `MovieWriter.presentationEnd(of:)` when the *presentation timestamp* is infinite (the
+    /// duration branch is already excluded by `CMTIME_IS_NUMERIC`), and
+    /// `Document+Export` then evaluates `Int64(value * 100)`, which **traps** on infinity.
+    /// Both entry points therefore reject non-finite values explicitly, which makes "the
+    /// sink never emits a non-finite value" an invariant of the type rather than of each
+    /// progress source.
     ///
     /// - Parameter value: Candidate progress in `0.0...1.0`.
     /// - Returns: `true` when the value was emitted.
     @discardableResult
     func publish(_ value: Float64) -> Bool {
         state.withLock { current in
+            // Rejected before the destination lookup so the invariant costs nothing:
+            // nothing non-finite ever reaches `current` or the destination.
+            guard value.isFinite else { return false }
             guard let destination = current.destination else { return false }
             guard value - current.lastEmitted >= Self.minimumDelta else { return false }
             current.lastEmitted = value
@@ -179,13 +194,15 @@ final class ProgressSink: @unchecked Sendable {
     ///
     /// Used by the `AVAssetExportSession` path, which already throttles its own updates
     /// (`MovieWriter.exportSessionTimerRefreshInterval`) and therefore must not be
-    /// filtered by the custom-export gate.
+    /// filtered by the custom-export gate. Non-finite values are rejected for the same
+    /// reason as in `publish(_:)`.
     ///
     /// - Parameter value: The progress to emit.
     /// - Returns: `true` when a destination was installed and the value was emitted.
     @discardableResult
     func publishUngated(_ value: Float) -> Bool {
         state.withLock { current in
+            guard value.isFinite else { return false }
             guard let destination = current.destination else { return false }
             current.lastEmitted = Double(value)
             destination.receive(value)

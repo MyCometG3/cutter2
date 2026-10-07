@@ -621,9 +621,11 @@ extension MovieWriter {
     
     /// Relative position of a sample's end time inside the movie, in `0.0...1.0`.
     ///
-    /// Nonisolated static so it is exercisable with plain `CMTime` values. A non-finite
-    /// result is returned as-is; `ProgressSink.publish` drops it because the comparison
-    /// against the high-water mark is always false for `NaN`.
+    /// Nonisolated static so it is exercisable with plain `CMTime` values. The result is
+    /// **not** clamped to `0.0...1.0` and a non-finite result is returned as-is; rejection
+    /// is `ProgressSink.publish(_:)`'s job, because it is the single place every progress
+    /// source passes through. See that method for why `NaN` and `±inf` need different
+    /// treatment.
     ///
     /// - Parameters:
     ///   - presentationEnd: The sample's end time.

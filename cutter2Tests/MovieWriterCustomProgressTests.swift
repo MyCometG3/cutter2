@@ -281,6 +281,33 @@ final class MovieWriterCustomProgressTests: XCTestCase {
         XCTAssertEqual(recorder.values, [0.5])
     }
 
+    func testProgressSinkRejectsInfinitePresentationTimeStamp() throws {
+        let (sink, recorder) = makeAttachedSink()
+
+        // `CMTIME_IS_NUMERIC` keeps `presentationEnd(of:)` from propagating an infinite
+        // *duration*, but an infinite *timestamp* passes through, and `progress` divides
+        // it by the movie length, which stays infinite.
+        let end = MovieWriter.presentationEnd(of: try makeSampleBuffer(pts: .positiveInfinity,
+                                                                      duration: CMTime(seconds: 1.0, preferredTimescale: 600)))
+        XCTAssertEqual(end, .positiveInfinity)
+        let value = MovieWriter.progress(presentationEnd: end, movieDurationSeconds: 10.0)
+        XCTAssertEqual(value, .infinity)
+
+        // Infinity *satisfies* the delta gate (`inf - (-inf) >= 0.002`), so without the
+        // explicit finiteness guard this would be emitted and
+        // `Document+Export`'s `Int64(value * 100)` would trap.
+        XCTAssertFalse(sink.publish(value))
+        XCTAssertFalse(sink.publish(-.infinity))
+        XCTAssertFalse(sink.publishUngated(.infinity))
+        XCTAssertTrue(recorder.values.isEmpty)
+
+        // A rejected value must not move the high-water mark either, or the next
+        // legitimate value would be gated against infinity.
+        XCTAssertEqual(sink.lastEmittedValue, -.infinity)
+        XCTAssertTrue(sink.publish(0.5))
+        XCTAssertEqual(recorder.values, [0.5])
+    }
+
     // MARK: - didRead wiring
 
     func testDidReadPublishesSynchronouslyWithoutTask() throws {

@@ -467,4 +467,10 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     // MARK: - UI Operations
     // NOTE: Window resize and transform operations are now in Document+UI.swift
     /* ============================================ */
+
+    /// used in debugInfo()
+    public func modifier(_ mask: NSEvent.ModifierFlags) -> Bool {
+        guard let current = NSApp.currentEvent?.modifierFlags else { return false }
+        return current.contains(mask)
+    }
 }

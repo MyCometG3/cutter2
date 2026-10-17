@@ -39,7 +39,7 @@ All three steps succeeded. The full test run executed **269 test cases with 269 
 - **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps plus coverage report generation/upload. The workflow uses `macos-latest` and does not pin a specific Xcode image.
 - **Strict concurrency:** `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` are enabled across all four app/test configurations.
 - **Swift language mode:** `SWIFT_VERSION = 6.0` is pinned in the app and test targets.
-- **Version:** `MARKETING_VERSION = 0.8.20`, `CURRENT_PROJECT_VERSION = 20260926` (app target); these values are committed in the project.
+- **Version:** `MARKETING_VERSION = 0.8.21a`, `CURRENT_PROJECT_VERSION = 20261010` (app target); these values are committed in the project. This review's baseline is 0.8.20 (`fb44143`); the work head advanced to 0.8.21a via `7a8f4e9` (2026-10-10) with no test-inventory change.
 - **Force casts:** 14 `as!` lines (10 code lines: 8 CF typealias casts + 2 NSDictionary casts, plus 4 whole-line comment lines) — unchanged from the earlier review.
 - **Intentional crash/assertion sites:** Three executable sites remain: `MovieMutatorBase.swift:23` (impossible `mutableCopy()` result), `AsyncBridge.swift:103-105` (deliberate main-thread API-contract guard), and `Document+ActorIsolation.swift:53` (fatalError in the non-throwing `performAsync` overload, indicating an internal bridge bug).
 
@@ -55,6 +55,7 @@ The project follows a layered architecture with clear separation of concerns:
 cutter2/
 ├── Application/
 │   ├── AppDelegate.swift
+│   ├── BookmarkStore.swift
 │   └── DocumentController.swift
 ├── Document/
 │   ├── Document.swift
@@ -92,6 +93,7 @@ cutter2/
 │   ├── VideoChannelMetadataBuilder.swift
 │   ├── SampleBufferChannel.swift
 │   ├── Notifications.swift
+│   ├── ProgressSink.swift
 │   └── AVMutableMovie+Extensions.swift
 ├── ViewControllers/
 │   ├── ViewController.swift
@@ -135,7 +137,7 @@ cutter2/
     └── Assets.xcassets/             # App icon
 ```
 
-**Total source files:** 67 Swift files across 6 source directories (plus Resources), including the S-17 `PlayerSeekSequencer` extraction and `VideoChannelMetadataBuilder`.
+**Total source files:** 69 Swift files across 6 source directories (plus Resources), including the S-17 `PlayerSeekSequencer` extraction, `VideoChannelMetadataBuilder`, `BookmarkStore`, and `ProgressSink`.
 
 **Note:** `MovieMutator` (in `MovieMutator.swift`) is a subclass of `MovieMutatorBase` (in `MovieMutatorBase.swift`). All functional extensions (`+Edit`, `+Transform`, `+Export`, etc.) are on the `MovieMutator` subclass, not on `MovieMutatorBase` directly.
 
@@ -183,9 +185,9 @@ The current source contains 320 test methods (TimelineViewRenderingTests 15→18
 
 | Layer | Responsibility | Key Files |
 |-------|---------------|-----------|
-| **Application** | App lifecycle, document creation, security-scoped URL bracketing | `AppDelegate.swift`, `DocumentController.swift` |
+| **Application** | App lifecycle, document creation, security-scoped URL bracketing | `AppDelegate.swift`, `BookmarkStore.swift`, `DocumentController.swift` |
 | **Document** | Core document model, NSDocument subclass, undo/redo, file I/O, export orchestration, reload/seek state | `Document.swift` + 12 extensions and `PlayerSeekSequencer.swift` |
-| **Models** | Media manipulation logic (timeline editing, transforms, export) | `MovieMutatorBase.swift` + 4 extensions, `MovieMutator.swift` + 6 extensions, `MovieWriter.swift` + 3 extensions, `VideoChannelMetadataBuilder.swift` |
+| **Models** | Media manipulation logic (timeline editing, transforms, export) | `MovieMutatorBase.swift` + 4 extensions, `MovieMutator.swift` + 6 extensions, `MovieWriter.swift` + 3 extensions, `VideoChannelMetadataBuilder.swift`, `ProgressSink.swift` |
 | **ViewControllers** | UI coordination, user input handling | `ViewController.swift` + 5 extensions, transcode/CAPAR/inspector dialogs |
 | **Views** | Rendering (timeline, player, window) | `TimelineView.swift` + 3 extensions, `MyPlayerView.swift`, `Window.swift` |
 | **Utilities** | Cross-cutting helpers (concurrency, layout, validation, logging) | Various utility files |
@@ -234,7 +236,7 @@ The user-reachable `preconditionFailure` paths in `MovieMutatorBase.swift` have 
 
 ### 4.3 Security-Scoped Access — CORRECTED
 
-The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` entitlement. Security-scoped resource access is centralized in a single helper, `bracketSecurityScopedAccess<T>(for:_:)` in `AppDelegate.swift` (declared at line 228), which pairs `startAccessingSecurityScopedResource()` with a `defer`-scoped `stopAccessingSecurityScopedResource()`. It is used by the three MovieWriter export paths — `MovieWriter+ExportSession.swift:250`, `MovieWriter+CustomExport.swift:500`, and `MovieWriter+WriteMovie.swift:122` — and `AppDelegate` also performs direct start/stop bracketing at lines 115/123 and 235/241. No `NSFileCoordinator` is used anywhere in the codebase, and no security-scoped access lives in `Document+FileIO.swift` (an earlier revision of this review cited that location; it has been corrected here).
+The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` entitlement. Security-scoped resource access is centralized in a single helper, `bracketSecurityScopedAccess<T>(for:_:)` in `AppDelegate.swift` (declared at line 232), which pairs `startAccessingSecurityScopedResource()` with a `defer`-scoped `stopAccessingSecurityScopedResource()`. It is used by the three MovieWriter export paths — `MovieWriter+ExportSession.swift:250`, `MovieWriter+CustomExport.swift:500`, and `MovieWriter+WriteMovie.swift:122` — and `AppDelegate` also performs direct start/stop bracketing at lines 119/127 and 239/245. No `NSFileCoordinator` is used anywhere in the codebase, and no security-scoped access lives in `Document+FileIO.swift` (an earlier revision of this review cited that location; it has been corrected here).
 
 ### 4.4 Build Settings
 
@@ -335,7 +337,7 @@ Revision 5 additionally closed two stale recommendations: the DateFormatter dupl
 - Project file: `cutter2.xcodeproj/project.pbxproj`
 - Deployment target: app and test targets explicitly set `MACOSX_DEPLOYMENT_TARGET = 14.0` in both Debug and Release configurations. The project-level Debug/Release settings retain `$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)` as a fallback.
 - Swift version: pinned to `SWIFT_VERSION = 6.0` (all app/test target configurations)
-- Version: `MARKETING_VERSION = 0.8.20`, `CURRENT_PROJECT_VERSION = 20260926` (committed in the project)
+- Version: `MARKETING_VERSION = 0.8.21a`, `CURRENT_PROJECT_VERSION = 20261010` (committed in the project)
 - `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` enabled in all 4 build configurations
 
 ### 7.2 CI Workflow
@@ -437,10 +439,10 @@ The current release-blocker fixes include CR-4 (empty-window lifecycle, which al
 
 ## 11. Files Reviewed
 
-### Source Files (67 files)
-- Application: `AppDelegate.swift`, `DocumentController.swift`
+### Source Files (69 files)
+- Application: `AppDelegate.swift`, `BookmarkStore.swift`, `DocumentController.swift`
 - Document: `Document.swift` + 12 extensions (conformance to `ViewControllerDelegate` declared in the class body; `Document+ViewControllerDelegate.swift` and `Document+TimelineUpdateDelegate.swift` hold the delegate method implementations) and `PlayerSeekSequencer.swift`
-- Models: `MovieMutator.swift` (subclass of MovieMutatorBase), `MovieMutatorBase.swift` + 4 extensions (`+FormatDescriptions`, `+Formatting`, `+PresentationInfo`, `+Progress`), `MovieMutator+Clipboard.swift`, `MovieMutator+Edit.swift`, `MovieMutator+Transform.swift`, `MovieMutator+Export.swift`, `MovieMutator+Inspector.swift`, `MovieMutator+Player.swift`, `MovieMutatorTypes.swift`, `MovieWriter.swift` + 3 extensions (`+CustomExport`, `+ExportSession`, `+WriteMovie`), `VideoChannelMetadataBuilder.swift`, `SampleBufferChannel.swift`, `Notifications.swift`, `AVMutableMovie+Extensions.swift`
+- Models: `MovieMutator.swift` (subclass of MovieMutatorBase), `MovieMutatorBase.swift` + 4 extensions (`+FormatDescriptions`, `+Formatting`, `+PresentationInfo`, `+Progress`), `MovieMutator+Clipboard.swift`, `MovieMutator+Edit.swift`, `MovieMutator+Transform.swift`, `MovieMutator+Export.swift`, `MovieMutator+Inspector.swift`, `MovieMutator+Player.swift`, `MovieMutatorTypes.swift`, `MovieWriter.swift` + 3 extensions (`+CustomExport`, `+ExportSession`, `+WriteMovie`), `VideoChannelMetadataBuilder.swift`, `SampleBufferChannel.swift`, `Notifications.swift`, `ProgressSink.swift`, `AVMutableMovie+Extensions.swift`
 - ViewControllers: `ViewController.swift` + 5 extensions, `CAPARViewController.swift`, `TranscodeViewController.swift`, `WindowController.swift`, `AccessoryViewController.swift`, `InspectorViewController.swift`
 - Views: `TimelineView.swift` + 3 extensions, `MyPlayerView.swift`, `Window.swift`
 - Utilities: `AsyncBridge.swift`, `ActorUtilities.swift`, `LayoutConverter.swift` + 3 extensions (`+Convert`, `+LayoutData`, `+Mapping`), `MovieHeaderValidator.swift`, `PerformanceMetrics.swift`, `ErrorUtilities.swift`, `Constants.swift`, `LocalizationHelper.swift`, `LoggingSystem.swift`, `DateFormatter+Factory.swift`
@@ -464,6 +466,6 @@ The current release-blocker fixes include CR-4 (empty-window lifecycle, which al
 - `docs/TESTING_GUIDE.md` (test structure and commands)
 
 ### Configuration
-- `cutter2.xcodeproj/project.pbxproj` (version 0.8.20 / build 20260926 — app target, committed in the project; the test target carries placeholder `1.0` / `1`)
+- `cutter2.xcodeproj/project.pbxproj` (version 0.8.21a / build 20261010 — app target, committed in the project; the test target carries placeholder `1.0` / `1`)
 - `.github/workflows/test.yml` (build/test/analyze, branches `main`/`work`/`develop`; coverage artifact generation is optional)
 - `scripts/test.sh` (build/test/analyze; summary reports 23 test source files + 1 helper and 320 tests)

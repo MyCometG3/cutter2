@@ -1,6 +1,6 @@
 # Contributing to cutter2
 
-**Last Updated**: September 27, 2026
+**Last Updated**: October 12, 2026
 
 Thank you for your interest in contributing to cutter2! This document provides guidelines and instructions for contributing to the project.
 
@@ -322,7 +322,7 @@ enum MyError: Error {
 do {
     try performOperation()
 } catch {
-    ErrorUtilities.presentError(error)
+    document.showErrorSheet(error)
 }
 ```
 
@@ -582,7 +582,7 @@ What actually happens
 - macOS version: 14.0+
 - Xcode version: 16.0+
 - Swift version: 6.0
-- App version: 0.8.20
+- App version: 0.8.21a
 
 ## Additional Context
 - Screenshots if applicable
@@ -651,5 +651,5 @@ Your contributions help make video editing on macOS better for everyone.
 ---
 
 **Document Status**: ✅ Active
-**Last Updated**: September 27, 2026
+**Last Updated**: October 12, 2026
 **Maintained By**: cutter2 project maintainers

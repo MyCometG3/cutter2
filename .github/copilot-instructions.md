@@ -5,12 +5,12 @@
 cutter2 is a sophisticated macOS video editing application written in Swift, leveraging Apple's AVFoundation framework. It serves as a QuickTime movie editor with powerful keyboard shortcuts, designed for precise video editing workflows.
 
 **Current Status**:
-- **Version**: 0.8.20
+- **Version**: 0.8.21a
 - **Swift language mode**: 6.0 (`SWIFT_VERSION = 6.0`)
 - **Minimum environment**: macOS 14.0; Xcode 16.0 or later
 - **Verified environment (September 27, 2026)**: macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
 - **Phase history**: Phase 2.1 (Internationalization) and Phase 2.2 (Performance Optimization) were recorded as complete on October 15 and October 17, 2025; these entries are historical milestones, not current verification results
-- **Current test note**: 269 statically declared test methods are present across 21 test files (20 test source files + 1 helper); the September 27, 2026 verification run (`xcodebuild test`, single scheme `cutter2`, Debug) passed all 269 test cases with 0 failures and 0 skips
+- **Current test note**: 320 statically declared test methods are present across 24 test files (23 test source files + 1 helper); the October 8, 2026 run on the `fix/cutter2-m31-l37` branch (PR #71) passed all 320 test cases with 0 failures and 0 skips
 
 ## Architecture & Design Patterns
 
@@ -233,7 +233,7 @@ The app declares no capture (camera/microphone) and no network entitlements.
 - `.m4a`: Audio-only format
 
 ### Internal Organization
-- **Application/**: App delegate and document controller
+- **Application/**: App delegate, bookmark store, and document controller
 - **Document/**: Document class and related extensions
 - **Models/**: Core business logic (MovieMutator, MovieWriter, SampleBufferChannel)
 - **ViewControllers/**: All view controllers (ViewController, WindowController, InspectorViewController, etc.)

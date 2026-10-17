@@ -238,6 +238,6 @@ The app declares no capture (camera/microphone) and no network entitlements.
 - **Models/**: Core business logic (MovieMutator, MovieWriter, SampleBufferChannel)
 - **ViewControllers/**: All view controllers (ViewController, WindowController, InspectorViewController, etc.)
 - **Views/**: Custom views (MyPlayerView, TimelineView)
-- **Utilities/**: Helper classes and utilities (ErrorUtilities, Constants, ActorUtilities, etc.)
+- **Utilities/**: Helper classes and utilities (ErrorUtilities, Constants, ConcurrencyBridge with AsyncBridge and ActorUtilities, etc.)
 - **Resources/**: Storyboards (`Base.lproj/`), assets (`Assets.xcassets/`), and other resources
 - Entitlements in `cutter2.entitlements`

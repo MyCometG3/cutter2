@@ -41,7 +41,7 @@ All three steps succeeded. The full test run executed **269 test cases with 269 
 - **Swift language mode:** `SWIFT_VERSION = 6.0` is pinned in the app and test targets.
 - **Version:** `MARKETING_VERSION = 0.8.21a`, `CURRENT_PROJECT_VERSION = 20261010` (app target); these values are committed in the project. This review's baseline is 0.8.20 (`fb44143`); the work head advanced to 0.8.21a via `7a8f4e9` (2026-10-10) with no test-inventory change.
 - **Force casts:** 14 `as!` lines (10 code lines: 8 CF typealias casts + 2 NSDictionary casts, plus 4 whole-line comment lines) — unchanged from the earlier review.
-- **Intentional crash/assertion sites:** Three executable sites remain: `MovieMutatorBase.swift:23` (impossible `mutableCopy()` result), `AsyncBridge.swift:103-105` (deliberate main-thread API-contract guard), and `Document+ActorIsolation.swift:53` (fatalError in the non-throwing `performAsync` overload, indicating an internal bridge bug).
+- **Intentional crash/assertion sites:** Three executable sites remain: `MovieMutatorBase.swift:23` (impossible `mutableCopy()` result), `ConcurrencyBridge.swift:104` (deliberate main-thread API-contract guard), and `Document+FileIO.swift:604` (fatalError in the non-throwing `performAsync` overload, indicating an internal bridge bug). Line numbers reflect the 2026-10-17 consolidation.
 
 ---
 
@@ -58,33 +58,28 @@ cutter2/
 │   ├── BookmarkStore.swift
 │   └── DocumentController.swift
 ├── Document/
-│   ├── Document.swift
-│   ├── Document+ActorIsolation.swift
+│   ├── Document.swift                  // Includes modifier(_:)
 │   ├── Document+Export.swift
-│   ├── Document+FileIO.swift
-│   ├── Document+MovieReference.swift
-│   ├── Document+Observers.swift
+│   ├── Document+FileIO.swift           // Includes validateIfSelfContained(for:) and performAsync
+│   ├── Document+Observers.swift        // Includes cleanup()
 │   ├── Document+PositionControl.swift
 │   ├── Document+SavePanel.swift
-│   ├── Document+SheetControl.swift
+│   ├── Document+SheetControl.swift     // Includes afterSheetContinue(_:perform:)
 │   ├── Document+TimelineUpdateDelegate.swift
-│   ├── Document+UI.swift
-│   ├── Document+Utilities.swift
+│   ├── Document+UI.swift               // Includes inspectorDictionary()
 │   ├── Document+ViewControllerDelegate.swift
 │   └── PlayerSeekSequencer.swift
 ├── Models/
-│   ├── MovieMutator.swift              // Subclass of MovieMutatorBase
+│   ├── MovieMutator.swift              // Subclass of MovieMutatorBase; includes clipboard and makePlayerItem()
 │   ├── MovieMutatorBase.swift          // Base class (NSObject subclass)
 │   ├── MovieMutatorBase+FormatDescriptions.swift
 │   ├── MovieMutatorBase+Formatting.swift
 │   ├── MovieMutatorBase+PresentationInfo.swift
 │   ├── MovieMutatorBase+Progress.swift
-│   ├── MovieMutator+Clipboard.swift
 │   ├── MovieMutator+Edit.swift
 │   ├── MovieMutator+Transform.swift
 │   ├── MovieMutator+Export.swift
 │   ├── MovieMutator+Inspector.swift
-│   ├── MovieMutator+Player.swift
 │   ├── MovieMutatorTypes.swift
 │   ├── MovieWriter.swift
 │   ├── MovieWriter+CustomExport.swift
@@ -115,8 +110,7 @@ cutter2/
 │   ├── MyPlayerView.swift
 │   └── Window.swift
 ├── Utilities/
-│   ├── AsyncBridge.swift
-│   ├── ActorUtilities.swift
+│   ├── ConcurrencyBridge.swift         // AsyncBridge + ActorUtilities
 │   ├── LayoutConverter.swift
 │   ├── LayoutConverter+Convert.swift
 │   ├── LayoutConverter+LayoutData.swift
@@ -137,7 +131,7 @@ cutter2/
     └── Assets.xcassets/             # App icon
 ```
 
-**Total source files:** 69 Swift files across 6 source directories (plus Resources), including the S-17 `PlayerSeekSequencer` extraction, `VideoChannelMetadataBuilder`, `BookmarkStore`, and `ProgressSink`.
+**Total source files:** 63 Swift files across 6 source directories (plus Resources), including the S-17 `PlayerSeekSequencer` extraction, `VideoChannelMetadataBuilder`, `BookmarkStore`, and `ProgressSink`. The 2026-10-17 consolidation (`refactor/consolidate-small-files`) reduced the count from 69 by merging `MovieMutator+Clipboard` and `+Player` into `MovieMutator.swift`, merging `Document+MovieReference`, `Document+Utilities`, and `Document+ActorIsolation` into their destination extensions, and merging `AsyncBridge` and `ActorUtilities` into `ConcurrencyBridge.swift`.
 
 **Note:** `MovieMutator` (in `MovieMutator.swift`) is a subclass of `MovieMutatorBase` (in `MovieMutatorBase.swift`). All functional extensions (`+Edit`, `+Transform`, `+Export`, etc.) are on the `MovieMutator` subclass, not on `MovieMutatorBase` directly.
 
@@ -186,8 +180,8 @@ The current source contains 320 test methods (TimelineViewRenderingTests 15→18
 | Layer | Responsibility | Key Files |
 |-------|---------------|-----------|
 | **Application** | App lifecycle, document creation, security-scoped URL bracketing | `AppDelegate.swift`, `BookmarkStore.swift`, `DocumentController.swift` |
-| **Document** | Core document model, NSDocument subclass, undo/redo, file I/O, export orchestration, reload/seek state | `Document.swift` + 12 extensions and `PlayerSeekSequencer.swift` |
-| **Models** | Media manipulation logic (timeline editing, transforms, export) | `MovieMutatorBase.swift` + 4 extensions, `MovieMutator.swift` + 6 extensions, `MovieWriter.swift` + 3 extensions, `VideoChannelMetadataBuilder.swift`, `ProgressSink.swift` |
+| **Document** | Core document model, NSDocument subclass, undo/redo, file I/O, export orchestration, reload/seek state | `Document.swift` + 9 extensions and `PlayerSeekSequencer.swift` |
+| **Models** | Media manipulation logic (timeline editing, transforms, export) | `MovieMutatorBase.swift` + 4 extensions, `MovieMutator.swift` + 4 extensions (clipboard and player support are in the class body), `MovieWriter.swift` + 3 extensions, `VideoChannelMetadataBuilder.swift`, `ProgressSink.swift` |
 | **ViewControllers** | UI coordination, user input handling | `ViewController.swift` + 5 extensions, transcode/CAPAR/inspector dialogs |
 | **Views** | Rendering (timeline, player, window) | `TimelineView.swift` + 3 extensions, `MyPlayerView.swift`, `Window.swift` |
 | **Utilities** | Cross-cutting helpers (concurrency, layout, validation, logging) | Various utility files |
@@ -200,9 +194,9 @@ The project uses Swift's modern concurrency model with a clear isolation strateg
 
 - **`actor MovieWriter`**: A dedicated actor for export state management, isolating export session lifecycle from the main actor.
 
-- **`AsyncBridge`**: A custom utility bridging async/await to synchronous contexts (used in `NSDocument` overrides like `data(ofType:)` and `read(from:ofType:)`).
+- **`AsyncBridge`**: A custom utility bridging async/await to synchronous contexts (used in `NSDocument` overrides like `data(ofType:)` and `read(from:ofType:)`). Defined in `Utilities/ConcurrencyBridge.swift`.
 
-- **`ActorUtilities.performSyncOnMainActor`**: A utility for safely calling main-actor-isolated code from synchronous contexts.
+- **`ActorUtilities.performSyncOnMainActor`**: A utility for safely calling main-actor-isolated code from synchronous contexts. Defined in `Utilities/ConcurrencyBridge.swift`.
 
 - **Reload/seek generation gating (S-17, hardened in #63/#64)**: `PlayerSeekSequencer` (itself `@MainActor`) owns the reload and seek generations, the reload task handle, the suppression state, a suppression watchdog, a token-snapshot type (`SeekToken`), and stale-completion gates. `Document+UI.swift` retains AVPlayer and UI side effects: it advances the seek generation via `beginItemReplacement` before swapping the player item, re-asserts suppression via `suppressForReload()` immediately before `replaceCurrentItem`, arms `armSuppressionWatchdog`, and releases only the current generation. The `readyToPlay` KVO handler reads suppression through the sequencer inside `performSyncOnMainActor` because `observeValue` is `nonisolated`. The state transitions are covered by `PlayerSeekSequencerTests`; integration ordering against a live AVPlayer, KVO delivery, and polling timer remains untested.
 
@@ -231,8 +225,8 @@ All 54 force-unwraps (`as!`) identified in the initial review have been replaced
 The user-reachable `preconditionFailure` paths in `MovieMutatorBase.swift` have been replaced with graceful error return paths (S-08 fix). Three intentional executable sites remain, all on non-user-reachable or deliberate paths:
 
 - **`MovieMutatorBase.swift:23`** — `preconditionFailure("mutableCopy() of AVMutableMovie returned non-AVMutableMovie")`. Guards an impossible condition (AVFoundation's `mutableCopy()` should never return a non-`AVMutableMovie` type) and is not on a user-reachable path.
-- **`AsyncBridge.swift:103-105`** — `precondition(allowMainThread || !Thread.isMainThread, ...)`. This is a deliberate API contract guard: `AsyncBridge.perform` must not be called on the main thread unless the caller explicitly opts into the deadlock risk via `allowMainThread: true`.
-- **`Document+ActorIsolation.swift:53`** — `fatalError("Non-throwing performAsync unexpectedly threw: ...")` in the non-throwing `performAsync` overload. The catch is intentionally fatal: a non-throwing block cannot produce a `PerformAsyncError` under normal operation, so reaching it indicates an internal bridge bug rather than a recoverable caller error. Pre-existing; documented here for completeness.
+- **`ConcurrencyBridge.swift:104`** — `precondition(allowMainThread || !Thread.isMainThread, ...)`. This is a deliberate API contract guard: `AsyncBridge.perform` must not be called on the main thread unless the caller explicitly opts into the deadlock risk via `allowMainThread: true`.
+- **`Document+FileIO.swift:604`** — `fatalError("Non-throwing performAsync unexpectedly threw: ...")` in the non-throwing `performAsync` overload. The catch is intentionally fatal: a non-throwing block cannot produce a `PerformAsyncError` under normal operation, so reaching it indicates an internal bridge bug rather than a recoverable caller error. Pre-existing; documented here for completeness.
 
 ### 4.3 Security-Scoped Access — CORRECTED
 
@@ -294,7 +288,7 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 | **Document × live AVPlayer integration** | Async ordering of `updatePlayer`, KVO delivery, and polling timer | ◑ Partially covered by T-19 (`DocumentReloadSeekIntegrationTests`, 5 cases): the reload generation propagation across the awaited player-item regeneration, superseded-reload item application, and the initial-setup wiring (player attachment, polling timer, immediate suppression release) are now fixed through a test-only seam. KVO `readyToPlay` re-seek delivery and playback with real media remain untested (out of scope, §0) |
 | **Document+UI** | Window resize handling (`windowDidResize`) | ❌ Not tested — layout update propagation on window resize |
 | **Document+SavePanel** | Export save panel flow | ❌ Not tested — save panel presentation and cancellation paths |
-| **MovieMutator+Clipboard** | Copy/paste operations | ❌ Not tested — clipboard serialization and deserialization |
+| **MovieMutator clipboard** (in `MovieMutator.swift`) | Copy/paste operations | ❌ Not tested — clipboard serialization and deserialization |
 | **Document+PositionControl** | Playback position scrubbing | ❌ Not tested — position updates during playback |
 
 > **Recommendation:** Unit-level seek, cancellation classification, position-cache reset, empty-window lifecycle, H-11 temporary finalization/self-contained selection, and — via the T-19 test-only seam — the reload ordering between `Document` and a live AVPlayer are covered. The remaining gaps in this area are KVO `readyToPlay` re-seek delivery (the AVPlayer observer count is not observable through public APIs) and playback with real media, both of which would need a UI/integration harness. Window resize, save panel, clipboard, and scrubbing coverage remain open.
@@ -439,13 +433,13 @@ The current release-blocker fixes include CR-4 (empty-window lifecycle, which al
 
 ## 11. Files Reviewed
 
-### Source Files (69 files)
+### Source Files (63 files)
 - Application: `AppDelegate.swift`, `BookmarkStore.swift`, `DocumentController.swift`
-- Document: `Document.swift` + 12 extensions (conformance to `ViewControllerDelegate` declared in the class body; `Document+ViewControllerDelegate.swift` and `Document+TimelineUpdateDelegate.swift` hold the delegate method implementations) and `PlayerSeekSequencer.swift`
-- Models: `MovieMutator.swift` (subclass of MovieMutatorBase), `MovieMutatorBase.swift` + 4 extensions (`+FormatDescriptions`, `+Formatting`, `+PresentationInfo`, `+Progress`), `MovieMutator+Clipboard.swift`, `MovieMutator+Edit.swift`, `MovieMutator+Transform.swift`, `MovieMutator+Export.swift`, `MovieMutator+Inspector.swift`, `MovieMutator+Player.swift`, `MovieMutatorTypes.swift`, `MovieWriter.swift` + 3 extensions (`+CustomExport`, `+ExportSession`, `+WriteMovie`), `VideoChannelMetadataBuilder.swift`, `SampleBufferChannel.swift`, `Notifications.swift`, `ProgressSink.swift`, `AVMutableMovie+Extensions.swift`
+- Document: `Document.swift` + 9 extensions (conformance to `ViewControllerDelegate` declared in the class body; `Document+ViewControllerDelegate.swift` and `Document+TimelineUpdateDelegate.swift` hold the delegate method implementations; `performAsync` is in `Document+FileIO.swift`, `afterSheetContinue` in `Document+SheetControl.swift`, `cleanup()` in `Document+Observers.swift`, `inspectorDictionary()` in `Document+UI.swift`) and `PlayerSeekSequencer.swift`
+- Models: `MovieMutator.swift` (subclass of MovieMutatorBase; includes clipboard helpers and `makePlayerItem()`), `MovieMutatorBase.swift` + 4 extensions (`+FormatDescriptions`, `+Formatting`, `+PresentationInfo`, `+Progress`), `MovieMutator+Edit.swift`, `MovieMutator+Transform.swift`, `MovieMutator+Export.swift`, `MovieMutator+Inspector.swift`, `MovieMutatorTypes.swift`, `MovieWriter.swift` + 3 extensions (`+CustomExport`, `+ExportSession`, `+WriteMovie`), `VideoChannelMetadataBuilder.swift`, `SampleBufferChannel.swift`, `Notifications.swift`, `ProgressSink.swift`, `AVMutableMovie+Extensions.swift`
 - ViewControllers: `ViewController.swift` + 5 extensions, `CAPARViewController.swift`, `TranscodeViewController.swift`, `WindowController.swift`, `AccessoryViewController.swift`, `InspectorViewController.swift`
 - Views: `TimelineView.swift` + 3 extensions, `MyPlayerView.swift`, `Window.swift`
-- Utilities: `AsyncBridge.swift`, `ActorUtilities.swift`, `LayoutConverter.swift` + 3 extensions (`+Convert`, `+LayoutData`, `+Mapping`), `MovieHeaderValidator.swift`, `PerformanceMetrics.swift`, `ErrorUtilities.swift`, `Constants.swift`, `LocalizationHelper.swift`, `LoggingSystem.swift`, `DateFormatter+Factory.swift`
+- Utilities: `ConcurrencyBridge.swift` (`AsyncBridge`, `PerformAsyncError`, `ActorUtilities`), `LayoutConverter.swift` + 3 extensions (`+Convert`, `+LayoutData`, `+Mapping`), `MovieHeaderValidator.swift`, `PerformanceMetrics.swift`, `ErrorUtilities.swift`, `Constants.swift`, `LocalizationHelper.swift`, `LoggingSystem.swift`, `DateFormatter+Factory.swift`
 - Resources: `Info.plist`, `cutter2.entitlements`, `Localizable.xcstrings` (hand-curated app strings), `Base.lproj/Main.storyboard` (main UI), `mul.lproj/Main.xcstrings` (storyboard-extracted strings), `Assets.xcassets` (app icon)
 
 ### Test Files (24 files: 23 test source files + 1 helper; 320 test methods)

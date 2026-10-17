@@ -127,7 +127,7 @@ try ActorUtilities.performSyncOnMainActor {
 **Use for:** Running async work synchronously from non-async contexts (e.g., `NSDocument` overrides).
 
 ```swift
-// Document+ActorIsolation.swift
+// Document+FileIO.swift
 nonisolated func performAsync<T: Sendable>(
     _ block: @Sendable @escaping () async throws -> T
 ) throws -> T {

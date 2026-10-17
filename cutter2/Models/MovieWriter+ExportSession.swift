@@ -183,7 +183,7 @@ extension MovieWriter {
         .failed: "failed",
         .cancelled: "cancelled"
     ]
-
+    
     /// Status string representation in "name(rawValue)" form without spaces,
     /// e.g. "completed(3)". The numeric suffix is derived from `rawValue`.
     private func statusString(of status: AVAssetExportSession.Status) -> String {

@@ -1,11 +1,11 @@
 # Codebase Review — cutter2
 
-**Date:** 2026-09-29 (revision 5; original review 2026-08-06)
+**Date:** 2026-10-17 (revision 6; revision 5: 2026-09-29; original review 2026-08-06)
 **Reviewer:** Source-level documentation and code review
-**Scope:** Source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
-**Reviewed baseline:** `fb4414346f86933344958ca31e5813dac4ef175a` (`work`, release 0.8.20)
-**Verification environment:** macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
-**Status:** Rebaselined on the current `work` head for release 0.8.20. The tested code baseline is PR #65 (`011aff7`); `fb44143` is the version/build metadata commit. Clean build / clean analyze / full test passed (269/269), with 0 release blockers; live integration coverage remains a non-blocking gap. The T-19 feature branch (this working tree) adds the `Document` test-only seam and 5 integration tests and now carries PR #67 (T-21: direct `invalidDuration` helper tests, §5.4) via rebase, raising the suite to 280 methods across 22 files; the T-20 branch (this working tree) adds four non-gating `TimelineView` / `MovieMutator` performance baselines, raising the suite to 284 methods across 22 files; PR #69 adds 2 `MovieMutatorTransformExportTests` cases (zero-height pASP and custom-cancel order) for 286 methods across 22 files; the `fix/cutter2-m32` branch adds 3 M-32 position regression tests (zero-width and negative-width) on that 286-method baseline, reaching 289 methods across 22 files; the `fix/cutter2-m31-l37` branch (PR #71) then adds 31 M-31 / L-37 tests — 12 new security-scoped bookmark tests, 15 new custom-export progress tests, and 4 new `Document` progress tests — taking the current inventory to 320 methods across 24 files (see §2.3, §5.3, §5.4, §8.5, §8.6, and §Conclusion).
+**Scope:** Current `refactor/consolidate-small-files` branch against `work` (`b5f5c42`), including source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
+**Reviewed baseline:** `cee7d285729a798baf82463ef45206a54d4c7b25` (`refactor/consolidate-small-files`; six commits ahead of `work` at `b5f5c42`)
+**Verification environment:** macOS 27.0.1 (build 26A434), Xcode 27.1 (build 27A9275), Swift compiler 6.4
+**Status:** The file consolidation and follow-up formatting/documentation changes are implemented. `build-for-testing` succeeded and the 2026-10-17 `test-without-building` run passed 320/320 tests with 0 failures and 0 skips. The xcresult records one runtime QoS priority-inversion warning in `MovieWriterCustomProgressTests.swift`; it is not a test failure and remains to be investigated. No source compiler warnings were recorded in the build log. The existing live-player integration gaps remain as described in §5.3 and §8.6.
 
 ---
 
@@ -13,7 +13,7 @@
 
 This document records a source-level review of the **cutter2** project — a macOS video editor application built with Swift and AVFoundation. The review covers project structure, architecture, concurrency model, code quality, test coverage, documentation accuracy, and build/CI configuration.
 
-Revision 5 (2026-09-29) rebaselines the review on `work` for the 0.8.20 release. PR #65 (`011aff7`) adds the fixture-writing test fix and closes the runtime warning triage; `fb44143` applies the 0.8.20 version/build metadata. The commits that constitute the current state relative to `master` (`88c0e13`) are:
+Revision 5 (2026-09-29) is the historical review of the 0.8.20 release baseline. Revision 6 (2026-10-17) updates the current branch inventory, file organization, bridge call paths, line references, and verification results after the small-file consolidation. The revision 5 commit list and measurements below are retained as historical records, not as the current branch state.
 
 - `b724483` Refactor cutter2: concurrency, export, and media cleanup overhaul (#63) — squash-merged the previously reviewed line together with the reload/seek generation work; re-asserts suppression immediately before `replaceCurrentItem`.
 - `38221e9` Fix cutter2 release blockers (#64) — CR-4, M-24, M-25, M-26, M-27, M-28, T-17, H-11; expands `DocumentTests` (6 → 12), `MovieWriterWriteTests`, `PlayerSeekSequencerTests`, and `MovieMutatorTransformExportTests`.
@@ -31,17 +31,18 @@ xcodebuild test          -project cutter2.xcodeproj -scheme cutter2 -destination
 
 All three steps succeeded. The full test run executed **269 test cases with 269 passed and 0 failed** (0 skipped). The 2026-09-27 run initially emitted 3 runtime performance warnings. Follow-up triage identified `libRPAC.dylib` (Xcode runtime performance analysis), not `libMainThreadChecker.dylib`, as the reporting component.
 
-**Current verification facts:**
+**Current verification facts (revision 6, 2026-10-17):**
 
 - **Current static test suite size:** 24 files total (23 test source files + 1 helper), with 320 test methods (TimelineViewRenderingTests 18, up from 15; M-32 added 3 zero-width and negative-width position regression tests).
-- **Runtime test result:** The 2026-09-27 run on the 0.8.20b head passed 269 test cases with 0 failures and 0 skips; after PR #65, the follow-up A/B measurement recorded **0 runtime performance reports** (55 before the fix).
+- **Current runtime test result:** 320 passed, 0 failed, 0 skipped (2026-10-17, `cee7d28`; recorded in the xcresult referenced by the local test run).
+- **Current runtime warning:** The same xcresult records one QoS priority-inversion runtime warning from `MovieWriterCustomProgressTests.swift`; no test failed. The earlier PR #65 A/B measurement of 0 runtime performance reports (55 before the fixture-writing fix) is historical and is not this run's result.
 - **Runtime warning triage:** `PERFC_ENABLE_DUPLICATE_DETECTION=0` reproduced 55 reports in an approximately 220 ms burst. PID correlation mapped the reporting processes to the three fixture-generating test files, where `DispatchQueue.global().sync` synchronously blocked the main actor during `AVAssetWriter` encoding. After PR #65 moved fixture generation to detached utility tasks, the same diagnostic measurement produced 0 reports.
 - **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps plus coverage report generation/upload. The workflow uses `macos-latest` and does not pin a specific Xcode image.
 - **Strict concurrency:** `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` are enabled across all four app/test configurations.
 - **Swift language mode:** `SWIFT_VERSION = 6.0` is pinned in the app and test targets.
-- **Version:** `MARKETING_VERSION = 0.8.20`, `CURRENT_PROJECT_VERSION = 20260926` (app target); these values are committed in the project.
+- **Version:** `MARKETING_VERSION = 0.8.21a`, `CURRENT_PROJECT_VERSION = 20261010` (app target; committed in the project). The reviewed branch is based on `work` commit `b5f5c42` and adds six commits through `cee7d28`; the release version/build are unchanged.
 - **Force casts:** 14 `as!` lines (10 code lines: 8 CF typealias casts + 2 NSDictionary casts, plus 4 whole-line comment lines) — unchanged from the earlier review.
-- **Intentional crash/assertion sites:** Three executable sites remain: `MovieMutatorBase.swift:23` (impossible `mutableCopy()` result), `AsyncBridge.swift:103-105` (deliberate main-thread API-contract guard), and `Document+ActorIsolation.swift:53` (fatalError in the non-throwing `performAsync` overload, indicating an internal bridge bug).
+- **Intentional crash/assertion sites:** Three executable sites remain: `MovieMutatorBase.swift:23` (impossible `mutableCopy()` result), `ConcurrencyBridge.swift:104` (deliberate main-thread API-contract guard), and `Document+FileIO.swift:604` (fatalError in the non-throwing `performAsync` overload, indicating an internal bridge bug). Line numbers reflect the 2026-10-17 consolidation.
 
 ---
 
@@ -55,35 +56,31 @@ The project follows a layered architecture with clear separation of concerns:
 cutter2/
 ├── Application/
 │   ├── AppDelegate.swift
+│   ├── BookmarkStore.swift
 │   └── DocumentController.swift
 ├── Document/
-│   ├── Document.swift
-│   ├── Document+ActorIsolation.swift
+│   ├── Document.swift                  // Includes modifier(_:)
 │   ├── Document+Export.swift
-│   ├── Document+FileIO.swift
-│   ├── Document+MovieReference.swift
-│   ├── Document+Observers.swift
+│   ├── Document+FileIO.swift           // Includes validateIfSelfContained(for:) and performAsync
+│   ├── Document+Observers.swift        // Includes cleanup()
 │   ├── Document+PositionControl.swift
 │   ├── Document+SavePanel.swift
-│   ├── Document+SheetControl.swift
+│   ├── Document+SheetControl.swift     // Includes afterSheetContinue(_:perform:)
 │   ├── Document+TimelineUpdateDelegate.swift
-│   ├── Document+UI.swift
-│   ├── Document+Utilities.swift
+│   ├── Document+UI.swift               // Includes inspectorDictionary()
 │   ├── Document+ViewControllerDelegate.swift
 │   └── PlayerSeekSequencer.swift
 ├── Models/
-│   ├── MovieMutator.swift              // Subclass of MovieMutatorBase
+│   ├── MovieMutator.swift              // Subclass of MovieMutatorBase; includes clipboard and makePlayerItem()
 │   ├── MovieMutatorBase.swift          // Base class (NSObject subclass)
 │   ├── MovieMutatorBase+FormatDescriptions.swift
 │   ├── MovieMutatorBase+Formatting.swift
 │   ├── MovieMutatorBase+PresentationInfo.swift
 │   ├── MovieMutatorBase+Progress.swift
-│   ├── MovieMutator+Clipboard.swift
 │   ├── MovieMutator+Edit.swift
 │   ├── MovieMutator+Transform.swift
 │   ├── MovieMutator+Export.swift
 │   ├── MovieMutator+Inspector.swift
-│   ├── MovieMutator+Player.swift
 │   ├── MovieMutatorTypes.swift
 │   ├── MovieWriter.swift
 │   ├── MovieWriter+CustomExport.swift
@@ -92,6 +89,7 @@ cutter2/
 │   ├── VideoChannelMetadataBuilder.swift
 │   ├── SampleBufferChannel.swift
 │   ├── Notifications.swift
+│   ├── ProgressSink.swift
 │   └── AVMutableMovie+Extensions.swift
 ├── ViewControllers/
 │   ├── ViewController.swift
@@ -113,8 +111,7 @@ cutter2/
 │   ├── MyPlayerView.swift
 │   └── Window.swift
 ├── Utilities/
-│   ├── AsyncBridge.swift
-│   ├── ActorUtilities.swift
+│   ├── ConcurrencyBridge.swift         // AsyncBridge + ActorUtilities
 │   ├── LayoutConverter.swift
 │   ├── LayoutConverter+Convert.swift
 │   ├── LayoutConverter+LayoutData.swift
@@ -135,7 +132,7 @@ cutter2/
     └── Assets.xcassets/             # App icon
 ```
 
-**Total source files:** 67 Swift files across 6 source directories (plus Resources), including the S-17 `PlayerSeekSequencer` extraction and `VideoChannelMetadataBuilder`.
+**Total source files:** 63 Swift files across 6 source directories (plus Resources), including the S-17 `PlayerSeekSequencer` extraction, `VideoChannelMetadataBuilder`, `BookmarkStore`, and `ProgressSink`. The 2026-10-17 consolidation (`refactor/consolidate-small-files`) reduced the count from 69 by merging `MovieMutator+Clipboard` and `+Player` into `MovieMutator.swift`, merging `Document+MovieReference`, `Document+Utilities`, and `Document+ActorIsolation` into their destination extensions, and merging `AsyncBridge` and `ActorUtilities` into `ConcurrencyBridge.swift`.
 
 **Note:** `MovieMutator` (in `MovieMutator.swift`) is a subclass of `MovieMutatorBase` (in `MovieMutatorBase.swift`). All functional extensions (`+Edit`, `+Transform`, `+Export`, etc.) are on the `MovieMutator` subclass, not on `MovieMutatorBase` directly.
 
@@ -173,7 +170,7 @@ cutter2Tests/
 
 ### 2.3 Test Execution Results
 
-The current source contains 320 test methods (TimelineViewRenderingTests 15→18 via M-32) and no `XCTSkip` usage. The 2026-09-27 full-suite run on the 0.8.20b head executed all 269 test cases successfully (269 passed, 0 failed, 0 skipped). The subsequent RPAC diagnosis and PR #65 A/B measurement reduced the runtime performance reports from 55 to 0. The October 1, 2026 feature-branch runs added the T-21 `MovieHeaderValidator` helper tests (PR #67, 275/275) and the T-19 `DocumentReloadSeekIntegrationTests` (274/274 on the standalone branch baseline), and the combined T-19 branch carried on top of PR #67 passed all 280 tests (280/280, 0 failed, 0 skipped).
+The current source contains 320 test methods (TimelineViewRenderingTests 15→18 via M-32) and no `XCTSkip` usage. Historical runs: the 2026-09-27 full-suite run on the 0.8.20b head passed 269/269; October 1, 2026 feature-branch runs passed 275/275 (PR #67), 274/274 (standalone T-19 baseline), and 280/280 (combined T-19 on PR #67). The current branch run on 2026-10-17 passed 320/320 with 0 failures and 0 skips; its xcresult contains one QoS priority-inversion runtime warning in `MovieWriterCustomProgressTests.swift` (see §1). The earlier PR #65 A/B measurement of runtime performance reports (55 before, 0 after the fixture-writing fix) is historical and separate from the current test run.
 
 ---
 
@@ -183,9 +180,9 @@ The current source contains 320 test methods (TimelineViewRenderingTests 15→18
 
 | Layer | Responsibility | Key Files |
 |-------|---------------|-----------|
-| **Application** | App lifecycle, document creation, security-scoped URL bracketing | `AppDelegate.swift`, `DocumentController.swift` |
-| **Document** | Core document model, NSDocument subclass, undo/redo, file I/O, export orchestration, reload/seek state | `Document.swift` + 12 extensions and `PlayerSeekSequencer.swift` |
-| **Models** | Media manipulation logic (timeline editing, transforms, export) | `MovieMutatorBase.swift` + 4 extensions, `MovieMutator.swift` + 6 extensions, `MovieWriter.swift` + 3 extensions, `VideoChannelMetadataBuilder.swift` |
+| **Application** | App lifecycle, document creation, security-scoped URL bracketing | `AppDelegate.swift`, `BookmarkStore.swift`, `DocumentController.swift` |
+| **Document** | Core document model, NSDocument subclass, undo/redo, file I/O, export orchestration, reload/seek state | `Document.swift` + 9 extensions and `PlayerSeekSequencer.swift` |
+| **Models** | Media manipulation logic (timeline editing, transforms, export) | `MovieMutatorBase.swift` + 4 extensions, `MovieMutator.swift` + 4 extensions (clipboard and player support are in the class body), `MovieWriter.swift` + 3 extensions, `VideoChannelMetadataBuilder.swift`, `ProgressSink.swift` |
 | **ViewControllers** | UI coordination, user input handling | `ViewController.swift` + 5 extensions, transcode/CAPAR/inspector dialogs |
 | **Views** | Rendering (timeline, player, window) | `TimelineView.swift` + 3 extensions, `MyPlayerView.swift`, `Window.swift` |
 | **Utilities** | Cross-cutting helpers (concurrency, layout, validation, logging) | Various utility files |
@@ -198,9 +195,9 @@ The project uses Swift's modern concurrency model with a clear isolation strateg
 
 - **`actor MovieWriter`**: A dedicated actor for export state management, isolating export session lifecycle from the main actor.
 
-- **`AsyncBridge`**: A custom utility bridging async/await to synchronous contexts (used in `NSDocument` overrides like `data(ofType:)` and `read(from:ofType:)`).
+- **`AsyncBridge`**: A custom utility bridging async/await to synchronous contexts (used by `Document.read(from:ofType:)` for file-open preparation and by the `performAsync` wrapper behind `Document.write(to:ofType:for:originalContentsURL:)`). Defined in `Utilities/ConcurrencyBridge.swift`.
 
-- **`ActorUtilities.performSyncOnMainActor`**: A utility for safely calling main-actor-isolated code from synchronous contexts.
+- **`ActorUtilities.performSyncOnMainActor`**: A utility for safely calling main-actor-isolated code from synchronous contexts. Defined in `Utilities/ConcurrencyBridge.swift`.
 
 - **Reload/seek generation gating (S-17, hardened in #63/#64)**: `PlayerSeekSequencer` (itself `@MainActor`) owns the reload and seek generations, the reload task handle, the suppression state, a suppression watchdog, a token-snapshot type (`SeekToken`), and stale-completion gates. `Document+UI.swift` retains AVPlayer and UI side effects: it advances the seek generation via `beginItemReplacement` before swapping the player item, re-asserts suppression via `suppressForReload()` immediately before `replaceCurrentItem`, arms `armSuppressionWatchdog`, and releases only the current generation. The `readyToPlay` KVO handler reads suppression through the sequencer inside `performSyncOnMainActor` because `observeValue` is `nonisolated`. The state transitions are covered by `PlayerSeekSequencerTests`; integration ordering against a live AVPlayer, KVO delivery, and polling timer remains untested.
 
@@ -229,12 +226,12 @@ All 54 force-unwraps (`as!`) identified in the initial review have been replaced
 The user-reachable `preconditionFailure` paths in `MovieMutatorBase.swift` have been replaced with graceful error return paths (S-08 fix). Three intentional executable sites remain, all on non-user-reachable or deliberate paths:
 
 - **`MovieMutatorBase.swift:23`** — `preconditionFailure("mutableCopy() of AVMutableMovie returned non-AVMutableMovie")`. Guards an impossible condition (AVFoundation's `mutableCopy()` should never return a non-`AVMutableMovie` type) and is not on a user-reachable path.
-- **`AsyncBridge.swift:103-105`** — `precondition(allowMainThread || !Thread.isMainThread, ...)`. This is a deliberate API contract guard: `AsyncBridge.perform` must not be called on the main thread unless the caller explicitly opts into the deadlock risk via `allowMainThread: true`.
-- **`Document+ActorIsolation.swift:53`** — `fatalError("Non-throwing performAsync unexpectedly threw: ...")` in the non-throwing `performAsync` overload. The catch is intentionally fatal: a non-throwing block cannot produce a `PerformAsyncError` under normal operation, so reaching it indicates an internal bridge bug rather than a recoverable caller error. Pre-existing; documented here for completeness.
+- **`ConcurrencyBridge.swift:104`** — `precondition(allowMainThread || !Thread.isMainThread, ...)`. This is a deliberate API contract guard: `AsyncBridge.perform` must not be called on the main thread unless the caller explicitly opts into the deadlock risk via `allowMainThread: true`.
+- **`Document+FileIO.swift:604`** — `fatalError("Non-throwing performAsync unexpectedly threw: ...")` in the non-throwing `performAsync` overload. The catch is intentionally fatal: a non-throwing block cannot produce a `PerformAsyncError` under normal operation, so reaching it indicates an internal bridge bug rather than a recoverable caller error. Pre-existing; documented here for completeness.
 
 ### 4.3 Security-Scoped Access — CORRECTED
 
-The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` entitlement. Security-scoped resource access is centralized in a single helper, `bracketSecurityScopedAccess<T>(for:_:)` in `AppDelegate.swift` (declared at line 228), which pairs `startAccessingSecurityScopedResource()` with a `defer`-scoped `stopAccessingSecurityScopedResource()`. It is used by the three MovieWriter export paths — `MovieWriter+ExportSession.swift:250`, `MovieWriter+CustomExport.swift:500`, and `MovieWriter+WriteMovie.swift:122` — and `AppDelegate` also performs direct start/stop bracketing at lines 115/123 and 235/241. No `NSFileCoordinator` is used anywhere in the codebase, and no security-scoped access lives in `Document+FileIO.swift` (an earlier revision of this review cited that location; it has been corrected here).
+The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` entitlement. Security-scoped resource access is centralized in a single helper, `bracketSecurityScopedAccess<T>(for:_:)` in `AppDelegate.swift` (declared at line 232), which pairs `startAccessingSecurityScopedResource()` with a `defer`-scoped `stopAccessingSecurityScopedResource()`. It is used by the three MovieWriter export paths — `MovieWriter+ExportSession.swift:250`, `MovieWriter+CustomExport.swift:500`, and `MovieWriter+WriteMovie.swift:122` — and `AppDelegate` also performs direct start/stop bracketing at lines 119/127 and 239/245. No `NSFileCoordinator` is used anywhere in the codebase, and no security-scoped access lives in `Document+FileIO.swift` (an earlier revision of this review cited that location; it has been corrected here).
 
 ### 4.4 Build Settings
 
@@ -272,14 +269,16 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 | **MovieWriter failure states** | `MovieWriterWriteTests.swift` | 3 | ✅ Covered (expanded in #64, H-11) |
 | **MovieWriter custom-export progress** | `MovieWriterCustomProgressTests.swift` | 15 | ✅ Covered (PR #71: `ProgressSink` admission gate, concurrent publish ordering, non-finite and out-of-range rejection, `didRead` wiring) |
 | **Security-scoped bookmarks** | `SecurityScopedBookmarkTests.swift` | 12 | ✅ Covered (PR #71: Save As registration policy — `bookmarkSourceTarget` decision matrix and duplicate detection) |
-| **Overall** | 24 files (23 test source + 1 helper) | **320 test methods** | ✅ Full suite passed 274/274 (2026-10-01, T-19 branch) and 275/275 (PR #67); the combined T-19 branch carried on top of PR #67 runs 280/280; KVO `readyToPlay` re-seek and real-media playback remain untested |
+| **Overall** | 24 files (23 test source + 1 helper) | **320 test methods** | ✅ Current branch run passed 320/320 (2026-10-17; 0 failed, 0 skipped); xcresult records one QoS priority-inversion runtime warning in `MovieWriterCustomProgressTests.swift`. Historical runs: 274/274 (standalone T-19), 275/275 (PR #67), and 280/280 (combined branch). KVO `readyToPlay` re-seek and real-media playback remain untested |
 
 ### 5.2 Test Execution
 
 - `scripts/test.sh` orchestrates build → test → analyze via `xcodebuild`
 - CI workflow (`.github/workflows/test.yml`) runs on push/PR to `main`, `work`, and `develop` branches (Build → Test → Analyze, using `build-for-testing` + `test-without-building` to avoid double compilation)
-- The current source contains 320 test methods (TimelineViewRenderingTests 15→18 via M-32) and no `XCTSkip` usage; the 2026-09-27 full-suite run on the 0.8.20b head passed all 269 test cases (0 failed, 0 skipped), the 2026-10-01 T-19 run passed all 274 (0 failed, 0 skipped), and the combined T-19-onto-PR-#67 run passed all 280 (0 failed, 0 skipped)
+- The current source contains 320 test methods (TimelineViewRenderingTests 15→18 via M-32) and no `XCTSkip` usage
 - `scripts/test.sh` reports the current inventory of 23 test source files + 1 helper and 320 tests
+- Historical suite runs: 269/269 (2026-09-27, 0.8.20b), 274/274 (2026-10-01, standalone T-19), 275/275 (2026-10-01, PR #67), and 280/280 (2026-10-01, combined T-19 on PR #67)
+- Current branch verification (2026-10-17): `build-for-testing` succeeded; `test-without-building` passed 320/320 (0 failures, 0 skips). No Swift source compiler warnings were found in the build log. The xcresult reports one QoS priority-inversion runtime warning in `MovieWriterCustomProgressTests.swift` (see §1); it is not a failed test.
 
 ### 5.3 Test Coverage Gaps
 
@@ -292,7 +291,7 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 | **Document × live AVPlayer integration** | Async ordering of `updatePlayer`, KVO delivery, and polling timer | ◑ Partially covered by T-19 (`DocumentReloadSeekIntegrationTests`, 5 cases): the reload generation propagation across the awaited player-item regeneration, superseded-reload item application, and the initial-setup wiring (player attachment, polling timer, immediate suppression release) are now fixed through a test-only seam. KVO `readyToPlay` re-seek delivery and playback with real media remain untested (out of scope, §0) |
 | **Document+UI** | Window resize handling (`windowDidResize`) | ❌ Not tested — layout update propagation on window resize |
 | **Document+SavePanel** | Export save panel flow | ❌ Not tested — save panel presentation and cancellation paths |
-| **MovieMutator+Clipboard** | Copy/paste operations | ❌ Not tested — clipboard serialization and deserialization |
+| **MovieMutator clipboard** (in `MovieMutator.swift`) | Copy/paste operations | ❌ Not tested — clipboard serialization and deserialization |
 | **Document+PositionControl** | Playback position scrubbing | ❌ Not tested — position updates during playback |
 
 > **Recommendation:** Unit-level seek, cancellation classification, position-cache reset, empty-window lifecycle, H-11 temporary finalization/self-contained selection, and — via the T-19 test-only seam — the reload ordering between `Document` and a live AVPlayer are covered. The remaining gaps in this area are KVO `readyToPlay` re-seek delivery (the AVPlayer observer count is not observable through public APIs) and playback with real media, both of which would need a UI/integration harness. Window resize, save panel, clipboard, and scrubbing coverage remain open.
@@ -335,7 +334,7 @@ Revision 5 additionally closed two stale recommendations: the DateFormatter dupl
 - Project file: `cutter2.xcodeproj/project.pbxproj`
 - Deployment target: app and test targets explicitly set `MACOSX_DEPLOYMENT_TARGET = 14.0` in both Debug and Release configurations. The project-level Debug/Release settings retain `$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)` as a fallback.
 - Swift version: pinned to `SWIFT_VERSION = 6.0` (all app/test target configurations)
-- Version: `MARKETING_VERSION = 0.8.20`, `CURRENT_PROJECT_VERSION = 20260926` (committed in the project)
+- Version: `MARKETING_VERSION = 0.8.21a`, `CURRENT_PROJECT_VERSION = 20261010` (committed in the project)
 - `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` enabled in all 4 build configurations
 
 ### 7.2 CI Workflow
@@ -429,21 +428,21 @@ Under the historical implementation, `queryPosition()` could poll the new item a
 
 ## 10. Conclusion
 
-The cutter2 codebase demonstrates a layered architecture with explicit concurrency settings and 320 test methods across 23 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Revision 5 verified the release code baseline (`011aff7`, PR #65) and the resulting 0.8.20 head (`fb44143`) with a clean build, clean analyze, and a full test run passing 269 test cases with 0 failures and 0 skips.
+The cutter2 codebase has a layered architecture, explicit concurrency settings, and 320 test methods across 23 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Revision 5's 0.8.20 verification (269/269) is historical. On the current `refactor/consolidate-small-files` branch (`cee7d28`), `build-for-testing` succeeded and the full test run passed 320/320 with 0 failures and 0 skips. The current xcresult contains one QoS priority-inversion runtime warning in `MovieWriterCustomProgressTests.swift`; the test passed, and the warning remains uninvestigated. The consolidation reduces the Swift source inventory from 69 to 63 files without changing the public API or runtime behavior.
 
-The current release-blocker fixes include CR-4 (empty-window lifecycle, which also made `Document` constructible in tests), M-26 cancellation classification, M-27 seek liveness (watchdog), M-28 generation/cache protection, and H-11 temporary finalization/self-contained selection protection. PR #65 also resolved the runtime performance warning triage by moving test fixture encoding off the main actor; the RPAC diagnostic A/B measurement changed from 55 reports to 0. Release blocker count is **0**. T-19 (live player integration) has been implemented on the `feature/t19-document-player-integration-seam` branch — a test-only seam in `Document` plus `DocumentReloadSeekIntegrationTests` (5 cases) covering reload generation propagation, superseded-reload item application, and the initial-setup wiring; KVO `readyToPlay` re-seek and real-media playback remain unverified (§5.3, §8.6) — and this branch now carries PR #67 (T-21: the `invalidDuration` branch is covered by direct helper tests, §5.4), giving a combined inventory of 280 tests across 22 files. T-20 (performance baselines) is implemented on this branch: four non-gating real-processing baselines for the real `TimelineView` `updateTimeline` + `layout` path and the `MovieMutator` clip/delete/transform operations, recorded with `XCTClockMetric` + `XCTMemoryMetric` without CI thresholds, taking the suite from 280 to 284 tests across 22 files; PR #69 then added 2 `MovieMutatorTransformExportTests` cases for 286, and the `fix/cutter2-m32` branch adds 3 M-32 TimelineView regression tests on that 286-method `work` baseline for 289 tests, and PR #71 (`fix/cutter2-m31-l37`) then adds 31 further tests across 2 new files and 4 additions to `DocumentTests`, giving a current inventory of 320 tests across 24 files. Window resize, save panel, clipboard, and scrubbing coverage remain open. Test counts in `scripts/test.sh`, this review, and the test guides now match the current inventory (320 across 24 files).
+The project has 0 recorded release blockers. The current `refactor/consolidate-small-files` branch (`cee7d28`) consolidates small source files, reducing the Swift source inventory from 69 to 63 without changing API signatures or runtime behavior. Its 2026-10-17 verification passed all 320 tests (0 failures, 0 skips); the xcresult also records one QoS priority-inversion runtime warning in `MovieWriterCustomProgressTests.swift`, which remains uninvestigated. The release-blocker fixes, T-19/T-20 coverage additions, PR #65 runtime-warning triage, and subsequent test-count progression described in revision 5 remain historical context. Current known coverage gaps are KVO `readyToPlay` re-seek, real-media playback, window resize, save panel, clipboard serialization, and scrubbing (§5.3, §8.6).
 
 ---
 
 ## 11. Files Reviewed
 
-### Source Files (67 files)
-- Application: `AppDelegate.swift`, `DocumentController.swift`
-- Document: `Document.swift` + 12 extensions (conformance to `ViewControllerDelegate` declared in the class body; `Document+ViewControllerDelegate.swift` and `Document+TimelineUpdateDelegate.swift` hold the delegate method implementations) and `PlayerSeekSequencer.swift`
-- Models: `MovieMutator.swift` (subclass of MovieMutatorBase), `MovieMutatorBase.swift` + 4 extensions (`+FormatDescriptions`, `+Formatting`, `+PresentationInfo`, `+Progress`), `MovieMutator+Clipboard.swift`, `MovieMutator+Edit.swift`, `MovieMutator+Transform.swift`, `MovieMutator+Export.swift`, `MovieMutator+Inspector.swift`, `MovieMutator+Player.swift`, `MovieMutatorTypes.swift`, `MovieWriter.swift` + 3 extensions (`+CustomExport`, `+ExportSession`, `+WriteMovie`), `VideoChannelMetadataBuilder.swift`, `SampleBufferChannel.swift`, `Notifications.swift`, `AVMutableMovie+Extensions.swift`
+### Source Files (63 files)
+- Application: `AppDelegate.swift`, `BookmarkStore.swift`, `DocumentController.swift`
+- Document: `Document.swift` + 9 extensions (conformance to `ViewControllerDelegate` declared in the class body; `Document+ViewControllerDelegate.swift` and `Document+TimelineUpdateDelegate.swift` hold the delegate method implementations; `performAsync` is in `Document+FileIO.swift`, `afterSheetContinue` in `Document+SheetControl.swift`, `cleanup()` in `Document+Observers.swift`, `inspectorDictionary()` in `Document+UI.swift`) and `PlayerSeekSequencer.swift`
+- Models: `MovieMutator.swift` (subclass of MovieMutatorBase; includes clipboard helpers and `makePlayerItem()`), `MovieMutatorBase.swift` + 4 extensions (`+FormatDescriptions`, `+Formatting`, `+PresentationInfo`, `+Progress`), `MovieMutator+Edit.swift`, `MovieMutator+Transform.swift`, `MovieMutator+Export.swift`, `MovieMutator+Inspector.swift`, `MovieMutatorTypes.swift`, `MovieWriter.swift` + 3 extensions (`+CustomExport`, `+ExportSession`, `+WriteMovie`), `VideoChannelMetadataBuilder.swift`, `SampleBufferChannel.swift`, `Notifications.swift`, `ProgressSink.swift`, `AVMutableMovie+Extensions.swift`
 - ViewControllers: `ViewController.swift` + 5 extensions, `CAPARViewController.swift`, `TranscodeViewController.swift`, `WindowController.swift`, `AccessoryViewController.swift`, `InspectorViewController.swift`
 - Views: `TimelineView.swift` + 3 extensions, `MyPlayerView.swift`, `Window.swift`
-- Utilities: `AsyncBridge.swift`, `ActorUtilities.swift`, `LayoutConverter.swift` + 3 extensions (`+Convert`, `+LayoutData`, `+Mapping`), `MovieHeaderValidator.swift`, `PerformanceMetrics.swift`, `ErrorUtilities.swift`, `Constants.swift`, `LocalizationHelper.swift`, `LoggingSystem.swift`, `DateFormatter+Factory.swift`
+- Utilities: `ConcurrencyBridge.swift` (`AsyncBridge`, `PerformAsyncError`, `ActorUtilities`), `LayoutConverter.swift` + 3 extensions (`+Convert`, `+LayoutData`, `+Mapping`), `MovieHeaderValidator.swift`, `PerformanceMetrics.swift`, `ErrorUtilities.swift`, `Constants.swift`, `LocalizationHelper.swift`, `LoggingSystem.swift`, `DateFormatter+Factory.swift`
 - Resources: `Info.plist`, `cutter2.entitlements`, `Localizable.xcstrings` (hand-curated app strings), `Base.lproj/Main.storyboard` (main UI), `mul.lproj/Main.xcstrings` (storyboard-extracted strings), `Assets.xcassets` (app icon)
 
 ### Test Files (24 files: 23 test source files + 1 helper; 320 test methods)
@@ -464,6 +463,9 @@ The current release-blocker fixes include CR-4 (empty-window lifecycle, which al
 - `docs/TESTING_GUIDE.md` (test structure and commands)
 
 ### Configuration
-- `cutter2.xcodeproj/project.pbxproj` (version 0.8.20 / build 20260926 — app target, committed in the project; the test target carries placeholder `1.0` / `1`)
+- `cutter2.xcodeproj/project.pbxproj` (version 0.8.21a / build 20261010 — app target, committed in the project; the test target carries placeholder `1.0` / `1`)
 - `.github/workflows/test.yml` (build/test/analyze, branches `main`/`work`/`develop`; coverage artifact generation is optional)
 - `scripts/test.sh` (build/test/analyze; summary reports 23 test source files + 1 helper and 320 tests)
+
+### Revision History
+- **Revision 6 (2026-10-17):** Rebased the current-state summary on `refactor/consolidate-small-files` (`cee7d28`); synchronized current test/build verification and runtime-warning status; corrected the source organization, bridge call paths, and crash-site references for the file consolidation. Revision 5's release baseline and historical test runs remain recorded above.

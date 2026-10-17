@@ -1,6 +1,6 @@
 # Development Guide for cutter2
 
-**Last Updated**: October 2, 2026
+**Last Updated**: October 8, 2026
 **Status**: ✅ Active and Maintained
 
 ---
@@ -342,7 +342,7 @@ enum DocumentError: Error {
 do {
     try await document.save(to: url)
 } catch {
-    ErrorUtilities.presentError(error)
+    document.showErrorSheet(error)
 }
 
 // Use Result type for asynchronous operations
@@ -977,5 +977,5 @@ If you encounter issues:
 ---
 
 **Document Status**: ✅ Active
-**Last Updated**: October 2, 2026
+**Last Updated**: October 8, 2026
 **Maintained By**: cutter2 development team

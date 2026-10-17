@@ -14,14 +14,14 @@ import AVFoundation
 /* ============================================ */
 
 extension MovieMutatorBase {
-
+    
     private func channelLayoutName(for desc: CMAudioFormatDescription) -> String? {
         var layoutSize: Int = 0
         guard let layout = CMAudioFormatDescriptionGetChannelLayout(desc, sizeOut: &layoutSize),
               layoutSize > 0 else {
             return nil
         }
-
+        
         var nameSize = UInt32(MemoryLayout<CFString?>.size)
         var name: Unmanaged<CFString>? = nil
         let error = withUnsafeMutablePointer(to: &name) { namePtr in
@@ -34,7 +34,7 @@ extension MovieMutatorBase {
         guard error == noErr, let name else { return nil }
         return name.takeUnretainedValue() as String
     }
-
+    
     /// Returns the paths of files referenced by the movie's tracks.
     ///
     /// The result is cached after the first query. When no referenced files are found,

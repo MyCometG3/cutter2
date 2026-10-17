@@ -1,7 +1,7 @@
 # Concurrency Guidelines for cutter2
 
-**Version**: 1.4
-**Last Updated**: September 27, 2026
+**Version**: 1.5
+**Last Updated**: October 12, 2026
 **Swift Version**: 6.0
 
 ---
@@ -127,7 +127,7 @@ try ActorUtilities.performSyncOnMainActor {
 **Use for:** Running async work synchronously from non-async contexts (e.g., `NSDocument` overrides).
 
 ```swift
-// Document+ActorIsolation.swift
+// Document+FileIO.swift
 nonisolated func performAsync<T: Sendable>(
     _ block: @Sendable @escaping () async throws -> T
 ) throws -> T {
@@ -143,8 +143,8 @@ nonisolated func performAsync<T: Sendable>(
 ### 7. `DispatchQueue` (Legacy / Specific Interop)
 
 **Allowed ONLY for:**
-- `SampleBufferChannel` internal queue (created at `SampleBufferChannel.swift:30`, used by `requestMediaDataWhenReady`)
-- `MovieWriter+CustomExport.swift:482` (`exportCustomMovie` dedicated queue, passed to `SampleBufferChannel`)
+- `SampleBufferChannel` internal queue (created at `SampleBufferChannel.swift:36`, used by `requestMediaDataWhenReady`)
+- `MovieWriter+CustomExport.swift:482` (`exportCustomMovie` dedicated queue, stored as `customQueue` and used by `cancelCustomMovie()`)
 - AVFoundation `requestMediaDataWhenReady(on:using:)` API (AVFoundation interop)
 - `OperationQueue.main` for `NotificationCenter` (AppKit requirement)
 - `Timer.scheduledTimer` (Foundation API)
@@ -156,8 +156,8 @@ nonisolated func performAsync<T: Sendable>(
 The `requestMediaDataWhenReady(on:using:)` API in AVFoundation asynchronously notifies on the specified `DispatchQueue` when media data is ready for writing. This is an official AVFoundation API that requires a `DispatchQueue` parameter.
 
 - **Usage locations:**
-  - `SampleBufferChannel.swift:30` — each `SampleBufferChannel` creates its own queue (`SBC-<mediaType>`) in its `init`, used by `requestMediaDataWhenReady` at line 76
-  - `MovieWriter+CustomExport.swift:482` — `MovieWriter` creates a separate `exportCustomMovie` queue stored as `customQueue`, passed to `SampleBufferChannel` for custom export
+  - `SampleBufferChannel.swift:36` — each `SampleBufferChannel` creates its own queue (`SBC-<mediaType>`) in its `init`, used by `requestMediaDataWhenReady` at line 82
+  - `MovieWriter+CustomExport.swift:482` — `MovieWriter` creates a separate `exportCustomMovie` queue stored as `customQueue`; `cancelCustomMovie()` dispatches channel cancellations onto it. The queue is not passed to `SampleBufferChannel` — each channel creates its own `SBC-<mediaType>` queue in `init`
 - **Reason:** AVFoundation API contract requires `DispatchQueue` — cannot be replaced with `Task` / `async`.
 - **Safety:** `requestMediaDataWhenReady` processes sequentially on the queue, so no data races occur. Queue cleanup happens at `stopRequestingMediaData` call.
 - **Note:** This API is called from the `SampleBufferChannel` (not from within an actor), with data passed back via `@Sendable` closure.
@@ -248,6 +248,7 @@ When touching a file, verify:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.5 | 2026-10-12 | — | Corrected the `SampleBufferChannel` queue-creation reference (`:30` → `:36`) and the `requestMediaDataWhenReady` reference (`:76` → `:82`); corrected the `exportCustomMovie` queue description (stored as `customQueue`, used by `cancelCustomMovie()` — not passed to `SampleBufferChannel`). |
 | 1.4 | 2026-09-27 | — | Corrected the `exportCustomMovie` queue line reference (`MovieWriter+CustomExport.swift:550` → `:482`) after the export-path refactor. |
 | 1.3 | 2026-09-23 | — | Updated the generation-gated example and reference implementation to use `PlayerSeekSequencer` after S-17 extraction. |
 | 1.2 | 2026-09-21 | — | Added the generation-gated completion pattern (reload/seek pipeline), documented the `Sendable`-refining conformance placement rule, made the main-actor-hop capture list explicit in the example, and refreshed the `DispatchQueue` usage line references. |

@@ -18,9 +18,9 @@ import VideoToolbox
 /// `cutter2Tests/MovieWriterVideoChannelMetadataTests.swift` through
 /// `@testable import cutter2`.
 enum VideoChannelMetadataBuilder {
-
+    
     // MARK: - CoreMedia extension retrieval gate
-
+    
     /// Retrieves the ordered `keys` from `description` via CoreMedia and lets
     /// `build` turn the values into a dictionary.
     ///
@@ -48,9 +48,9 @@ enum VideoChannelMetadataBuilder {
         }
         return build(values)
     }
-
+    
     // MARK: - Clean aperture
-
+    
     /// Builds the `AVVideoCleanApertureKey` dictionary from the
     /// `kCMFormatDescriptionExtension_CleanAperture` extension value.
     ///
@@ -73,9 +73,9 @@ enum VideoChannelMetadataBuilder {
         ]
         return dict as NSDictionary
     }
-
+    
     // MARK: - Pixel aspect ratio
-
+    
     /// Builds the `AVVideoPixelAspectRatioKey` dictionary from the
     /// `kCMFormatDescriptionExtension_PixelAspectRatio` extension value.
     ///
@@ -94,9 +94,9 @@ enum VideoChannelMetadataBuilder {
         ]
         return dict as NSDictionary
     }
-
+    
     // MARK: - Color properties (NCLC)
-
+    
     /// Builds the `AVVideoColorPropertiesKey` dictionary from the ordered
     /// color extension values: primaries, transfer function, YCbCr matrix.
     ///
@@ -117,9 +117,9 @@ enum VideoChannelMetadataBuilder {
         ]
         return dict as NSDictionary
     }
-
+    
     // MARK: - Ordered extension key lists
-
+    
     /// Returns the ordered CoreMedia color extension keys when `copyNCLC` is
     /// enabled, otherwise an empty list so that no color extension is
     /// retrieved and no color properties dictionary is produced.
@@ -131,7 +131,7 @@ enum VideoChannelMetadataBuilder {
             kCMFormatDescriptionExtension_YCbCrMatrix,
         ]
     }
-
+    
     /// Returns the ordered CoreMedia field extension keys when `copyField` is
     /// enabled, otherwise an empty list so that no field extension is
     /// retrieved.
@@ -142,9 +142,9 @@ enum VideoChannelMetadataBuilder {
             kCMFormatDescriptionExtension_FieldDetail,
         ]
     }
-
+    
     // MARK: - Field metadata merge
-
+    
     /// Merges field metadata into the initial video compression properties.
     ///
     /// Mirrors the previous inline behavior in `prepareVideoChannels`:
@@ -164,7 +164,7 @@ enum VideoChannelMetadataBuilder {
         guard fieldCount != nil || fieldDetail != nil else {
             return initial
         }
-
+        
         var dict: [AnyHashable: Any] = [:]
         if let fieldCount, let fieldDetail {
             dict[kVTCompressionPropertyKey_FieldCount] = fieldCount
@@ -177,9 +177,9 @@ enum VideoChannelMetadataBuilder {
         }
         return dict as NSDictionary
     }
-
+    
     // MARK: - Initial compression properties
-
+    
     /// The initial `AVVideoCompressionPropertiesKey` value for the target
     /// codec.
     ///

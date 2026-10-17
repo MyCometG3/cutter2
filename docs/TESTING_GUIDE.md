@@ -1,6 +1,6 @@
 # Testing Guide for cutter2
 
-**Status**: Active — test instructions and infrastructure reference *(Updated: October 2, 2026; release 0.8.20)*
+**Status**: Active — test instructions and infrastructure reference *(Updated: October 8, 2026; release 0.8.21a)*
 
 This guide provides instructions for running and writing tests for the cutter2 application.
 
@@ -204,11 +204,10 @@ final class MyFeatureTests: XCTestCase {
 ### Testing Async Code
 
 ```swift
-// Note: A `Document` instance cannot be constructed in the unit-test environment —
-// the `window` computed property force-indexes `windowControllers[0]`, raising
-// `NSRangeException` on the empty array during `NSDocument.init()`. Test Document
-// logic through extracted helpers instead (e.g. `Document.validateMovieType(_:)`
-// and `MovieHeaderValidator`).
+// Note: `Document()` can be constructed in the unit-test environment (CR-4
+// changed `window` to return `nil` until a window controller exists). This
+// example exercises extracted helpers (`Document.validateMovieType(_:)` and
+// `MovieHeaderValidator`) directly.
 func testAsyncOperation() async throws {
     // Given
     let typeName = "com.apple.quicktime-movie"
@@ -443,6 +442,6 @@ Based on Phase 2-3 of the improvement plan:
 
 ---
 
-**Last Updated**: October 6, 2026
-**Version**: 1.12
+**Last Updated**: October 8, 2026
+**Version**: 1.13
 **Status**: Static suite size: 320 test methods across 23 test source files + 1 helper; the October 8, 2026 run on the `fix/cutter2-m31-l37` branch passed 320/320 with 0 failures and 0 skips (M-31 and L-37 added 31 tests: 12 security-scoped bookmark, 15 custom-export progress, 4 `Document` progress); the October 6, 2026 run on the `fix/cutter2-m32` branch passed 289/289 with 0 failures and 0 skips (M-32 added 3 TimelineView regression tests); the October 1, 2026 combined-branch run (T-19 rebased onto PR #67) passed 280/280 with 0 skips; the prior September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips

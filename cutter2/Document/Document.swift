@@ -102,7 +102,7 @@ extension Document {
 /// (registration / callback) can refer to it within the module, and the unit
 /// tests (`DocumentKVOContextTests`) can verify the pointer contract directly.
 final class PlayerKVOContextToken: Sendable {
-
+    
     /// Raw `context` pointer derived from this token's identity. Single
     /// derivation site shared by registration, callback comparison, and the
     /// unit tests (internal test helper).
@@ -139,33 +139,33 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     public var window: Window? {
         return self.windowControllers.first?.window as? Window
     }
-
+    
     /// The document's view controller, or `nil` when the window content is unavailable.
     public var viewController: ViewController? {
         return window?.contentViewController as? ViewController
     }
-
+    
     /// The document's player view, or `nil` when the view controller is unavailable.
     public var playerView: AVPlayerView? {
         return testablePlayerView ?? viewController?.playerView
     }
-
+    
     /// The player associated with the document's player view.
     public var player: AVPlayer? {
         return playerView?.player
     }
-
+    
     /// The current player item, or `nil` when no player is attached.
     public var playerItem: AVPlayerItem? {
         return player?.currentItem
     }
-
+    
     /// The timer used for periodic playback-position polling.
     public var timer: Timer? = nil
-
+    
     /// The interval between playback-position polls, in seconds.
     public var pollingInterval: TimeInterval = 1.0/15
-
+    
     /// Per-document KVO context token (L-33).
     ///
     /// `nonisolated` + `Sendable` so the nonisolated `observeValue` override can
@@ -174,7 +174,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     /// stability contract the legacy `kvoContext` storage provided. Never
     /// weakified, regenerated, or shared outside this instance.
     nonisolated private let playerKVOContextToken = PlayerKVOContextToken()
-
+    
     /// Raw `context` pointer identifying this document's KVO registrations (L-33).
     ///
     /// Forwards to the token's `contextPointer` derivation at each use site and
@@ -189,7 +189,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     nonisolated var playerKVOContext: UnsafeMutableRawPointer {
         playerKVOContextToken.contextPointer
     }
-
+    
     /// Storage used as the KVO context for document observations.
     ///
     /// Retained for source compatibility: this member is `public` and may be
@@ -198,34 +198,34 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     /// public API change tracked as a separate issue.
     @available(*, deprecated, message: "KVO context is managed internally.")
     public var kvoContext = 0
-
+    
     /// The save panel currently associated with the document.
     public weak var savePanel: NSSavePanel? = nil
-
+    
     /// The alert used to display progress or error information.
     public var alert: NSAlert? = nil
-
+    
     /// The progress indicator used for visual feedback.
     public var progressIndicator: NSProgressIndicator? = nil
-
+    
     /// The timestamp of the last progress update, in nanoseconds.
     public var lastUpdateAt: UInt64 = 0
-
+    
     /// The last progress value reported after exponential smoothing.
     public var lastReportedProgress: Float = 0.0
-
+    
     /// The current save or export progress object.
     public var saveProgress: Progress? = nil
-
+    
     /// The most recently queried movie time.
     public var cachedTime = CMTime.invalid
-
+    
     /// Whether `cachedTime` lies within the cached last-sample range.
     public var cachedWithinLastSampleRange: Bool = false
-
+    
     /// The last sample range used by playback-position queries.
     public var cachedLastSampleRange: CMTimeRange? = nil
-
+    
     func resetPositionCache() {
         cachedTime = .invalid
         cachedWithinLastSampleRange = false
@@ -268,7 +268,7 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     /// registration policy is observable without a live `NSApplication`. Never assigned
     /// in production code.
     internal var bookmarkRegistryOverride: (any SecurityScopedBookmarkRegistering)? = nil
-
+    
     /// The registry used to register the source movie's security-scoped bookmark.
     internal var bookmarkRegistry: (any SecurityScopedBookmarkRegistering)? {
         self.bookmarkRegistryOverride ?? (NSApp.delegate as? AppDelegate)
@@ -467,4 +467,10 @@ class Document: NSDocument, NSOpenSavePanelDelegate, AccessoryViewDelegate, View
     // MARK: - UI Operations
     // NOTE: Window resize and transform operations are now in Document+UI.swift
     /* ============================================ */
+    
+    /// used in debugInfo()
+    public func modifier(_ mask: NSEvent.ModifierFlags) -> Bool {
+        guard let current = NSApp.currentEvent?.modifierFlags else { return false }
+        return current.contains(mask)
+    }
 }

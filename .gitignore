@@ -51,3 +51,6 @@ scripts/sampleMedia/
 # Local planning artifacts
 plans/
 _plans/
+
+# Local agent configuration
+.commandcode/

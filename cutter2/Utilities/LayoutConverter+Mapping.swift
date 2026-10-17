@@ -126,7 +126,7 @@ private enum LayoutMappingTables {
         (kAudioChannelLayoutTag_Atmos_9_1_6, [1, 2, 3, 4, 5, 6, 33, 34, 35, 36, 13, 15, 49, 51, 52, 54]),
         (kAudioChannelLayoutTag_Atmos_5_1_2, [1, 2, 3, 4, 5, 6, 52, 54]),
     ]
-
+    
     static let aacTagByLabelsStrict: [([AudioChannelLabel], AudioChannelLayoutTag)] = [
         ([42], kAudioChannelLayoutTag_Mono),
         ([3], kAudioChannelLayoutTag_Mono),
@@ -144,7 +144,7 @@ private enum LayoutMappingTables {
         ([3, 1, 2, 5, 6, 4, 13, 15], kAudioChannelLayoutTag_AAC_7_1_C),
         ([3, 1, 2, 5, 6, 33, 34, 9], kAudioChannelLayoutTag_AAC_Octagonal),
     ]
-
+    
     static let aacTagByLabelsFallback: [([AudioChannelLabel], AudioChannelLayoutTag)] = [
         ([301, 302], kAudioChannelLayoutTag_Stereo),
         ([38, 39], kAudioChannelLayoutTag_Stereo),
@@ -163,7 +163,7 @@ private enum LayoutMappingTables {
         ([1, 2, 3, 4, 9], kAudioChannelLayoutTag_AAC_6_1),
         ([1, 2, 5, 6, 3, 7, 8], kAudioChannelLayoutTag_AAC_Octagonal),
     ]
-
+    
     static let lpcmTagByLabels: [([AudioChannelLabel], AudioChannelLayoutTag)] = [
         ([42], kAudioChannelLayoutTag_Mono),
         ([3], kAudioChannelLayoutTag_Mono),
@@ -257,7 +257,7 @@ private enum LayoutMappingTables {
         ([1, 2, 3, 4, 5, 6, 33, 34, 35, 36, 13, 15, 49, 51, 52, 54], kAudioChannelLayoutTag_Atmos_9_1_6),
         ([1, 2, 3, 4, 5, 6, 52, 54], kAudioChannelLayoutTag_Atmos_5_1_2),
     ]
-
+    
     static let labelByBitmapBit: [(UInt32, AudioChannelLabel)] = [
         (AudioChannelBitmap.bit_Left.rawValue, kAudioChannelLabel_Left),
         (AudioChannelBitmap.bit_Right.rawValue, kAudioChannelLabel_Right),

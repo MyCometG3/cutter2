@@ -34,14 +34,14 @@ extension Document {
     /* ============================================ */
     // MARK: - Revert
     /* ============================================ */
-
+    
     /// Returns whether an error represents user cancellation from MovieWriter or AppKit.
     ///
     /// MovieWriter cancellation is converted to the Cocoa domain by `write(to:)`; both
     /// representations must bypass `showErrorSheet` in the outer save path.
     nonisolated static func isUserCancellationError(_ error: NSError) -> Bool {
-        let isKnownDomain = error.domain == MovieWriterError.errorDomain ||
-            error.domain == NSCocoaErrorDomain
+        let isKnownDomain = (error.domain == MovieWriterError.errorDomain ||
+                             error.domain == NSCocoaErrorDomain)
         return isKnownDomain && error.code == NSUserCancelledError
     }
     
@@ -110,7 +110,7 @@ extension Document {
             try throwError(.unableToOpenFile, reason: reason)
         }
     }
-
+    
     private func applyOpenedMovie(_ movie: AVMutableMovie) {
         removeMutationObserver()
         removeAllUndoRecords()
@@ -280,7 +280,7 @@ extension Document {
                                                                selfContained: self.accessoryVC?.selfContained,
                                                                sourceURL: self.fileURL)
     }
-
+    
     /// Whether a Save As must register a security-scoped bookmark for the source movie.
     ///
     /// Pure so the decision matrix is unit testable without accessory view or document
@@ -353,7 +353,7 @@ extension Document {
         ActorUtilities.performSyncOnMainActor {
             self.commitSourceBookmark(bookmarkTarget)
         }
-
+        
         // Refresh internal movie (to sync selfcontained <> referece movie change)
         if saveOperation == .saveAsOperation {
             let refreshed = ActorUtilities.performSyncOnMainActor {
@@ -496,7 +496,7 @@ extension Document {
         guard let url, let registry = self.bookmarkRegistry else { return }
         registry.addBookmark(for: url)
     }
-
+    
     private func refreshMutator(from url: URL) -> Bool {
         
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
@@ -523,5 +523,85 @@ extension Document {
         }
         resetPositionCache()
         return true
+    }
+    
+    /* ============================================ */
+    // MARK: - Self-contained check
+    /* ============================================ */
+    
+    /// Determines whether the document's movie is self-contained at the specified URL.
+    ///
+    /// A movie is considered self-contained when exactly one referenced URL exists and
+    /// it matches `url`.
+    ///
+    /// - Parameter url: The document URL to compare with the movie's referenced URL.
+    /// - Returns: `true` when the movie has exactly one matching reference URL.
+    public func validateIfSelfContained(for url: URL) -> Bool {
+        /*
+         If a movie refers to one file path only and it is same as the movie's filePath,
+         - the URL is the only one source of the movie
+         - movie file is self-contained - no referencing track is included
+         
+         In case of in-memory movie (no-file-backed) it should be a reference movie.
+         In case of multiple url found it should be a reference movie.
+         */
+        let refURLs: [URL] = self.movieMutator?.queryMediaDataURLs() ?? []
+        if refURLs.count == 1
+            && refURLs[0].standardizedFileURL == url.standardizedFileURL {
+            return true
+        }
+        //
+        if refURLs.count < 1 {
+            LoggingSystem.video.error("Unable to get track reference URLs")
+        }
+        if refURLs.count == 1 {
+            LoggingSystem.video.info("Different track reference URL found")
+        }
+        if refURLs.count > 1 {
+            LoggingSystem.video.info("Multiple track reference URLs found")
+        }
+        return false
+    }
+    
+    /* ============================================ */
+    // MARK: - Actor isolation
+    /* ============================================ */
+    
+    /// Executes an asynchronous, throwing operation synchronously on a detached task.
+    ///
+    /// This method bridges async/await operations to synchronous AppKit document APIs.
+    /// It is designed to be called from `nonisolated` contexts (specifically `Document.write(...)`).
+    ///
+    /// Implementation is delegated to `AsyncBridge.perform` (adopted from
+    /// `performAsync_comparison.md` §10.2). AppKit's `canAsynchronouslyWrite` executes
+    /// `write()` on a background queue, so the default `allowMainThread: false`
+    /// precondition is satisfied.
+    ///
+    /// - Parameter block: A closure that performs asynchronous work and may throw.
+    /// - Returns: The result produced by the closure.
+    /// - Throws: An error thrown by the closure.
+    /// - Warning: This blocks the current thread. Do not call from the main thread.
+    nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async throws -> T) throws -> T {
+        return try AsyncBridge.perform(block)
+    }
+    
+    /// Executes an asynchronous, non-throwing operation synchronously on a detached task.
+    ///
+    /// A `() async -> T` block satisfies `() async throws -> T`, so the throwing
+    /// variant of `AsyncBridge.perform` is reused. See the throwing version for
+    /// design rationale. The `catch` is intentionally fatal: a non-throwing
+    /// block cannot produce a `PerformAsyncError` (.timeout / .operationFailed)
+    /// under normal operation, so reaching it indicates an internal bridge bug
+    /// rather than a recoverable caller error.
+    ///
+    /// - Parameter block: A closure that performs asynchronous work.
+    /// - Returns: The result produced by the closure.
+    /// - Warning: This blocks the current thread. Do not call from the main thread.
+    nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async -> T) -> T {
+        do {
+            return try AsyncBridge.perform(block)
+        } catch {
+            fatalError("Non-throwing performAsync unexpectedly threw: \(error)")
+        }
     }
 }

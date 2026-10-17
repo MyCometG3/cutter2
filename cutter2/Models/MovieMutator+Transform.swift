@@ -14,7 +14,7 @@ import AVFoundation
 /* ============================================ */
 
 extension MovieMutator {
-
+    
     private func makeCleanApertureDictionary(size: NSSize, offset: NSPoint) -> NSMutableDictionary? {
         guard validSize(size), validPoint(offset) else { return nil }
         return [
@@ -24,7 +24,7 @@ extension MovieMutator {
             kCMFormatDescriptionKey_CleanApertureVerticalOffset: offset.y
         ]
     }
-
+    
     private func makePixelAspectRatioDictionary(_ ratio: NSSize) -> NSMutableDictionary? {
         guard validSize(ratio) else { return nil }
         return [
@@ -32,7 +32,7 @@ extension MovieMutator {
             kCMFormatDescriptionKey_PixelAspectRatioVerticalSpacing: ratio.height
         ]
     }
-
+    
     /* ============================================ */
     // MARK: - private method - clap/pasp
     /* ============================================ */
@@ -223,12 +223,11 @@ extension MovieMutator {
                 dict[kCMFormatDescriptionExtension_VerbatimISOSampleEntry] = nil
                 
                 // Replace CleanAperture if available
-                dict[kCMFormatDescriptionExtension_CleanAperture] =
-                    makeCleanApertureDictionary(size: clapSize, offset: clapOffset)
+                dict[kCMFormatDescriptionExtension_CleanAperture] = makeCleanApertureDictionary(size: clapSize,
+                                                                                                offset: clapOffset)
                 
                 // Replace PixelAspectRatio if available
-                dict[kCMFormatDescriptionExtension_PixelAspectRatio] =
-                    makePixelAspectRatioDictionary(paspRatio)
+                dict[kCMFormatDescriptionExtension_PixelAspectRatio] = makePixelAspectRatioDictionary(paspRatio)
                 
                 // Create New formatDescription as replacement
                 var newFormat: CMVideoFormatDescription? = nil

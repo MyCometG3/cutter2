@@ -68,7 +68,7 @@ extension LayoutConverter {
     /* ============================================ */
     // MARK: - AudioChannelLayoutData helpers
     /* ============================================ */
-
+    
     private func withMutableLayout(
         descCount: Int,
         _ update: (MutableLayoutPtr) -> Void

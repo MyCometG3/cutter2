@@ -40,7 +40,7 @@ struct MovieHeaderValidator {
         }
         return nil
     }
-
+    
     static func validate(_ movie: AVMutableMovie) -> ValidationError? {
         let tracks = movie.tracks
         if tracks.isEmpty {

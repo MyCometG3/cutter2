@@ -89,7 +89,7 @@ extension LayoutConverter {
         }
         return pos
     }
-
+    
     private func convertChannelLabelSet<T>(
         from aclData: AudioChannelLayoutData,
         transform: (Set<AudioChannelLabel>) -> T?,

@@ -2,7 +2,7 @@
 
 cutter2 is a simple QuickTime movie editor with powerful keyboard shortcuts.
 
-- **Version**: 0.8.20 (build 20260926)
+- **Version**: 0.8.21a (build 20261010)
 - **Minimum requirement**: macOS 14.0 or later
 - **Framework**: AVFoundation (native macOS)
 - **Restriction**: Autosave is not supported

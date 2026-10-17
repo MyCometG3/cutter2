@@ -130,7 +130,7 @@ extension MovieWriter {
                                              of: movie,
                                              at: CMTime.zero,
                                              copySampleData: selfContained)
-
+                
                 if self.writeCancelled {
                     try throwError(.operationCancelled, reason: "Movie write was cancelled by the user.")
                 }
@@ -174,7 +174,7 @@ extension MovieWriter {
             }
         }
     }
-
+    
     func finalizeTemporaryMovie(at temporaryURL: URL, to destinationURL: URL) throws {
         let fileManager = FileManager.default
         let destinationExists = fileManager.fileExists(atPath: destinationURL.path)

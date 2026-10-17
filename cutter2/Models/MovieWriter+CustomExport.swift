@@ -325,21 +325,21 @@ extension MovieWriter {
                 ) { values in
                     VideoChannelMetadataBuilder.makeCleanAperture(from: values[0])
                 }
-
+                
                 pixelAspectRatio = VideoChannelMetadataBuilder.makeExtensionDict(
                     from: desc,
                     keys: [kCMFormatDescriptionExtension_PixelAspectRatio]
                 ) { values in
                     VideoChannelMetadataBuilder.makePixelAspectRatio(from: values[0])
                 }
-
+                
                 nclc = VideoChannelMetadataBuilder.makeExtensionDict(
                     from: desc,
                     keys: VideoChannelMetadataBuilder.nclcExtensionKeys(copyNCLC: copyNCLC)
                 ) { values in
                     VideoChannelMetadataBuilder.makeNCLC(from: values)
                 }
-
+                
                 compressionProperties = VideoChannelMetadataBuilder.makeExtensionDict(
                     from: desc,
                     keys: VideoChannelMetadataBuilder.fieldExtensionKeys(copyField: copyField)
@@ -635,7 +635,7 @@ extension MovieWriter {
         guard movieDurationSeconds != 0.0 else { return 0.0 }
         return CMTimeGetSeconds(presentationEnd) / movieDurationSeconds
     }
-
+    
     // subs for UTGetOSTypeFromString()
     private func stringToOSType(_ type:String) -> OSType {
         guard type.count == 4 else { return 0 }

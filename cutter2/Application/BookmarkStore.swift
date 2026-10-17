@@ -25,7 +25,7 @@ protocol SecurityScopedBookmarkRegistering: AnyObject {
 /// Extracted from `AppDelegate` so the duplicate-detection policy can be unit tested
 /// without sandbox entitlements and without mutating the developer's real `UserDefaults`.
 enum BookmarkStore {
-
+    
     /// Whether two urls denote the same bookmark target.
     ///
     /// Both sides are standardized, so a redundant separator or a `..` segment cannot make
@@ -40,7 +40,7 @@ enum BookmarkStore {
     static func denotesSameTarget(_ lhs: URL, _ rhs: URL) -> Bool {
         lhs.standardizedFileURL.path == rhs.standardizedFileURL.path
     }
-
+    
     /// Whether any already-registered url denotes `url`.
     ///
     /// This is the duplicate check `AppDelegate.addBookmark(for:)` performs, kept as a pure

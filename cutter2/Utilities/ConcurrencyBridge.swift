@@ -2,7 +2,7 @@
 //  ConcurrencyBridge.swift
 //  cutter2
 //
-//  Sync-to-async and MainActor bridge utilities.
+//  Async-to-sync bridge and MainActor-isolated sync call utilities.
 //  Merged from AsyncBridge.swift and ActorUtilities.swift.
 //
 //  Created by Takashi Mochizuki on 2026/06/13.

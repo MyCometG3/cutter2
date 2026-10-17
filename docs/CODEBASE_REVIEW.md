@@ -194,7 +194,7 @@ The project uses Swift's modern concurrency model with a clear isolation strateg
 
 - **`actor MovieWriter`**: A dedicated actor for export state management, isolating export session lifecycle from the main actor.
 
-- **`AsyncBridge`**: A custom utility bridging async/await to synchronous contexts (used in `NSDocument` overrides like `data(ofType:)` and `read(from:ofType:)`). Defined in `Utilities/ConcurrencyBridge.swift`.
+- **`AsyncBridge`**: A custom utility bridging async/await to synchronous contexts (used by `Document.read(from:ofType:)` for file-open preparation and by the `performAsync` wrapper behind `Document.write(to:ofType:for:originalContentsURL:)`). Defined in `Utilities/ConcurrencyBridge.swift`.
 
 - **`ActorUtilities.performSyncOnMainActor`**: A utility for safely calling main-actor-isolated code from synchronous contexts. Defined in `Utilities/ConcurrencyBridge.swift`.
 

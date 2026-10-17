@@ -52,7 +52,8 @@ final class UndoManagerWrapper {
 /// Wrapper of AVMutableMovie as model object of movie editor
 @MainActor
 class MovieMutator: MovieMutatorBase {
-    // All functionality has been moved to extensions:
+    // Functionality is split between this class body and extensions:
+    // - This file: Clipboard operations and AVPlayer item construction
     // - MovieMutator+Edit.swift: Edit operations (cut, copy, paste, delete)
     // - MovieMutator+Transform.swift: Transform operations (clap/pasp)
     // - MovieMutator+Inspector.swift: Inspector utilities

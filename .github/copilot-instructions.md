@@ -10,7 +10,7 @@ cutter2 is a sophisticated macOS video editing application written in Swift, lev
 - **Minimum environment**: macOS 14.0; Xcode 16.0 or later
 - **Verified environment (September 27, 2026)**: macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
 - **Phase history**: Phase 2.1 (Internationalization) and Phase 2.2 (Performance Optimization) were recorded as complete on October 15 and October 17, 2025; these entries are historical milestones, not current verification results
-- **Current test note**: 320 statically declared test methods are present across 24 test files (23 test source files + 1 helper); the October 8, 2026 run on the `fix/cutter2-m31-l37` branch (PR #71) passed all 320 test cases with 0 failures and 0 skips
+- **Current test note**: 320 statically declared test methods are present across 24 test files (23 test source files + 1 helper); the October 17, 2026 run for PR #72 passed all 320 test cases with 0 failures and 0 skips. Its xcresult recorded one QoS priority-inversion runtime warning in `MovieWriterCustomProgressTests.swift`.
 
 ## Architecture & Design Patterns
 

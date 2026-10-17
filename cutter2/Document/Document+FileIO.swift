@@ -34,14 +34,14 @@ extension Document {
     /* ============================================ */
     // MARK: - Revert
     /* ============================================ */
-
+    
     /// Returns whether an error represents user cancellation from MovieWriter or AppKit.
     ///
     /// MovieWriter cancellation is converted to the Cocoa domain by `write(to:)`; both
     /// representations must bypass `showErrorSheet` in the outer save path.
     nonisolated static func isUserCancellationError(_ error: NSError) -> Bool {
-        let isKnownDomain = error.domain == MovieWriterError.errorDomain ||
-            error.domain == NSCocoaErrorDomain
+        let isKnownDomain = (error.domain == MovieWriterError.errorDomain ||
+                             error.domain == NSCocoaErrorDomain)
         return isKnownDomain && error.code == NSUserCancelledError
     }
     
@@ -110,7 +110,7 @@ extension Document {
             try throwError(.unableToOpenFile, reason: reason)
         }
     }
-
+    
     private func applyOpenedMovie(_ movie: AVMutableMovie) {
         removeMutationObserver()
         removeAllUndoRecords()
@@ -280,7 +280,7 @@ extension Document {
                                                                selfContained: self.accessoryVC?.selfContained,
                                                                sourceURL: self.fileURL)
     }
-
+    
     /// Whether a Save As must register a security-scoped bookmark for the source movie.
     ///
     /// Pure so the decision matrix is unit testable without accessory view or document
@@ -353,7 +353,7 @@ extension Document {
         ActorUtilities.performSyncOnMainActor {
             self.commitSourceBookmark(bookmarkTarget)
         }
-
+        
         // Refresh internal movie (to sync selfcontained <> referece movie change)
         if saveOperation == .saveAsOperation {
             let refreshed = ActorUtilities.performSyncOnMainActor {
@@ -496,7 +496,7 @@ extension Document {
         guard let url, let registry = self.bookmarkRegistry else { return }
         registry.addBookmark(for: url)
     }
-
+    
     private func refreshMutator(from url: URL) -> Bool {
         
         // SaveAs triggers internal movie refresh (to sync selfcontained <> referece movie change)
@@ -524,11 +524,11 @@ extension Document {
         resetPositionCache()
         return true
     }
-
+    
     /* ============================================ */
     // MARK: - Self-contained check
     /* ============================================ */
-
+    
     /// Determines whether the document's movie is self-contained at the specified URL.
     ///
     /// A movie is considered self-contained when exactly one referenced URL exists and
@@ -541,7 +541,7 @@ extension Document {
          If a movie refers to one file path only and it is same as the movie's filePath,
          - the URL is the only one source of the movie
          - movie file is self-contained - no referencing track is included
-
+         
          In case of in-memory movie (no-file-backed) it should be a reference movie.
          In case of multiple url found it should be a reference movie.
          */
@@ -562,11 +562,11 @@ extension Document {
         }
         return false
     }
-
+    
     /* ============================================ */
     // MARK: - Actor isolation
     /* ============================================ */
-
+    
     /// Executes an asynchronous, throwing operation synchronously on a detached task.
     ///
     /// This method bridges async/await operations to synchronous AppKit document APIs.
@@ -584,7 +584,7 @@ extension Document {
     nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async throws -> T) throws -> T {
         return try AsyncBridge.perform(block)
     }
-
+    
     /// Executes an asynchronous, non-throwing operation synchronously on a detached task.
     ///
     /// A `() async -> T` block satisfies `() async throws -> T`, so the throwing

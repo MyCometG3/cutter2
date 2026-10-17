@@ -130,7 +130,7 @@ extension Document {
                 Self.applyProgressValue(progressValue, to: progress)
             }
         }
-
+        
         // Ordering matters here. The terminal state must be written *after* the consumer
         // has been cancelled, otherwise a buffered update still sitting in the stream can
         // be applied afterwards and lower the progress again.
@@ -154,25 +154,25 @@ extension Document {
     }
     
     /// Writes `progressValue` into `progress` without ever lowering `completedUnitCount`.
-///
-/// `NSProgress.completedUnitCount` is a second, independently observable copy of the
-/// progress state, and the monotonic clamp in `updateProgress(_:)` only protects the
-/// rendered bar. A buffered iteration that lands after a successful operation reported
-/// 100% would otherwise drag the value back down, which is the one thing a progress
-/// indicator must not do once it has finished.
-///
-/// Extracted so the guarantee is testable without driving `withBusyProgress`. `progress`
-/// is `totalUnitCount: 100` in `withBusyProgress`, and `ProgressSink` admits only values in
-/// `0.0...1.0`, so the scaled result never exceeds it.
-///
-/// - Parameters:
-///   - progressValue: Progress in `0.0...1.0`.
-///   - progress: The progress to update.
+    ///
+    /// `NSProgress.completedUnitCount` is a second, independently observable copy of the
+    /// progress state, and the monotonic clamp in `updateProgress(_:)` only protects the
+    /// rendered bar. A buffered iteration that lands after a successful operation reported
+    /// 100% would otherwise drag the value back down, which is the one thing a progress
+    /// indicator must not do once it has finished.
+    ///
+    /// Extracted so the guarantee is testable without driving `withBusyProgress`. `progress`
+    /// is `totalUnitCount: 100` in `withBusyProgress`, and `ProgressSink` admits only values in
+    /// `0.0...1.0`, so the scaled result never exceeds it.
+    ///
+    /// - Parameters:
+    ///   - progressValue: Progress in `0.0...1.0`.
+    ///   - progress: The progress to update.
     internal static func applyProgressValue(_ progressValue: Float, to progress: Progress) {
         let scaled: Int64 = Int64(progressValue * 100)
         progress.completedUnitCount = max(progress.completedUnitCount, scaled)
     }
-
+    
     internal func export(to url: URL, ofType typeName: String, preset: String) async throws {
         let title = NSLocalizedString("progress.exporting.title", comment: "Title for export progress dialog")
         let message = NSLocalizedString("progress.exporting.message", comment: "Message for export progress dialog")

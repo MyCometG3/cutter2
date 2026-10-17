@@ -17,11 +17,11 @@ import os.lock
 private final class UnfairLockBox<T>: @unchecked Sendable {
     private var rawLock = os_unfair_lock_s()
     private var value: T
-
+    
     init(_ value: T) {
         self.value = value
     }
-
+    
     @inline(__always)
     func withLock<U>(_ body: (inout T) throws -> U) rethrows -> U {
         os_unfair_lock_lock(&rawLock)
@@ -54,7 +54,7 @@ protocol ProgressDestination: Sendable {
 /// Production destination: yields into the progress `AsyncStream`.
 struct AsyncStreamProgressDestination: ProgressDestination {
     private let continuation: AsyncStream<Float>.Continuation
-
+    
     /// Wraps an `AsyncStream` continuation as a progress destination.
     ///
     /// - Parameter continuation: The continuation produced by
@@ -62,7 +62,7 @@ struct AsyncStreamProgressDestination: ProgressDestination {
     init(_ continuation: AsyncStream<Float>.Continuation) {
         self.continuation = continuation
     }
-
+    
     func receive(_ value: Float) {
         continuation.yield(value)
     }
@@ -94,14 +94,14 @@ struct AsyncStreamProgressDestination: ProgressDestination {
 /// `AsyncStream.Continuation.yield` does not block, so invoking it while holding the lock
 /// is safe and cheap. The delta gate additionally bounds how many values are ever queued.
 final class ProgressSink: @unchecked Sendable {
-
+    
     /// Minimum advance of the high-water mark between two emissions, in `0.0...1.0`.
     ///
     /// The consumer renders `Int64(progress * 100)` (`Document+Export.swift:124`), so a
     /// 0.2 % step is five emissions per rendered percent: visually smooth while capping a
     /// full-length export at 500 emissions.
     static let minimumDelta: Float64 = 0.002
-
+    
     /// Identity of one destination installation.
     ///
     /// Returned by `install(_:)` and required by `detach(_:)` so a late termination from a
@@ -109,7 +109,7 @@ final class ProgressSink: @unchecked Sendable {
     struct Token: Sendable, Hashable {
         fileprivate let generation: UInt64
     }
-
+    
     private struct State {
         /// Monotonic counter handing out `Token` values.
         var generation: UInt64 = 0
@@ -119,9 +119,9 @@ final class ProgressSink: @unchecked Sendable {
         /// High-water mark of emitted values. `-infinity` admits the first value.
         var lastEmitted: Float64 = -.infinity
     }
-
+    
     private let state = UnfairLockBox(State())
-
+    
     /// Installs or clears the destination and returns its identity.
     ///
     /// Installing resets the high-water mark: a destination belongs to one operation, so
@@ -139,7 +139,7 @@ final class ProgressSink: @unchecked Sendable {
             return Token(generation: current.current)
         }
     }
-
+    
     /// Detaches the destination only when `token` still identifies the installed one.
     ///
     /// A termination callback from a superseded stream carries a stale token and is
@@ -152,12 +152,12 @@ final class ProgressSink: @unchecked Sendable {
             current.destination = nil
         }
     }
-
+    
     /// Whether a destination is currently installed.
     var isAttached: Bool {
         state.withLock { $0.destination != nil }
     }
-
+    
     /// Emits `value` when it is a valid progress value and advances the high-water
     /// mark by at least `minimumDelta`.
     ///
@@ -206,7 +206,7 @@ final class ProgressSink: @unchecked Sendable {
             return true
         }
     }
-
+    
     /// Whether `value` is usable as a progress value: finite and within `0.0...1.0`.
     ///
     /// The bounds are what actually reject bad values. Measured: `value >= 0.0 &&
@@ -225,7 +225,7 @@ final class ProgressSink: @unchecked Sendable {
     static func isRepresentable(_ value: Float64) -> Bool {
         value.isFinite && value >= 0.0 && value <= 1.0
     }
-
+    
     /// Emits `value` without consulting the delta gate, and moves the high-water mark so
     /// later gated values cannot overtake it.
     ///
@@ -246,7 +246,7 @@ final class ProgressSink: @unchecked Sendable {
             return true
         }
     }
-
+    
     /// The current high-water mark. Test support.
     var lastEmittedValue: Float64 {
         state.withLock { $0.lastEmitted }

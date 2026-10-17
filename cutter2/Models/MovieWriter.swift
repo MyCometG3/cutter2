@@ -125,7 +125,7 @@ extension MovieWriter {
         
         return dateStart
     }
-
+    
     /// Post the start-phase notification with the standard userInfo keys.
     ///
     /// - Parameters:
@@ -138,7 +138,7 @@ extension MovieWriter {
         let notificationStart = Notification(name: name, object: self, userInfo: userInfoStart)
         NotificationCenter.default.post(notificationStart)
     }
-
+    
     /// Post the end-phase notification with the standard userInfo keys.
     ///
     /// `endInfoKey` / `intervalInfoKey` are appended only when `writeEnd` is set.

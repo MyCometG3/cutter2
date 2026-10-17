@@ -24,22 +24,22 @@ extension NSPasteboard.PasteboardType {
 @MainActor
 final class UndoManagerWrapper {
     private let undoManager: UndoManager
-
+    
     init(_ undoManager: UndoManager) {
         self.undoManager = undoManager
     }
-
+    
     func registerUndo<T: AnyObject>(
         withTarget target: T,
         handler: @MainActor @escaping (T) -> Void
     ) {
         undoManager.registerUndo(withTarget: target, handler: handler)
     }
-
+    
     func setActionName(_ actionName: String) {
         undoManager.setActionName(actionName)
     }
-
+    
     func removeAllActions(withTarget target: AnyObject) {
         undoManager.removeAllActions(withTarget: target)
     }
@@ -58,22 +58,22 @@ class MovieMutator: MovieMutatorBase {
     // - MovieMutator+Transform.swift: Transform operations (clap/pasp)
     // - MovieMutator+Inspector.swift: Inspector utilities
     // - MovieMutator+Export.swift: Export/write support
-
+    
     /* ============================================ */
     // MARK: - Clipboard Operations
     /* ============================================ */
-
+    
     /// Read movie clip data from PasteBoard
     ///
     /// - Returns: Data of movie header
     internal func readClipFromPBoard() -> Data? {
         let pBoard: NSPasteboard = NSPasteboard.general
-
+        
         // extract movie header data from PBoard
         let data: Data? = pBoard.data(forType: .movieMutator)
         return data
     }
-
+    
     /// Write movie header data to PasteBoard
     ///
     /// - Parameter data: Data of movie header
@@ -85,7 +85,7 @@ class MovieMutator: MovieMutatorBase {
         let result = pBoard.setData(data, forType: .movieMutator)
         return result
     }
-
+    
     /// Write movie clip data to PasteBoard
     ///
     /// - Parameter range: CMTimeRange of clip
@@ -96,24 +96,24 @@ class MovieMutator: MovieMutatorBase {
         guard self.writeClipToPBoard(data) else { return nil }
         return data
     }
-
+    
     /// Check if pasteboard has valid movie clip
     ///
     /// - Returns: true if available
     public func validateClipFromPBoard() -> Bool {
         let pBoard: NSPasteboard = NSPasteboard.general
-
+        
         if let _ = pBoard.data(forType: .movieMutator) {
             return true
         } else {
             return false
         }
     }
-
+    
     /* ============================================ */
     // MARK: - AVPlayer support
     /* ============================================ */
-
+    
     /// Make new AVPlayerItem for internalMovie.
     ///
     /// The video-composition derivation path is asynchronous on macOS 15+ and
@@ -132,7 +132,7 @@ class MovieMutator: MovieMutatorBase {
         }
         return playerItem
     }
-
+    
     /// Make new AVVideoComposition for the supplied asset when multiple video
     /// tracks require composition.
     ///

@@ -204,7 +204,7 @@ extension Document {
             alert.beginSheetModal(for: window, completionHandler: nil)
         }
     }
-
+    
     /// Bridge a sheet modal response to a MainActor-isolated Document action.
     ///
     /// Use this from sheet completion handlers to replace the repeated pattern:

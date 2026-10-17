@@ -208,24 +208,24 @@ extension Document {
         guard let mutator = self.movieMutator else { return }
         self.undoManagerWrapper.removeAllActions(withTarget: mutator)
     }
-
+    
     /// Cleanup for close document
     public func cleanup() {
         guard !didCleanup else { return }
         didCleanup = true
-
+        
         //
         self.removeMutationObserver()
         self.removeAllUndoRecords()
         self.useUpdateTimer(false)
         self.playerSeekSequencer.invalidate()
         self.removePlayerObserver()
-
+        
         //
         self.viewController?.cleanup()
         self.player?.pause()
         self.playerView?.player = nil
-
+        
         // dealloc mutator
         self.movieMutator = nil
     }

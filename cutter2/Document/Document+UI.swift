@@ -175,11 +175,11 @@ extension Document {
             }
         }
     }
-
+    
     /* ============================================ */
     // MARK: - Inspector
     /* ============================================ */
-
+    
     /// Builds the dictionary of display strings used by the movie inspector.
     ///
     /// Returns an empty dictionary when no movie mutator is available.
@@ -188,7 +188,7 @@ extension Document {
     public func inspectorDictionary() -> [String:Any] {
         var dict: [String:Any] = [:]
         guard let mutator = self.movieMutator else { return dict }
-
+        
         dict[titleInspectKey] = self.displayName
         dict[pathInspectKey] = mutator.mediaDataPaths()?.joined(separator: "\n")
         dict[videoFormatInspectKey] = mutator.videoFormats()?.joined(separator: "\n")
@@ -198,12 +198,12 @@ extension Document {
         dict[audioDataSizeInspectKey] = mutator.audioDataSizes()?.joined(separator: "\n")
         dict[currentTimeInspectKey] = mutator.shortTimeString(mutator.insertionTime, withDecimals: true)
         dict[movieDurationInspectKey] = mutator.shortTimeString(mutator.movieDuration(), withDecimals: true)
-
+        
         let range: CMTimeRange = mutator.selectedTimeRange
         dict[selectionStartInspectKey] = mutator.shortTimeString(range.start, withDecimals: true)
         dict[selectionEndInspectKey] = mutator.shortTimeString(range.end, withDecimals: true)
         dict[selectionDurationInspectKey] = mutator.shortTimeString(range.duration, withDecimals: true)
-
+        
         return dict
     }
 }
@@ -330,7 +330,7 @@ extension Document {
     /// delete-key position regression) without ever leaving the polling timer
     /// suppressed after an interrupted reload.
     private func updatePlayer(generation: UInt64) async {
-
+        
         guard let mutator = movieMutator, let pv = playerView else {
             self.playerSeekSequencer.liftSuppression(for: generation)
             return
@@ -362,7 +362,7 @@ extension Document {
                 }
                 self.playerSeekSequencer.suppressForReload()
                 self.playerSeekSequencer.armSuppressionWatchdog(for: token)
-
+                
                 // Apply modified source movie
                 player.replaceCurrentItem(with: playerItem)
                 
@@ -392,7 +392,7 @@ extension Document {
                 
                 // Start polling timer
                 self.useUpdateTimer(true)
-
+                
                 // No in-flight seek here, so release immediately.
                 self.playerSeekSequencer.liftSuppression(for: generation)
             }

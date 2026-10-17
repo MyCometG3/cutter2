@@ -205,7 +205,7 @@ extension MovieMutatorBase {
         case previous
         case next
     }
-
+    
     private func adjacentInfo(of range: CMTimeRange,
                               direction: AdjacentDirection) -> PresentationInfo? {
         let boundary: CMTime
@@ -223,70 +223,70 @@ extension MovieMutatorBase {
             step = 1
             sampleRange = CMTimeRangeFromTimeToTime(start: range.start, end: range.end)
         }
-
+        
         for track in orderedTracks() {
             let pts = track.samplePresentationTime(forTrackTime: sampleRange.start)
             guard CMTIME_IS_VALID(pts),
                   let cursor = track.makeSampleCursor(presentationTimeStamp: pts),
                   let segment = track.segment(forTrackTime: sampleRange.start),
                   !segment.isEmpty else { continue }
-
+            
             let mapping = segment.timeMapping
             let mediaBoundary = direction == .previous ? mapping.source.start : mapping.source.end
             let trackBoundary = direction == .previous ? mapping.target.start : mapping.target.end
             let resolution = movieResolution()
             var reachedSegmentBoundary = false
-
+            
             while (direction == .previous && cursor.presentationTimeStamp > mediaBoundary)
                     || (direction == .next && cursor.presentationTimeStamp < mediaBoundary) {
                 guard cursor.stepInPresentationOrder(byCount: Int64(step)) == Int64(step) else { break }
-                let crossedBoundary = direction == .previous
-                    ? cursor.presentationTimeStamp <= mediaBoundary
-                    : cursor.presentationTimeStamp >= mediaBoundary
+                let crossedBoundary = (direction == .previous
+                                       ? cursor.presentationTimeStamp <= mediaBoundary
+                                       : cursor.presentationTimeStamp >= mediaBoundary)
                 reachedSegmentBoundary = crossedBoundary
                 let candidateTime = trackTime(of: cursor.presentationTimeStamp, from: mapping)
-                let distance = direction == .previous
-                    ? boundary - candidateTime
-                    : candidateTime - boundary
+                let distance = (direction == .previous
+                                ? boundary - candidateTime
+                                : candidateTime - boundary)
                 guard distance >= resolution else {
                     if crossedBoundary { break }
                     continue
                 }
-
-                let candidateRange = direction == .previous
-                    ? CMTimeRangeFromTimeToTime(start: candidateTime, end: boundary)
-                    : CMTimeRangeFromTimeToTime(start: boundary, end: candidateTime)
+                
+                let candidateRange = (direction == .previous
+                                      ? CMTimeRangeFromTimeToTime(start: candidateTime, end: boundary)
+                                      : CMTimeRangeFromTimeToTime(start: boundary, end: candidateTime))
                 return PresentationInfo(range: candidateRange, of: internalMovie)
             }
-
-            let segmentDistance = direction == .previous
-                ? boundary - trackBoundary
-                : trackBoundary - boundary
+            
+            let segmentDistance = (direction == .previous
+                                   ? boundary - trackBoundary
+                                   : trackBoundary - boundary)
             if reachedSegmentBoundary && segmentDistance >= resolution {
                 let candidateRange = direction == .previous
-                    ? CMTimeRangeFromTimeToTime(start: trackBoundary, end: boundary)
-                    : CMTimeRangeFromTimeToTime(start: boundary, end: trackBoundary)
+                ? CMTimeRangeFromTimeToTime(start: trackBoundary, end: boundary)
+                : CMTimeRangeFromTimeToTime(start: boundary, end: trackBoundary)
                 return PresentationInfo(range: candidateRange, of: internalMovie)
             }
         }
-
-        let testTime = direction == .previous
-            ? range.start - movieResolution()
-            : range.end + movieResolution()
+        
+        let testTime = (direction == .previous
+                        ? range.start - movieResolution()
+                        : range.end + movieResolution())
         if let info = presentationInfoAtTime(testTime) {
             return info
         }
-
+        
         let directionName = direction == .previous ? "previous" : "next"
         LoggingSystem.video.error("\(self.ts()) Cannot find \(directionName) sample's PresentationInfo for range: \(self.shortTimeString(range.start, withDecimals: false))..\(self.shortTimeString(range.end, withDecimals: false))")
         return nil
     }
-
+    
     /// Query Previous sample's PresentationInfo.
     public func previousInfo(of range: CMTimeRange) -> PresentationInfo? {
         adjacentInfo(of: range, direction: .previous)
     }
-
+    
     /// Query Next sample's PresentationInfo.
     public func nextInfo(of range: CMTimeRange) -> PresentationInfo? {
         adjacentInfo(of: range, direction: .next)

@@ -10,7 +10,7 @@ import os.lock
 
 /// `os_unfair_lock` box holding the sink's mutable state.
 ///
-/// A file-private copy, matching `PerformanceMetrics.swift:20-34`. `AsyncBridge.swift:21`
+/// A file-private copy, matching `PerformanceMetrics.swift:20-34`. `ConcurrencyBridge.swift`
 /// declares a **non-generic** box with a different `withLock` signature, so the two
 /// existing copies cannot be unified without adapting `AsyncResultBox`; that cleanup is
 /// tracked separately rather than done opportunistically here.

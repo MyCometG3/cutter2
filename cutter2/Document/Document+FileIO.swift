@@ -562,4 +562,46 @@ extension Document {
         }
         return false
     }
+
+    /* ============================================ */
+    // MARK: - Actor isolation
+    /* ============================================ */
+
+    /// Executes an asynchronous, throwing operation synchronously on a detached task.
+    ///
+    /// This method bridges async/await operations to synchronous AppKit document APIs.
+    /// It is designed to be called from `nonisolated` contexts (specifically `Document.write(...)`).
+    ///
+    /// Implementation is delegated to `AsyncBridge.perform` (adopted from
+    /// `performAsync_comparison.md` §10.2). AppKit's `canAsynchronouslyWrite` executes
+    /// `write()` on a background queue, so the default `allowMainThread: false`
+    /// precondition is satisfied.
+    ///
+    /// - Parameter block: A closure that performs asynchronous work and may throw.
+    /// - Returns: The result produced by the closure.
+    /// - Throws: An error thrown by the closure.
+    /// - Warning: This blocks the current thread. Do not call from the main thread.
+    nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async throws -> T) throws -> T {
+        return try AsyncBridge.perform(block)
+    }
+
+    /// Executes an asynchronous, non-throwing operation synchronously on a detached task.
+    ///
+    /// A `() async -> T` block satisfies `() async throws -> T`, so the throwing
+    /// variant of `AsyncBridge.perform` is reused. See the throwing version for
+    /// design rationale. The `catch` is intentionally fatal: a non-throwing
+    /// block cannot produce a `PerformAsyncError` (.timeout / .operationFailed)
+    /// under normal operation, so reaching it indicates an internal bridge bug
+    /// rather than a recoverable caller error.
+    ///
+    /// - Parameter block: A closure that performs asynchronous work.
+    /// - Returns: The result produced by the closure.
+    /// - Warning: This blocks the current thread. Do not call from the main thread.
+    nonisolated func performAsync<T: Sendable>(_ block: @Sendable @escaping () async -> T) -> T {
+        do {
+            return try AsyncBridge.perform(block)
+        } catch {
+            fatalError("Non-throwing performAsync unexpectedly threw: \(error)")
+        }
+    }
 }

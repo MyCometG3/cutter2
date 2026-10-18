@@ -250,6 +250,17 @@ final class MovieWriterCustomProgressTests: XCTestCase {
             sink.publish(0.3)
             secondFinished.fulfill()
         }
+        // Match the QoS class of the test-runner thread. XCTest runs test methods at
+        // User-interactive, while plain `Thread` defaults to Default. With A and B at
+        // Default, the main test thread (User-interactive) waiting on A while A holds the
+        // sink lock trips the OS priority-inversion warning
+        // ("User-interactive ... waiting on a lower QoS thread running at Default").
+        // Raising A and B to User-interactive removes exactly that class delta, without
+        // changing what the test asserts: A still parks inside `receive` holding the sink
+        // lock, so B still cannot reach `receive` until `releaseFirst()`.
+        for worker in [first, second] {
+            worker.qualityOfService = .userInteractive
+        }
         first.start()
         XCTAssertTrue(recorder.waitForNextEntry(timeout: .seconds(10)),
                       "publisher A never reached the destination")

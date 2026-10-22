@@ -5,12 +5,12 @@
 cutter2 is a sophisticated macOS video editing application written in Swift, leveraging Apple's AVFoundation framework. It serves as a QuickTime movie editor with powerful keyboard shortcuts, designed for precise video editing workflows.
 
 **Current Status**:
-- **Version**: 0.8.21a
+- **Version**: 0.8.21
 - **Swift language mode**: 6.0 (`SWIFT_VERSION = 6.0`)
 - **Minimum environment**: macOS 14.0; Xcode 16.0 or later
-- **Verified environment (September 27, 2026)**: macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), Swift compiler 6.4
+- **Verified environment (October 22, 2026)**: macOS 27.0.1 (build 26A434), Xcode 27.2 (build 27B48), Swift compiler 6.4.2
 - **Phase history**: Phase 2.1 (Internationalization) and Phase 2.2 (Performance Optimization) were recorded as complete on October 15 and October 17, 2025; these entries are historical milestones, not current verification results
-- **Current test note**: 320 statically declared test methods are present across 24 test files (23 test source files + 1 helper); the October 17, 2026 run for PR #72 passed all 320 test cases with 0 failures and 0 skips. Its xcresult recorded one QoS priority-inversion runtime warning in `MovieWriterCustomProgressTests.swift`.
+- **Current test note**: 320 statically declared test methods are present across 24 test files (23 test source files + 1 helper); the October 22, 2026 release run on Xcode 27.2 passed all 320 test cases with 0 failures and 0 skips. Its xcresult records no runtime warnings; the QoS priority-inversion warning reported by the October 17, 2026 run was fixed by PR #73.
 
 ## Architecture & Design Patterns
 

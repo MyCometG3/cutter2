@@ -1,11 +1,11 @@
 # Codebase Review — cutter2
 
-**Date:** 2026-10-17 (revision 6; revision 5: 2026-09-29; original review 2026-08-06)
+**Date:** 2026-10-22 (revision 7; revision 6: 2026-10-17; revision 5: 2026-09-29; original review 2026-08-06)
 **Reviewer:** Source-level documentation and code review
-**Scope:** Current `work` integration branch after PR #72, including source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
-**Reviewed baseline:** `83328ff86708b93b7daa95737b71a377d90566a5` (`work`; PR #72 squash merge)
-**Verification environment:** macOS 27.0.1 (build 26A434), Xcode 27.1 (build 27A9275), Swift compiler 6.4
-**Status:** The file consolidation and follow-up formatting/documentation changes are implemented. `build-for-testing` succeeded and the 2026-10-17 `test-without-building` run passed 320/320 tests with 0 failures and 0 skips. The xcresult records one runtime QoS priority-inversion warning in `MovieWriterCustomProgressTests.swift`; it is not a test failure and remains to be investigated. No source compiler warnings were recorded in the build log. The existing live-player integration gaps remain as described in §5.3 and §8.6.
+**Scope:** Current `work` integration branch after PR #73, including source, tests, Markdown documentation, Xcode project, CI workflow, and test scripts
+**Reviewed baseline:** `e5dc551` (`work`; PR #73 squash merge); the 0.8.21 version/build commit follows it
+**Verification environment:** macOS 27.0.1 (build 26A434), Xcode 27.2 (build 27B48), Swift compiler 6.4.2
+**Status:** Rebaselined for the 0.8.21 release. The tested code baseline is PR #73 (`e5dc551`); the release commit changes only the version/build metadata. Clean build, clean analyze, and `build-for-testing` succeeded on Xcode 27.2 with no Swift source warnings, and the 2026-10-22 `test-without-building` run passed 320/320 tests with 0 failures and 0 skips. The xcresult records no runtime warnings, so the QoS priority-inversion warning previously reported by `MovieWriterCustomProgressTests.swift` is resolved by PR #73. The existing live-player integration gaps remain as described in §5.3 and §8.6.
 
 ---
 
@@ -13,7 +13,7 @@
 
 This document records a source-level review of the **cutter2** project — a macOS video editor application built with Swift and AVFoundation. The review covers project structure, architecture, concurrency model, code quality, test coverage, documentation accuracy, and build/CI configuration.
 
-Revision 5 (2026-09-29) is the historical review of the 0.8.20 release baseline. Revision 6 (2026-10-17) updates the current branch inventory, file organization, bridge call paths, line references, and verification results after the small-file consolidation. The revision 5 commit list and measurements below are retained as historical records, not as the current branch state.
+Revision 5 (2026-09-29) is the historical review of the 0.8.20 release baseline. Revision 6 (2026-10-17) updates the current branch inventory, file organization, bridge call paths, line references, and verification results after the small-file consolidation. Revision 7 (2026-10-22) rebaselines the review on `work` for the 0.8.21 release, replacing the beta marketing version with the final 0.8.21 / build 20261022 metadata and re-running the verification on Xcode 27.2. The revision 5 commit list and measurements below are retained as historical records, not as the current branch state.
 
 - `b724483` Refactor cutter2: concurrency, export, and media cleanup overhaul (#63) — squash-merged the previously reviewed line together with the reload/seek generation work; re-asserts suppression immediately before `replaceCurrentItem`.
 - `38221e9` Fix cutter2 release blockers (#64) — CR-4, M-24, M-25, M-26, M-27, M-28, T-17, H-11; expands `DocumentTests` (6 → 12), `MovieWriterWriteTests`, `PlayerSeekSequencerTests`, and `MovieMutatorTransformExportTests`.
@@ -31,16 +31,16 @@ xcodebuild test          -project cutter2.xcodeproj -scheme cutter2 -destination
 
 All three steps succeeded. The full test run executed **269 test cases with 269 passed and 0 failed** (0 skipped). The 2026-09-27 run initially emitted 3 runtime performance warnings. Follow-up triage identified `libRPAC.dylib` (Xcode runtime performance analysis), not `libMainThreadChecker.dylib`, as the reporting component.
 
-**Current verification facts (revision 6, 2026-10-17):**
+**Current verification facts (revision 7, 2026-10-22):**
 
 - **Current static test suite size:** 24 files total (23 test source files + 1 helper), with 320 test methods (TimelineViewRenderingTests 18, up from 15; M-32 added 3 zero-width and negative-width position regression tests).
-- **Current runtime test result:** 320 passed, 0 failed, 0 skipped (2026-10-17, `cee7d28`; recorded in the xcresult referenced by the local test run).
-- **Current runtime warning:** The same xcresult records one QoS priority-inversion runtime warning from `MovieWriterCustomProgressTests.swift`; no test failed. The earlier PR #65 A/B measurement of 0 runtime performance reports (55 before the fixture-writing fix) is historical and is not this run's result.
+- **Current runtime test result:** 320 passed, 0 failed, 0 skipped (2026-10-22, `e5dc551`; recorded in the xcresult referenced by the local test run).
+- **Current runtime warning:** The same xcresult records no runtime warnings; PR #73 removed the QoS priority-inversion warning previously reported by `MovieWriterCustomProgressTests.swift`. The earlier PR #65 A/B measurement of 0 runtime performance reports (55 before the fixture-writing fix) is historical and is not this run's result.
 - **Runtime warning triage:** `PERFC_ENABLE_DUPLICATE_DETECTION=0` reproduced 55 reports in an approximately 220 ms burst. PID correlation mapped the reporting processes to the three fixture-generating test files, where `DispatchQueue.global().sync` synchronously blocked the main actor during `AVAssetWriter` encoding. After PR #65 moved fixture generation to detached utility tasks, the same diagnostic measurement produced 0 reports.
 - **CI workflow:** Configured for `main`, `work`, and `develop`, with Build → Test → Analyze steps plus coverage report generation/upload. The workflow uses `macos-latest` and does not pin a specific Xcode image.
 - **Strict concurrency:** `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` are enabled across all four app/test configurations.
 - **Swift language mode:** `SWIFT_VERSION = 6.0` is pinned in the app and test targets.
-- **Version:** `MARKETING_VERSION = 0.8.21a`, `CURRENT_PROJECT_VERSION = 20261010` (app target; committed in the project). The reviewed branch is based on `work` commit `b5f5c42` and adds six commits through `cee7d28`; the release version/build are unchanged.
+- **Version:** `MARKETING_VERSION = 0.8.21`, `CURRENT_PROJECT_VERSION = 20261022` (app target; committed in the project). The beta suffix was removed for the release; the version/build commit follows the reviewed `work` head `e5dc551`.
 - **Force casts:** 14 `as!` lines (10 code lines: 8 CF typealias casts + 2 NSDictionary casts, plus 4 whole-line comment lines) — unchanged from the earlier review.
 - **Intentional crash/assertion sites:** Three executable sites remain: `MovieMutatorBase.swift:23` (impossible `mutableCopy()` result), `ConcurrencyBridge.swift:104` (deliberate main-thread API-contract guard), and `Document+FileIO.swift:604` (fatalError in the non-throwing `performAsync` overload, indicating an internal bridge bug). Line numbers reflect the 2026-10-17 consolidation.
 
@@ -170,7 +170,7 @@ cutter2Tests/
 
 ### 2.3 Test Execution Results
 
-The current source contains 320 test methods (TimelineViewRenderingTests 15→18 via M-32) and no `XCTSkip` usage. Historical runs: the 2026-09-27 full-suite run on the 0.8.20b head passed 269/269; October 1, 2026 feature-branch runs passed 275/275 (PR #67), 274/274 (standalone T-19 baseline), and 280/280 (combined T-19 on PR #67). The current branch run on 2026-10-17 passed 320/320 with 0 failures and 0 skips; its xcresult contains one QoS priority-inversion runtime warning in `MovieWriterCustomProgressTests.swift` (see §1). The earlier PR #65 A/B measurement of runtime performance reports (55 before, 0 after the fixture-writing fix) is historical and separate from the current test run.
+The current source contains 320 test methods (TimelineViewRenderingTests 15→18 via M-32) and no `XCTSkip` usage. Historical runs: the 2026-09-27 full-suite run on the 0.8.20b head passed 269/269; October 1, 2026 feature-branch runs passed 275/275 (PR #67), 274/274 (standalone T-19 baseline), and 280/280 (combined T-19 on PR #67). The current branch run on 2026-10-22 passed 320/320 with 0 failures and 0 skips; its xcresult records no runtime warnings (see §1). The earlier PR #65 A/B measurement of runtime performance reports (55 before, 0 after the fixture-writing fix) is historical and separate from the current test run.
 
 ---
 
@@ -269,7 +269,7 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 | **MovieWriter failure states** | `MovieWriterWriteTests.swift` | 3 | ✅ Covered (expanded in #64, H-11) |
 | **MovieWriter custom-export progress** | `MovieWriterCustomProgressTests.swift` | 15 | ✅ Covered (PR #71: `ProgressSink` admission gate, concurrent publish ordering, non-finite and out-of-range rejection, `didRead` wiring) |
 | **Security-scoped bookmarks** | `SecurityScopedBookmarkTests.swift` | 12 | ✅ Covered (PR #71: Save As registration policy — `bookmarkSourceTarget` decision matrix and duplicate detection) |
-| **Overall** | 24 files (23 test source + 1 helper) | **320 test methods** | ✅ Current branch run passed 320/320 (2026-10-17; 0 failed, 0 skipped); xcresult records one QoS priority-inversion runtime warning in `MovieWriterCustomProgressTests.swift`. Historical runs: 274/274 (standalone T-19), 275/275 (PR #67), and 280/280 (combined branch). KVO `readyToPlay` re-seek and real-media playback remain untested |
+| **Overall** | 24 files (23 test source + 1 helper) | **320 test methods** | ✅ Current branch run passed 320/320 (2026-10-22; 0 failed, 0 skipped); xcresult records no runtime warnings. Historical runs: 274/274 (standalone T-19), 275/275 (PR #67), and 280/280 (combined branch). KVO `readyToPlay` re-seek and real-media playback remain untested |
 
 ### 5.2 Test Execution
 
@@ -278,7 +278,7 @@ The app is sandboxed with the `com.apple.security.files.bookmarks.app-scope` ent
 - The current source contains 320 test methods (TimelineViewRenderingTests 15→18 via M-32) and no `XCTSkip` usage
 - `scripts/test.sh` reports the current inventory of 23 test source files + 1 helper and 320 tests
 - Historical suite runs: 269/269 (2026-09-27, 0.8.20b), 274/274 (2026-10-01, standalone T-19), 275/275 (2026-10-01, PR #67), and 280/280 (2026-10-01, combined T-19 on PR #67)
-- Current branch verification (2026-10-17): `build-for-testing` succeeded; `test-without-building` passed 320/320 (0 failures, 0 skips). No Swift source compiler warnings were found in the build log. The xcresult reports one QoS priority-inversion runtime warning in `MovieWriterCustomProgressTests.swift` (see §1); it is not a failed test.
+- Current branch verification (2026-10-22): clean build, clean analyze, and `build-for-testing` succeeded; `test-without-building` passed 320/320 (0 failures, 0 skips). No Swift source compiler warnings were found in the build or analyze logs. The xcresult reports no runtime warnings (see §1); the earlier QoS priority-inversion warning in `MovieWriterCustomProgressTests.swift` was fixed by PR #73.
 
 ### 5.3 Test Coverage Gaps
 
@@ -334,7 +334,7 @@ Revision 5 additionally closed two stale recommendations: the DateFormatter dupl
 - Project file: `cutter2.xcodeproj/project.pbxproj`
 - Deployment target: app and test targets explicitly set `MACOSX_DEPLOYMENT_TARGET = 14.0` in both Debug and Release configurations. The project-level Debug/Release settings retain `$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)` as a fallback.
 - Swift version: pinned to `SWIFT_VERSION = 6.0` (all app/test target configurations)
-- Version: `MARKETING_VERSION = 0.8.21a`, `CURRENT_PROJECT_VERSION = 20261010` (committed in the project)
+- Version: `MARKETING_VERSION = 0.8.21`, `CURRENT_PROJECT_VERSION = 20261022` (committed in the project)
 - `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` enabled in all 4 build configurations
 
 ### 7.2 CI Workflow
@@ -428,9 +428,9 @@ Under the historical implementation, `queryPosition()` could poll the new item a
 
 ## 10. Conclusion
 
-The cutter2 codebase has a layered architecture, explicit concurrency settings, and 320 test methods across 23 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Revision 5's 0.8.20 verification (269/269) is historical. On the current `work` branch after PR #72 (`83328ff`), `build-for-testing` succeeded and the full test run passed 320/320 with 0 failures and 0 skips. The current xcresult contains one QoS priority-inversion runtime warning in `MovieWriterCustomProgressTests.swift`; the test passed, and the warning remains uninvestigated. The consolidation reduces the Swift source inventory from 69 to 63 files without changing the public API or runtime behavior.
+The cutter2 codebase has a layered architecture, explicit concurrency settings, and 320 test methods across 23 test source files plus one helper. Strict concurrency (`complete`) and warnings-as-errors are enabled across all build configurations. Revision 5's 0.8.20 verification (269/269) is historical. On the current `work` branch after PR #73 (`e5dc551`), clean build, clean analyze, and `build-for-testing` succeeded and the full test run passed 320/320 with 0 failures and 0 skips. The current xcresult contains no runtime warnings. The consolidation reduces the Swift source inventory from 69 to 63 files without changing the public API or runtime behavior.
 
-The project has 0 recorded release blockers. PR #72 on `work` (`83328ff`) consolidates small source files, reducing the Swift source inventory from 69 to 63 without changing API signatures or runtime behavior. Its 2026-10-17 verification passed all 320 tests (0 failures, 0 skips); the xcresult also records one QoS priority-inversion runtime warning in `MovieWriterCustomProgressTests.swift`, which remains uninvestigated. The release-blocker fixes, T-19/T-20 coverage additions, PR #65 runtime-warning triage, and subsequent test-count progression described in revision 5 remain historical context. Current known coverage gaps are KVO `readyToPlay` re-seek, real-media playback, window resize, save panel, clipboard serialization, and scrubbing (§5.3, §8.6).
+The project has 0 recorded release blockers. PR #73 on `work` (`e5dc551`) fixes the test QoS priority-inversion warning, and the release drops the beta suffix from the marketing version (0.8.21, build 20261022). The 2026-10-22 verification on Xcode 27.2 passed all 320 tests (0 failures, 0 skips), and the xcresult records no runtime warnings. The release-blocker fixes, T-19/T-20 coverage additions, PR #65 runtime-warning triage, and subsequent test-count progression described in revision 5 remain historical context. Current known coverage gaps are KVO `readyToPlay` re-seek, real-media playback, window resize, save panel, clipboard serialization, and scrubbing (§5.3, §8.6).
 
 ---
 
@@ -463,9 +463,10 @@ The project has 0 recorded release blockers. PR #72 on `work` (`83328ff`) consol
 - `docs/TESTING_GUIDE.md` (test structure and commands)
 
 ### Configuration
-- `cutter2.xcodeproj/project.pbxproj` (version 0.8.21a / build 20261010 — app target, committed in the project; the test target carries placeholder `1.0` / `1`)
+- `cutter2.xcodeproj/project.pbxproj` (version 0.8.21 / build 20261022 — app target, committed in the project; the test target carries placeholder `1.0` / `1`)
 - `.github/workflows/test.yml` (build/test/analyze, branches `main`/`work`/`develop`; coverage artifact generation is optional)
 - `scripts/test.sh` (build/test/analyze; summary reports 23 test source files + 1 helper and 320 tests)
 
 ### Revision History
 - **Revision 6 (2026-10-17):** Rebased the current-state summary on `refactor/consolidate-small-files` (`cee7d28`); synchronized current test/build verification and runtime-warning status; corrected the source organization, bridge call paths, and crash-site references for the file consolidation. Revision 5's release baseline and historical test runs remain recorded above.
+- **Revision 7 (2026-10-22):** Rebaselined on `work` for the 0.8.21 release (`e5dc551`); replaced the beta marketing version with 0.8.21 / build 20261022; re-verified on Xcode 27.2 (clean build, clean analyze, `build-for-testing`, and 320/320 tests with no runtime warnings recorded). Revision 6's consolidation baseline and the historical test runs remain recorded above.

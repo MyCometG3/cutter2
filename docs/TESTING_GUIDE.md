@@ -1,6 +1,6 @@
 # Testing Guide for cutter2
 
-**Status**: Active — test instructions and infrastructure reference *(Updated: October 8, 2026; release 0.8.21a)*
+**Status**: Active — test instructions and infrastructure reference *(Updated: October 22, 2026; release 0.8.21)*
 
 This guide provides instructions for running and writing tests for the cutter2 application.
 
@@ -24,7 +24,7 @@ xcodebuild test \
   CODE_SIGNING_REQUIRED=NO
 ```
 
-The September 27, 2026 full-suite run on the pre-release `work` baseline (0.8.20b, single scheme `cutter2`, Debug) executed 269 test cases with 269 passed, 0 failed, and 0 skipped. Release 0.8.20 (`fb44143`) changes only the version/build metadata after the tested PR #65 code baseline (`011aff7`). The October 1, 2026 feature-branch runs added 6 direct `MovieHeaderValidator` helper tests (PR #67, 275/275 on its branch baseline) and `DocumentReloadSeekIntegrationTests` (5 tests, 274/274 on the standalone T-19 branch baseline); the combined T-19 branch carried on top of PR #67 is 280 tests across 21 test source files and one helper, and its full-suite run passed 280/280 with 0 failed and 0 skipped; runtime results remain tied to each specific test run.
+The September 27, 2026 full-suite run on the pre-release `work` baseline (0.8.20b, single scheme `cutter2`, Debug) executed 269 test cases with 269 passed, 0 failed, and 0 skipped. Release 0.8.20 (`fb44143`) changes only the version/build metadata after the tested PR #65 code baseline (`011aff7`). The October 1, 2026 feature-branch runs added 6 direct `MovieHeaderValidator` helper tests (PR #67, 275/275 on its branch baseline) and `DocumentReloadSeekIntegrationTests` (5 tests, 274/274 on the standalone T-19 branch baseline); the combined T-19 branch carried on top of PR #67 is 280 tests across 21 test source files and one helper, and its full-suite run passed 280/280 with 0 failed and 0 skipped; runtime results remain tied to each specific test run. Release 0.8.21 removes the beta suffix from the marketing version and sets the build to 20261022; it changes only the version/build metadata after the tested PR #73 code baseline (`e5dc551`). The October 22, 2026 full-suite run on Xcode 27.2 passed 320/320 with 0 failed and 0 skipped.
 
 ## Table of Contents
 
@@ -45,7 +45,7 @@ The September 27, 2026 full-suite run on the pre-release `work` baseline (0.8.20
 - macOS 14.0 or later
 - Swift language mode 6.0 (`SWIFT_VERSION = 6.0`)
 
-The documentation was verified on September 27, 2026 with macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), and Swift compiler 6.4.
+The documentation was verified on October 22, 2026 with macOS 27.0.1 (build 26A434), Xcode 27.2 (build 27B48), and Swift compiler 6.4.2.
 
 ### Initial Setup
 
@@ -442,6 +442,6 @@ Based on Phase 2-3 of the improvement plan:
 
 ---
 
-**Last Updated**: October 8, 2026
-**Version**: 1.13
-**Status**: Static suite size: 320 test methods across 23 test source files + 1 helper; the October 8, 2026 run on the `fix/cutter2-m31-l37` branch passed 320/320 with 0 failures and 0 skips (M-31 and L-37 added 31 tests: 12 security-scoped bookmark, 15 custom-export progress, 4 `Document` progress); the October 6, 2026 run on the `fix/cutter2-m32` branch passed 289/289 with 0 failures and 0 skips (M-32 added 3 TimelineView regression tests); the October 1, 2026 combined-branch run (T-19 rebased onto PR #67) passed 280/280 with 0 skips; the prior September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips
+**Last Updated**: October 22, 2026
+**Version**: 1.14
+**Status**: Static suite size: 320 test methods across 23 test source files + 1 helper; the October 22, 2026 release run on `work` with Xcode 27.2 passed 320/320 with 0 failures and 0 skips and recorded no runtime warnings; the October 8, 2026 run on the `fix/cutter2-m31-l37` branch passed 320/320 with 0 failures and 0 skips (M-31 and L-37 added 31 tests: 12 security-scoped bookmark, 15 custom-export progress, 4 `Document` progress); the October 6, 2026 run on the `fix/cutter2-m32` branch passed 289/289 with 0 failures and 0 skips (M-32 added 3 TimelineView regression tests); the October 1, 2026 combined-branch run (T-19 rebased onto PR #67) passed 280/280 with 0 skips; the prior September 27, 2026 run on 0.8.20b passed 269/269 with 0 skips

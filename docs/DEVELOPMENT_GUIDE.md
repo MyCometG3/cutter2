@@ -1,6 +1,6 @@
 # Development Guide for cutter2
 
-**Last Updated**: October 8, 2026
+**Last Updated**: October 22, 2026
 **Status**: ✅ Active and Maintained
 
 ---
@@ -31,7 +31,7 @@
 - **Git**: For version control
 - **Command Line Tools**: Install via `xcode-select --install`
 
-The documentation was verified on September 27, 2026 with macOS 27.0 (build 26A428), Xcode 27.0 (build 27A266a), and Swift compiler 6.4. These are verification values, not minimum requirements.
+The documentation was verified on October 22, 2026 with macOS 27.0.1 (build 26A434), Xcode 27.2 (build 27B48), and Swift compiler 6.4.2. These are verification values, not minimum requirements.
 
 ### Clone the Repository
 
@@ -977,5 +977,5 @@ If you encounter issues:
 ---
 
 **Document Status**: ✅ Active
-**Last Updated**: October 8, 2026
+**Last Updated**: October 22, 2026
 **Maintained By**: cutter2 development team
